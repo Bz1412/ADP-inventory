@@ -17,16 +17,49 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* สไตล์สำหรับ Toast Notification */
+        .toast-enter { transform: translateX(100%); opacity: 0; }
+        .toast-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s ease-out; }
+        .toast-exit { transform: translateX(100%); opacity: 0; transition: all 0.3s ease-in; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-gray-800">
+
+    <!-- 🌟 โซนสำหรับ Toast แจ้งเตือนมุมขวาบน -->
+    <div id="toastContainer" class="fixed top-20 right-5 z-[200] flex flex-col gap-3 pointer-events-none"></div>
 
     <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] hidden flex-col justify-center items-center backdrop-blur-sm">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-white font-bold text-lg">กำลังซิงค์ข้อมูลกับฐานข้อมูล...</p>
     </div>
 
-    <!-- หน้าต่าง Confirm -->
+    <!-- 🌟 หน้าต่างยืนยันการลบแถว -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden transform transition-all">
+            <div class="bg-red-50 p-4 border-b border-red-200">
+                <h3 class="text-xl font-bold text-red-800 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    ยืนยันการลบอุปกรณ์
+                </h3>
+            </div>
+            <div class="p-6 bg-white text-center text-gray-700">
+                <p class="mb-2 text-lg">คุณแน่ใจหรือไม่ที่จะลบรายการนี้?</p>
+                <div id="deleteDetailText" class="p-3 bg-red-100 text-red-900 rounded font-semibold break-words border border-red-200">
+                    <!-- ข้อมูลอุปกรณ์ที่จะถูกลบจะแสดงตรงนี้ -->
+                </div>
+                <p class="mt-4 text-sm text-gray-500">*อุปกรณ์จะถูกลบออกจากตาราง แต่ต้องกด "บันทึกฐานข้อมูล" เพื่อยืนยันการลบในระบบหลัก</p>
+            </div>
+            <div class="bg-gray-50 p-4 border-t flex justify-center gap-4">
+                <button onclick="closeDeleteModal()" class="px-6 py-2 rounded-lg font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition shadow-sm">ยกเลิก</button>
+                <button onclick="executeDeleteRow()" class="px-6 py-2 rounded-lg font-bold text-white bg-red-600 hover:bg-red-700 transition shadow-md flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    ลบเลย
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- หน้าต่าง Confirm บันทึกข้อมูล -->
     <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="bg-yellow-50 p-4 border-b border-yellow-200">
@@ -70,17 +103,29 @@
         </div>
 
         <div class="grid grid-cols-1 gap-8">
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto">
+            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto relative">
                 <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3>
                 <div id="spreadsheet-cpu" class="w-full text-sm"></div>
+                <!-- ปุ่มเพิ่มแถว -->
+                <div class="mt-3">
+                    <button onclick="addNewRow('spreadsheet-cpu')" class="px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded hover:bg-blue-200 transition text-sm">➕ เพิ่มแถวอุปกรณ์</button>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500 overflow-x-auto">
+            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500 overflow-x-auto relative">
                 <h3 class="text-xl font-bold mb-2 text-green-800">🖥️ 2. ตารางจอมอนิเตอร์</h3>
                 <div id="spreadsheet-mon" class="w-full text-sm"></div>
+                <!-- ปุ่มเพิ่มแถว -->
+                <div class="mt-3">
+                    <button onclick="addNewRow('spreadsheet-mon')" class="px-4 py-2 bg-green-100 text-green-700 font-bold rounded hover:bg-green-200 transition text-sm">➕ เพิ่มแถวอุปกรณ์</button>
+                </div>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-purple-500 overflow-x-auto">
+            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-purple-500 overflow-x-auto relative">
                 <h3 class="text-xl font-bold mb-2 text-purple-800">🖨️ 3. ตารางเครื่องพิมพ์</h3>
                 <div id="spreadsheet-prn" class="w-full text-sm"></div>
+                <!-- ปุ่มเพิ่มแถว -->
+                <div class="mt-3">
+                    <button onclick="addNewRow('spreadsheet-prn')" class="px-4 py-2 bg-purple-100 text-purple-700 font-bold rounded hover:bg-purple-200 transition text-sm">➕ เพิ่มแถวอุปกรณ์</button>
+                </div>
             </div>
         </div>
     </div>
@@ -108,7 +153,36 @@
         let currentStation = '';
         let tableCPU = null, tableMon = null, tablePrn = null;
         let originalDbData = { cpu: [], mon: [], prn: [] };
-        let pendingLogs = []; // เก็บ Log รอส่งขึ้น Server
+        let pendingLogs = []; 
+        let rowToDelete = null; // เก็บข้อมูลรอการลบ
+
+        // 🌟 ระบบ Toast Notification
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
+            
+            toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center gap-3 toast-enter pointer-events-auto`;
+            
+            let iconHtml = type === 'success' 
+                ? `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`
+                : `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+            toast.innerHTML = `${iconHtml} <span>${message}</span>`;
+            container.appendChild(toast);
+
+            // Animate In
+            requestAnimationFrame(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-enter-active');
+            });
+
+            // Animate Out after 3s
+            setTimeout(() => {
+                toast.classList.add('toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
@@ -154,7 +228,7 @@
                 initSpreadsheets(dbData);
             } catch (error) {
                 console.error(error);
-                alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
+                showToast("เกิดข้อผิดพลาดในการดึงข้อมูล", "error");
                 initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]] });
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
@@ -171,15 +245,67 @@
             if (tablePrn) tablePrn.destroy();
         };
 
-        // ฟังก์ชันสร้างปุ่มลบ
+        // 🌟 แก้ไข: กดปุ่มลบแล้วเด้ง Modal แทนที่จะลบเลย
         const renderDeleteButton = function(instance, cell, col, row, val, label, cellName) {
-            // ถ้าเป็นคอลัมน์สุดท้ายของตาราง ให้แสดงปุ่มถังขยะ
             let totalCols = document.getElementById(instance.id).jexcel.options.columns.length;
             if (col == totalCols - 1) {
-                cell.innerHTML = `<button onclick="document.getElementById('${instance.id}').jexcel.deleteRow(${row})" title="ลบบรรทัดนี้" class="text-red-500 font-bold hover:text-red-800 text-lg">🗑️</button>`;
+                cell.innerHTML = `<button onclick="promptDeleteRow('${instance.id}', ${row})" title="ลบบรรทัดนี้" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 text-lg transition">🗑️</button>`;
                 cell.style.textAlign = 'center';
             }
         };
+
+        // 🌟 ฟังก์ชันสำหรับเตรียมข้อมูลใส่ Modal ยืนยันการลบ
+        function promptDeleteRow(instanceId, rowIdx) {
+            const table = document.getElementById(instanceId).jexcel;
+            const rowData = table.getRowData(rowIdx);
+            
+            let typeName = "อุปกรณ์";
+            if (instanceId === 'spreadsheet-cpu') typeName = "CPU คอมพิวเตอร์";
+            if (instanceId === 'spreadsheet-mon') typeName = "จอมอนิเตอร์";
+            if (instanceId === 'spreadsheet-prn') typeName = "เครื่องพิมพ์";
+
+            // สกัดข้อมูล (สมมติคอลัมน์เหมือนกัน: 1=User, 2=Brand, 3=Model, 4=S/N)
+            let user = rowData[1] || '-';
+            let brand = rowData[2] || '';
+            let model = rowData[3] || '';
+            let sn = rowData[4] || '-';
+            
+            let displayStr = `ผู้ใช้: ${user} | ${brand} ${model} (S/N: ${sn})`;
+            
+            // ตรวจสอบถ้าเป็นแถวว่าง
+            if(!rowData[1] && !rowData[2] && !rowData[3] && !rowData[4]) {
+                displayStr = "แถวว่าง (ไม่มีข้อมูล)";
+            }
+
+            document.getElementById('deleteDetailText').innerText = `[${typeName}] ${displayStr}`;
+            
+            rowToDelete = { instanceId, rowIdx }; // เก็บค่าไว้รอผู้ใช้ยืนยัน
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+            document.getElementById('deleteConfirmModal').classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            rowToDelete = null;
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+            document.getElementById('deleteConfirmModal').classList.remove('flex');
+        }
+
+        // 🌟 ฟังก์ชันที่ทำงานเมื่อกดยืนยันใน Modal
+        function executeDeleteRow() {
+            if (rowToDelete) {
+                const table = document.getElementById(rowToDelete.instanceId).jexcel;
+                table.deleteRow(rowToDelete.rowIdx);
+                showToast("ลบอุปกรณ์ออกจากตารางแล้ว (โปรดบันทึกฐานข้อมูลเพื่อยืนยัน)", "success");
+            }
+            closeDeleteModal();
+        }
+
+        // 🌟 ฟังก์ชันเพิ่มแถวใหม่
+        function addNewRow(instanceId) {
+            const table = document.getElementById(instanceId).jexcel;
+            table.insertRow(); // แทรกบรรทัดล่างสุด
+            showToast("เพิ่มบรรทัดใหม่แล้ว", "success");
+        }
 
         function initSpreadsheets(dbData) {
             document.getElementById('spreadsheet-cpu').innerHTML = '';
@@ -197,7 +323,7 @@
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'dropdown', title: 'ระบบเชื่อมต่อ', width: 150, source: connectionOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
-                    { type: 'html', title: 'ลบ', width: 60, readOnly: true } // เพิ่มคอลัมน์ลบ
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
                 ],
                 minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
                 updateTable: renderDeleteButton
@@ -213,7 +339,7 @@
                     { type: 'text', title: 'S/N จอ', width: 160 },
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
-                    { type: 'html', title: 'ลบ', width: 60, readOnly: true } // เพิ่มคอลัมน์ลบ
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
                 ],
                 minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
                 updateTable: renderDeleteButton
@@ -230,7 +356,7 @@
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'dropdown', title: 'ระบบเชื่อมต่อ', width: 150, source: connectionOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
-                    { type: 'html', title: 'ลบ', width: 60, readOnly: true } // เพิ่มคอลัมน์ลบ
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
                 ],
                 minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
                 updateTable: renderDeleteButton
@@ -280,13 +406,13 @@
             
             let diff = calculateDiff();
             let diffHtml = '';
-            pendingLogs = []; // รีเซ็ต Log เตรียมส่งเข้า API
+            pendingLogs = [];
 
             if (diff.added.length === 0 && diff.removed.length === 0) {
                 diffHtml = `
                     <div class="flex flex-col items-center justify-center p-8 text-gray-400">
                         <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="text-lg">ไม่มีการเปลี่ยนแปลงข้อมูล</p>
+                        <p class="text-lg font-semibold">ไม่มีการเปลี่ยนแปลงข้อมูล</p>
                     </div>`;
             } else {
                 if (diff.added.length > 0) {
@@ -297,7 +423,7 @@
                         </p><ul class="list-disc pl-5 space-y-1 text-green-800">`;
                     diff.added.forEach(item => {
                         diffHtml += `<li>${item}</li>`;
-                        pendingLogs.push({ action: 'เพิ่ม/อัปเดต', detail: item }); // เก็บลง Log
+                        pendingLogs.push({ action: 'เพิ่ม/อัปเดต', detail: item });
                     });
                     diffHtml += `</ul></div>`;
                 }
@@ -310,7 +436,7 @@
                         </p><ul class="list-disc pl-5 space-y-1 text-red-800">`;
                     diff.removed.forEach(item => {
                         diffHtml += `<li>${item}</li>`;
-                        pendingLogs.push({ action: 'ลบออก', detail: item }); // เก็บลง Log
+                        pendingLogs.push({ action: 'ลบออก', detail: item });
                     });
                     diffHtml += `</ul></div>`;
                 }
@@ -335,7 +461,6 @@
             try {
                 const dbKey = `ADP_${currentGroup}_${currentStation}`;
                 
-                // หั่นคอลัมน์สุดท้าย (ปุ่มลบ) ทิ้งก่อนส่งเข้า Database 
                 const newPayload = {
                     cpu: tableCPU.getData().map(row => row.slice(0, -1)),
                     mon: tableMon.getData().map(row => row.slice(0, -1)),
@@ -348,15 +473,15 @@
                     body: JSON.stringify({
                         key: dbKey,
                         value: JSON.stringify(newPayload),
-                        logs: pendingLogs // ส่ง Log ไปหลังบ้านด้วย!
+                        logs: pendingLogs 
                     })
                 });
 
                 originalDbData = JSON.parse(JSON.stringify(newPayload));
-                alert(`บันทึกข้อมูลและประวัติการแก้ไขสำเร็จแล้ว!`);
+                showToast(`บันทึกข้อมูล ${currentStation} สำเร็จ!`); // 🌟 เปลี่ยนเป็น Toast
             } catch (error) {
                 console.error("Error saving:", error);
-                alert("ไม่สามารถบันทึกข้อมูลได้");
+                showToast("ไม่สามารถบันทึกข้อมูลได้", "error"); // 🌟 เปลี่ยนเป็น Toast
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
@@ -367,7 +492,6 @@
             if (!tableCPU || !tableMon || !tablePrn) return;
             const wb = XLSX.utils.book_new();
 
-            // ตัดคอลัมน์สุดท้ายออกตอน Export ด้วย จะได้ไม่มีช่องว่างแปลกๆ ติดไป
             const headerCPU = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
             const wsCPU = XLSX.utils.aoa_to_sheet([...headerCPU, ...tableCPU.getData().map(row => row.slice(0, -1))]);
             XLSX.utils.book_append_sheet(wb, wsCPU, "คอมพิวเตอร์");
@@ -381,6 +505,7 @@
             XLSX.utils.book_append_sheet(wb, wsPrn, "เครื่องพิมพ์");
 
             XLSX.writeFile(wb, `ADP_${currentGroup}_${currentStation}.xlsx`);
+            showToast("ส่งออกไฟล์ Excel สำเร็จ!"); // 🌟 แจ้งเตือนเมื่อโหลดเสร็จ
         }
     </script>
 </body>
