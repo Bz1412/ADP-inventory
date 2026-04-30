@@ -225,51 +225,57 @@
                 return;
             }
 
-            document.getElementById('loadingText').innerText = 'กำลังค้นหาฐานข้อมูลทั้งหมด...';
+            document.getElementById('loadingText').innerText = 'กำลังค้นหาจากทุกสถานี...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('flex');
 
             try {
-                // เราส่ง key เป็น action=search ไปที่ API ของเรา (ต้องไปแก้ Google Script ด้วย แต่ผมใช้ทริคดึงข้อมูลทีละตัวในฝั่ง Client เพื่อความชัวร์)
-                let allResults = [];
+                // ยิง API แค่ 1 ครั้ง เพื่อดึงข้อมูลทั้งหมด (ALL_DATA)
+                const response = await fetch(`${API_URL}?key=ALL_DATA`);
+                const result = await response.json();
                 
-                // วนลูปดึงข้อมูลทุกสถานี (อาจจะช้านิดนึง แต่ได้ของชัวร์)
-                for (let group of groupOrder) {
-                    for (let station of inventoryGroups[group]) {
-                        try {
-                            const dbKey = `ADP_${group}_${station}`;
-                            const response = await fetch(`${API_URL}?key=${dbKey}`);
-                            const result = await response.json();
-                            
-                            if (result.value) {
-                                const dbData = JSON.parse(result.value);
-                                
-                                // เช็คในตาราง CPU
-                                dbData.cpu.forEach(row => {
-                                    if (row.join(' ').toLowerCase().includes(query)) {
-                                        allResults.push(createSearchRowHtml(group, station, 'CPU', row));
-                                    }
-                                });
-                                // เช็คในตารางจอ
-                                dbData.mon.forEach(row => {
-                                    if (row.join(' ').toLowerCase().includes(query)) {
-                                        allResults.push(createSearchRowHtml(group, station, 'จอ', row));
-                                    }
-                                });
-                                // เช็คในตารางปรินเตอร์
-                                dbData.prn.forEach(row => {
-                                    if (row.join(' ').toLowerCase().includes(query)) {
-                                        allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row));
-                                    }
-                                });
-                            }
-                        } catch (e) {
-                            console.log(`ข้ามสถานี ${station}`);
+                let allResults = [];
+
+                if (result.value) {
+                    const allRecords = result.value; // เป็นก้อนข้อมูลของทุกสถานี
+                    
+                    // วนลูปหาจากก้อนข้อมูลนี้แทนการยิง API
+                    for (const [dbKey, jsonValue] of Object.entries(allRecords)) {
+                        // แยกชื่อกลุ่มและสถานีออกมาจาก Key เช่น ADP_ตะวันออก_อรัญประเทศ
+                        const parts = dbKey.split('_');
+                        if (parts.length < 3) continue;
+                        const group = parts[1];
+                        const station = parts[2];
+                        
+                        const dbData = JSON.parse(jsonValue);
+                        
+                        // ค้นในตาราง CPU
+                        if (dbData.cpu) {
+                            dbData.cpu.forEach(row => {
+                                if (row.join(' ').toLowerCase().includes(query)) {
+                                    allResults.push(createSearchRowHtml(group, station, 'CPU', row));
+                                }
+                            });
+                        }
+                        // ค้นในตาราง จอ
+                        if (dbData.mon) {
+                            dbData.mon.forEach(row => {
+                                if (row.join(' ').toLowerCase().includes(query)) {
+                                    allResults.push(createSearchRowHtml(group, station, 'จอ', row));
+                                }
+                            });
+                        }
+                        // ค้นในตาราง เครื่องพิมพ์
+                        if (dbData.prn) {
+                            dbData.prn.forEach(row => {
+                                if (row.join(' ').toLowerCase().includes(query)) {
+                                    allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row));
+                                }
+                            });
                         }
                     }
                 }
 
-                // แสดงผลลัพธ์
                 const tbody = document.getElementById('searchTableBody');
                 if (allResults.length > 0) {
                     tbody.innerHTML = allResults.join('');
