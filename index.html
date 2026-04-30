@@ -12,8 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- โหลดไลบรารีสร้าง QR Code -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- 🌟 เปลี่ยนมาใช้ QRious ที่รองรับภาษาไทย 100% -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
     <style>
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
@@ -25,14 +25,26 @@
         .toast-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s ease-out; }
         .toast-exit { transform: translateX(100%); opacity: 0; transition: all 0.3s ease-in; }
 
-        /* 🌟 CSS เฉพาะสำหรับตอนกดสั่งปริ้นต์ QR Code 🌟 */
+        /* 🌟 CSS สำหรับตั้งค่าการสั่งปริ้นต์ (Print Media) 🌟 */
         @media print {
-            body * { visibility: hidden; } 
-            #printArea, #printArea * { visibility: visible; } 
-            #printArea { position: absolute; left: 0; top: 0; width: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px; padding: 10px; margin: 0; }
-            .no-print { display: none !important; }
+            body * { visibility: hidden; } /* ซ่อนของทุกอย่างบนเว็บ */
+            #printArea, #printArea * { visibility: visible; } /* โชว์แค่พื้นที่ QR Code */
+            #printArea { 
+                position: absolute !important; 
+                left: 0 !important; 
+                top: 0 !important; 
+                opacity: 1 !important; 
+                z-index: 9999 !important; 
+                width: 100%; 
+                display: flex !important; 
+                flex-wrap: wrap !important; 
+                gap: 15px !important; 
+                padding: 10px; 
+            }
+            /* บังคับให้เบราว์เซอร์ปริ้นต์สีดำของป้าย */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .qr-label { page-break-inside: avoid; }
+            .qr-label { page-break-inside: avoid; border: 1px solid #000; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -45,8 +57,8 @@
         <p id="loadingText" class="text-white font-bold text-lg">กำลังประมวลผล...</p>
     </div>
 
-    <!-- 🖨️ พื้นที่สำหรับ Print QR Code จะโดนซ่อนในหน้าเว็บปกติ 🖨️ -->
-    <div id="printArea" class="hidden no-print"></div>
+    <!-- 🖨️ พื้นที่สำหรับ Print QR Code (จะมองไม่เห็นในหน้าจอปกติ แต่โผล่ตอนกดปริ้นต์) -->
+    <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print"></div>
 
     <!-- Modal ลบ -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
@@ -80,9 +92,7 @@
     <div id="monthlyConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="bg-purple-50 p-4 border-b border-purple-200">
-                <h3 class="text-xl font-bold text-purple-800 flex items-center gap-2">
-                    <span id="monthlyModalTitle">สรุปรายงานสถานภาพประจำเดือน</span>
-                </h3>
+                <h3 class="text-xl font-bold text-purple-800 flex items-center gap-2"><span id="monthlyModalTitle">สรุปรายงานสถานภาพประจำเดือน</span></h3>
                 <p class="text-purple-700 mt-1 font-semibold" id="monthlyModalSubtitle">กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน</p>
             </div>
             <div id="monthlySummaryContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm"></div>
@@ -93,15 +103,15 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal สำหรับพรีวิว QR Code 🌟 -->
+    <!-- 🌟 Modal สำหรับพรีวิว QR Code ก่อนสั่งปริ้นต์ 🌟 -->
     <div id="qrPreviewModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="bg-blue-50 p-4 border-b border-blue-200 flex justify-between items-center">
                 <h3 class="text-xl font-bold text-blue-800 flex items-center gap-2">🖨️ ตัวอย่าง QR Code (พร้อมปริ้นต์)</h3>
                 <button onclick="closeQrModal()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
             </div>
-            <div id="qrPreviewContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-100 flex flex-wrap gap-4 justify-center">
-                <!-- QR Code จะแสดงที่นี่ -->
+            <!-- พื้นที่แสดงตัวอย่างป้าย QR สติ๊กเกอร์ -->
+            <div id="qrPreviewContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-100 flex flex-wrap gap-4 justify-center items-start">
             </div>
             <div class="bg-white p-4 border-t flex justify-end gap-3">
                 <button onclick="closeQrModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 bg-gray-200 hover:bg-gray-300">ปิดหน้าต่าง</button>
@@ -119,6 +129,7 @@
         </div>
     </nav>
 
+    <!-- Dashboard -->
     <div id="homePage" class="max-w-7xl mx-auto p-6 mt-4 no-print">
         <div class="mb-4 flex justify-end">
             <button onclick="exportAllDataToExcel()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-indigo-700 font-bold flex items-center gap-2 transition transform hover:-translate-y-1">
@@ -141,6 +152,7 @@
             </div>
         </div>
 
+        <!-- Search -->
         <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-blue-600 mb-8">
             <h2 class="text-xl font-bold text-blue-900 mb-4">🔍 ค้นหาอุปกรณ์ข้ามสถานี</h2>
             <div class="flex flex-col md:flex-row gap-4">
@@ -163,6 +175,7 @@
         <div id="indexPage"></div>
     </div>
 
+    <!-- ตารางการทำงาน -->
     <div id="editorPage" class="max-w-full mx-auto p-6 mt-4 hidden bg-transparent m-4 no-print">
         <div class="bg-white p-6 rounded-lg shadow mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
@@ -247,9 +260,7 @@
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json();
                 let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0; let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
-
                 groupOrder.forEach(g => inventoryGroups[g].forEach(s => { const badge = document.getElementById(`badge_${g}_${s}`); if(badge) badge.outerHTML = getMonthBadge(null).replace('<span', `<span id="badge_${g}_${s}"`); }));
-
                 if (result.value) {
                     globalAllDataCache = result.value; 
                     for (const [dbKey, jsonValue] of Object.entries(result.value)) {
@@ -259,10 +270,7 @@
                         totalCPU += countItems(dbData.cpu); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
                     }
                 }
-                document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc;
-                document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statMon').innerText = totalMon;
-                document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
-
+                document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc; document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statMon').innerText = totalMon; document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
                 const ctx = document.getElementById('statusChart').getContext('2d'); if(myChart) myChart.destroy();
                 myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง'], datasets: [{ data: [statCounts['ปกติ'], statCounts['ชำรุด'], statCounts['สำรอง']], backgroundColor: ['#22c55e', '#ef4444', '#eab308'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
             } catch (error) { console.error(error); document.getElementById('statTotal').innerText = "Error"; }
@@ -290,9 +298,7 @@
         }
 
         function createSearchRowHtml(g, s, t, r) {
-            let badge = `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded">${r[5]||'-'}</span>`;
-            if(r[5]==='ปกติ') badge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded">${r[5]}</span>`;
-            if(r[5]==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded">${r[5]}</span>`;
+            let badge = `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded">${r[5]||'-'}</span>`; if(r[5]==='ปกติ') badge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded">${r[5]}</span>`; if(r[5]==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded">${r[5]}</span>`;
             return `<tr class="border-b hover:bg-gray-50"><td class="p-3 border font-semibold text-blue-800">${g} > ${s}</td><td class="p-3 border">${t}</td><td class="p-3 border">${r[1]||'-'}</td><td class="p-3 border">${r[2]||''} ${r[3]||''}</td><td class="p-3 border font-mono bg-yellow-50">${r[4]||'-'}</td><td class="p-3 border text-center">${badge}</td></tr>`;
         }
 
@@ -309,16 +315,11 @@
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                const btnConfirm = document.getElementById('btnConfirmMonth');
-                btnConfirm.classList.remove('hidden'); 
+                const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.classList.remove('hidden'); 
                 if (dbData.lastConfirmed === currentMonthStr) { 
-                    isEditingConfirmedReport = true;
-                    btnConfirm.className = "bg-orange-500 text-white px-4 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2";
-                    document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
+                    isEditingConfirmedReport = true; btnConfirm.className = "bg-orange-500 text-white px-4 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
                 } else { 
-                    isEditingConfirmedReport = false;
-                    btnConfirm.className = "bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 font-bold flex items-center gap-2";
-                    document.getElementById('btnConfirmText').innerText = "ยืนยันรายงานประจำเดือน";
+                    isEditingConfirmedReport = false; btnConfirm.className = "bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "ยืนยันรายงานประจำเดือน";
                 }
                 initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
@@ -327,13 +328,13 @@
 
         document.getElementById('btnHome').onclick = () => window.location.reload();
 
+        // 🌟 ปรับปรุงปุ่ม "จัดการ" ให้แสดง 2 ปุ่ม (ปริ้นต์ QR / ลบ) 🌟
         const renderManageBtn = function(i, c, col, r) { 
             let tCols = document.getElementById(i.id).jexcel.options.columns.length; 
             if (col == tCols - 1) { 
-                c.innerHTML = `
-                <div class="flex justify-center gap-1">
-                    <button onclick="showSingleQR('${i.id}', ${r})" title="พิมพ์ QR ชิ้นนี้" class="text-indigo-600 font-bold hover:bg-indigo-100 rounded px-1 text-lg">🖨️</button>
-                    <button onclick="promptDeleteRow('${i.id}', ${r})" title="ลบ" class="text-red-500 font-bold hover:bg-red-100 rounded px-1 text-lg">🗑️</button>
+                c.innerHTML = `<div class="flex justify-center gap-2">
+                    <button onclick="showSingleQR('${i.id}', ${r})" title="พิมพ์ QR Code (ชิ้นนี้)" class="text-indigo-600 font-bold hover:bg-indigo-100 rounded px-2 py-1 text-lg border border-indigo-200 shadow-sm transition">🖨️</button>
+                    <button onclick="promptDeleteRow('${i.id}', ${r})" title="ลบอุปกรณ์" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 py-1 text-lg border border-red-200 shadow-sm transition">🗑️</button>
                 </div>`; 
                 c.style.textAlign = 'center'; 
             } 
@@ -354,10 +355,10 @@
 
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 80, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 80, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 80, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 80, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
         }
 
         function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ผู้ใช้: ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) | สถานะ: ${r[5]||'-'}`); }); return items; }
@@ -413,7 +414,7 @@
 
         async function executeConfirmMonth() {
             closeMonthlyModal(); const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงานประจำเดือน', detail: `✏️ ยืนยันแก้ไขข้อมูลประจำเดือน ${currentMonthStr} อีกครั้ง` }] : [{ action: 'ส่งรายงานประจำเดือน', detail: `✅ ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
+            pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงานประจำเดือน', detail: `✏️ ยืนยันแก้ไขข้อมูลประจำเดือน ${currentMonthStr}` }] : [{ action: 'ส่งรายงานประจำเดือน', detail: `✅ ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
             document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
@@ -461,107 +462,82 @@
             } catch (error) { console.error(error); showToast("เกิดข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 1. ฟังก์ชันแสดงและพิมพ์ QR Code เดี่ยว 🌟
+        // 🌟 ฟังก์ชันสร้างโครงสร้างป้าย QR Code แบบสวยงาม (ลดความซ้ำซ้อนของโค้ด) 🌟
+        function createQRLabelElement(type, brand, model, sn, user, dateStr) {
+            let qrTextContent = `สถานี: ${currentStation}\nประเภท: ${type}\nยี่ห้อ/รุ่น: ${brand} ${model}\nS/N: ${sn}\nผู้ใช้: ${user}\nวันที่ออก QR: ${dateStr}`;
+            
+            let labelDiv = document.createElement('div');
+            // ออกแบบป้ายสติ๊กเกอร์ขนาด 5x5 ซม. โดยประมาณ
+            labelDiv.className = 'qr-label flex flex-col items-center justify-center p-2 bg-white border border-gray-400 rounded-sm w-[4.5rem] h-[5.5rem] sm:w-48 sm:h-56 m-1';
+            
+            let titleDiv = document.createElement('div');
+            titleDiv.className = 'text-[9px] sm:text-xs font-black text-center mb-1 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide leading-tight truncate';
+            titleDiv.innerText = `${currentStation}`;
+
+            // วาดรูปด้วย QRious
+            let qrCanvas = document.createElement('canvas');
+            new QRious({ element: qrCanvas, value: qrTextContent, size: 100, level: 'M' }); // ใช้ Level M เพื่อให้อ่านง่ายขึ้น
+            
+            let qrImg = document.createElement('img');
+            qrImg.src = qrCanvas.toDataURL();
+            qrImg.className = "mx-auto border border-gray-200 p-1 w-16 h-16 sm:w-28 sm:h-28";
+
+            let textDiv = document.createElement('div');
+            textDiv.className = 'text-[8px] sm:text-[10px] text-center mt-1 sm:mt-2 font-bold text-gray-800 leading-tight w-full truncate';
+            textDiv.innerHTML = `<span class="text-blue-700 uppercase tracking-widest">${type}</span><br>S/N: <span class="font-mono">${sn}</span>`;
+
+            labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrImg); labelDiv.appendChild(textDiv);
+            return labelDiv;
+        }
+
+        // 🌟 1. ฟังก์ชันพิมพ์ QR Code รายชิ้น 🌟
         function showSingleQR(instanceId, rowIdx) {
             const table = document.getElementById(instanceId).jexcel;
             const rData = table.getRowData(rowIdx);
             
-            if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) {
-                showToast("ไม่สามารถสร้าง QR Code สำหรับแถวว่างได้", "error"); return;
-            }
+            if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR Code สำหรับแถวว่างได้", "error"); return; }
             
             let type = instanceId==='spreadsheet-cpu'?"CPU":instanceId==='spreadsheet-mon'?"จอ":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
             let user = rData[1] || '-'; let brand = rData[2] || '-'; let model = rData[3] || '-'; let sn = rData[4] || '-';
             let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
 
-            const printArea = document.getElementById('printArea');
-            const previewArea = document.getElementById('qrPreviewContent');
+            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent');
             printArea.innerHTML = ''; previewArea.innerHTML = '';
 
-            let qrTextContent = `สถานี: ${currentStation}\nประเภท: ${type}\nยี่ห้อ/รุ่น: ${brand} ${model}\nS/N: ${sn}\nผู้ใช้: ${user}\nวันที่ออก QR: ${dateStr}`;
+            let labelElement = createQRLabelElement(type, brand, model, sn, user, dateStr);
             
-            // 🌟 2. วางโครงสร้างกล่องไว้บน DOM ก่อนวาด QR โค้ด เพื่อแก้ปัญหาค้าง 🌟
-            const createLabel = (container) => {
-                let labelDiv = document.createElement('div');
-                labelDiv.className = 'qr-label flex flex-col items-center justify-center p-3 bg-white border-2 border-gray-800 rounded shadow-md w-48 h-56 m-auto bg-white';
+            previewArea.appendChild(labelElement);
+            printArea.appendChild(labelElement.cloneNode(true));
 
-                let titleDiv = document.createElement('div');
-                titleDiv.className = 'qr-title text-xs font-black text-center mb-2 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide';
-                titleDiv.innerText = `${currentGroup} > ${currentStation}`;
-
-                let qrDiv = document.createElement('div');
-
-                let textDiv = document.createElement('div');
-                textDiv.className = 'qr-text text-[10px] text-center mt-3 font-bold text-gray-800 leading-tight';
-                textDiv.innerHTML = `<span class="text-blue-700 uppercase tracking-widest">${type}</span><br>S/N: <span class="font-mono">${sn}</span><br>วันที่: ${dateStr}`;
-
-                labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrDiv); labelDiv.appendChild(textDiv);
-                
-                // แปะลง DOM ของจอ
-                container.appendChild(labelDiv);
-                
-                // ค่อยสั่งวาดรูป QR ลงไปในกล่องที่แปะแล้ว (กันบัค qrcodejs ค้าง)
-                new QRCode(qrDiv, { text: qrTextContent, width: 110, height: 110, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
-            };
-
-            createLabel(previewArea); // สำหรับดู
-            createLabel(printArea);   // สำหรับปริ้นต์
-
-            document.getElementById('qrPreviewModal').classList.remove('hidden');
-            document.getElementById('qrPreviewModal').classList.add('flex');
+            document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
 
-        // 🌟 3. ปรับการพิมพ์ QR ทั้งสถานีให้ใช้หลักการเดียวกัน 🌟
+        // 🌟 2. ฟังก์ชันพิมพ์ QR Code ทั้งสถานี 🌟
         function generateAllQRCodes() {
             if (!tableCPU) return;
-            const printArea = document.getElementById('printArea');
-            const previewArea = document.getElementById('qrPreviewContent');
+            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent');
             printArea.innerHTML = ''; previewArea.innerHTML = '';
-            let hasData = false;
-            let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+            let hasData = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
 
-            const createQR = (type, dataArray) => {
+            const appendQRs = (type, dataArray) => {
                 dataArray.forEach(r => {
                     if (r[1] || r[2] || r[3] || r[4]) {
                         hasData = true;
                         let user = r[1] || '-'; let brand = r[2] || '-'; let model = r[3] || '-'; let sn = r[4] || '-';
-                        let qrTextContent = `สถานี: ${currentStation}\nประเภท: ${type}\nยี่ห้อ/รุ่น: ${brand} ${model}\nS/N: ${sn}\nผู้ใช้: ${user}\nวันที่ออก QR: ${dateStr}`;
-                        
-                        const createLabel = (container) => {
-                            let labelDiv = document.createElement('div');
-                            labelDiv.className = 'qr-label flex flex-col items-center justify-center p-3 bg-white border-2 border-gray-800 rounded shadow-md w-48 h-56 bg-white';
-                            
-                            let titleDiv = document.createElement('div');
-                            titleDiv.className = 'qr-title text-xs font-black text-center mb-2 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide';
-                            titleDiv.innerText = `${currentGroup} > ${currentStation}`;
-
-                            let qrDiv = document.createElement('div');
-                            
-                            let textDiv = document.createElement('div');
-                            textDiv.className = 'qr-text text-[10px] text-center mt-3 font-bold text-gray-800 leading-tight';
-                            textDiv.innerHTML = `<span class="text-blue-700 uppercase tracking-widest">${type}</span><br>S/N: <span class="font-mono">${sn}</span><br>วันที่: ${dateStr}`;
-
-                            labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrDiv); labelDiv.appendChild(textDiv);
-                            
-                            container.appendChild(labelDiv); // แปะลง DOM ก่อน
-                            new QRCode(qrDiv, { text: qrTextContent, width: 110, height: 110, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.L });
-                        };
-
-                        createLabel(previewArea);
-                        createLabel(printArea);
+                        let labelElement = createQRLabelElement(type, brand, model, sn, user, dateStr);
+                        previewArea.appendChild(labelElement);
+                        printArea.appendChild(labelElement.cloneNode(true));
                     }
                 });
             };
-            createQR('CPU', tableCPU.getData()); createQR('จอ', tableMon.getData()); createQR('เครื่องพิมพ์', tablePrn.getData()); createQR('เครื่องมือพิเศษ', tableSpc.getData());
+
+            appendQRs('CPU', tableCPU.getData()); appendQRs('จอ', tableMon.getData()); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
 
             if (!hasData) { showToast("ไม่มีข้อมูลอุปกรณ์", "error"); return; }
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
 
-        function closeQrModal() {
-            document.getElementById('qrPreviewModal').classList.add('hidden');
-            document.getElementById('qrPreviewModal').classList.remove('flex');
-        }
+        function closeQrModal() { document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); }
 
         window.onload = loadDashboardStats;
     </script>
