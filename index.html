@@ -13,7 +13,6 @@
     <style>
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* สกอร์บาร์สำหรับ Modal */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -22,16 +21,14 @@
 </head>
 <body class="bg-slate-100 font-sans text-gray-800">
 
-    <!-- หน้าต่าง Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] hidden flex-col justify-center items-center backdrop-blur-sm">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-white font-bold text-lg">กำลังซิงค์ข้อมูลกับฐานข้อมูล...</p>
     </div>
 
-    <!-- ⚠️ หน้าต่าง Confirm แจ้งเตือนก่อนบันทึก -->
+    <!-- หน้าต่าง Confirm -->
     <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
-            <!-- Header -->
             <div class="bg-yellow-50 p-4 border-b border-yellow-200">
                 <h3 class="text-xl font-bold text-yellow-800 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -39,13 +36,7 @@
                 </h3>
                 <p class="text-yellow-700 mt-1 font-semibold">โปรดตรวจสอบข้อมูลอุปกรณ์ที่ เพิ่ม/ลด ให้ถูกต้องตามความเป็นจริง</p>
             </div>
-            
-            <!-- Content (แสดงรายการ Diff) -->
-            <div id="diffContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm">
-                <!-- ข้อมูลการเปลี่ยนแปลงจะถูกสร้างด้วย Javascript ตรงนี้ -->
-            </div>
-
-            <!-- Footer Buttons -->
+            <div id="diffContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm"></div>
             <div class="bg-white p-4 border-t flex justify-end gap-3">
                 <button onclick="closeConfirmModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 transition">ยกเลิก</button>
                 <button onclick="executeSaveData()" class="px-5 py-2 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition shadow-md">✅ ยืนยันบันทึกข้อมูล</button>
@@ -61,10 +52,8 @@
         </div>
     </nav>
 
-    <!-- หน้า Index -->
     <div id="indexPage" class="max-w-7xl mx-auto p-6 mt-4"></div>
 
-    <!-- หน้า จัดการข้อมูล -->
     <div id="editorPage" class="max-w-full mx-auto p-6 mt-4 hidden bg-transparent m-4">
         <div class="bg-white p-6 rounded-lg shadow mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
@@ -72,7 +61,6 @@
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
             <div class="space-x-2 flex">
-                <!-- กดปุ่มนี้จะไปเรียกหน้าต่าง Confirm ก่อน -->
                 <button onclick="prepareSave()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -99,7 +87,6 @@
 
     <script>
         // ==========================================
-        // ⚠️ อย่าลืมนำ URL จาก Google Apps Script มาใส่ตรงนี้!
         const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         // ==========================================
 
@@ -120,9 +107,8 @@
         let currentGroup = '';
         let currentStation = '';
         let tableCPU = null, tableMon = null, tablePrn = null;
-
-        // 🌟 ตัวแปรใหม่สำหรับเก็บข้อมูลดั้งเดิมก่อนมีการแก้ไข
         let originalDbData = { cpu: [], mon: [], prn: [] };
+        let pendingLogs = []; // เก็บ Log รอส่งขึ้น Server
 
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
@@ -147,14 +133,11 @@
         async function openStation(groupName, stationName) {
             currentGroup = groupName;
             currentStation = stationName;
-            
             document.getElementById('indexPage').classList.add('hidden');
             document.getElementById('editorPage').classList.remove('hidden');
             document.getElementById('btnHome').classList.remove('hidden');
-            
             document.getElementById('currentStationTitle').innerText = `📍 สถานี/ชุด: ${stationName}`;
             document.getElementById('currentGroupSubtitle').innerText = `กลุ่มพื้นที่: ${groupName}`;
-            
             document.getElementById('loadingText').innerText = 'กำลังโหลดข้อมูลจากฐานข้อมูล...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('flex');
@@ -165,17 +148,13 @@
                 const result = await response.json();
                 
                 let dbData = { cpu: [[]], mon: [[]], prn: [[]] };
-                if (result.value) {
-                    dbData = JSON.parse(result.value);
-                }
+                if (result.value) { dbData = JSON.parse(result.value); }
 
-                // 🌟 เก็บข้อมูลฉบับดั้งเดิมไว้ (Copy clone กันการโดนอ้างอิง)
                 originalDbData = JSON.parse(JSON.stringify(dbData));
-
                 initSpreadsheets(dbData);
             } catch (error) {
-                console.error("Error loading data:", error);
-                alert("เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาตรวจสอบลิงก์ API หรือลองใหม่อีกครั้ง");
+                console.error(error);
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
                 initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]] });
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
@@ -187,10 +166,19 @@
             document.getElementById('indexPage').classList.remove('hidden');
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('btnHome').classList.add('hidden');
-            
             if (tableCPU) tableCPU.destroy();
             if (tableMon) tableMon.destroy();
             if (tablePrn) tablePrn.destroy();
+        };
+
+        // ฟังก์ชันสร้างปุ่มลบ
+        const renderDeleteButton = function(instance, cell, col, row, val, label, cellName) {
+            // ถ้าเป็นคอลัมน์สุดท้ายของตาราง ให้แสดงปุ่มถังขยะ
+            let totalCols = document.getElementById(instance.id).jexcel.options.columns.length;
+            if (col == totalCols - 1) {
+                cell.innerHTML = `<button onclick="document.getElementById('${instance.id}').jexcel.deleteRow(${row})" title="ลบบรรทัดนี้" class="text-red-500 font-bold hover:text-red-800 text-lg">🗑️</button>`;
+                cell.style.textAlign = 'center';
+            }
         };
 
         function initSpreadsheets(dbData) {
@@ -209,8 +197,10 @@
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'dropdown', title: 'ระบบเชื่อมต่อ', width: 150, source: connectionOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true } // เพิ่มคอลัมน์ลบ
                 ],
-                minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+                minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+                updateTable: renderDeleteButton
             });
 
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), {
@@ -223,8 +213,10 @@
                     { type: 'text', title: 'S/N จอ', width: 160 },
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true } // เพิ่มคอลัมน์ลบ
                 ],
-                minDimensions: [7, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+                minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+                updateTable: renderDeleteButton
             });
 
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), {
@@ -238,19 +230,18 @@
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'dropdown', title: 'ระบบเชื่อมต่อ', width: 150, source: connectionOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true } // เพิ่มคอลัมน์ลบ
                 ],
-                minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+                minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+                updateTable: renderDeleteButton
             });
         }
 
-        // 🌟 ฟังก์ชันช่วยสร้างข้อความสรุปอุปกรณ์แต่ละแถว
         function extractValidItems(dataArray, deviceType) {
             if (!dataArray) return [];
             let items = [];
             dataArray.forEach(row => {
-                // เช็คว่าแถวนั้นมีข้อมูลอย่างใดอย่างหนึ่งหรือไม่ (ดักแถวว่าง)
                 if (row[1] || row[2] || row[3] || row[4]) {
-                    // รูปแบบ: [ประเภท] ผู้ใช้: xxx | ยี่ห้อ รุ่น (S/N) | สถานะ: xxx
                     let str = `[${deviceType}] ผู้ใช้: ${row[1] || '-'} | ${row[2] || '-'} ${row[3] || '-'} (S/N: ${row[4] || '-'}) | สถานะ: ${row[5] || '-'}`;
                     items.push(str.trim());
                 }
@@ -258,7 +249,6 @@
             return items;
         }
 
-        // 🌟 ฟังก์ชันคำนวณความแตกต่าง (อะไรเพิ่ม อะไรลบ)
         function calculateDiff() {
             let oldItems = [
                 ...extractValidItems(originalDbData.cpu, 'CPU'),
@@ -275,46 +265,40 @@
             let added = [];
             let tempOld = [...oldItems];
 
-            // ตรวจสอบของที่เพิ่มใหม่
             newItems.forEach(item => {
                 let idx = tempOld.indexOf(item);
-                if (idx > -1) {
-                    tempOld.splice(idx, 1); // ถ้ามีทั้งเก่าและใหม่ คือไม่ได้แก้ ให้เอาออกจากการลบ
-                } else {
-                    added.push(item); // ถ้าไม่มีในของเก่า แปลว่าถูกเพิ่มมาใหม่ (หรือถูกแก้ข้อมูล)
-                }
+                if (idx > -1) { tempOld.splice(idx, 1); } 
+                else { added.push(item); }
             });
             
-            // ของเก่าที่เหลืออยู่ใน tempOld คือโดนลบทิ้ง (หรือโดนแก้ข้อมูล)
             let removed = tempOld;
-
             return { added, removed };
         }
 
-        // 🌟 ฟังก์ชันเปิดหน้าต่างเตรียม Save
         function prepareSave() {
             if (!tableCPU || !tableMon || !tablePrn) return;
             
             let diff = calculateDiff();
             let diffHtml = '';
-            const diffContainer = document.getElementById('diffContent');
+            pendingLogs = []; // รีเซ็ต Log เตรียมส่งเข้า API
 
             if (diff.added.length === 0 && diff.removed.length === 0) {
                 diffHtml = `
                     <div class="flex flex-col items-center justify-center p-8 text-gray-400">
                         <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <p class="text-lg">ไม่มีการเปลี่ยนแปลงข้อมูล</p>
-                        <p class="text-sm">(จำนวนและรายละเอียดอุปกรณ์เท่าเดิม)</p>
                     </div>`;
             } else {
                 if (diff.added.length > 0) {
                     diffHtml += `<div class="mb-4 bg-green-50 p-4 rounded border border-green-200">
                         <p class="font-bold text-green-700 mb-2 flex items-center gap-2">
                             <span class="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">+</span>
-                            รายการอุปกรณ์ที่เพิ่มใหม่ / แก้ไขข้อมูล:
-                        </p>
-                        <ul class="list-disc pl-5 space-y-1 text-green-800">`;
-                    diff.added.forEach(item => diffHtml += `<li>${item}</li>`);
+                            รายการเพิ่มใหม่ / แก้ไขข้อมูล:
+                        </p><ul class="list-disc pl-5 space-y-1 text-green-800">`;
+                    diff.added.forEach(item => {
+                        diffHtml += `<li>${item}</li>`;
+                        pendingLogs.push({ action: 'เพิ่ม/อัปเดต', detail: item }); // เก็บลง Log
+                    });
                     diffHtml += `</ul></div>`;
                 }
 
@@ -322,44 +306,40 @@
                     diffHtml += `<div class="bg-red-50 p-4 rounded border border-red-200">
                         <p class="font-bold text-red-700 mb-2 flex items-center gap-2">
                             <span class="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">-</span>
-                            รายการอุปกรณ์ที่ถูกนำออก / ข้อมูลเดิม:
-                        </p>
-                        <ul class="list-disc pl-5 space-y-1 text-red-800">`;
-                    diff.removed.forEach(item => diffHtml += `<li>${item}</li>`);
+                            รายการที่ถูกลบ / ข้อมูลเดิม:
+                        </p><ul class="list-disc pl-5 space-y-1 text-red-800">`;
+                    diff.removed.forEach(item => {
+                        diffHtml += `<li>${item}</li>`;
+                        pendingLogs.push({ action: 'ลบออก', detail: item }); // เก็บลง Log
+                    });
                     diffHtml += `</ul></div>`;
                 }
             }
 
-            diffContainer.innerHTML = diffHtml;
+            document.getElementById('diffContent').innerHTML = diffHtml;
             document.getElementById('confirmModal').classList.remove('hidden');
             document.getElementById('confirmModal').classList.add('flex');
         }
 
-        // ปิด Modal
         function closeConfirmModal() {
             document.getElementById('confirmModal').classList.add('hidden');
             document.getElementById('confirmModal').classList.remove('flex');
         }
 
-        // 🌟 ฟังก์ชันบันทึกข้อมูลของจริง (รันหลังจากกดยืนยันใน Modal)
         async function executeSaveData() {
-            closeConfirmModal(); // ปิด Modal
-
-            if (!API_URL.startsWith('http')) {
-                alert("กรุณาใส่ URL ของ API ในโค้ดก่อนครับ!");
-                return;
-            }
-
-            document.getElementById('loadingText').innerText = 'กำลังบันทึกข้อมูลลงฐานข้อมูล...';
+            closeConfirmModal();
+            document.getElementById('loadingText').innerText = 'กำลังบันทึกข้อมูลพร้อม Logs...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('flex');
 
             try {
                 const dbKey = `ADP_${currentGroup}_${currentStation}`;
+                
+                // หั่นคอลัมน์สุดท้าย (ปุ่มลบ) ทิ้งก่อนส่งเข้า Database 
                 const newPayload = {
-                    cpu: tableCPU.getData(),
-                    mon: tableMon.getData(),
-                    prn: tablePrn.getData()
+                    cpu: tableCPU.getData().map(row => row.slice(0, -1)),
+                    mon: tableMon.getData().map(row => row.slice(0, -1)),
+                    prn: tablePrn.getData().map(row => row.slice(0, -1))
                 };
 
                 await fetch(API_URL, {
@@ -367,17 +347,16 @@
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         key: dbKey,
-                        value: JSON.stringify(newPayload)
+                        value: JSON.stringify(newPayload),
+                        logs: pendingLogs // ส่ง Log ไปหลังบ้านด้วย!
                     })
                 });
 
-                // สำคัญ: อัปเดตข้อมูลต้นฉบับใหม่หลังจากบันทึกสำเร็จ เพื่อให้การเทียบ Diff ครั้งต่อไปถูกต้อง
                 originalDbData = JSON.parse(JSON.stringify(newPayload));
-
-                alert(`บันทึกข้อมูลของ ${currentStation} ลงฐานข้อมูลสำเร็จแล้ว!`);
+                alert(`บันทึกข้อมูลและประวัติการแก้ไขสำเร็จแล้ว!`);
             } catch (error) {
-                console.error("Error saving data:", error);
-                alert("ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
+                console.error("Error saving:", error);
+                alert("ไม่สามารถบันทึกข้อมูลได้");
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
@@ -388,16 +367,17 @@
             if (!tableCPU || !tableMon || !tablePrn) return;
             const wb = XLSX.utils.book_new();
 
+            // ตัดคอลัมน์สุดท้ายออกตอน Export ด้วย จะได้ไม่มีช่องว่างแปลกๆ ติดไป
             const headerCPU = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
-            const wsCPU = XLSX.utils.aoa_to_sheet([...headerCPU, ...tableCPU.getData()]);
+            const wsCPU = XLSX.utils.aoa_to_sheet([...headerCPU, ...tableCPU.getData().map(row => row.slice(0, -1))]);
             XLSX.utils.book_append_sheet(wb, wsCPU, "คอมพิวเตอร์");
 
             const headerMon = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]];
-            const wsMon = XLSX.utils.aoa_to_sheet([...headerMon, ...tableMon.getData()]);
+            const wsMon = XLSX.utils.aoa_to_sheet([...headerMon, ...tableMon.getData().map(row => row.slice(0, -1))]);
             XLSX.utils.book_append_sheet(wb, wsMon, "จอมอนิเตอร์");
 
             const headerPrn = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อเครื่องพิมพ์", "รุ่นเครื่องพิมพ์", "S/N เครื่องพิมพ์", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
-            const wsPrn = XLSX.utils.aoa_to_sheet([...headerPrn, ...tablePrn.getData()]);
+            const wsPrn = XLSX.utils.aoa_to_sheet([...headerPrn, ...tablePrn.getData().map(row => row.slice(0, -1))]);
             XLSX.utils.book_append_sheet(wb, wsPrn, "เครื่องพิมพ์");
 
             XLSX.writeFile(wb, `ADP_${currentGroup}_${currentStation}.xlsx`);
