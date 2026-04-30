@@ -61,6 +61,26 @@
         </div>
     </div>
 
+    <!-- 🌟 ใหม่: Modal ยืนยันรายงานประจำเดือน 🌟 -->
+    <div id="monthlyConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="bg-purple-50 p-4 border-b border-purple-200">
+                <h3 class="text-xl font-bold text-purple-800 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    สรุปรายงานสถานภาพประจำเดือน
+                </h3>
+                <p class="text-purple-700 mt-1 font-semibold">กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน</p>
+            </div>
+            <div id="monthlySummaryContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm">
+                <!-- ข้อมูลสรุปจะถูกแทรกที่นี่ -->
+            </div>
+            <div class="bg-white p-4 border-t flex justify-end gap-3">
+                <button onclick="closeMonthlyModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 bg-gray-200 hover:bg-gray-300">ยกเลิก</button>
+                <button onclick="executeConfirmMonth()" class="px-5 py-2 rounded-lg font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-md">✅ ยืนยันส่งรายงาน</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">
@@ -72,6 +92,14 @@
     </nav>
 
     <div id="homePage" class="max-w-7xl mx-auto p-6 mt-4">
+        
+        <div class="mb-4 flex justify-end">
+            <button onclick="exportAllDataToExcel()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-indigo-700 font-bold flex items-center gap-2 transition transform hover:-translate-y-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                ดาวน์โหลด Excel รวมทุกสถานี
+            </button>
+        </div>
+
         <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="col-span-2 lg:col-span-4 bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex flex-col justify-center">
@@ -111,7 +139,6 @@
             </div>
         </div>
 
-        <!-- หน้า Index ที่มีแจ้งเตือน -->
         <div id="indexPage"></div>
     </div>
 
@@ -121,14 +148,13 @@
                 <h2 id="currentStationTitle" class="text-2xl font-bold text-blue-700">ชื่อสถานี</h2>
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
-            <!-- 🌟 เพิ่มปุ่มยืนยันรายงานประจำเดือน 🌟 -->
             <div class="space-x-2 flex flex-wrap gap-y-2 justify-end">
                 <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                     ยืนยันรายงานประจำเดือน
                 </button>
                 <button onclick="prepareSave()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
-                <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export Excel</button>
+                <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export Excel (สถานีนี้)</button>
             </div>
         </div>
 
@@ -163,8 +189,9 @@
 
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; 
-        let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null }; // 🌟 เก็บสถานะประจำเดือน
+        let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
+        let globalAllDataCache = null;
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
@@ -175,25 +202,18 @@
             setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // 🌟 สร้างฟังก์ชันคำนวณป้ายแจ้งเตือนสถานะประจำเดือน 🌟
         function getMonthBadge(lastConfirmedStr) {
             const now = new Date();
-            // สร้าง Format ปัจจุบัน เช่น "2026-04"
             const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             const currentDay = now.getDate();
 
-            if (lastConfirmedStr === currentMonthStr) {
-                return '<span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-bold border border-green-200">✅ ส่งรายงานแล้ว</span>';
-            } else {
-                if (currentDay <= 5) {
-                    return '<span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-bold border border-yellow-300">⚠️ รอส่งรายงาน (ด่วน)</span>';
-                } else {
-                    return '<span class="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700 font-bold border border-red-200">❌ ยังไม่ส่งรายงาน (เลยกำหนด)</span>';
-                }
+            if (lastConfirmedStr === currentMonthStr) { return '<span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-bold border border-green-200">✅ ส่งรายงานแล้ว</span>'; } 
+            else {
+                if (currentDay <= 5) { return '<span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-bold border border-yellow-300">⚠️ รอส่งรายงาน (ด่วน)</span>'; } 
+                else { return '<span class="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700 font-bold border border-red-200">❌ ยังไม่ส่งรายงาน (เลยกำหนด)</span>'; }
             }
         }
 
-        // สร้างปุ่มโครงสร้างหน้าแรก (ใส่ป้าย Loading ไว้ก่อน)
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
             const groupSection = document.createElement('div');
@@ -203,7 +223,6 @@
             inventoryGroups[groupName].forEach(station => {
                 const btn = document.createElement('div');
                 btn.className = "bg-slate-50 p-4 rounded-lg shadow-sm hover:shadow-md border border-gray-200 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-900 flex flex-col items-center justify-center gap-2 min-h-[90px]";
-                // 🌟 ใส่ Badge แจ้งเตือน 🌟
                 btn.innerHTML = `<span>📍 ${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-500">กำลังตรวจสอบ...</div>`; 
                 btn.onclick = () => openStation(groupName, station);
                 gridDiv.appendChild(btn);
@@ -217,17 +236,15 @@
                 let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0;
                 let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
 
-                // 🌟 รีเซ็ตป้ายทุกอันให้เป็น "ยังไม่ส่งรายงาน" ไปก่อน เผื่อสถานีไหนไม่เคยมีข้อมูล 🌟
                 groupOrder.forEach(g => inventoryGroups[g].forEach(s => {
                     const badge = document.getElementById(`badge_${g}_${s}`);
                     if(badge) badge.outerHTML = getMonthBadge(null).replace('<span', `<span id="badge_${g}_${s}"`);
                 }));
 
                 if (result.value) {
+                    globalAllDataCache = result.value; 
                     for (const [dbKey, jsonValue] of Object.entries(result.value)) {
                         const dbData = JSON.parse(jsonValue);
-                        
-                        // 🌟 อัปเดตป้ายแจ้งเตือนของสถานีนี้ 🌟
                         const parts = dbKey.split('_');
                         if(parts.length >= 3) {
                             const badge = document.getElementById(`badge_${parts[1]}_${parts[2]}`);
@@ -255,9 +272,9 @@
             if (!query) return showToast("กรุณาพิมพ์คำค้นหาก่อน", "error");
             document.getElementById('loadingText').innerText = 'กำลังค้นหา...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json(); let allResults = [];
-                if (result.value) {
-                    for (const [dbKey, jsonValue] of Object.entries(result.value)) {
+                let allResults = [];
+                if (globalAllDataCache) {
+                    for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
                         const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                         if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'CPU', row)); });
                         if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอ', row)); });
@@ -292,14 +309,10 @@
                 if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
-                // 🌟 ตรวจสอบว่าเดือนนี้กดส่งรายงานไปหรือยัง เพื่อซ่อน/โชว์ปุ่ม 🌟
                 const now = new Date();
                 const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                if (dbData.lastConfirmed === currentMonthStr) {
-                    document.getElementById('btnConfirmMonth').classList.add('hidden'); // ซ่อนปุ่มถ้ายืนยันแล้ว
-                } else {
-                    document.getElementById('btnConfirmMonth').classList.remove('hidden'); // โชว์ปุ่มถ้ายังไม่ยืนยัน
-                }
+                if (dbData.lastConfirmed === currentMonthStr) { document.getElementById('btnConfirmMonth').classList.add('hidden'); } 
+                else { document.getElementById('btnConfirmMonth').classList.remove('hidden'); }
 
                 initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
@@ -327,7 +340,7 @@
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
             tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อพริ้นเตอร์', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
         }
 
@@ -351,46 +364,84 @@
 
         function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
 
-        // 🌟 ฟังก์ชันทำงานเวลากดยืนยันส่งรายงานประจำเดือน 🌟
-        async function confirmMonthlyStatus() {
-            if(!confirm("คุณต้องการยืนยันว่าข้อมูลปัจจุบันถูกต้อง และส่งรายงานสถานภาพประจำเดือนนี้ใช่หรือไม่?")) return;
+        // 🌟 ฟังก์ชันเตรียมข้อมูลใส่หน้าต่างสรุปประจำเดือน 🌟
+        function confirmMonthlyStatus() {
+            if (!tableCPU) return;
 
-            const now = new Date();
-            const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            
-            // ใส่ประวัติ Log ไปด้วยว่า ส่งรายงานแล้ว
+            let summaryHtml = '<div class="space-y-4">';
+
+            const generateCategorySummary = (name, data, icon, colorClass) => {
+                let total = 0, normal = 0, broken = 0, spare = 0;
+                let brokenList = [];
+                data.forEach(r => {
+                    if (r[1] || r[2] || r[3] || r[4]) {
+                        total++;
+                        let status = r[5];
+                        if (status === 'ปกติ') normal++;
+                        else if (status === 'ชำรุด') { broken++; brokenList.push(`${r[2]||''} ${r[3]||''} (S/N: ${r[4]||'-'})`); }
+                        else if (status === 'สำรอง') spare++;
+                        else normal++; 
+                    }
+                });
+
+                if (total === 0) return '';
+
+                let html = `<div class="p-4 rounded-lg border ${colorClass}">
+                    <h4 class="font-bold mb-2 flex items-center gap-2">${icon} ${name} (รวม ${total} รายการ)</h4>
+                    <div class="grid grid-cols-3 gap-2 text-sm text-center mb-2">
+                        <div class="bg-green-100 text-green-800 rounded py-1 font-semibold">ปกติ: ${normal}</div>
+                        <div class="bg-red-100 text-red-800 rounded py-1 font-semibold">ชำรุด: ${broken}</div>
+                        <div class="bg-yellow-100 text-yellow-800 rounded py-1 font-semibold">สำรอง: ${spare}</div>
+                    </div>`;
+                if (brokenList.length > 0) {
+                    html += `<div class="text-xs text-red-600 mt-2"><strong>⚠️ รายการชำรุด:</strong> ${brokenList.join(', ')}</div>`;
+                }
+                html += `</div>`;
+                return html;
+            };
+
+            summaryHtml += generateCategorySummary('คอมพิวเตอร์ (CPU)', tableCPU.getData(), '💻', 'border-blue-200 bg-blue-50');
+            summaryHtml += generateCategorySummary('จอมอนิเตอร์', tableMon.getData(), '🖥️', 'border-green-200 bg-green-50');
+            summaryHtml += generateCategorySummary('เครื่องพิมพ์', tablePrn.getData(), '🖨️', 'border-purple-200 bg-purple-50');
+            summaryHtml += generateCategorySummary('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️', 'border-orange-200 bg-orange-50');
+
+            if (summaryHtml === '<div class="space-y-4">') {
+                summaryHtml = '<div class="text-center text-gray-500 py-4 font-semibold">ไม่มีข้อมูลอุปกรณ์ในสถานีนี้เลย</div>';
+            } else {
+                summaryHtml += '</div>';
+            }
+
+            document.getElementById('monthlySummaryContent').innerHTML = summaryHtml;
+            document.getElementById('monthlyConfirmModal').classList.remove('hidden');
+            document.getElementById('monthlyConfirmModal').classList.add('flex');
+        }
+
+        // 🌟 ปิด Modal สรุปเดือน
+        function closeMonthlyModal() {
+            document.getElementById('monthlyConfirmModal').classList.add('hidden');
+            document.getElementById('monthlyConfirmModal').classList.remove('flex');
+        }
+
+        // 🌟 ฟังก์ชันที่ทำงานหลังจากกดยืนยันใน Modal สรุปเดือน 🌟
+        async function executeConfirmMonth() {
+            closeMonthlyModal();
+            const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             pendingLogs = [{ action: 'ส่งรายงานประจำเดือน', detail: `ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
-            
-            document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...';
-            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
-
+            document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const newPayload = { 
-                    cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), 
-                    prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)),
-                    lastConfirmed: currentMonthStr // 🌟 ใส่ลายเซ็นยืนยันเดือนนี้ลงในฐานข้อมูล
-                };
+                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
-                
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
-                showToast(`ส่งรายงานประจำเดือนของ ${currentStation} สำเร็จ!`);
-                document.getElementById('btnConfirmMonth').classList.add('hidden'); // ซ่อนปุ่มเพราะส่งแล้ว
-            } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } 
-            finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(`ส่งรายงานประจำเดือนของ ${currentStation} สำเร็จ!`); document.getElementById('btnConfirmMonth').classList.add('hidden');
+            } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         async function executeSaveData() {
             closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังบันทึก...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const newPayload = { 
-                    cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), 
-                    prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)),
-                    lastConfirmed: originalDbData.lastConfirmed // 🌟 เซฟปกติ ไม่ไปยุ่งกับสถานะการรายงานเดือน 🌟
-                };
+                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(`บันทึก ${currentStation} สำเร็จ!`);
-            } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } 
-            finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         async function exportStationExcel() {
@@ -405,6 +456,44 @@
             const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
             const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
             const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ส่งออกสำเร็จ!");
+        }
+
+        async function exportAllDataToExcel() {
+            if (!globalAllDataCache) { showToast("ข้อมูลยังโหลดไม่เสร็จ กรุณารอสักครู่", "error"); return; }
+            showToast("กำลังสร้างไฟล์ Excel รวมทุกสถานี...");
+            document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์ Excel...';
+            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+
+            try {
+                const wb = new ExcelJS.Workbook();
+                const formatWs = (ws) => {
+                    ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}];
+                    ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); });
+                };
+
+                for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
+                    const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue);
+                    const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
+                    
+                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์ (CPU)"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
+                    ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
+
+                    formatWs(ws);
+                    ws.eachRow((row, rowNumber) => {
+                        const firstCell = row.getCell(1).value;
+                        if (typeof firstCell === 'string' && firstCell.includes("หมวดหมู่:")) {
+                            ws.mergeCells(`A${rowNumber}:H${rowNumber}`); const cell = row.getCell(1);
+                            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }; cell.alignment = { horizontal: 'left' };
+                        }
+                    });
+                }
+                if(wb.worksheets.length === 0) { wb.addWorksheet("ไม่มีข้อมูล"); }
+
+                const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0');
+                saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ส่งออกไฟล์ Excel รวมสำเร็จ!");
+            } catch (error) { console.error(error); showToast("เกิดข้อผิดพลาดในการสร้างไฟล์ Excel", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         window.onload = loadDashboardStats;
