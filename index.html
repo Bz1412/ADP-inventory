@@ -61,19 +61,17 @@
         </div>
     </div>
 
-    <!-- 🌟 ใหม่: Modal ยืนยันรายงานประจำเดือน 🌟 -->
+    <!-- Modal ยืนยันรายงานประจำเดือน -->
     <div id="monthlyConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="bg-purple-50 p-4 border-b border-purple-200">
                 <h3 class="text-xl font-bold text-purple-800 flex items-center gap-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    สรุปรายงานสถานภาพประจำเดือน
+                    <span id="monthlyModalTitle">สรุปรายงานสถานภาพประจำเดือน</span>
                 </h3>
-                <p class="text-purple-700 mt-1 font-semibold">กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน</p>
+                <p class="text-purple-700 mt-1 font-semibold" id="monthlyModalSubtitle">กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน</p>
             </div>
-            <div id="monthlySummaryContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm">
-                <!-- ข้อมูลสรุปจะถูกแทรกที่นี่ -->
-            </div>
+            <div id="monthlySummaryContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm"></div>
             <div class="bg-white p-4 border-t flex justify-end gap-3">
                 <button onclick="closeMonthlyModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 bg-gray-200 hover:bg-gray-300">ยกเลิก</button>
                 <button onclick="executeConfirmMonth()" class="px-5 py-2 rounded-lg font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-md">✅ ยืนยันส่งรายงาน</button>
@@ -139,6 +137,7 @@
             </div>
         </div>
 
+        <!-- หน้า Index ที่มีแจ้งเตือน -->
         <div id="indexPage"></div>
     </div>
 
@@ -149,9 +148,10 @@
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
             <div class="space-x-2 flex flex-wrap gap-y-2 justify-end">
+                <!-- 🌟 ปุ่มยืนยัน/แก้ไขรายงานประจำเดือน 🌟 -->
                 <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                    ยืนยันรายงานประจำเดือน
+                    <span id="btnConfirmIcon"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></span>
+                    <span id="btnConfirmText">ยืนยันรายงานประจำเดือน</span>
                 </button>
                 <button onclick="prepareSave()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export Excel (สถานีนี้)</button>
@@ -192,6 +192,9 @@
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null;
+
+        // 🌟 ตัวแปรเช็คว่ากดส่งแบบไหน (ส่งครั้งแรก หรือ แก้ไขที่ส่งแล้ว)
+        let isEditingConfirmedReport = false; 
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
@@ -309,10 +312,25 @@
                 if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
+                // 🌟 อัปเดตปุ่มยืนยันรายงานตามสถานะ 🌟
                 const now = new Date();
                 const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                if (dbData.lastConfirmed === currentMonthStr) { document.getElementById('btnConfirmMonth').classList.add('hidden'); } 
-                else { document.getElementById('btnConfirmMonth').classList.remove('hidden'); }
+                const btnConfirm = document.getElementById('btnConfirmMonth');
+                
+                btnConfirm.classList.remove('hidden'); // โชว์ปุ่มเสมอ
+                if (dbData.lastConfirmed === currentMonthStr) { 
+                    // ถ้าเดือนนี้ส่งไปแล้ว เปลี่ยนปุ่มให้เป็นโหมดแก้ไข
+                    isEditingConfirmedReport = true;
+                    btnConfirm.className = "bg-orange-500 text-white px-6 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2";
+                    document.getElementById('btnConfirmIcon').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
+                    document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
+                } else { 
+                    // ถ้ายังไม่ส่ง ให้เป็นโหมดยืนยันปกติ
+                    isEditingConfirmedReport = false;
+                    btnConfirm.className = "bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 font-bold flex items-center gap-2";
+                    document.getElementById('btnConfirmIcon').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>`;
+                    document.getElementById('btnConfirmText').innerText = "ยืนยันรายงานประจำเดือน";
+                }
 
                 initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
@@ -340,7 +358,7 @@
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
             tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อพริ้นเตอร์', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
         }
 
@@ -364,40 +382,51 @@
 
         function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
 
-        // 🌟 ฟังก์ชันเตรียมข้อมูลใส่หน้าต่างสรุปประจำเดือน 🌟
+        // 🌟 ปรับปรุงการเปิด Modal สรุปเดือน ให้รองรับโหมดแก้ไข
         function confirmMonthlyStatus() {
             if (!tableCPU) return;
 
-            let summaryHtml = '<div class="space-y-4">';
+            // ตรวจสอบว่ามีข้อมูลเปลี่ยนแปลงหรือเปล่าด้วย
+            let diff = calculateDiff();
+            if (isEditingConfirmedReport && diff.added.length === 0 && diff.removed.length === 0) {
+                showToast("ไม่มีการแก้ไขข้อมูลเพิ่มเติม ไม่จำเป็นต้องกดยืนยันใหม่ครับ", "error");
+                return;
+            }
 
+            if (isEditingConfirmedReport) {
+                document.getElementById('monthlyModalTitle').innerText = "แก้ไขรายงานที่ส่งแล้ว";
+                document.getElementById('monthlyModalSubtitle').innerText = "กรุณาตรวจสอบความถูกต้องอีกครั้ง ข้อมูลจะถูกอัปเดตไปที่ระบบหลังบ้าน";
+                document.querySelector('#monthlyConfirmModal .bg-purple-50').className = "bg-orange-50 p-4 border-b border-orange-200";
+                document.querySelector('#monthlyConfirmModal h3').className = "text-xl font-bold text-orange-800 flex items-center gap-2";
+                document.querySelector('#monthlyConfirmModal p').className = "text-orange-700 mt-1 font-semibold";
+                document.querySelector('#monthlyConfirmModal button.bg-purple-600').className = "px-5 py-2 rounded-lg font-bold text-white bg-orange-500 hover:bg-orange-600 shadow-md";
+            } else {
+                // เปลี่ยนกลับเป็นโหมดปกติ (สีม่วง) เผื่อมีการสลับไปมา
+                document.getElementById('monthlyModalTitle').innerText = "สรุปรายงานสถานภาพประจำเดือน";
+                document.getElementById('monthlyModalSubtitle').innerText = "กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน";
+                document.querySelector('#monthlyConfirmModal .bg-orange-50')?.classList.replace('bg-orange-50', 'bg-purple-50') || document.querySelector('#monthlyConfirmModal > div > div:first-child').classList.add('bg-purple-50');
+                document.querySelector('#monthlyConfirmModal > div > div:first-child').classList.replace('border-orange-200', 'border-purple-200');
+                document.querySelector('#monthlyConfirmModal h3').className = "text-xl font-bold text-purple-800 flex items-center gap-2";
+                document.querySelector('#monthlyConfirmModal p').className = "text-purple-700 mt-1 font-semibold";
+                document.querySelector('#monthlyConfirmModal button.bg-orange-500')?.classList.replace('bg-orange-500', 'bg-purple-600');
+                document.querySelector('#monthlyConfirmModal button.bg-purple-600').classList.replace('hover:bg-orange-600', 'hover:bg-purple-700');
+            }
+
+            let summaryHtml = '<div class="space-y-4">';
             const generateCategorySummary = (name, data, icon, colorClass) => {
-                let total = 0, normal = 0, broken = 0, spare = 0;
-                let brokenList = [];
+                let total = 0, normal = 0, broken = 0, spare = 0; let brokenList = [];
                 data.forEach(r => {
                     if (r[1] || r[2] || r[3] || r[4]) {
-                        total++;
-                        let status = r[5];
+                        total++; let status = r[5];
                         if (status === 'ปกติ') normal++;
                         else if (status === 'ชำรุด') { broken++; brokenList.push(`${r[2]||''} ${r[3]||''} (S/N: ${r[4]||'-'})`); }
-                        else if (status === 'สำรอง') spare++;
-                        else normal++; 
+                        else if (status === 'สำรอง') spare++; else normal++; 
                     }
                 });
-
                 if (total === 0) return '';
-
-                let html = `<div class="p-4 rounded-lg border ${colorClass}">
-                    <h4 class="font-bold mb-2 flex items-center gap-2">${icon} ${name} (รวม ${total} รายการ)</h4>
-                    <div class="grid grid-cols-3 gap-2 text-sm text-center mb-2">
-                        <div class="bg-green-100 text-green-800 rounded py-1 font-semibold">ปกติ: ${normal}</div>
-                        <div class="bg-red-100 text-red-800 rounded py-1 font-semibold">ชำรุด: ${broken}</div>
-                        <div class="bg-yellow-100 text-yellow-800 rounded py-1 font-semibold">สำรอง: ${spare}</div>
-                    </div>`;
-                if (brokenList.length > 0) {
-                    html += `<div class="text-xs text-red-600 mt-2"><strong>⚠️ รายการชำรุด:</strong> ${brokenList.join(', ')}</div>`;
-                }
-                html += `</div>`;
-                return html;
+                let html = `<div class="p-4 rounded-lg border ${colorClass}"><h4 class="font-bold mb-2 flex items-center gap-2">${icon} ${name} (รวม ${total} รายการ)</h4><div class="grid grid-cols-3 gap-2 text-sm text-center mb-2"><div class="bg-green-100 text-green-800 rounded py-1 font-semibold">ปกติ: ${normal}</div><div class="bg-red-100 text-red-800 rounded py-1 font-semibold">ชำรุด: ${broken}</div><div class="bg-yellow-100 text-yellow-800 rounded py-1 font-semibold">สำรอง: ${spare}</div></div>`;
+                if (brokenList.length > 0) { html += `<div class="text-xs text-red-600 mt-2"><strong>⚠️ รายการชำรุด:</strong> ${brokenList.join(', ')}</div>`; }
+                html += `</div>`; return html;
             };
 
             summaryHtml += generateCategorySummary('คอมพิวเตอร์ (CPU)', tableCPU.getData(), '💻', 'border-blue-200 bg-blue-50');
@@ -405,33 +434,40 @@
             summaryHtml += generateCategorySummary('เครื่องพิมพ์', tablePrn.getData(), '🖨️', 'border-purple-200 bg-purple-50');
             summaryHtml += generateCategorySummary('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️', 'border-orange-200 bg-orange-50');
 
-            if (summaryHtml === '<div class="space-y-4">') {
-                summaryHtml = '<div class="text-center text-gray-500 py-4 font-semibold">ไม่มีข้อมูลอุปกรณ์ในสถานีนี้เลย</div>';
-            } else {
-                summaryHtml += '</div>';
-            }
+            if (summaryHtml === '<div class="space-y-4">') { summaryHtml = '<div class="text-center text-gray-500 py-4 font-semibold">ไม่มีข้อมูลอุปกรณ์ในสถานีนี้เลย</div>'; } else { summaryHtml += '</div>'; }
 
             document.getElementById('monthlySummaryContent').innerHTML = summaryHtml;
-            document.getElementById('monthlyConfirmModal').classList.remove('hidden');
-            document.getElementById('monthlyConfirmModal').classList.add('flex');
+            document.getElementById('monthlyConfirmModal').classList.remove('hidden'); document.getElementById('monthlyConfirmModal').classList.add('flex');
         }
 
-        // 🌟 ปิด Modal สรุปเดือน
-        function closeMonthlyModal() {
-            document.getElementById('monthlyConfirmModal').classList.add('hidden');
-            document.getElementById('monthlyConfirmModal').classList.remove('flex');
-        }
+        function closeMonthlyModal() { document.getElementById('monthlyConfirmModal').classList.add('hidden'); document.getElementById('monthlyConfirmModal').classList.remove('flex'); }
 
-        // 🌟 ฟังก์ชันที่ทำงานหลังจากกดยืนยันใน Modal สรุปเดือน 🌟
         async function executeConfirmMonth() {
             closeMonthlyModal();
             const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            pendingLogs = [{ action: 'ส่งรายงานประจำเดือน', detail: `ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
+            
+            // 🌟 เช็คว่าส่งใหม่ หรือ แก้ไขของเดิม
+            if (isEditingConfirmedReport) {
+                pendingLogs = [{ action: 'แก้ไขรายงานประจำเดือน', detail: `✏️ ยืนยันแก้ไขข้อมูลประจำเดือน ${currentMonthStr} อีกครั้ง` }];
+            } else {
+                pendingLogs = [{ action: 'ส่งรายงานประจำเดือน', detail: `✅ ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
+            }
+
             document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(`ส่งรายงานประจำเดือนของ ${currentStation} สำเร็จ!`); document.getElementById('btnConfirmMonth').classList.add('hidden');
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+                
+                showToast(isEditingConfirmedReport ? `แก้ไขรายงานของ ${currentStation} สำเร็จ!` : `ส่งรายงานประจำเดือนของ ${currentStation} สำเร็จ!`); 
+                
+                // หลังจากส่งเสร็จ เปลี่ยนปุ่มให้เป็นโหมดแก้ไขทันที
+                isEditingConfirmedReport = true;
+                const btnConfirm = document.getElementById('btnConfirmMonth');
+                btnConfirm.className = "bg-orange-500 text-white px-6 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2";
+                document.getElementById('btnConfirmIcon').innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>`;
+                document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
+                
             } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
