@@ -67,7 +67,6 @@
     </div>
 
     <script>
-        // ข้อมูลและลำดับกลุ่มตามที่คุณต้องการ
         const groupOrder = [
             "เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", 
             "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"
@@ -83,15 +82,17 @@
             "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
 
+        // ตัวเลือกสำหรับ Dropdown
+        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง'];
+        const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
+
         let currentGroup = '';
         let currentStation = '';
         
-        // ตัวแปรเก็บตารางทั้ง 3
         let tableCPU = null;
         let tableMon = null;
         let tablePrn = null;
 
-        // สร้างหมวดหมู่ตามลำดับที่กำหนด
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
             const stations = inventoryGroups[groupName];
@@ -115,7 +116,6 @@
             indexPage.appendChild(groupSection);
         });
 
-        // เปิดหน้าจัดการสถานี
         function openStation(groupName, stationName) {
             currentGroup = groupName;
             currentStation = stationName;
@@ -130,31 +130,25 @@
             initSpreadsheets(groupName, stationName);
         }
 
-        // กลับหน้าแรก
         document.getElementById('btnHome').onclick = () => {
             document.getElementById('indexPage').classList.remove('hidden');
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('btnHome').classList.add('hidden');
             
-            // ล้างข้อมูลตารางออกจากหน้าจอ
             if (tableCPU) tableCPU.destroy();
             if (tableMon) tableMon.destroy();
             if (tablePrn) tablePrn.destroy();
         };
 
-        // เริ่มสร้างทั้ง 3 ตาราง
         function initSpreadsheets(groupName, stationName) {
-            // โหลดข้อมูลเก่า (ถ้ามี)
             let dataCPU = JSON.parse(localStorage.getItem(`ADP_CPU_${groupName}_${stationName}`)) || [[]];
             let dataMon = JSON.parse(localStorage.getItem(`ADP_MON_${groupName}_${stationName}`)) || [[]];
             let dataPrn = JSON.parse(localStorage.getItem(`ADP_PRN_${groupName}_${stationName}`)) || [[]];
 
-            // เคลียร์พื้นที่เก่า
             document.getElementById('spreadsheet-cpu').innerHTML = '';
             document.getElementById('spreadsheet-mon').innerHTML = '';
             document.getElementById('spreadsheet-prn').innerHTML = '';
 
-            // ตาราง CPU
             tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), {
                 data: dataCPU,
                 columns: [
@@ -163,15 +157,14 @@
                     { type: 'text', title: 'ยี่ห้อ CPU', width: 120 },
                     { type: 'text', title: 'รุ่น CPU', width: 140 },
                     { type: 'text', title: 'S/N CPU', width: 160 },
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
-                    { type: 'text', title: 'ระบบเชื่อมต่อ', width: 130 },
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
+                    { type: 'dropdown', title: 'ระบบเชื่อมต่อ', width: 150, source: connectionOptions }, // เปลี่ยนเป็น Dropdown
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
                 ],
                 minDimensions: [8, 5],
                 allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
             });
 
-            // ตาราง Monitor
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), {
                 data: dataMon,
                 columns: [
@@ -180,14 +173,13 @@
                     { type: 'text', title: 'ยี่ห้อจอ', width: 120 },
                     { type: 'text', title: 'รุ่นจอ', width: 140 },
                     { type: 'text', title: 'S/N จอ', width: 160 },
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
                 ],
                 minDimensions: [7, 5],
                 allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
             });
 
-            // ตาราง Printer
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), {
                 data: dataPrn,
                 columns: [
@@ -196,8 +188,8 @@
                     { type: 'text', title: 'ยี่ห้อเครื่องพิมพ์', width: 120 },
                     { type: 'text', title: 'รุ่นเครื่องพิมพ์', width: 140 },
                     { type: 'text', title: 'S/N เครื่องพิมพ์', width: 160 },
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
-                    { type: 'text', title: 'ระบบเชื่อมต่อ', width: 130 },
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions },
+                    { type: 'dropdown', title: 'ระบบเชื่อมต่อ', width: 150, source: connectionOptions }, // เปลี่ยนเป็น Dropdown
                     { type: 'text', title: 'หมายเหตุ', width: 150 },
                 ],
                 minDimensions: [8, 5],
@@ -205,7 +197,6 @@
             });
         }
 
-        // บันทึกข้อมูลทั้ง 3 ตาราง
         function saveDataLocal() {
             if (!tableCPU || !tableMon || !tablePrn) return;
             localStorage.setItem(`ADP_CPU_${currentGroup}_${currentStation}`, JSON.stringify(tableCPU.getData()));
@@ -214,13 +205,11 @@
             alert(`บันทึกข้อมูลของ ${currentStation} สำเร็จแล้ว!`);
         }
 
-        // Export ข้อมูลเป็น Excel ไฟล์เดียว แต่แยกเป็น 3 Sheet
         function exportStationExcel() {
             if (!tableCPU || !tableMon || !tablePrn) return;
             
             const wb = XLSX.utils.book_new();
 
-            // นำข้อมูลตารางมาต่อกับ Header
             const headerCPU = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
             const wsCPU = XLSX.utils.aoa_to_sheet([...headerCPU, ...tableCPU.getData()]);
             XLSX.utils.book_append_sheet(wb, wsCPU, "คอมพิวเตอร์");
@@ -233,7 +222,6 @@
             const wsPrn = XLSX.utils.aoa_to_sheet([...headerPrn, ...tablePrn.getData()]);
             XLSX.utils.book_append_sheet(wb, wsPrn, "เครื่องพิมพ์");
 
-            // ตั้งชื่อไฟล์
             XLSX.writeFile(wb, `ADP_${currentGroup}_${currentStation}.xlsx`);
         }
     </script>
