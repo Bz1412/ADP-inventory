@@ -4,12 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สถานภาพอุปกณ์คอมพิวเตอร์ ADP-Inventory</title>
-    <!-- โหลด Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- โหลด SheetJS สำหรับ Export Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     
-    <!-- โหลด Jspreadsheet (ตารางคล้าย Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/index.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/jspreadsheet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
@@ -27,63 +24,88 @@
 
     <!-- หน้า Index (เลือกกลุ่มและสถานี) -->
     <div id="indexPage" class="max-w-7xl mx-auto p-6 mt-4">
-        <!-- จะใช้ JavaScript สร้างหมวดหมู่ตรงนี้ -->
+        <!-- JavaScript จะสร้างหมวดหมู่ตรงนี้ตามลำดับที่คุณกำหนด -->
     </div>
 
-    <!-- หน้า จัดการข้อมูล (ตาราง Excel) -->
-    <div id="editorPage" class="max-w-full mx-auto p-6 mt-4 hidden bg-white rounded-lg shadow m-4">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-4 gap-4">
+    <!-- หน้า จัดการข้อมูล (แยก 3 ตาราง) -->
+    <div id="editorPage" class="max-w-full mx-auto p-6 mt-4 hidden bg-transparent m-4">
+        
+        <!-- Header ของหน้าแก้ไข -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h2 id="currentStationTitle" class="text-2xl font-bold text-blue-700">ชื่อสถานี</h2>
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
             <div class="space-x-2 flex">
-                <button onclick="saveDataLocal()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึก (ในเครื่อง)</button>
-                <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <button onclick="saveDataLocal()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกข้อมูล</button>
+                <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Export Excel
                 </button>
             </div>
         </div>
-        
-        <p class="text-sm text-gray-500 mb-2">* สามารถคัดลอก (Ctrl+C) จาก Excel มาวาง (Ctrl+V) ในตารางนี้ได้เลย</p>
-        
-        <!-- พื้นที่แสดงตาราง -->
-        <div id="spreadsheet" class="w-full overflow-x-auto text-sm"></div>
+
+        <div class="grid grid-cols-1 gap-8">
+            <!-- ตารางที่ 1: CPU -->
+            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto">
+                <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3>
+                <div id="spreadsheet-cpu" class="w-full text-sm"></div>
+            </div>
+
+            <!-- ตารางที่ 2: จอมอนิเตอร์ -->
+            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500 overflow-x-auto">
+                <h3 class="text-xl font-bold mb-2 text-green-800">🖥️ 2. ตารางจอมอนิเตอร์</h3>
+                <div id="spreadsheet-mon" class="w-full text-sm"></div>
+            </div>
+
+            <!-- ตารางที่ 3: เครื่องพิมพ์ -->
+            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-purple-500 overflow-x-auto">
+                <h3 class="text-xl font-bold mb-2 text-purple-800">🖨️ 3. ตารางเครื่องพิมพ์</h3>
+                <div id="spreadsheet-prn" class="w-full text-sm"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // ข้อมูลกลุ่มและสถานีที่ดึงมาจากไฟล์ Excel ของคุณ
+        // ข้อมูลและลำดับกลุ่มตามที่คุณต้องการ
+        const groupOrder = [
+            "เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", 
+            "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"
+        ];
+
         const inventoryGroups = {
-            "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'],
-            "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'],
-            "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'],
-            "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.'],
             "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'],
             "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'],
-            "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี']
+            "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'],
+            "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'],
+            "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'],
+            "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'],
+            "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
 
         let currentGroup = '';
         let currentStation = '';
-        let myTable = null;
+        
+        // ตัวแปรเก็บตารางทั้ง 3
+        let tableCPU = null;
+        let tableMon = null;
+        let tablePrn = null;
 
-        // สร้างหมวดหมู่และปุ่มเลือกสถานีในหน้าแรก
+        // สร้างหมวดหมู่ตามลำดับที่กำหนด
         const indexPage = document.getElementById('indexPage');
-        for (const [groupName, stations] of Object.entries(inventoryGroups)) {
-            // สร้าง Header ของแต่ละกลุ่ม
+        groupOrder.forEach(groupName => {
+            const stations = inventoryGroups[groupName];
             const groupSection = document.createElement('div');
-            groupSection.className = 'mb-8 bg-white p-6 rounded-lg shadow-sm border-t-4 border-blue-800';
+            groupSection.className = 'mb-8 bg-white p-6 rounded-lg shadow-sm border-t-4 border-gray-400 hover:border-blue-500 transition-colors duration-300';
             
-            groupSection.innerHTML = `<h2 class="text-xl font-bold mb-4 text-blue-900 border-b pb-2">📁 พื้นที่: ${groupName}</h2>`;
+            groupSection.innerHTML = `<h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">📁 พื้นที่: ${groupName}</h2>`;
             
-            // สร้าง Grid สำหรับใส่ปุ่มสถานี
             const gridDiv = document.createElement('div');
             gridDiv.className = 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4';
             
             stations.forEach(station => {
                 const btn = document.createElement('div');
-                btn.className = "bg-blue-50 p-4 rounded-lg shadow-sm hover:shadow-md border border-blue-100 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-800 flex items-center justify-center min-h-[80px]";
+                btn.className = "bg-slate-50 p-4 rounded-lg shadow-sm hover:shadow-md border border-gray-200 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-900 flex items-center justify-center min-h-[80px]";
                 btn.innerHTML = `<span>📍 ${station}</span>`;
                 btn.onclick = () => openStation(groupName, station);
                 gridDiv.appendChild(btn);
@@ -91,9 +113,9 @@
             
             groupSection.appendChild(gridDiv);
             indexPage.appendChild(groupSection);
-        }
+        });
 
-        // ฟังก์ชันสลับหน้าและเปิดตาราง
+        // เปิดหน้าจัดการสถานี
         function openStation(groupName, stationName) {
             currentGroup = groupName;
             currentStation = stationName;
@@ -105,99 +127,114 @@
             document.getElementById('currentStationTitle').innerText = `📍 สถานี/ชุด: ${stationName}`;
             document.getElementById('currentGroupSubtitle').innerText = `กลุ่มพื้นที่: ${groupName}`;
             
-            initSpreadsheet(groupName, stationName);
+            initSpreadsheets(groupName, stationName);
         }
 
-        // ฟังก์ชันกลับหน้าแรก
+        // กลับหน้าแรก
         document.getElementById('btnHome').onclick = () => {
             document.getElementById('indexPage').classList.remove('hidden');
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('btnHome').classList.add('hidden');
-            if (myTable) {
-                myTable.destroy(); 
-            }
+            
+            // ล้างข้อมูลตารางออกจากหน้าจอ
+            if (tableCPU) tableCPU.destroy();
+            if (tableMon) tableMon.destroy();
+            if (tablePrn) tablePrn.destroy();
         };
 
-        // ฟังก์ชันสร้างตารางแบบ Excel (เพิ่มช่องเครื่องพิมพ์แล้ว)
-        function initSpreadsheet(groupName, stationName) {
-            let savedData = localStorage.getItem(`ADP_${groupName}_${stationName}`);
-            let initialData = savedData ? JSON.parse(savedData) : [[]];
+        // เริ่มสร้างทั้ง 3 ตาราง
+        function initSpreadsheets(groupName, stationName) {
+            // โหลดข้อมูลเก่า (ถ้ามี)
+            let dataCPU = JSON.parse(localStorage.getItem(`ADP_CPU_${groupName}_${stationName}`)) || [[]];
+            let dataMon = JSON.parse(localStorage.getItem(`ADP_MON_${groupName}_${stationName}`)) || [[]];
+            let dataPrn = JSON.parse(localStorage.getItem(`ADP_PRN_${groupName}_${stationName}`)) || [[]];
 
-            const spreadsheetDiv = document.getElementById('spreadsheet');
-            spreadsheetDiv.innerHTML = ''; 
+            // เคลียร์พื้นที่เก่า
+            document.getElementById('spreadsheet-cpu').innerHTML = '';
+            document.getElementById('spreadsheet-mon').innerHTML = '';
+            document.getElementById('spreadsheet-prn').innerHTML = '';
 
-            myTable = jspreadsheet(spreadsheetDiv, {
-                data: initialData,
+            // ตาราง CPU
+            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), {
+                data: dataCPU,
                 columns: [
-                    { type: 'numeric', title: 'ลำดับ', width: 50 },
-                    { type: 'text', title: 'ยี่ห้อ CPU', width: 90 },
-                    { type: 'text', title: 'รุ่น CPU', width: 110 },
-                    { type: 'text', title: 'S/N CPU', width: 120 },
-                    { type: 'text', title: 'ยี่ห้อจอ', width: 90 },
-                    { type: 'text', title: 'รุ่นจอ', width: 110 },
-                    { type: 'text', title: 'S/N จอ', width: 120 },
-                    { type: 'text', title: 'ยี่ห้อเครื่องพิมพ์', width: 100 },
-                    { type: 'text', title: 'รุ่นเครื่องพิมพ์', width: 110 },
-                    { type: 'text', title: 'S/N เครื่องพิมพ์', width: 120 },
-                    { type: 'text', title: 'USER / ผู้ใช้', width: 110 },
-                    { type: 'dropdown', title: 'สถานะ', width: 70, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
-                    { type: 'text', title: 'ระบบเชื่อมต่อ', width: 100 },
-                    { type: 'text', title: 'หมายเหตุ', width: 120 },
+                    { type: 'numeric', title: 'ลำดับ', width: 60 },
+                    { type: 'text', title: 'USER / ผู้ใช้', width: 150 },
+                    { type: 'text', title: 'ยี่ห้อ CPU', width: 120 },
+                    { type: 'text', title: 'รุ่น CPU', width: 140 },
+                    { type: 'text', title: 'S/N CPU', width: 160 },
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
+                    { type: 'text', title: 'ระบบเชื่อมต่อ', width: 130 },
+                    { type: 'text', title: 'หมายเหตุ', width: 150 },
                 ],
-                nestedHeaders: [
-                    [
-                        { title: '', colspan: 1 },
-                        { title: 'คอมพิวเตอร์ (CPU)', colspan: 3 },
-                        { title: 'จอมอนิเตอร์', colspan: 3 },
-                        { title: 'เครื่องพิมพ์ (Printer)', colspan: 3 },
-                        { title: 'ข้อมูลการใช้งาน', colspan: 4 },
-                    ]
+                minDimensions: [8, 5],
+                allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+            });
+
+            // ตาราง Monitor
+            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), {
+                data: dataMon,
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 60 },
+                    { type: 'text', title: 'USER / ผู้ใช้', width: 150 },
+                    { type: 'text', title: 'ยี่ห้อจอ', width: 120 },
+                    { type: 'text', title: 'รุ่นจอ', width: 140 },
+                    { type: 'text', title: 'S/N จอ', width: 160 },
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
+                    { type: 'text', title: 'หมายเหตุ', width: 150 },
                 ],
-                minDimensions: [14, 15],
-                allowInsertRow: true,
-                allowManualInsertRow: true,
-                allowInsertColumn: false,
-                wordWrap: true,
+                minDimensions: [7, 5],
+                allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
+            });
+
+            // ตาราง Printer
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), {
+                data: dataPrn,
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 60 },
+                    { type: 'text', title: 'USER / ผู้ใช้', width: 150 },
+                    { type: 'text', title: 'ยี่ห้อเครื่องพิมพ์', width: 120 },
+                    { type: 'text', title: 'รุ่นเครื่องพิมพ์', width: 140 },
+                    { type: 'text', title: 'S/N เครื่องพิมพ์', width: 160 },
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
+                    { type: 'text', title: 'ระบบเชื่อมต่อ', width: 130 },
+                    { type: 'text', title: 'หมายเหตุ', width: 150 },
+                ],
+                minDimensions: [8, 5],
+                allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true,
             });
         }
 
-        // ฟังก์ชันบันทึกข้อมูลลงเครื่อง
+        // บันทึกข้อมูลทั้ง 3 ตาราง
         function saveDataLocal() {
-            if (!myTable) return;
-            const data = myTable.getData(); 
-            localStorage.setItem(`ADP_${currentGroup}_${currentStation}`, JSON.stringify(data));
-            alert(`บันทึกข้อมูลของ ${currentStation} (${currentGroup}) ลงในอุปกรณ์นี้เรียบร้อยแล้ว!`);
+            if (!tableCPU || !tableMon || !tablePrn) return;
+            localStorage.setItem(`ADP_CPU_${currentGroup}_${currentStation}`, JSON.stringify(tableCPU.getData()));
+            localStorage.setItem(`ADP_MON_${currentGroup}_${currentStation}`, JSON.stringify(tableMon.getData()));
+            localStorage.setItem(`ADP_PRN_${currentGroup}_${currentStation}`, JSON.stringify(tablePrn.getData()));
+            alert(`บันทึกข้อมูลของ ${currentStation} สำเร็จแล้ว!`);
         }
 
-        // ฟังก์ชัน Export Excel โครงสร้างใหม่ (14 คอลัมน์)
+        // Export ข้อมูลเป็น Excel ไฟล์เดียว แต่แยกเป็น 3 Sheet
         function exportStationExcel() {
-            if (!myTable) return;
-            const tableData = myTable.getData();
+            if (!tableCPU || !tableMon || !tablePrn) return;
             
-            // สร้าง Header 2 ชั้นให้ตรงกับตารางใหม่
-            const headerData = [
-                ["ลำดับ", "CPU", "", "", "จอ", "", "", "เครื่องพิมพ์", "", "", "USER / ผู้ใช้", "สถานะ", "ระบบการเชื่อมต่อ", "หมายเหตุ"],
-                ["", "ยี่ห้อ", "รุ่น", "S/N", "ยี่ห้อ", "รุ่น", "S/N", "ยี่ห้อ", "รุ่น", "S/N", "", "", "", ""]
-            ];
+            const wb = XLSX.utils.book_new();
 
-            const worksheet = XLSX.utils.aoa_to_sheet([...headerData, ...tableData]);
+            // นำข้อมูลตารางมาต่อกับ Header
+            const headerCPU = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
+            const wsCPU = XLSX.utils.aoa_to_sheet([...headerCPU, ...tableCPU.getData()]);
+            XLSX.utils.book_append_sheet(wb, wsCPU, "คอมพิวเตอร์");
 
-            // Merge Cells รูปแบบใหม่
-            worksheet['!merges'] = [
-                { s: { r: 0, c: 1 }, e: { r: 0, c: 3 } }, // CPU
-                { s: { r: 0, c: 4 }, e: { r: 0, c: 6 } }, // จอ
-                { s: { r: 0, c: 7 }, e: { r: 0, c: 9 } }, // เครื่องพิมพ์
-                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // ลำดับ
-                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } }, // USER
-                { s: { r: 0, c: 11 }, e: { r: 1, c: 11 } }, // สถานะ
-                { s: { r: 0, c: 12 }, e: { r: 1, c: 12 } }, // การเชื่อมต่อ
-                { s: { r: 0, c: 13 }, e: { r: 1, c: 13 } } // หมายเหตุ
-            ];
+            const headerMon = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]];
+            const wsMon = XLSX.utils.aoa_to_sheet([...headerMon, ...tableMon.getData()]);
+            XLSX.utils.book_append_sheet(wb, wsMon, "จอมอนิเตอร์");
 
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, currentStation);
-            // ตั้งชื่อไฟล์ให้มีทั้งชื่อกลุ่มและชื่อสถานี เพื่อง่ายต่อการรวบรวม
-            XLSX.writeFile(workbook, `ADP_${currentGroup}_${currentStation}.xlsx`);
+            const headerPrn = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อเครื่องพิมพ์", "รุ่นเครื่องพิมพ์", "S/N เครื่องพิมพ์", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
+            const wsPrn = XLSX.utils.aoa_to_sheet([...headerPrn, ...tablePrn.getData()]);
+            XLSX.utils.book_append_sheet(wb, wsPrn, "เครื่องพิมพ์");
+
+            // ตั้งชื่อไฟล์
+            XLSX.writeFile(wb, `ADP_${currentGroup}_${currentStation}.xlsx`);
         }
     </script>
 </body>
