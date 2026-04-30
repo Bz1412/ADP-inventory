@@ -11,21 +11,50 @@
     <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.css" />
     <style>
-        /* CSS สำหรับวงกลมหมุน Loading */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* สกอร์บาร์สำหรับ Modal */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans text-gray-800">
 
     <!-- หน้าต่าง Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-[100] hidden flex-col justify-center items-center">
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] hidden flex-col justify-center items-center backdrop-blur-sm">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-white font-bold text-lg">กำลังซิงค์ข้อมูลกับฐานข้อมูล...</p>
     </div>
 
+    <!-- ⚠️ หน้าต่าง Confirm แจ้งเตือนก่อนบันทึก -->
+    <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div class="bg-yellow-50 p-4 border-b border-yellow-200">
+                <h3 class="text-xl font-bold text-yellow-800 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    ยืนยันการบันทึกข้อมูล
+                </h3>
+                <p class="text-yellow-700 mt-1 font-semibold">โปรดตรวจสอบข้อมูลอุปกรณ์ที่ เพิ่ม/ลด ให้ถูกต้องตามความเป็นจริง</p>
+            </div>
+            
+            <!-- Content (แสดงรายการ Diff) -->
+            <div id="diffContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm">
+                <!-- ข้อมูลการเปลี่ยนแปลงจะถูกสร้างด้วย Javascript ตรงนี้ -->
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="bg-white p-4 border-t flex justify-end gap-3">
+                <button onclick="closeConfirmModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 transition">ยกเลิก</button>
+                <button onclick="executeSaveData()" class="px-5 py-2 rounded-lg font-bold text-white bg-green-600 hover:bg-green-700 transition shadow-md">✅ ยืนยันบันทึกข้อมูล</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
-    <nav class="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-50">
+    <nav class="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <h1 class="text-xl md:text-2xl font-bold">🖥️ สถานภาพอุปกณ์คอมพิวเตอร์ ADP-Inventory</h1>
             <button id="btnHome" class="hidden bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition shadow">🏠 กลับหน้าหลัก</button>
@@ -43,8 +72,8 @@
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
             <div class="space-x-2 flex">
-                <!-- เปลี่ยนเป็นกดแล้วเรียก saveDataToServer() -->
-                <button onclick="saveDataToServer()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
+                <!-- กดปุ่มนี้จะไปเรียกหน้าต่าง Confirm ก่อน -->
+                <button onclick="prepareSave()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Export Excel
@@ -70,7 +99,7 @@
 
     <script>
         // ==========================================
-        // ⚠️ นำ URL จาก Google Apps Script มาใส่ตรงนี้!
+        // ⚠️ อย่าลืมนำ URL จาก Google Apps Script มาใส่ตรงนี้!
         const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         // ==========================================
 
@@ -92,7 +121,9 @@
         let currentStation = '';
         let tableCPU = null, tableMon = null, tablePrn = null;
 
-        // สร้าง UI หน้าแรก
+        // 🌟 ตัวแปรใหม่สำหรับเก็บข้อมูลดั้งเดิมก่อนมีการแก้ไข
+        let originalDbData = { cpu: [], mon: [], prn: [] };
+
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
             const stations = inventoryGroups[groupName];
@@ -113,7 +144,6 @@
             indexPage.appendChild(groupSection);
         });
 
-        // ฟังก์ชันโหลดข้อมูลจาก Server 
         async function openStation(groupName, stationName) {
             currentGroup = groupName;
             currentStation = stationName;
@@ -125,37 +155,34 @@
             document.getElementById('currentStationTitle').innerText = `📍 สถานี/ชุด: ${stationName}`;
             document.getElementById('currentGroupSubtitle').innerText = `กลุ่มพื้นที่: ${groupName}`;
             
-            // แสดงหน้าโหลด
             document.getElementById('loadingText').innerText = 'กำลังโหลดข้อมูลจากฐานข้อมูล...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('flex');
 
             try {
-                // สร้าง Key ไม่ซ้ำกัน เช่น ADP_ตะวันออก_อรัญประเทศ
                 const dbKey = `ADP_${groupName}_${stationName}`;
-                
-                // ดึงข้อมูลผ่าน API
                 const response = await fetch(`${API_URL}?key=${dbKey}`);
                 const result = await response.json();
                 
                 let dbData = { cpu: [[]], mon: [[]], prn: [[]] };
                 if (result.value) {
-                    dbData = JSON.parse(result.value); // แปลง JSON กลับเป็นตาราง
+                    dbData = JSON.parse(result.value);
                 }
+
+                // 🌟 เก็บข้อมูลฉบับดั้งเดิมไว้ (Copy clone กันการโดนอ้างอิง)
+                originalDbData = JSON.parse(JSON.stringify(dbData));
 
                 initSpreadsheets(dbData);
             } catch (error) {
                 console.error("Error loading data:", error);
-                alert("เกิดข้อผิดพลาดในการดึงข้อมูลจาก Server กรุณาตรวจสอบลิงก์ API หรือลองใหม่อีกครั้ง");
-                initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]] }); // ถ้าพลาดให้เปิดตารางเปล่า
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาตรวจสอบลิงก์ API หรือลองใหม่อีกครั้ง");
+                initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]] });
             } finally {
-                // ปิดหน้าโหลด
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
             }
         }
 
-        // กลับหน้าแรก
         document.getElementById('btnHome').onclick = () => {
             document.getElementById('indexPage').classList.remove('hidden');
             document.getElementById('editorPage').classList.add('hidden');
@@ -166,7 +193,6 @@
             if (tablePrn) tablePrn.destroy();
         };
 
-        // เริ่มสร้างตาราง
         function initSpreadsheets(dbData) {
             document.getElementById('spreadsheet-cpu').innerHTML = '';
             document.getElementById('spreadsheet-mon').innerHTML = '';
@@ -217,51 +243,147 @@
             });
         }
 
-        // ฟังก์ชันบันทึกข้อมูลไป Google Sheets
-        async function saveDataToServer() {
+        // 🌟 ฟังก์ชันช่วยสร้างข้อความสรุปอุปกรณ์แต่ละแถว
+        function extractValidItems(dataArray, deviceType) {
+            if (!dataArray) return [];
+            let items = [];
+            dataArray.forEach(row => {
+                // เช็คว่าแถวนั้นมีข้อมูลอย่างใดอย่างหนึ่งหรือไม่ (ดักแถวว่าง)
+                if (row[1] || row[2] || row[3] || row[4]) {
+                    // รูปแบบ: [ประเภท] ผู้ใช้: xxx | ยี่ห้อ รุ่น (S/N) | สถานะ: xxx
+                    let str = `[${deviceType}] ผู้ใช้: ${row[1] || '-'} | ${row[2] || '-'} ${row[3] || '-'} (S/N: ${row[4] || '-'}) | สถานะ: ${row[5] || '-'}`;
+                    items.push(str.trim());
+                }
+            });
+            return items;
+        }
+
+        // 🌟 ฟังก์ชันคำนวณความแตกต่าง (อะไรเพิ่ม อะไรลบ)
+        function calculateDiff() {
+            let oldItems = [
+                ...extractValidItems(originalDbData.cpu, 'CPU'),
+                ...extractValidItems(originalDbData.mon, 'จอ'),
+                ...extractValidItems(originalDbData.prn, 'เครื่องพิมพ์')
+            ];
+
+            let newItems = [
+                ...extractValidItems(tableCPU.getData(), 'CPU'),
+                ...extractValidItems(tableMon.getData(), 'จอ'),
+                ...extractValidItems(tablePrn.getData(), 'เครื่องพิมพ์')
+            ];
+
+            let added = [];
+            let tempOld = [...oldItems];
+
+            // ตรวจสอบของที่เพิ่มใหม่
+            newItems.forEach(item => {
+                let idx = tempOld.indexOf(item);
+                if (idx > -1) {
+                    tempOld.splice(idx, 1); // ถ้ามีทั้งเก่าและใหม่ คือไม่ได้แก้ ให้เอาออกจากการลบ
+                } else {
+                    added.push(item); // ถ้าไม่มีในของเก่า แปลว่าถูกเพิ่มมาใหม่ (หรือถูกแก้ข้อมูล)
+                }
+            });
+            
+            // ของเก่าที่เหลืออยู่ใน tempOld คือโดนลบทิ้ง (หรือโดนแก้ข้อมูล)
+            let removed = tempOld;
+
+            return { added, removed };
+        }
+
+        // 🌟 ฟังก์ชันเปิดหน้าต่างเตรียม Save
+        function prepareSave() {
             if (!tableCPU || !tableMon || !tablePrn) return;
+            
+            let diff = calculateDiff();
+            let diffHtml = '';
+            const diffContainer = document.getElementById('diffContent');
+
+            if (diff.added.length === 0 && diff.removed.length === 0) {
+                diffHtml = `
+                    <div class="flex flex-col items-center justify-center p-8 text-gray-400">
+                        <svg class="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-lg">ไม่มีการเปลี่ยนแปลงข้อมูล</p>
+                        <p class="text-sm">(จำนวนและรายละเอียดอุปกรณ์เท่าเดิม)</p>
+                    </div>`;
+            } else {
+                if (diff.added.length > 0) {
+                    diffHtml += `<div class="mb-4 bg-green-50 p-4 rounded border border-green-200">
+                        <p class="font-bold text-green-700 mb-2 flex items-center gap-2">
+                            <span class="bg-green-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">+</span>
+                            รายการอุปกรณ์ที่เพิ่มใหม่ / แก้ไขข้อมูล:
+                        </p>
+                        <ul class="list-disc pl-5 space-y-1 text-green-800">`;
+                    diff.added.forEach(item => diffHtml += `<li>${item}</li>`);
+                    diffHtml += `</ul></div>`;
+                }
+
+                if (diff.removed.length > 0) {
+                    diffHtml += `<div class="bg-red-50 p-4 rounded border border-red-200">
+                        <p class="font-bold text-red-700 mb-2 flex items-center gap-2">
+                            <span class="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">-</span>
+                            รายการอุปกรณ์ที่ถูกนำออก / ข้อมูลเดิม:
+                        </p>
+                        <ul class="list-disc pl-5 space-y-1 text-red-800">`;
+                    diff.removed.forEach(item => diffHtml += `<li>${item}</li>`);
+                    diffHtml += `</ul></div>`;
+                }
+            }
+
+            diffContainer.innerHTML = diffHtml;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            document.getElementById('confirmModal').classList.add('flex');
+        }
+
+        // ปิด Modal
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            document.getElementById('confirmModal').classList.remove('flex');
+        }
+
+        // 🌟 ฟังก์ชันบันทึกข้อมูลของจริง (รันหลังจากกดยืนยันใน Modal)
+        async function executeSaveData() {
+            closeConfirmModal(); // ปิด Modal
+
             if (!API_URL.startsWith('http')) {
                 alert("กรุณาใส่ URL ของ API ในโค้ดก่อนครับ!");
                 return;
             }
 
-            // แสดงหน้าโหลด
             document.getElementById('loadingText').innerText = 'กำลังบันทึกข้อมูลลงฐานข้อมูล...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('flex');
 
             try {
                 const dbKey = `ADP_${currentGroup}_${currentStation}`;
-                
-                // มัดรวมข้อมูล 3 ตาราง
-                const payload = {
+                const newPayload = {
                     cpu: tableCPU.getData(),
                     mon: tableMon.getData(),
                     prn: tablePrn.getData()
                 };
 
-                // ส่ง POST Request
                 await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         key: dbKey,
-                        value: JSON.stringify(payload)
+                        value: JSON.stringify(newPayload)
                     })
                 });
+
+                // สำคัญ: อัปเดตข้อมูลต้นฉบับใหม่หลังจากบันทึกสำเร็จ เพื่อให้การเทียบ Diff ครั้งต่อไปถูกต้อง
+                originalDbData = JSON.parse(JSON.stringify(newPayload));
 
                 alert(`บันทึกข้อมูลของ ${currentStation} ลงฐานข้อมูลสำเร็จแล้ว!`);
             } catch (error) {
                 console.error("Error saving data:", error);
                 alert("ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
             } finally {
-                // ปิดหน้าโหลด
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
             }
         }
 
-        // ฟังก์ชัน Export Excel
         function exportStationExcel() {
             if (!tableCPU || !tableMon || !tablePrn) return;
             const wb = XLSX.utils.book_new();
