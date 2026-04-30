@@ -390,11 +390,7 @@
         }
 
         document.getElementById('btnHome').onclick = () => {
-            document.getElementById('homePage').classList.remove('hidden'); // โชว์หน้าแรกอีกครั้ง
-            document.getElementById('editorPage').classList.add('hidden');
-            document.getElementById('btnHome').classList.add('hidden');
-            if (tableCPU) tableCPU.destroy(); if (tableMon) tableMon.destroy(); if (tablePrn) tablePrn.destroy();
-            loadDashboardStats(); // รีเฟรชสถิติใหม่เวลากลับมาหน้าแรก
+            window.location.reload();
         };
 
         const renderDeleteButton = function(instance, cell, col, row) {
