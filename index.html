@@ -52,7 +52,7 @@
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">กรุณาบันทึกข้อมูลก่อน</h3>
-            <p class="text-gray-600 mb-6">คุณมีการลบอุปกรณ์ออกจากตาราง กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> เพื่ออัปเดตรายการที่ถูกลบก่อนจะกดยืนยันแก้ไขรายงานครับ</p>
+            <p class="text-gray-600 mb-6">คุณมีการลบอุปกรณ์ออกจากตาราง กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> เพื่อยืนยันการเปลี่ยนแปลงก่อนจะกดยืนยันแก้ไขรายงานประจำเดือนครับ</p>
             <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">รับทราบ</button>
         </div>
     </div>
@@ -335,7 +335,6 @@
             if (rowToDelete) { 
                 document.getElementById(rowToDelete.id).jexcel.deleteRow(rowToDelete.row); 
                 showToast("ลบออกจากตารางแล้ว อย่าลืมกดบันทึกฐานข้อมูลครับ", "blue"); 
-                // 🌟 ตั้งค่าว่ามีการลบที่ยังไม่ได้บันทึก 🌟
                 hasUnsavedDeletions = true;
             } 
             closeDeleteModal(); 
@@ -373,14 +372,11 @@
 
         function confirmMonthlyStatus() {
             if (!tableCPU) return;
-
-            // 🌟 ตรวจสอบว่ามีการลบอุปกรณ์ แต่ยังไม่ได้กดบันทึกฐานข้อมูลหรือไม่ 🌟
             if (hasUnsavedDeletions) {
                 document.getElementById('saveFirstModal').classList.remove('hidden');
                 document.getElementById('saveFirstModal').classList.add('flex');
                 return;
             }
-
             let diff = calculateDiff();
             if (isEditingConfirmedReport && diff.added.length === 0 && diff.removed.length === 0) { showToast("ไม่มีการแก้ไขข้อมูลเพิ่มเติมครับ", "error"); return; }
             if (isEditingConfirmedReport) {
@@ -417,7 +413,7 @@
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ!` : `ส่งรายงานประจำเดือนสำเร็จ!`); 
                 isEditingConfirmedReport = true; const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.className = "bg-orange-500 text-white px-4 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
-                hasUnsavedDeletions = false; // รีเซ็ตสถานะ
+                hasUnsavedDeletions = false; 
             } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
@@ -426,10 +422,11 @@
             try {
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(`บันทึก ${currentStation} สำเร็จ!`);
                 
-                // 🌟 เมื่อบันทึกสำเร็จ ให้ล้างสถานะการลบที่ค้างไว้ 🌟
+                // 🌟 อัปเดตข้อมูลเปรียบเทียบทันที เพื่อให้กดยืนยันรายงานต่อได้ 🌟
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
                 hasUnsavedDeletions = false;
+                showToast(`บันทึก ${currentStation} สำเร็จ!`);
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
