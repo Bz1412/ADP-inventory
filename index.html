@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกอุปกรณ์คอมพิวเตอร์</title>
+    <!-- โหลด Tailwind CSS เพื่อความสวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- โหลด SheetJS สำหรับทำไฟล์ Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-100 p-6 font-sans">
+    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-700">ฟอร์มบันทึกสถานะอุปกรณ์ IT</h1>
+        
+        <!-- แบบฟอร์มกรอกข้อมูล -->
+        <form id="deviceForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-blue-50 p-4 rounded border">
+            <!-- หมวด CPU -->
+            <div class="col-span-1 md:col-span-3 font-semibold text-blue-800 border-b pb-2">ส่วนของคอมพิวเตอร์ (CPU)</div>
+            <input type="text" id="cpuBrand" placeholder="ยี่ห้อ CPU" class="p-2 border rounded">
+            <input type="text" id="cpuModel" placeholder="รุ่น CPU" class="p-2 border rounded">
+            <input type="text" id="cpuSN" placeholder="S/N CPU" class="p-2 border rounded">
+
+            <!-- หมวด จอมอนิเตอร์ -->
+            <div class="col-span-1 md:col-span-3 font-semibold text-blue-800 border-b pb-2 mt-2">ส่วนของจอมอนิเตอร์</div>
+            <input type="text" id="monBrand" placeholder="ยี่ห้อจอ" class="p-2 border rounded">
+            <input type="text" id="monModel" placeholder="รุ่นจอ" class="p-2 border rounded">
+            <input type="text" id="monSN" placeholder="S/N จอ" class="p-2 border rounded">
+
+            <!-- หมวด ข้อมูลผู้ใช้และสถานะ -->
+            <div class="col-span-1 md:col-span-3 font-semibold text-blue-800 border-b pb-2 mt-2">ข้อมูลการใช้งาน</div>
+            <input type="text" id="user" placeholder="USER / ผู้ใช้" class="p-2 border rounded" required>
+            <select id="status" class="p-2 border rounded">
+                <option value="ปกติ">ปกติ</option>
+                <option value="ชำรุด">ชำรุด</option>
+                <option value="สำรอง">สำรอง</option>
+            </select>
+            <input type="text" id="connection" placeholder="ระบบการเชื่อมต่อ (เช่น LAN DIV 6)" class="p-2 border rounded">
+            <input type="text" id="remark" placeholder="หมายเหตุ" class="p-2 border rounded md:col-span-3">
+
+            <button type="submit" class="md:col-span-3 bg-green-600 text-white p-2 rounded hover:bg-green-700 font-bold transition">
+                + เพิ่มลงตาราง
+            </button>
+        </form>
+
+        <!-- ปุ่ม Export -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">รายการอุปกรณ์ที่รอ Export</h2>
+            <button onclick="exportToExcel()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold transition shadow">
+                📥 ดาวน์โหลดไฟล์ Excel
+            </button>
+        </div>
+
+        <!-- ตารางแสดงข้อมูลชั่วคราว -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="p-2 border">ผู้ใช้</th>
+                        <th class="p-2 border">CPU</th>
+                        <th class="p-2 border">จอ</th>
+                        <th class="p-2 border">สถานะ</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- ข้อมูลจะมาแสดงตรงนี้ -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Array สำหรับเก็บข้อมูลที่กรอกเข้ามา
+        let deviceList = [];
+
+        // ฟังก์ชันจัดการเมื่อกดปุ่ม Submit ฟอร์ม
+        document.getElementById('deviceForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // ป้องกันเว็บรีเฟรช
+            
+            // เก็บข้อมูลจากฟอร์มลง Object
+            const deviceData = {
+                cpuBrand: document.getElementById('cpuBrand').value,
+                cpuModel: document.getElementById('cpuModel').value,
+                cpuSN: document.getElementById('cpuSN').value,
+                monBrand: document.getElementById('monBrand').value,
+                monModel: document.getElementById('monModel').value,
+                monSN: document.getElementById('monSN').value,
+                user: document.getElementById('user').value,
+                status: document.getElementById('status').value,
+                connection: document.getElementById('connection').value,
+                remark: document.getElementById('remark').value,
+            };
+
+            deviceList.push(deviceData);
+            renderTable();
+            this.reset(); // ล้างฟอร์ม
+        });
+
+        // ฟังก์ชันแสดงข้อมูลในตารางบนเว็บ
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            deviceList.forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2 border">${item.user}</td>
+                        <td class="p-2 border">${item.cpuBrand} ${item.cpuModel}</td>
+                        <td class="p-2 border">${item.monBrand} ${item.monModel}</td>
+                        <td class="p-2 border text-center">${item.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // ฟังก์ชันแปลงข้อมูลเป็น Excel ด้วย SheetJS ตามโครงสร้าง COMPUTER-ตะวันออก.xlsx
+        function exportToExcel() {
+            if (deviceList.length === 0) {
+                alert("กรุณาเพิ่มข้อมูลอย่างน้อย 1 รายการก่อนดาวน์โหลด");
+                return;
+            }
+
+            // 1. เตรียม Header 2 บรรทัด
+            const headerData = [
+                ["ลำดับ", "CPU", "", "", "จอ", "", "", "USER / ผู้ใช้", "สถานะ", "ระบบการเชื่อมต่อ", "หมายเหตุ"],
+                ["", "ยี่ห้อ", "รุ่น", "S/N", "ยี่ห้อ", "รุ่น", "S/N", "", "", "", ""]
+            ];
+
+            // 2. แมพข้อมูลจาก deviceList ลงใน Array
+            const bodyData = deviceList.map((item, index) => ([
+                index + 1,
+                item.cpuBrand, item.cpuModel, item.cpuSN,
+                item.monBrand, item.monModel, item.monSN,
+                item.user, item.status, item.connection, item.remark
+            ]));
+
+            // 3. สร้าง Worksheet และรวมข้อมูล
+            const worksheet = XLSX.utils.aoa_to_sheet([...headerData, ...bodyData]);
+
+            // 4. จัดรูปแบบ Merge Cell
+            worksheet['!merges'] = [
+                { s: { r: 0, c: 1 }, e: { r: 0, c: 3 } }, // CPU
+                { s: { r: 0, c: 4 }, e: { r: 0, c: 6 } }, // จอ
+                { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // ลำดับ
+                { s: { r: 0, c: 7 }, e: { r: 1, c: 7 } }, // USER
+                { s: { r: 0, c: 8 }, e: { r: 1, c: 8 } }, // สถานะ
+                { s: { r: 0, c: 9 }, e: { r: 1, c: 9 } }, // การเชื่อมต่อ
+                { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } } // หมายเหตุ
+            ];
+
+            // 5. สร้างไฟล์และสั่งดาวน์โหลด
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "ข้อมูลอุปกรณ์");
+            XLSX.writeFile(workbook, "COMPUTER-ตะวันออก_อัปเดต.xlsx");
+        }
+    </script>
+</body>
+</html>
