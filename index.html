@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สถานภาพอุปกณ์คอมพิวเตอร์ ADP-Inventory</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/index.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/jspreadsheet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
@@ -488,24 +489,88 @@
             }
         }
 
-        function exportStationExcel() {
+        async function exportStationExcel() {
             if (!tableCPU || !tableMon || !tablePrn) return;
-            const wb = XLSX.utils.book_new();
+            
+            showToast("กำลังเตรียมไฟล์ Excel...");
+            
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'ADP-Inventory';
+            workbook.created = new Date();
 
-            const headerCPU = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
-            const wsCPU = XLSX.utils.aoa_to_sheet([...headerCPU, ...tableCPU.getData().map(row => row.slice(0, -1))]);
-            XLSX.utils.book_append_sheet(wb, wsCPU, "คอมพิวเตอร์");
+            // ฟังก์ชันช่วยจัดรูปแบบตาราง (ตีกรอบ + จัดกึ่งกลาง + ใส่สีหัวตาราง)
+            const formatWorksheet = (ws, headerRowCount) => {
+                // จัดความกว้างคอลัมน์ (หน่วยเป็นตัวอักษร)
+                ws.columns = [
+                    { width: 8 },  // ลำดับ
+                    { width: 25 }, // USER
+                    { width: 15 }, // ยี่ห้อ
+                    { width: 20 }, // รุ่น
+                    { width: 25 }, // S/N
+                    { width: 12 }, // สถานะ
+                    { width: 15 }, // ระบบเชื่อมต่อ (ถ้ามี)
+                    { width: 25 }  // หมายเหตุ
+                ];
 
-            const headerMon = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]];
-            const wsMon = XLSX.utils.aoa_to_sheet([...headerMon, ...tableMon.getData().map(row => row.slice(0, -1))]);
-            XLSX.utils.book_append_sheet(wb, wsMon, "จอมอนิเตอร์");
+                // ตีกรอบให้ทุกช่องที่มีข้อมูล และใส่สีให้ Header
+                ws.eachRow({ includeEmpty: false }, function(row, rowNumber) {
+                    row.eachCell({ includeEmpty: true }, function(cell, colNumber) {
+                        // ตีกรอบ
+                        cell.border = {
+                            top: {style:'thin'}, left: {style:'thin'}, 
+                            bottom: {style:'thin'}, right: {style:'thin'}
+                        };
+                        // จัดตัวหนังสือ
+                        cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                        // จัดกึ่งกลางให้คอลัมน์ "ลำดับ" และ "สถานะ"
+                        if (colNumber === 1 || colNumber === 6) {
+                            cell.alignment.horizontal = 'center';
+                        }
+                        
+                        // ใส่สีและตัวหนาให้บรรทัด Header
+                        if (rowNumber <= headerRowCount) {
+                            cell.font = { bold: true };
+                            cell.alignment.horizontal = 'center';
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFE0E0E0' } // สีเทาอ่อน
+                            };
+                        }
+                    });
+                });
+            };
 
-            const headerPrn = [["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อเครื่องพิมพ์", "รุ่นเครื่องพิมพ์", "S/N เครื่องพิมพ์", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]];
-            const wsPrn = XLSX.utils.aoa_to_sheet([...headerPrn, ...tablePrn.getData().map(row => row.slice(0, -1))]);
-            XLSX.utils.book_append_sheet(wb, wsPrn, "เครื่องพิมพ์");
+            // --- Sheet 1: คอมพิวเตอร์ ---
+            const wsCPU = workbook.addWorksheet("คอมพิวเตอร์");
+            wsCPU.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]);
+            tableCPU.getData().forEach(row => wsCPU.addRow(row.slice(0, -1))); // เอาข้อมูลมาใส่ (ตัดปุ่มลบทิ้ง)
+            formatWorksheet(wsCPU, 1);
 
-            XLSX.writeFile(wb, `ADP_${currentGroup}_${currentStation}.xlsx`);
-            showToast("ส่งออกไฟล์ Excel สำเร็จ!"); // 🌟 แจ้งเตือนเมื่อโหลดเสร็จ
+            // --- Sheet 2: จอมอนิเตอร์ ---
+            const wsMon = workbook.addWorksheet("จอมอนิเตอร์");
+            wsMon.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]);
+            tableMon.getData().forEach(row => wsMon.addRow(row.slice(0, -1)));
+            
+            // ตั้งค่าความกว้างคอลัมน์ของจอมอนิเตอร์ใหม่ (เพราะคอลัมน์ไม่เท่า CPU)
+            wsMon.columns = [
+                { width: 8 }, { width: 25 }, { width: 15 }, { width: 20 }, 
+                { width: 25 }, { width: 12 }, { width: 30 }
+            ];
+            formatWorksheet(wsMon, 1);
+
+            // --- Sheet 3: เครื่องพิมพ์ ---
+            const wsPrn = workbook.addWorksheet("เครื่องพิมพ์");
+            wsPrn.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อเครื่องพิมพ์", "รุ่นเครื่องพิมพ์", "S/N เครื่องพิมพ์", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]);
+            tablePrn.getData().forEach(row => wsPrn.addRow(row.slice(0, -1)));
+            formatWorksheet(wsPrn, 1);
+
+            // สร้างไฟล์และสั่งดาวน์โหลด
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `ADP_${currentGroup}_${currentStation}.xlsx`);
+            
+            showToast("ส่งออกไฟล์ Excel สำเร็จ!");
         }
     </script>
 </body>
