@@ -3,140 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบบันทึกอุปกรณ์คอมพิวเตอร์</title>
-    <!-- โหลด Tailwind CSS เพื่อความสวยงาม -->
+    <title>ระบบคลังอุปกรณ์ IT ตะวันออก</title>
+    <!-- โหลด Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- โหลด SheetJS สำหรับทำไฟล์ Excel -->
+    <!-- โหลด SheetJS สำหรับ Export Excel -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- โหลด Jspreadsheet (ตารางคล้าย Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/index.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/jspreadsheet.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.css" />
 </head>
-<body class="bg-slate-100 p-6 font-sans">
-    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-6 text-center text-blue-700">ฟอร์มบันทึกสถานะอุปกรณ์ IT</h1>
-        
-        <!-- แบบฟอร์มกรอกข้อมูล -->
-        <form id="deviceForm" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-blue-50 p-4 rounded border">
-            <!-- หมวด CPU -->
-            <div class="col-span-1 md:col-span-3 font-semibold text-blue-800 border-b pb-2">ส่วนของคอมพิวเตอร์ (CPU)</div>
-            <input type="text" id="cpuBrand" placeholder="ยี่ห้อ CPU" class="p-2 border rounded">
-            <input type="text" id="cpuModel" placeholder="รุ่น CPU" class="p-2 border rounded">
-            <input type="text" id="cpuSN" placeholder="S/N CPU" class="p-2 border rounded">
+<body class="bg-slate-100 font-sans text-gray-800">
 
-            <!-- หมวด จอมอนิเตอร์ -->
-            <div class="col-span-1 md:col-span-3 font-semibold text-blue-800 border-b pb-2 mt-2">ส่วนของจอมอนิเตอร์</div>
-            <input type="text" id="monBrand" placeholder="ยี่ห้อจอ" class="p-2 border rounded">
-            <input type="text" id="monModel" placeholder="รุ่นจอ" class="p-2 border rounded">
-            <input type="text" id="monSN" placeholder="S/N จอ" class="p-2 border rounded">
-
-            <!-- หมวด ข้อมูลผู้ใช้และสถานะ -->
-            <div class="col-span-1 md:col-span-3 font-semibold text-blue-800 border-b pb-2 mt-2">ข้อมูลการใช้งาน</div>
-            <input type="text" id="user" placeholder="USER / ผู้ใช้" class="p-2 border rounded" required>
-            <select id="status" class="p-2 border rounded">
-                <option value="ปกติ">ปกติ</option>
-                <option value="ชำรุด">ชำรุด</option>
-                <option value="สำรอง">สำรอง</option>
-            </select>
-            <input type="text" id="connection" placeholder="ระบบการเชื่อมต่อ (เช่น LAN DIV 6)" class="p-2 border rounded">
-            <input type="text" id="remark" placeholder="หมายเหตุ" class="p-2 border rounded md:col-span-3">
-
-            <button type="submit" class="md:col-span-3 bg-green-600 text-white p-2 rounded hover:bg-green-700 font-bold transition">
-                + เพิ่มลงตาราง
-            </button>
-        </form>
-
-        <!-- ปุ่ม Export -->
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold">รายการอุปกรณ์ที่รอ Export</h2>
-            <button onclick="exportToExcel()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold transition shadow">
-                📥 ดาวน์โหลดไฟล์ Excel
-            </button>
+    <!-- Navbar -->
+    <nav class="bg-blue-800 text-white p-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">🖥️ ระบบจัดการอุปกรณ์ IT (สายตะวันออก)</h1>
+            <button id="btnHome" class="hidden bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition">🏠 กลับหน้าหลัก</button>
         </div>
+    </nav>
 
-        <!-- ตารางแสดงข้อมูลชั่วคราว -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left border">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="p-2 border">ผู้ใช้</th>
-                        <th class="p-2 border">CPU</th>
-                        <th class="p-2 border">จอ</th>
-                        <th class="p-2 border">สถานะ</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- ข้อมูลจะมาแสดงตรงนี้ -->
-                </tbody>
-            </table>
+    <!-- หน้า Index (เลือกสถานี) -->
+    <div id="indexPage" class="max-w-7xl mx-auto p-6 mt-6">
+        <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">เลือกสถานี / ชุดปฏิบัติการ</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6" id="stationGrid">
+            <!-- ปุ่มสถานีจะถูกสร้างด้วย Javascript -->
         </div>
     </div>
 
+    <!-- หน้า จัดการข้อมูล (ตาราง Excel) -->
+    <div id="editorPage" class="max-w-7xl mx-auto p-6 mt-6 hidden bg-white rounded-lg shadow">
+        <div class="flex justify-between items-center mb-4 border-b pb-4">
+            <h2 id="currentStationTitle" class="text-2xl font-bold text-blue-700">ชื่อสถานี</h2>
+            <div class="space-x-2">
+                <button onclick="saveDataLocal()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึก (ในเครื่อง)</button>
+                <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export เป็น Excel</button>
+            </div>
+        </div>
+        
+        <p class="text-sm text-gray-500 mb-2">* สามารถคัดลอก (Ctrl+C) จาก Excel มาวาง (Ctrl+V) ในตารางนี้ได้เลย</p>
+        
+        <!-- พื้นที่แสดงตาราง -->
+        <div id="spreadsheet" class="w-full overflow-x-auto"></div>
+    </div>
+
     <script>
-        // Array สำหรับเก็บข้อมูลที่กรอกเข้ามา
-        let deviceList = [];
+        // รายชื่อสถานีอ้างอิงจากไฟล์ Excel ต้นฉบับ
+        const stations = ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'];
+        let currentStation = '';
+        let myTable = null; // ตัวแปรเก็บ Object ตาราง
 
-        // ฟังก์ชันจัดการเมื่อกดปุ่ม Submit ฟอร์ม
-        document.getElementById('deviceForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // ป้องกันเว็บรีเฟรช
-            
-            // เก็บข้อมูลจากฟอร์มลง Object
-            const deviceData = {
-                cpuBrand: document.getElementById('cpuBrand').value,
-                cpuModel: document.getElementById('cpuModel').value,
-                cpuSN: document.getElementById('cpuSN').value,
-                monBrand: document.getElementById('monBrand').value,
-                monModel: document.getElementById('monModel').value,
-                monSN: document.getElementById('monSN').value,
-                user: document.getElementById('user').value,
-                status: document.getElementById('status').value,
-                connection: document.getElementById('connection').value,
-                remark: document.getElementById('remark').value,
-            };
-
-            deviceList.push(deviceData);
-            renderTable();
-            this.reset(); // ล้างฟอร์ม
+        // สร้างปุ่มเลือกสถานีในหน้าแรก
+        const grid = document.getElementById('stationGrid');
+        stations.forEach(station => {
+            const btn = document.createElement('div');
+            btn.className = "bg-white p-6 rounded-xl shadow-sm hover:shadow-md border-t-4 border-blue-500 cursor-pointer transform hover:-translate-y-1 transition text-center font-bold text-xl text-gray-700";
+            btn.innerHTML = `📍 ${station}`;
+            btn.onclick = () => openStation(station);
+            grid.appendChild(btn);
         });
 
-        // ฟังก์ชันแสดงข้อมูลในตารางบนเว็บ
-        function renderTable() {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            deviceList.forEach(item => {
-                tbody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-2 border">${item.user}</td>
-                        <td class="p-2 border">${item.cpuBrand} ${item.cpuModel}</td>
-                        <td class="p-2 border">${item.monBrand} ${item.monModel}</td>
-                        <td class="p-2 border text-center">${item.status}</td>
-                    </tr>
-                `;
+        // ฟังก์ชันสลับหน้าและเปิดตาราง
+        function openStation(stationName) {
+            currentStation = stationName;
+            document.getElementById('indexPage').classList.add('hidden');
+            document.getElementById('editorPage').classList.remove('hidden');
+            document.getElementById('btnHome').classList.remove('hidden');
+            document.getElementById('currentStationTitle').innerText = `ข้อมูลอุปกรณ์: ${stationName}`;
+            
+            initSpreadsheet(stationName);
+        }
+
+        // ฟังก์ชันกลับหน้าแรก
+        document.getElementById('btnHome').onclick = () => {
+            document.getElementById('indexPage').classList.remove('hidden');
+            document.getElementById('editorPage').classList.add('hidden');
+            document.getElementById('btnHome').classList.add('hidden');
+            if (myTable) {
+                myTable.destroy(); // ล้างตารางเดิมเมื่อกลับหน้าแรก
+            }
+        };
+
+        // ฟังก์ชันสร้างตารางแบบ Excel
+        function initSpreadsheet(stationName) {
+            // ดึงข้อมูลเดิมจาก LocalStorage (ถ้ามี)
+            let savedData = localStorage.getItem(`stationData_${stationName}`);
+            let initialData = savedData ? JSON.parse(savedData) : [[]]; // ถ้าไม่มีข้อมูลให้เริ่มบรรทัดว่าง 1 บรรทัด
+
+            const spreadsheetDiv = document.getElementById('spreadsheet');
+            spreadsheetDiv.innerHTML = ''; // ล้างของเก่า
+
+            // ตั้งค่าคอลัมน์ให้เหมือนไฟล์ Excel ของคุณ
+            myTable = jspreadsheet(spreadsheetDiv, {
+                data: initialData,
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 60 },
+                    { type: 'text', title: 'ยี่ห้อ CPU', width: 100 },
+                    { type: 'text', title: 'รุ่น CPU', width: 120 },
+                    { type: 'text', title: 'S/N CPU', width: 150 },
+                    { type: 'text', title: 'ยี่ห้อจอ', width: 100 },
+                    { type: 'text', title: 'รุ่นจอ', width: 120 },
+                    { type: 'text', title: 'S/N จอ', width: 150 },
+                    { type: 'text', title: 'USER / ผู้ใช้', width: 120 },
+                    { type: 'dropdown', title: 'สถานะ', width: 80, source: ['ปกติ', 'ชำรุด', 'สำรอง'] },
+                    { type: 'text', title: 'ระบบการเชื่อมต่อ', width: 130 },
+                    { type: 'text', title: 'หมายเหตุ', width: 150 },
+                ],
+                nestedHeaders: [
+                    [
+                        { title: '', colspan: 1 },
+                        { title: 'คอมพิวเตอร์ (CPU)', colspan: 3 },
+                        { title: 'จอมอนิเตอร์', colspan: 3 },
+                        { title: 'ข้อมูลการใช้งาน', colspan: 4 },
+                    ]
+                ],
+                minDimensions: [11, 15], // เริ่มต้นให้มีอย่างน้อย 15 บรรทัด
+                allowInsertRow: true,
+                allowManualInsertRow: true,
+                allowInsertColumn: false,
+                wordWrap: true,
             });
         }
 
-        // ฟังก์ชันแปลงข้อมูลเป็น Excel ด้วย SheetJS ตามโครงสร้าง COMPUTER-ตะวันออก.xlsx
-        function exportToExcel() {
-            if (deviceList.length === 0) {
-                alert("กรุณาเพิ่มข้อมูลอย่างน้อย 1 รายการก่อนดาวน์โหลด");
-                return;
-            }
+        // ฟังก์ชันบันทึกข้อมูลลงเครื่อง
+        function saveDataLocal() {
+            if (!myTable) return;
+            const data = myTable.getData(); // ดึงข้อมูลทั้งหมดจากตาราง
+            localStorage.setItem(`stationData_${currentStation}`, JSON.stringify(data));
+            alert(`บันทึกข้อมูลของ ${currentStation} ลงในอุปกรณ์นี้เรียบร้อยแล้ว!`);
+        }
 
-            // 1. เตรียม Header 2 บรรทัด
+        // ฟังก์ชัน Export Excel โครงสร้างเดิม
+        function exportStationExcel() {
+            if (!myTable) return;
+            const tableData = myTable.getData();
+            
+            // สร้าง Header โครงสร้างเดิมของ Excel
             const headerData = [
                 ["ลำดับ", "CPU", "", "", "จอ", "", "", "USER / ผู้ใช้", "สถานะ", "ระบบการเชื่อมต่อ", "หมายเหตุ"],
                 ["", "ยี่ห้อ", "รุ่น", "S/N", "ยี่ห้อ", "รุ่น", "S/N", "", "", "", ""]
             ];
 
-            // 2. แมพข้อมูลจาก deviceList ลงใน Array
-            const bodyData = deviceList.map((item, index) => ([
-                index + 1,
-                item.cpuBrand, item.cpuModel, item.cpuSN,
-                item.monBrand, item.monModel, item.monSN,
-                item.user, item.status, item.connection, item.remark
-            ]));
+            const worksheet = XLSX.utils.aoa_to_sheet([...headerData, ...tableData]);
 
-            // 3. สร้าง Worksheet และรวมข้อมูล
-            const worksheet = XLSX.utils.aoa_to_sheet([...headerData, ...bodyData]);
-
-            // 4. จัดรูปแบบ Merge Cell
+            // Merge Cells
             worksheet['!merges'] = [
                 { s: { r: 0, c: 1 }, e: { r: 0, c: 3 } }, // CPU
                 { s: { r: 0, c: 4 }, e: { r: 0, c: 6 } }, // จอ
@@ -147,10 +159,9 @@
                 { s: { r: 0, c: 10 }, e: { r: 1, c: 10 } } // หมายเหตุ
             ];
 
-            // 5. สร้างไฟล์และสั่งดาวน์โหลด
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "ข้อมูลอุปกรณ์");
-            XLSX.writeFile(workbook, "COMPUTER-ตะวันออก_อัปเดต.xlsx");
+            XLSX.utils.book_append_sheet(workbook, worksheet, currentStation);
+            XLSX.writeFile(workbook, `COMPUTER_${currentStation}.xlsx`);
         }
     </script>
 </body>
