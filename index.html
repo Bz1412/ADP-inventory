@@ -30,7 +30,7 @@
 
     <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] hidden flex-col justify-center items-center backdrop-blur-sm">
         <div class="loader mb-4"></div>
-        <p id="loadingText" class="text-white font-bold text-lg">กำลังซิงค์ข้อมูลกับฐานข้อมูล...</p>
+        <p id="loadingText" class="text-white font-bold text-lg">กำลังประมวลผล...</p>
     </div>
 
     <!-- Modal ลบ -->
@@ -72,39 +72,23 @@
     </nav>
 
     <div id="homePage" class="max-w-7xl mx-auto p-6 mt-4">
-        <!-- Dashboard สถิติ (ปรับเป็น 4 หมวด) -->
         <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="col-span-2 lg:col-span-4 bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex flex-col justify-center">
                     <p class="text-gray-500 font-bold mb-1">อุปกรณ์ทั้งหมดในระบบ</p>
                     <h3 class="text-4xl font-black text-blue-900" id="statTotal">-</h3>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
-                    <p class="text-gray-500 font-bold mb-1 text-sm">💻 CPU</p>
-                    <h3 class="text-2xl font-bold text-indigo-800" id="statCPU">-</h3>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
-                    <p class="text-gray-500 font-bold mb-1 text-sm">🖥️ จอมอนิเตอร์</p>
-                    <h3 class="text-2xl font-bold text-green-800" id="statMon">-</h3>
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-purple-500">
-                    <p class="text-gray-500 font-bold mb-1 text-sm">🖨️ เครื่องพิมพ์</p>
-                    <h3 class="text-2xl font-bold text-purple-800" id="statPrn">-</h3>
-                </div>
-                <!-- 🌟 เพิ่มสถิติเครื่องมือพิเศษ -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500">
-                    <p class="text-gray-500 font-bold mb-1 text-sm">🛠️ เครื่องมือพิเศษ</p>
-                    <h3 class="text-2xl font-bold text-orange-800" id="statSpc">-</h3>
-                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-gray-500 font-bold mb-1 text-sm">💻 CPU</p><h3 class="text-2xl font-bold text-indigo-800" id="statCPU">-</h3></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500 font-bold mb-1 text-sm">🖥️ จอมอนิเตอร์</p><h3 class="text-2xl font-bold text-green-800" id="statMon">-</h3></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-500 font-bold mb-1 text-sm">🖨️ เครื่องพิมพ์</p><h3 class="text-2xl font-bold text-purple-800" id="statPrn">-</h3></div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-gray-500 font-bold mb-1 text-sm">🛠️ เครื่องมือพิเศษ</p><h3 class="text-2xl font-bold text-orange-800" id="statSpc">-</h3></div>
             </div>
-
             <div class="bg-white p-4 rounded-xl shadow-sm border-t-4 border-gray-400 flex flex-col items-center">
                 <h3 class="font-bold text-gray-700 mb-2">สัดส่วนสถานะอุปกรณ์</h3>
                 <div class="relative w-full h-48"><canvas id="statusChart"></canvas></div>
             </div>
         </div>
 
-        <!-- ค้นหา -->
         <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-blue-600 mb-8">
             <h2 class="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -127,23 +111,27 @@
             </div>
         </div>
 
+        <!-- หน้า Index ที่มีแจ้งเตือน -->
         <div id="indexPage"></div>
     </div>
 
-    <!-- หน้า จัดการข้อมูล (ตาราง) -->
     <div id="editorPage" class="max-w-full mx-auto p-6 mt-4 hidden bg-transparent m-4">
         <div class="bg-white p-6 rounded-lg shadow mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h2 id="currentStationTitle" class="text-2xl font-bold text-blue-700">ชื่อสถานี</h2>
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
-            <div class="space-x-2 flex">
+            <!-- 🌟 เพิ่มปุ่มยืนยันรายงานประจำเดือน 🌟 -->
+            <div class="space-x-2 flex flex-wrap gap-y-2 justify-end">
+                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    ยืนยันรายงานประจำเดือน
+                </button>
                 <button onclick="prepareSave()" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export Excel</button>
             </div>
         </div>
 
-        <!-- ⚠️ แนะนำเรื่องพิมพ์ภาษาไทย ⚠️ -->
         <div class="bg-yellow-100 text-yellow-800 p-3 rounded-lg mb-4 text-sm font-semibold flex items-center gap-2 border border-yellow-300">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             เคล็ดลับ: หากต้องการพิมพ์ "ภาษาไทย" ให้ดับเบิลคลิก (Double Click) ที่ช่องนั้นก่อน แล้วค่อยพิมพ์ จะพิมพ์ได้ปกติครับ!
@@ -151,25 +139,16 @@
 
         <div class="grid grid-cols-1 gap-8">
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto relative">
-                <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3>
-                <div id="spreadsheet-cpu" class="w-full text-sm"></div>
-                <button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded hover:bg-blue-200 text-sm">➕ เพิ่มแถว</button>
+                <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3><div id="spreadsheet-cpu" class="w-full text-sm"></div><button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded hover:bg-blue-200 text-sm">➕ เพิ่มแถว</button>
             </div>
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500 overflow-x-auto relative">
-                <h3 class="text-xl font-bold mb-2 text-green-800">🖥️ 2. ตารางจอมอนิเตอร์</h3>
-                <div id="spreadsheet-mon" class="w-full text-sm"></div>
-                <button onclick="addNewRow('spreadsheet-mon')" class="mt-3 px-4 py-2 bg-green-100 text-green-700 font-bold rounded hover:bg-green-200 text-sm">➕ เพิ่มแถว</button>
+                <h3 class="text-xl font-bold mb-2 text-green-800">🖥️ 2. ตารางจอมอนิเตอร์</h3><div id="spreadsheet-mon" class="w-full text-sm"></div><button onclick="addNewRow('spreadsheet-mon')" class="mt-3 px-4 py-2 bg-green-100 text-green-700 font-bold rounded hover:bg-green-200 text-sm">➕ เพิ่มแถว</button>
             </div>
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-purple-500 overflow-x-auto relative">
-                <h3 class="text-xl font-bold mb-2 text-purple-800">🖨️ 3. ตารางเครื่องพิมพ์</h3>
-                <div id="spreadsheet-prn" class="w-full text-sm"></div>
-                <button onclick="addNewRow('spreadsheet-prn')" class="mt-3 px-4 py-2 bg-purple-100 text-purple-700 font-bold rounded hover:bg-purple-200 text-sm">➕ เพิ่มแถว</button>
+                <h3 class="text-xl font-bold mb-2 text-purple-800">🖨️ 3. ตารางเครื่องพิมพ์</h3><div id="spreadsheet-prn" class="w-full text-sm"></div><button onclick="addNewRow('spreadsheet-prn')" class="mt-3 px-4 py-2 bg-purple-100 text-purple-700 font-bold rounded hover:bg-purple-200 text-sm">➕ เพิ่มแถว</button>
             </div>
-            <!-- 🌟 เพิ่มตารางเครื่องมือพิเศษ 🌟 -->
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-orange-500 overflow-x-auto relative">
-                <h3 class="text-xl font-bold mb-2 text-orange-800">🛠️ 4. ตารางเครื่องมือพิเศษ</h3>
-                <div id="spreadsheet-spc" class="w-full text-sm"></div>
-                <button onclick="addNewRow('spreadsheet-spc')" class="mt-3 px-4 py-2 bg-orange-100 text-orange-700 font-bold rounded hover:bg-orange-200 text-sm">➕ เพิ่มแถว</button>
+                <h3 class="text-xl font-bold mb-2 text-orange-800">🛠️ 4. ตารางเครื่องมือพิเศษ</h3><div id="spreadsheet-spc" class="w-full text-sm"></div><button onclick="addNewRow('spreadsheet-spc')" class="mt-3 px-4 py-2 bg-orange-100 text-orange-700 font-bold rounded hover:bg-orange-200 text-sm">➕ เพิ่มแถว</button>
             </div>
         </div>
     </div>
@@ -179,77 +158,42 @@
         
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
         const inventoryGroups = {
-            "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'],
-            "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'],
-            "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'],
-            "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'],
-            "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'],
-            "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'],
-            "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
+            "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
 
-        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง'];
-        const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
-
-        let currentGroup = '', currentStation = '';
-        let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; // เพิ่ม tableSpc
-        let originalDbData = { cpu: [], mon: [], prn: [], spc: [] }; // เพิ่ม spc
+        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
+        let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; 
+        let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null }; // 🌟 เก็บสถานะประจำเดือน
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
 
         function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
+            const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
             const bgColor = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
             toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center gap-3 toast-enter pointer-events-auto`;
-            toast.innerHTML = `<span>${message}</span>`;
-            container.appendChild(toast);
+            toast.innerHTML = `<span>${message}</span>`; container.appendChild(toast);
             requestAnimationFrame(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-enter-active'); });
             setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch(`${API_URL}?key=ALL_DATA`);
-                const result = await response.json();
-                let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0;
-                let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
+        // 🌟 สร้างฟังก์ชันคำนวณป้ายแจ้งเตือนสถานะประจำเดือน 🌟
+        function getMonthBadge(lastConfirmedStr) {
+            const now = new Date();
+            // สร้าง Format ปัจจุบัน เช่น "2026-04"
+            const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const currentDay = now.getDate();
 
-                if (result.value) {
-                    for (const jsonValue of Object.values(result.value)) {
-                        const dbData = JSON.parse(jsonValue);
-                        const countItems = (dataArray) => {
-                            if(!dataArray) return 0; let count = 0;
-                            dataArray.forEach(row => {
-                                if(row[1] || row[2] || row[3] || row[4]) {
-                                    count++; let status = row[5];
-                                    if(status === 'ปกติ' || status === 'ชำรุด' || status === 'สำรอง') { statCounts[status]++; } else { statCounts['ปกติ']++; }
-                                }
-                            }); return count;
-                        };
-                        totalCPU += countItems(dbData.cpu); totalMon += countItems(dbData.mon); 
-                        totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc); // รวม Spc
-                    }
+            if (lastConfirmedStr === currentMonthStr) {
+                return '<span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-bold border border-green-200">✅ ส่งรายงานแล้ว</span>';
+            } else {
+                if (currentDay <= 5) {
+                    return '<span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-bold border border-yellow-300">⚠️ รอส่งรายงาน (ด่วน)</span>';
+                } else {
+                    return '<span class="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700 font-bold border border-red-200">❌ ยังไม่ส่งรายงาน (เลยกำหนด)</span>';
                 }
-
-                document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc;
-                document.getElementById('statCPU').innerText = totalCPU;
-                document.getElementById('statMon').innerText = totalMon;
-                document.getElementById('statPrn').innerText = totalPrn;
-                document.getElementById('statSpc').innerText = totalSpc;
-
-                const ctx = document.getElementById('statusChart').getContext('2d');
-                if(myChart) myChart.destroy();
-                myChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['ปกติ', 'ชำรุด', 'สำรอง'],
-                        datasets: [{ data: [statCounts['ปกติ'], statCounts['ชำรุด'], statCounts['สำรอง']], backgroundColor: ['#22c55e', '#ef4444', '#eab308'], borderWidth: 0 }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-                });
-            } catch (error) { console.error(error); document.getElementById('statTotal').innerText = "Error"; }
+            }
         }
 
+        // สร้างปุ่มโครงสร้างหน้าแรก (ใส่ป้าย Loading ไว้ก่อน)
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
             const groupSection = document.createElement('div');
@@ -258,28 +202,66 @@
             const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4';
             inventoryGroups[groupName].forEach(station => {
                 const btn = document.createElement('div');
-                btn.className = "bg-slate-50 p-4 rounded-lg shadow-sm hover:shadow-md border border-gray-200 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-900 flex items-center justify-center min-h-[80px]";
-                btn.innerHTML = `<span>📍 ${station}</span>`; btn.onclick = () => openStation(groupName, station);
+                btn.className = "bg-slate-50 p-4 rounded-lg shadow-sm hover:shadow-md border border-gray-200 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-900 flex flex-col items-center justify-center gap-2 min-h-[90px]";
+                // 🌟 ใส่ Badge แจ้งเตือน 🌟
+                btn.innerHTML = `<span>📍 ${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-500">กำลังตรวจสอบ...</div>`; 
+                btn.onclick = () => openStation(groupName, station);
                 gridDiv.appendChild(btn);
             });
             groupSection.appendChild(gridDiv); indexPage.appendChild(groupSection);
         });
 
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json();
+                let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0;
+                let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
+
+                // 🌟 รีเซ็ตป้ายทุกอันให้เป็น "ยังไม่ส่งรายงาน" ไปก่อน เผื่อสถานีไหนไม่เคยมีข้อมูล 🌟
+                groupOrder.forEach(g => inventoryGroups[g].forEach(s => {
+                    const badge = document.getElementById(`badge_${g}_${s}`);
+                    if(badge) badge.outerHTML = getMonthBadge(null).replace('<span', `<span id="badge_${g}_${s}"`);
+                }));
+
+                if (result.value) {
+                    for (const [dbKey, jsonValue] of Object.entries(result.value)) {
+                        const dbData = JSON.parse(jsonValue);
+                        
+                        // 🌟 อัปเดตป้ายแจ้งเตือนของสถานีนี้ 🌟
+                        const parts = dbKey.split('_');
+                        if(parts.length >= 3) {
+                            const badge = document.getElementById(`badge_${parts[1]}_${parts[2]}`);
+                            if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${parts[1]}_${parts[2]}"`);
+                        }
+
+                        const countItems = (arr) => {
+                            if(!arr) return 0; let c = 0;
+                            arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c;
+                        };
+                        totalCPU += countItems(dbData.cpu); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
+                    }
+                }
+                document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc;
+                document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statMon').innerText = totalMon;
+                document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
+
+                const ctx = document.getElementById('statusChart').getContext('2d'); if(myChart) myChart.destroy();
+                myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง'], datasets: [{ data: [statCounts['ปกติ'], statCounts['ชำรุด'], statCounts['สำรอง']], backgroundColor: ['#22c55e', '#ef4444', '#eab308'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+            } catch (error) { console.error(error); document.getElementById('statTotal').innerText = "Error"; }
+        }
+
         async function globalSearch() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!query) return showToast("กรุณาพิมพ์คำค้นหาก่อน", "error");
             document.getElementById('loadingText').innerText = 'กำลังค้นหา...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
-
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json(); let allResults = [];
                 if (result.value) {
                     for (const [dbKey, jsonValue] of Object.entries(result.value)) {
-                        const parts = dbKey.split('_'); if (parts.length < 3) continue;
-                        const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
+                        const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                         if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'CPU', row)); });
                         if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอ', row)); });
                         if (dbData.prn) dbData.prn.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row)); });
-                        // 🌟 ค้นหาในเครื่องมือพิเศษด้วย
                         if (dbData.spc) dbData.spc.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องมือพิเศษ', row)); });
                     }
                 }
@@ -287,8 +269,7 @@
                 if (allResults.length > 0) { tbody.innerHTML = allResults.join(''); showToast(`พบ ${allResults.length} รายการ`); } 
                 else { tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">ไม่พบอุปกรณ์ที่ค้นหา</td></tr>`; showToast("ไม่พบข้อมูล", "error"); }
                 document.getElementById('searchResults').classList.remove('hidden');
-            } catch (error) { console.error(error); showToast("ระบบขัดข้อง", "error"); } 
-            finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (error) { console.error(error); showToast("ระบบขัดข้อง", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         function createSearchRowHtml(g, s, t, r) {
@@ -307,19 +288,27 @@
 
             try {
                 const response = await fetch(`${API_URL}?key=ADP_${groupName}_${stationName}`); const result = await response.json();
-                let dbData = { cpu: [[]], mon: [[]], prn: [[]], spc: [[]] };
-                if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } // รองรับข้อมูลเก่าที่ยังไม่มี spc
-                originalDbData = JSON.parse(JSON.stringify(dbData)); initSpreadsheets(dbData);
+                let dbData = { cpu: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
+                if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } 
+                originalDbData = JSON.parse(JSON.stringify(dbData)); 
+                
+                // 🌟 ตรวจสอบว่าเดือนนี้กดส่งรายงานไปหรือยัง เพื่อซ่อน/โชว์ปุ่ม 🌟
+                const now = new Date();
+                const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                if (dbData.lastConfirmed === currentMonthStr) {
+                    document.getElementById('btnConfirmMonth').classList.add('hidden'); // ซ่อนปุ่มถ้ายืนยันแล้ว
+                } else {
+                    document.getElementById('btnConfirmMonth').classList.remove('hidden'); // โชว์ปุ่มถ้ายังไม่ยืนยัน
+                }
+
+                initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
             finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         document.getElementById('btnHome').onclick = () => window.location.reload();
 
-        const renderDeleteBtn = function(i, c, col, r) {
-            let tCols = document.getElementById(i.id).jexcel.options.columns.length;
-            if (col == tCols - 1) { c.innerHTML = `<button onclick="promptDeleteRow('${i.id}', ${r})" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 text-lg">🗑️</button>`; c.style.textAlign = 'center'; }
-        };
+        const renderDeleteBtn = function(i, c, col, r) { let tCols = document.getElementById(i.id).jexcel.options.columns.length; if (col == tCols - 1) { c.innerHTML = `<button onclick="promptDeleteRow('${i.id}', ${r})" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 text-lg">🗑️</button>`; c.style.textAlign = 'center'; } };
 
         function promptDeleteRow(id, row) {
             const rData = document.getElementById(id).jexcel.getRowData(row);
@@ -335,38 +324,19 @@
         function addNewRow(id) { document.getElementById(id).jexcel.insertRow(); showToast("เพิ่มแถวใหม่แล้ว"); }
 
         function initSpreadsheets(data) {
-            document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; 
-            document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-
+            document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
             tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
-            
-            // 🌟 ตารางเครื่องมือพิเศษ
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { 
-                data: data.spc, 
-                columns: [
-                    { type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, 
-                    { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }
-                ], 
-                minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn 
-            });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อพริ้นเตอร์', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderDeleteBtn });
         }
 
-        function extractValid(arr, type) {
-            if (!arr) return []; let items = [];
-            arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ผู้ใช้: ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) | สถานะ: ${r[5]||'-'}`); });
-            return items;
-        }
+        function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ผู้ใช้: ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) | สถานะ: ${r[5]||'-'}`); }); return items; }
 
         function calculateDiff() {
             let oldItems = [...extractValid(originalDbData.cpu, 'CPU'), ...extractValid(originalDbData.mon, 'จอ'), ...extractValid(originalDbData.prn, 'เครื่องพิมพ์'), ...extractValid(originalDbData.spc, 'เครื่องมือพิเศษ')];
             let newItems = [...extractValid(tableCPU.getData(), 'CPU'), ...extractValid(tableMon.getData(), 'จอ'), ...extractValid(tablePrn.getData(), 'เครื่องพิมพ์'), ...extractValid(tableSpc.getData(), 'เครื่องมือพิเศษ')];
-            let added = []; let tempOld = [...oldItems];
-            newItems.forEach(i => { let idx = tempOld.indexOf(i); if (idx > -1) { tempOld.splice(idx, 1); } else { added.push(i); } });
-            return { added, removed: tempOld };
+            let added = []; let tempOld = [...oldItems]; newItems.forEach(i => { let idx = tempOld.indexOf(i); if (idx > -1) { tempOld.splice(idx, 1); } else { added.push(i); } }); return { added, removed: tempOld };
         }
 
         function prepareSave() {
@@ -381,12 +351,41 @@
 
         function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
 
+        // 🌟 ฟังก์ชันทำงานเวลากดยืนยันส่งรายงานประจำเดือน 🌟
+        async function confirmMonthlyStatus() {
+            if(!confirm("คุณต้องการยืนยันว่าข้อมูลปัจจุบันถูกต้อง และส่งรายงานสถานภาพประจำเดือนนี้ใช่หรือไม่?")) return;
+
+            const now = new Date();
+            const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            
+            // ใส่ประวัติ Log ไปด้วยว่า ส่งรายงานแล้ว
+            pendingLogs = [{ action: 'ส่งรายงานประจำเดือน', detail: `ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
+            
+            document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...';
+            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+
+            try {
+                const newPayload = { 
+                    cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), 
+                    prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)),
+                    lastConfirmed: currentMonthStr // 🌟 ใส่ลายเซ็นยืนยันเดือนนี้ลงในฐานข้อมูล
+                };
+                await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
+                
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+                showToast(`ส่งรายงานประจำเดือนของ ${currentStation} สำเร็จ!`);
+                document.getElementById('btnConfirmMonth').classList.add('hidden'); // ซ่อนปุ่มเพราะส่งแล้ว
+            } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } 
+            finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
+
         async function executeSaveData() {
             closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังบันทึก...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const newPayload = { 
                     cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), 
-                    prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)) // เพิ่มการเซฟ spc
+                    prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)),
+                    lastConfirmed: originalDbData.lastConfirmed // 🌟 เซฟปกติ ไม่ไปยุ่งกับสถานะการรายงานเดือน 🌟
                 };
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(`บันทึก ${currentStation} สำเร็จ!`);
@@ -404,10 +403,7 @@
             const w1 = wb.addWorksheet("คอมพิวเตอร์"); w1.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableCPU.getData().forEach(r => w1.addRow(r.slice(0, -1))); formatWs(w1);
             const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
             const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
-            
-            // 🌟 เพิ่ม Sheet เครื่องมือพิเศษ
             const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
-
             const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ส่งออกสำเร็จ!");
         }
 
