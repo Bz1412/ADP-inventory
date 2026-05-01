@@ -92,6 +92,7 @@
                 <button onclick="closeExampleModal()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
             </div>
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
+                <p class="mb-4 text-gray-700 dark:text-gray-300">การกรอกข้อมูลที่ครบถ้วนและเป็นรูปแบบเดียวกัน จะช่วยให้การค้นหาและสรุปรายงานมีประสิทธิภาพมากขึ้นครับ</p>
                 <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm mb-4">
                     <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead class="bg-blue-100 dark:bg-blue-800 text-blue-900 dark:text-blue-100">
@@ -111,8 +112,29 @@
                                 <td class="p-3 border dark:border-gray-600 font-mono">ABC1234567</td>
                                 <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ฝกร. (ส่วนหน้า)</td>
                             </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="p-3 border dark:border-gray-600">ร.อ. หญิง มานี รักชาติ</td>
+                                <td class="p-3 border dark:border-gray-600">HP</td>
+                                <td class="p-3 border dark:border-gray-600">ProDesk 400 G7</td>
+                                <td class="p-3 border dark:border-gray-600 font-mono">8CG12345Z</td>
+                                <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ฝอ.3 (ส่วนหลัง)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="p-3 border dark:border-gray-600">ส่วนรวม (ใช้งานทั่วไป)</td>
+                                <td class="p-3 border dark:border-gray-600">Lenovo</td>
+                                <td class="p-3 border dark:border-gray-600">ThinkCentre M70s</td>
+                                <td class="p-3 border dark:border-gray-600 font-mono">P0A1B2C3</td>
+                                <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ห้องประชุม 1</td>
+                            </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200">
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>การพิมพ์ภาษาไทย:</strong> โปรดดับเบิลคลิกที่ช่องให้ <span class="font-mono bg-white dark:bg-gray-800 px-1 border dark:border-gray-600 rounded">|</span> กระพริบก่อนพิมพ์เสมอ</li>
+                        <li><strong>S/N (Serial Number):</strong> กรอกให้ถูกต้องเสมอเพื่อใช้ในการค้นหาเครื่องหายหรือเช็คประกัน</li>
+                        <li><strong>ผู้ใช้งาน:</strong> ระบุชื่อจริงและยศ เพื่อให้ทราบว่าเครื่องนั้นอยู่ในความรับผิดชอบของใคร</li>
+                    </ul>
                 </div>
             </div>
             <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end">
@@ -259,6 +281,24 @@
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export</button>
                 <button onclick="generateAllQRCodes()" class="bg-gray-800 dark:bg-black text-white px-4 py-2 rounded shadow hover:bg-gray-900 font-bold flex items-center gap-2">🖨️ ปริ้นต์ QR</button>
             </div>
+        </div>
+
+        <!-- 🌟 เอากล่องคำแนะนำกลับมาใส่ตรงนี้แล้วครับ 🌟 -->
+        <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 p-4 rounded-lg mb-6 border border-blue-200 dark:border-blue-800 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div class="flex items-start gap-3">
+                <span class="text-2xl">💡</span>
+                <div>
+                    <h3 class="font-bold text-base mb-1">คำแนะนำในการกรอกข้อมูล</h3>
+                    <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+                        <li><strong>การพิมพ์ภาษาไทย:</strong> ต้อง <span class="text-red-600 dark:text-red-400 font-bold">ดับเบิลคลิกที่ช่อง (Double-click)</span> ให้เคอร์เซอร์กระพริบก่อน จึงจะสามารถพิมพ์ภาษาไทยได้ปกติ</li>
+                        <li><strong>ช่องหมายเหตุ:</strong> ให้ระบุ <span class="text-blue-600 dark:text-blue-400 font-bold">สถานที่ตั้งของอุปกรณ์</span> ให้ชัดเจน เช่น <em>ฝกร. (ส่วนหน้า)</em>, <em>ฝอ.3 (ส่วนหลัง)</em> หรือ <em>ห้องประชุม 1</em></li>
+                        <li><strong>การนำเข้า Excel:</strong> ให้ทำการ <span class="text-teal-600 dark:text-teal-400 font-bold">Export Excel</span> สถานีนี้ออกไปก่อนเพื่อใช้เป็น Template ในการกรอกข้อมูลและ Import กลับเข้ามาครับ</li>
+                    </ul>
+                </div>
+            </div>
+            <button onclick="openExampleModal()" class="shrink-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg font-bold border-2 border-blue-300 dark:border-blue-700 shadow-sm transition-colors flex items-center justify-center gap-2 text-sm">
+                <span>👀</span> ดูตัวอย่างการใส่ข้อมูล
+            </button>
         </div>
 
         <div class="grid grid-cols-1 gap-8">
