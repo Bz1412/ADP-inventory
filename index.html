@@ -45,6 +45,65 @@
 
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print"></div>
 
+    <!-- 🌟 Modal คำแนะนำการกรอกข้อมูล 🌟 -->
+    <div id="exampleModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="bg-blue-50 p-4 border-b border-blue-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-blue-800 flex items-center gap-2">📋 ตัวอย่างการกรอกข้อมูลที่ถูกต้อง</h3>
+                <button onclick="closeExampleModal()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm">
+                <p class="mb-4 text-gray-700">การกรอกข้อมูลที่ครบถ้วนและเป็นรูปแบบเดียวกัน จะช่วยให้การค้นหาและสรุปรายงานมีประสิทธิภาพมากขึ้นครับ</p>
+                <div class="overflow-x-auto border rounded-lg bg-white shadow-sm mb-4">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-blue-100 text-blue-900">
+                            <tr>
+                                <th class="p-3 border font-bold w-1/5">USER / ผู้ใช้</th>
+                                <th class="p-3 border font-bold">ยี่ห้อ</th>
+                                <th class="p-3 border font-bold">รุ่น</th>
+                                <th class="p-3 border font-bold">S/N</th>
+                                <th class="p-3 border font-bold w-1/5">หมายเหตุ (จุดตั้ง)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 border">จ.ส.อ. สมชาย ใจดี</td>
+                                <td class="p-3 border">DELL</td>
+                                <td class="p-3 border">Optiplex 7090</td>
+                                <td class="p-3 border font-mono">ABC1234567</td>
+                                <td class="p-3 border text-blue-700 font-semibold bg-blue-50">ฝกร. (ส่วนหน้า)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 bg-gray-50">
+                                <td class="p-3 border">ร.อ. หญิง มานี รักชาติ</td>
+                                <td class="p-3 border">HP</td>
+                                <td class="p-3 border">ProDesk 400 G7</td>
+                                <td class="p-3 border font-mono">8CG12345Z</td>
+                                <td class="p-3 border text-blue-700 font-semibold bg-blue-50">ฝอ.3 (ส่วนหลัง)</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 border">ส่วนรวม (ใช้งานทั่วไป)</td>
+                                <td class="p-3 border">Lenovo</td>
+                                <td class="p-3 border">ThinkCentre M70s</td>
+                                <td class="p-3 border font-mono">P0A1B2C3</td>
+                                <td class="p-3 border text-blue-700 font-semibold bg-blue-50">ห้องประชุม 1</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded border border-yellow-200 text-yellow-800">
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>การพิมพ์ภาษาไทย:</strong> โปรดดับเบิลคลิกที่ช่องให้ <span class="font-mono bg-white px-1 border rounded">|</span> กระพริบก่อนพิมพ์เสมอ</li>
+                        <li><strong>S/N (Serial Number):</strong> กรอกให้ถูกต้องเสมอเพื่อใช้ในการค้นหาเครื่องหายหรือเช็คประกัน</li>
+                        <li><strong>ผู้ใช้งาน:</strong> ระบุชื่อจริงและยศ เพื่อให้ทราบว่าเครื่องนั้นอยู่ในความรับผิดชอบของใคร</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bg-white p-4 border-t flex justify-end">
+                <button onclick="closeExampleModal()" class="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md">เข้าใจแล้ว</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal แจ้งเตือนต้องบันทึกก่อนแก้ไข -->
     <div id="saveFirstModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
@@ -52,7 +111,7 @@
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">กรุณาบันทึกข้อมูลก่อน</h3>
-            <p class="text-gray-600 mb-6">คุณมีการลบอุปกรณ์ออกจากตาราง กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> เพื่ออัปเดตรายการที่ถูกลบก่อนจะกดยืนยันแก้ไขรายงานครับ</p>
+            <p class="text-gray-600 mb-6">คุณมีการลบอุปกรณ์ออกจากตาราง กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> เพื่อยืนยันการเปลี่ยนแปลงก่อนจะกดยืนยันแก้ไขรายงานประจำเดือนครับ</p>
             <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">รับทราบ</button>
         </div>
     </div>
@@ -180,6 +239,23 @@
             </div>
         </div>
 
+        <!-- 🌟 ส่วนกล่องคำแนะนำที่ปรับปรุงใหม่ 🌟 -->
+        <div class="bg-blue-50 text-blue-800 p-4 rounded-lg mb-6 border border-blue-200 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div class="flex items-start gap-3">
+                <span class="text-2xl">💡</span>
+                <div>
+                    <h3 class="font-bold text-base mb-1">คำแนะนำในการกรอกข้อมูล</h3>
+                    <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                        <li><strong>การพิมพ์ภาษาไทย:</strong> ต้อง <span class="text-red-600 font-bold">ดับเบิลคลิกที่ช่อง (Double-click)</span> ให้เคอร์เซอร์กระพริบก่อน จึงจะสามารถพิมพ์ภาษาไทยได้ปกติ</li>
+                        <li><strong>ช่องหมายเหตุ:</strong> ให้ระบุ <span class="text-blue-600 font-bold">สถานที่ตั้งของอุปกรณ์</span> ให้ชัดเจน เช่น <em>ฝกร. (ส่วนหน้า)</em>, <em>ฝอ.3 (ส่วนหลัง)</em> หรือ <em>ห้องประชุม 1</em></li>
+                    </ul>
+                </div>
+            </div>
+            <button onclick="openExampleModal()" class="shrink-0 bg-white hover:bg-gray-50 text-blue-700 px-4 py-2 rounded-lg font-bold border-2 border-blue-300 shadow-sm transition-colors flex items-center justify-center gap-2 text-sm">
+                <span>👀</span> ดูตัวอย่างการใส่ข้อมูล
+            </button>
+        </div>
+
         <div class="grid grid-cols-1 gap-8">
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto relative">
                 <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3><div id="spreadsheet-cpu" class="w-full text-sm"></div><button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded text-sm">➕ เพิ่มแถว</button>
@@ -198,9 +274,9 @@
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
-        const groupOrder = [ "ตัวอย่างการใส่ข้อมูล", "เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
+        const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
         const inventoryGroups = {
-             "ตัวอย่างการใส่ข้อมูล": ['ตัวอย่างการใส่ข้อมูล'], "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
+            "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; 
@@ -208,7 +284,6 @@
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null; let isEditingConfirmedReport = false; 
 
-        // 🌟 ตัวแปรเช็คสถานะการลบที่ยังไม่ได้บันทึก 🌟
         let hasUnsavedDeletions = false;
 
         function showToast(message, type = 'success') {
@@ -335,7 +410,6 @@
             if (rowToDelete) { 
                 document.getElementById(rowToDelete.id).jexcel.deleteRow(rowToDelete.row); 
                 showToast("ลบออกจากตารางแล้ว อย่าลืมกดบันทึกฐานข้อมูลครับ", "blue"); 
-                // 🌟 ตั้งค่าว่ามีการลบที่ยังไม่ได้บันทึก 🌟
                 hasUnsavedDeletions = true;
             } 
             closeDeleteModal(); 
@@ -373,14 +447,11 @@
 
         function confirmMonthlyStatus() {
             if (!tableCPU) return;
-
-            // 🌟 ตรวจสอบว่ามีการลบอุปกรณ์ แต่ยังไม่ได้กดบันทึกฐานข้อมูลหรือไม่ 🌟
             if (hasUnsavedDeletions) {
                 document.getElementById('saveFirstModal').classList.remove('hidden');
                 document.getElementById('saveFirstModal').classList.add('flex');
                 return;
             }
-
             let diff = calculateDiff();
             if (isEditingConfirmedReport && diff.added.length === 0 && diff.removed.length === 0) { showToast("ไม่มีการแก้ไขข้อมูลเพิ่มเติมครับ", "error"); return; }
             if (isEditingConfirmedReport) {
@@ -417,7 +488,7 @@
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ!` : `ส่งรายงานประจำเดือนสำเร็จ!`); 
                 isEditingConfirmedReport = true; const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.className = "bg-orange-500 text-white px-4 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
-                hasUnsavedDeletions = false; // รีเซ็ตสถานะ
+                hasUnsavedDeletions = false; 
             } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
@@ -426,10 +497,9 @@
             try {
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(`บันทึก ${currentStation} สำเร็จ!`);
-                
-                // 🌟 เมื่อบันทึกสำเร็จ ให้ล้างสถานะการลบที่ค้างไว้ 🌟
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
                 hasUnsavedDeletions = false;
+                showToast(`บันทึก ${currentStation} สำเร็จ!`);
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
@@ -517,6 +587,10 @@
         }
 
         function closeQrModal() { document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); }
+
+        // ฟังก์ชันใหม่สำหรับเปิด/ปิด Modal ตัวอย่างการใส่ข้อมูล
+        function openExampleModal() { document.getElementById('exampleModal').classList.remove('hidden'); document.getElementById('exampleModal').classList.add('flex'); }
+        function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
 
         window.onload = loadDashboardStats;
     </script>
