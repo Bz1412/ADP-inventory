@@ -40,15 +40,8 @@
             #printArea, #printArea * { visibility: visible; } 
             #printArea { position: absolute !important; left: 0 !important; top: 0 !important; opacity: 1 !important; z-index: 9999 !important; width: 100%; display: flex !important; flex-wrap: wrap !important; gap: 15px !important; padding: 10px; }
             
-            #officialReportArea, #officialReportArea * { visibility: visible; }
-            #officialReportArea { position: absolute !important; left: 0 !important; top: 0 !important; width: 100%; display: block !important; padding: 20px; background: white; color: black; z-index: 9999 !important;}
-            
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .qr-label { page-break-inside: avoid; border: 1px solid #ccc; background: white; }
-            /* สไตล์สำหรับใบรายงาน */
-            .report-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; }
-            .report-table th, .report-table td { border: 1px solid #000; padding: 5px; text-align: left; }
-            .report-table th { background-color: #f0f0f0; text-align: center; }
         }
     </style>
 </head>
@@ -63,9 +56,6 @@
 
     <!-- พื้นที่สำหรับ Print QR Code -->
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
-    
-    <!-- พื้นที่สำหรับ Print ใบรายงานแบบทางการ -->
-    <div id="officialReportArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 bg-white text-black p-8 no-print only-print"></div>
 
     <!-- Modal ดูประวัติการแก้ไข -->
     <div id="auditLogModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
@@ -184,6 +174,21 @@
         </div>
     </div>
 
+    <!-- Modal สำหรับพรีวิว QR Code -->
+    <div id="qrPreviewModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">🖨️ ตัวอย่าง QR Code (พร้อมปริ้นต์)</h3>
+                <button onclick="closeQrModal()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div id="qrPreviewContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-100 dark:bg-gray-700 flex flex-wrap gap-4 justify-center items-start"></div>
+            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end gap-3">
+                <button onclick="closeQrModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">ปิดหน้าต่าง</button>
+                <button onclick="window.print()" class="px-5 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md flex items-center gap-2">สั่งพิมพ์ (Print)</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="bg-blue-800 dark:bg-gray-900 text-white p-4 shadow-md sticky top-0 z-40 transition-colors border-b dark:border-gray-700 no-print">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
@@ -252,15 +257,10 @@
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
                 <button onclick="document.getElementById('importExcelInput').click()" class="bg-teal-600 text-white px-4 py-2 rounded shadow hover:bg-teal-700 font-bold flex items-center gap-2">📤 นำเข้า</button>
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export</button>
-                
-                <!-- 🌟 ปุ่มพิมพ์ใบรายงาน PDF 🌟 -->
-                <button onclick="generateOfficialReport()" class="bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700 font-bold flex items-center gap-2">📑 พิมพ์ใบรายงาน</button>
-                
                 <button onclick="generateAllQRCodes()" class="bg-gray-800 dark:bg-black text-white px-4 py-2 rounded shadow hover:bg-gray-900 font-bold flex items-center gap-2">🖨️ ปริ้นต์ QR</button>
             </div>
         </div>
 
-        <!-- ⚠️ กล่อง Jspreadsheet เราบังคับพื้นหลังขาวไว้ เพื่อไม่ให้ตารางสีเพี้ยนใน Dark Mode -->
         <div class="grid grid-cols-1 gap-8">
             <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto">
                 <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3><div id="spreadsheet-cpu" class="w-full text-sm text-black"></div><button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded text-sm">➕ เพิ่มแถว</button>
@@ -296,69 +296,9 @@
             document.getElementById('darkModeIcon').innerText = isDark ? '☀️' : '🌙';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
-        // เช็คค่าจากที่เคยตั้งไว้
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
             document.getElementById('darkModeIcon').innerText = '☀️';
-        }
-
-        // 📑 ระบบออกใบรายงาน (PDF)
-        function generateOfficialReport() {
-            if (!tableCPU) return;
-            const reportArea = document.getElementById('officialReportArea');
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' });
-            
-            let html = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">แบบรายงานสถานภาพอุปกรณ์คอมพิวเตอร์และระบบเครือข่าย</h1>
-                    <h2 style="font-size: 18px;">พื้นที่/สถานี: ${currentStation} (${currentGroup})</h2>
-                    <p style="font-size: 14px; margin-top: 10px;">ข้อมูล ณ วันที่: ${dateStr}</p>
-                </div>
-            `;
-
-            const buildReportTable = (title, dataArr, headers) => {
-                let validData = dataArr.filter(r => r[1] || r[2] || r[3] || r[4]);
-                if(validData.length === 0) return '';
-                
-                let tHtml = `<h3 style="font-size: 16px; font-weight: bold; margin-top: 20px; border-bottom: 1px solid #000; padding-bottom: 5px;">หมวด: ${title} (จำนวน ${validData.length} รายการ)</h3>`;
-                tHtml += `<table class="report-table"><thead><tr>`;
-                headers.forEach(h => tHtml += `<th>${h}</th>`);
-                tHtml += `</tr></thead><tbody>`;
-                
-                validData.forEach((r, idx) => {
-                    tHtml += `<tr><td style="text-align:center;">${idx+1}</td>`;
-                    for(let i=1; i<headers.length; i++) {
-                        tHtml += `<td>${r[i] || '-'}</td>`;
-                    }
-                    tHtml += `</tr>`;
-                });
-                tHtml += `</tbody></table>`;
-                return tHtml;
-            };
-
-            html += buildReportTable("1. คอมพิวเตอร์ (CPU)", tableCPU.getData(), ["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]);
-            html += buildReportTable("2. จอมอนิเตอร์", tableMon.getData(), ["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]);
-            html += buildReportTable("3. เครื่องพิมพ์", tablePrn.getData(), ["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]);
-            html += buildReportTable("4. เครื่องมือพิเศษ", tableSpc.getData(), ["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]);
-
-            html += `
-                <div style="margin-top: 50px; display: flex; justify-content: space-around; text-align: center;">
-                    <div>
-                        <p>ลงชื่อ.......................................................ผู้ตรวจบันทึก</p>
-                        <p style="margin-top: 5px;">(.......................................................)</p>
-                        <p style="margin-top: 5px;">ตำแหน่ง................................................</p>
-                    </div>
-                    <div>
-                        <p>ลงชื่อ.......................................................ผู้รับรอง</p>
-                        <p style="margin-top: 5px;">(.......................................................)</p>
-                        <p style="margin-top: 5px;">หัวหน้าสถานี / ผู้บังคับบัญชา</p>
-                    </div>
-                </div>
-            `;
-
-            reportArea.innerHTML = html;
-            window.print();
         }
 
         function showToast(message, type = 'success') {
