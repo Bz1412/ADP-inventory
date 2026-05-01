@@ -360,6 +360,9 @@
         }
 
         async function openStation(groupName, stationName) {
+            // 🌟 เลื่อนหน้าจอขึ้นไปด้านบนสุดเมื่อกดเข้ามา 🌟
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
             currentGroup = groupName; currentStation = stationName; hasUnsavedDeletions = false;
             document.getElementById('homePage').classList.add('hidden'); document.getElementById('editorPage').classList.remove('hidden'); document.getElementById('btnHome').classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = `📍 สถานี/ชุด: ${stationName}`; document.getElementById('currentGroupSubtitle').innerText = `กลุ่มพื้นที่: ${groupName}`;
@@ -451,9 +454,6 @@
                 document.getElementById('saveFirstModal').classList.add('flex');
                 return;
             }
-            
-            // 🌟 นำเงื่อนไขบล็อคการกดปุ่มออกแล้ว 🌟
-            // ตอนนี้ไม่ว่าจะมี diff หรือไม่มี ก็สามารถกดเข้าไปดูรายงานสรุปและยืนยันส่งข้อมูลซ้ำได้เลย
 
             if (isEditingConfirmedReport) {
                 document.getElementById('monthlyModalTitle').innerText = "แก้ไขรายงานที่ส่งแล้ว"; document.getElementById('monthlyModalSubtitle').innerText = "กรุณาตรวจสอบความถูกต้องอีกครั้ง ข้อมูลจะถูกอัปเดตไปที่ระบบหลังบ้าน";
@@ -589,7 +589,6 @@
 
         function closeQrModal() { document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); }
 
-        // ฟังก์ชันสำหรับเปิด/ปิด Modal ตัวอย่างการใส่ข้อมูล
         function openExampleModal() { document.getElementById('exampleModal').classList.remove('hidden'); document.getElementById('exampleModal').classList.add('flex'); }
         function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
 
