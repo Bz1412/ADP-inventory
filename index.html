@@ -57,7 +57,7 @@
     <!-- พื้นที่สำหรับ Print QR Code -->
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- 🌟 Modal ดูประวัติรายเครื่อง (จากการสแกน QR) 🌟 -->
+    <!-- Modal ดูประวัติรายเครื่อง (จากการสแกน QR) -->
     <div id="snHistoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] overflow-hidden border-t-4 border-blue-500">
             <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
@@ -157,7 +157,7 @@
                     <ul class="list-disc pl-5 space-y-2">
                         <li><strong>การพิมพ์ภาษาไทย:</strong> โปรดดับเบิลคลิกที่ช่องให้ <span class="font-mono bg-white dark:bg-gray-800 px-1 border dark:border-gray-600 rounded">|</span> กระพริบก่อนพิมพ์เสมอ</li>
                         <li><strong>S/N (Serial Number):</strong> กรอกให้ถูกต้องเสมอเพื่อใช้ในการค้นหาเครื่องหายหรือเช็คประกัน</li>
-                        <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อถ่ายหรือแนบรูปเมื่อแจ้งชำรุด ลิงก์รูปจะถูกใส่ในช่องหมายเหตุให้อัตโนมัติ</li>
+                        <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อถ่ายหรือแนบรูปเมื่อแจ้งชำรุด ระบบจะสร้างปุ่มกดดูรูปให้ในตารางอัตโนมัติ</li>
                     </ul>
                 </div>
             </div>
@@ -174,7 +174,7 @@
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">กรุณาบันทึกข้อมูลก่อน</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-6">คุณมีการเปลี่ยนแปลงอุปกรณ์ กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> ก่อนครับ</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">คุณมีการลบหรือนำเข้าอุปกรณ์ใหม่ กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> ก่อนครับ</p>
             <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">รับทราบ</button>
         </div>
     </div>
@@ -344,7 +344,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwq5b3B6BUNfgbEjffWuUHIC60klQaR8t3w1O5iQnYIaeVsxBJCY_FD97Jl-2TxASem/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
         const inventoryGroups = {
             "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
@@ -354,9 +354,8 @@
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null; let isEditingConfirmedReport = false; let hasUnsavedDeletions = false;
-        let uploadTarget = null; // เก็บข้อมูลว่ากำลังอัปโหลดรูปลงตารางไหน แถวไหน
+        let uploadTarget = null; 
 
-        // 🌗 ระบบสลับ Dark Mode 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -368,15 +367,12 @@
             document.getElementById('darkModeIcon').innerText = '☀️';
         }
 
-        // 🌟 ดักจับลิงก์จากการสแกน QR Code 🌟
         window.onload = function() {
             loadDashboardStats();
-            
-            // เช็คว่าลิงก์มี ?sn= เข้ามาหรือเปล่า
             const urlParams = new URLSearchParams(window.location.search);
             const snParam = urlParams.get('sn');
             if(snParam) {
-                openSnHistory(snParam); // ถ้ามี ให้เปิดหน้าต่างโชว์ประวัติเครื่องนั้นเลย
+                openSnHistory(snParam);
             }
         };
 
@@ -477,31 +473,41 @@
             finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 อัปเดตคอลัมน์ "จัดการ" ให้มีปุ่มกล้องถ่ายรูป 🌟
-        const renderManageBtn = function(i, c, col, r) { 
-            let tCols = document.getElementById(i.id).jexcel.options.columns.length; 
+        // 🌟 เปลี่ยนข้อความ [ดูรูป: url] เป็นปุ่มกดสวยๆ บนตาราง 🌟
+        const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
+            let table = document.getElementById(instance.id).jexcel;
+            let tCols = table.options.columns.length; 
+            let colTitle = table.options.columns[col].title;
+
+            // 1. ปุ่มจัดการ
             if (col == tCols - 1) { 
-                c.innerHTML = `<div class="flex justify-center gap-1">
-                    <button onclick="triggerUpload('${i.id}', ${r})" title="อัปโหลดรูปลงช่องหมายเหตุ" class="text-emerald-600 font-bold hover:bg-emerald-100 rounded px-2 py-1 text-lg border border-emerald-200 shadow-sm transition">📸</button>
-                    <button onclick="showSingleQR('${i.id}', ${r})" title="พิมพ์ QR Code" class="text-indigo-600 font-bold hover:bg-indigo-100 rounded px-2 py-1 text-lg border border-indigo-200 shadow-sm transition">🖨️</button>
-                    <button onclick="promptDeleteRow('${i.id}', ${r})" title="ลบอุปกรณ์" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 py-1 text-lg border border-red-200 shadow-sm transition">🗑️</button>
+                cell.innerHTML = `<div class="flex justify-center gap-1">
+                    <button onclick="triggerUpload('${instance.id}', ${row})" title="อัปโหลดรูปลงช่องหมายเหตุ" class="text-emerald-600 font-bold hover:bg-emerald-100 rounded px-2 py-1 text-lg border border-emerald-200 shadow-sm transition">📸</button>
+                    <button onclick="showSingleQR('${instance.id}', ${row})" title="พิมพ์ QR Code" class="text-indigo-600 font-bold hover:bg-indigo-100 rounded px-2 py-1 text-lg border border-indigo-200 shadow-sm transition">🖨️</button>
+                    <button onclick="promptDeleteRow('${instance.id}', ${row})" title="ลบอุปกรณ์" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 py-1 text-lg border border-red-200 shadow-sm transition">🗑️</button>
                 </div>`; 
-                c.style.textAlign = 'center'; 
+                cell.style.textAlign = 'center'; 
             } 
+            
+            // 2. แปลงข้อความลิงก์รูป ให้กลายเป็นปุ่ม
+            if (colTitle === 'หมายเหตุ' && val) {
+                let htmlVal = val.toString().replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
+                    return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-md font-bold text-xs ml-1 border border-blue-300 shadow-sm transition-colors cursor-pointer" title="คลิกเพื่อเปิดรูป">🖼️ เปิดดูรูปภาพ</a>`;
+                });
+                // อัปเดตการแสดงผล (จะไม่กระทบข้อมูลดิบเวลาดับเบิลคลิกเพื่อแก้)
+                cell.innerHTML = htmlVal;
+            }
         };
 
-        // 🌟 ฟังก์ชันจัดการการเลือกรูปภาพ 🌟
         function triggerUpload(tableId, rowIdx) {
             uploadTarget = { tableId, rowIdx };
-            document.getElementById('imageUploadInput').click(); // เปิดหน้าต่างเลือกไฟล์
+            document.getElementById('imageUploadInput').click(); 
         }
 
-        // 🌟 ฟังก์ชันแปลงและส่งรูปไปเก็บบน Google Drive 🌟
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if(!file || !uploadTarget) return;
 
-            // ตรวจสอบขนาดคร่าวๆ ไม่เกิน 5MB
             if(file.size > 5 * 1024 * 1024) { showToast("ไฟล์รูปภาพใหญ่เกินไป (ไม่ควรเกิน 5MB)", "error"); return; }
 
             const reader = new FileReader();
@@ -521,7 +527,6 @@
                     
                     if(res.status === 'success') {
                         showToast("อัปโหลดรูปสำเร็จ!");
-                        // หาระยะคอลัมน์ "หมายเหตุ" (มักจะอยู่ก่อนคอลัมน์สุดท้าย 1 ช่อง)
                         const table = document.getElementById(uploadTarget.tableId).jexcel;
                         let remarkColIndex = table.options.columns.length - 2; 
                         
@@ -546,7 +551,6 @@
             reader.readAsDataURL(file);
         }
 
-        // 🌟 ดึงข้อมูลประวัติรายเครื่องจาก S/N 🌟
         async function openSnHistory(sn) {
             document.getElementById('loadingText').innerText = 'กำลังค้นหาประวัติอุปกรณ์...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -572,7 +576,6 @@
                            if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
                         } catch(e) {}
 
-                        // หาคำว่าสถานะเพื่อทำ Badge
                         let detailText = log.detail;
                         let statusBadge = "-";
                         if(detailText.includes("สถานะ: ปกติ")) statusBadge = `<span class="text-green-600 font-bold">ปกติ</span>`;
@@ -605,7 +608,6 @@
         function closeSnHistory() {
             document.getElementById('snHistoryModal').classList.add('hidden');
             document.getElementById('snHistoryModal').classList.remove('flex');
-            // ลบ parameter ?sn= ออกจาก URL เพื่อความสะอาด
             window.history.pushState({}, document.title, window.location.pathname);
         }
 
@@ -633,10 +635,11 @@
 
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            // 🌟 เปลี่ยนให้ใช้ customRenderTable แทน renderManageBtn เดิม 🌟
+            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
         }
 
         async function openAuditLog() {
@@ -781,9 +784,7 @@
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 อัปเดตการสร้าง QR Code เป็นลิงก์ URL แทนข้อความธรรมดา 🌟
         function createQRLabelElement(type, brand, model, sn, user, dateStr) {
-            // สร้าง URL ที่ส่ง Parameter ไปด้วย (สมมติหน้าเว็บปัจจุบันคือหน้าแรก)
             let baseUrl = window.location.href.split('?')[0]; 
             let qrUrl = baseUrl + "?sn=" + encodeURIComponent(sn);
 
@@ -793,7 +794,6 @@
             titleDiv.className = 'text-[9px] sm:text-xs font-black text-center mb-1 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide leading-tight truncate';
             titleDiv.innerText = `${currentStation}`;
             let qrCanvas = document.createElement('canvas');
-            // สร้าง QR เป็น URL แทน
             new QRious({ element: qrCanvas, value: qrUrl, size: 400, level: 'M' }); 
             let qrImg = document.createElement('img');
             qrImg.src = qrCanvas.toDataURL();
@@ -843,7 +843,62 @@
         function openExampleModal() { document.getElementById('exampleModal').classList.remove('hidden'); document.getElementById('exampleModal').classList.add('flex'); }
         function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
 
-        // ให้ข้ามฟังก์ชันการดึง Excel ไปไว้ด้านล่างสุด
+        async function handleImportExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('loadingText').innerText = 'กำลังอ่านไฟล์ Excel...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
+            try {
+                const wb = new ExcelJS.Workbook();
+                const buffer = await file.arrayBuffer();
+                await wb.xlsx.load(buffer);
+                
+                const extractSheetData = (sheetName, expectedColumns) => {
+                    const ws = wb.getWorksheet(sheetName);
+                    if (!ws) return [];
+                    let rowData = [];
+                    ws.eachRow((row, rowNumber) => {
+                        if (rowNumber > 1) {
+                            let r = [];
+                            for(let i = 1; i <= expectedColumns; i++) {
+                                let val = row.getCell(i).value;
+                                r.push(val !== null && val !== undefined ? val : "");
+                            }
+                            r.push(""); 
+                            rowData.push(r);
+                        }
+                    });
+                    return rowData;
+                };
+
+                const cpuData = extractSheetData("คอมพิวเตอร์", 8);
+                if(cpuData.length > 0) tableCPU.setData(cpuData);
+                
+                const monData = extractSheetData("จอมอนิเตอร์", 7);
+                if(monData.length > 0) tableMon.setData(monData);
+                
+                const prnData = extractSheetData("เครื่องพิมพ์", 8);
+                if(prnData.length > 0) tablePrn.setData(prnData);
+                
+                const spcData = extractSheetData("เครื่องมือพิเศษ", 7);
+                if(spcData.length > 0) tableSpc.setData(spcData);
+
+                showToast("อัปโหลดข้อมูลลงตารางสำเร็จ! กรุณากดบันทึกฐานข้อมูลเพื่อยืนยัน", "success");
+                hasUnsavedDeletions = true; 
+                
+            } catch (err) {
+                console.error(err);
+                showToast("รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาด", "error");
+            } finally {
+                document.getElementById('importExcelInput').value = ""; 
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').classList.remove('flex');
+            }
+        }
+
         async function exportStationExcel() {
             if (!tableCPU) return; showToast("เตรียมไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
             const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
