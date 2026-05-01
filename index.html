@@ -45,7 +45,7 @@
 
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print"></div>
 
-    <!-- 🌟 Modal คำแนะนำการกรอกข้อมูล 🌟 -->
+    <!-- Modal คำแนะนำการกรอกข้อมูล -->
     <div id="exampleModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="bg-blue-50 p-4 border-b border-blue-200 flex justify-between items-center">
@@ -239,7 +239,6 @@
             </div>
         </div>
 
-        <!-- 🌟 ส่วนกล่องคำแนะนำที่ปรับปรุงใหม่ 🌟 -->
         <div class="bg-blue-50 text-blue-800 p-4 rounded-lg mb-6 border border-blue-200 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div class="flex items-start gap-3">
                 <span class="text-2xl">💡</span>
@@ -452,8 +451,10 @@
                 document.getElementById('saveFirstModal').classList.add('flex');
                 return;
             }
-            let diff = calculateDiff();
-            if (isEditingConfirmedReport && diff.added.length === 0 && diff.removed.length === 0) { showToast("ไม่มีการแก้ไขข้อมูลเพิ่มเติมครับ", "error"); return; }
+            
+            // 🌟 นำเงื่อนไขบล็อคการกดปุ่มออกแล้ว 🌟
+            // ตอนนี้ไม่ว่าจะมี diff หรือไม่มี ก็สามารถกดเข้าไปดูรายงานสรุปและยืนยันส่งข้อมูลซ้ำได้เลย
+
             if (isEditingConfirmedReport) {
                 document.getElementById('monthlyModalTitle').innerText = "แก้ไขรายงานที่ส่งแล้ว"; document.getElementById('monthlyModalSubtitle').innerText = "กรุณาตรวจสอบความถูกต้องอีกครั้ง ข้อมูลจะถูกอัปเดตไปที่ระบบหลังบ้าน";
                 document.querySelector('#monthlyConfirmModal .bg-purple-50').className = "bg-orange-50 p-4 border-b border-orange-200"; document.querySelector('#monthlyConfirmModal h3').className = "text-xl font-bold text-orange-800 flex items-center gap-2";
@@ -588,7 +589,7 @@
 
         function closeQrModal() { document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); }
 
-        // ฟังก์ชันใหม่สำหรับเปิด/ปิด Modal ตัวอย่างการใส่ข้อมูล
+        // ฟังก์ชันสำหรับเปิด/ปิด Modal ตัวอย่างการใส่ข้อมูล
         function openExampleModal() { document.getElementById('exampleModal').classList.remove('hidden'); document.getElementById('exampleModal').classList.add('flex'); }
         function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
 
