@@ -48,7 +48,7 @@
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- 🌟 Modal ดูประวัติรายเครื่อง (Mobile Friendly) 🌟 -->
+    <!-- Modal ดูประวัติรายเครื่อง (Mobile Friendly) -->
     <div id="snHistoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border-t-4 border-blue-500">
             <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
@@ -236,7 +236,8 @@
             <h1 class="text-lg md:text-2xl font-bold flex items-center gap-2">🖥️ ADP-Inventory</h1>
             <div class="flex items-center gap-2 md:gap-3">
                 <button onclick="toggleDarkMode()" class="p-1 md:p-2 rounded-full hover:bg-white/20 transition text-lg md:text-xl" title="เปิด/ปิด โหมดกลางคืน"><span id="darkModeIcon">🌙</span></button>
-                <button id="btnHome" class="hidden bg-blue-600 dark:bg-blue-700 px-3 py-1 md:px-4 md:py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow text-xs md:text-sm font-bold">🏠 หน้าหลัก</button>
+                <!-- 🌟 เปลี่ยนแปลงปุ่ม Home ตรงนี้ให้เรียกฟังก์ชัน goHome() แทน 🌟 -->
+                <button id="btnHome" onclick="goHome()" class="hidden bg-blue-600 dark:bg-blue-700 px-3 py-1 md:px-4 md:py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow text-xs md:text-sm font-bold">🏠 หน้าหลัก</button>
             </div>
         </div>
     </nav>
@@ -282,7 +283,7 @@
         <div id="indexPage"></div>
     </div>
 
-    <!-- 🌟 หน้าจัดการสถานี (Editor) จัดระเบียบปุ่มใหม่ให้ไม่ซ้อนบนมือถือ 🌟 -->
+    <!-- หน้าจัดการสถานี (Editor) -->
     <div id="editorPage" class="max-w-full mx-auto p-2 sm:p-4 md:p-6 hidden bg-transparent no-print overflow-x-hidden">
         <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border border-gray-200 dark:border-gray-700 w-full">
             <div class="w-full">
@@ -290,7 +291,6 @@
                 <p id="currentGroupSubtitle" class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กลุ่ม: </p>
             </div>
             
-            <!-- 🌟 แผงปุ่มแอคชัน 🌟 -->
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
                 <button onclick="openAuditLog()" class="w-full sm:w-auto justify-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded shadow hover:bg-gray-200 border border-gray-300 dark:border-gray-600 font-bold flex items-center gap-1 text-sm"><span class="hidden md:inline">🕒</span> ประวัติ</button>
                 <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="w-full sm:w-auto justify-center bg-purple-600 text-white px-3 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-1 text-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
@@ -320,7 +320,6 @@
             </button>
         </div>
 
-        <!-- 🌟 กำหนดความกว้างตารางให้ยืดหยุ่นด้วย overflow-x-auto 🌟 -->
         <div class="grid grid-cols-1 gap-6 md:gap-8 w-full">
             <div class="bg-white p-3 md:p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto w-full">
                 <h3 class="text-lg md:text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3><div id="spreadsheet-cpu" class="w-full text-xs md:text-sm text-black min-w-full"></div><button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded text-sm w-full md:w-auto">➕ เพิ่มแถว</button>
@@ -465,6 +464,20 @@
             finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
+        // 🌟 ฟังก์ชันกลับหน้าหลักที่แท้จริง (สลับการมองเห็นแทนการโหลดใหม่) 🌟
+        function goHome() {
+            document.getElementById('editorPage').classList.add('hidden');
+            document.getElementById('homePage').classList.remove('hidden');
+            document.getElementById('btnHome').classList.add('hidden');
+            
+            // เคลียร์ URL (เผื่อมี ?sn= ค้างอยู่)
+            window.history.pushState({}, document.title, window.location.pathname);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // สั่งโหลดกราฟและตัวเลขสรุปใหม่ให้เป็นปัจจุบัน
+            loadDashboardStats();
+        }
+
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
@@ -515,7 +528,6 @@
             reader.readAsDataURL(file);
         }
 
-        // 🌟 อัปเดตฟังก์ชันดึงประวัติ และโชว์รายละเอียดสเปคเครื่อง 🌟
         async function openSnHistory(sn) {
             document.getElementById('loadingText').innerText = 'กำลังดึงข้อมูลอุปกรณ์...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -526,7 +538,6 @@
                 const response = await fetch(`${API_URL}?action=GET_HISTORY_SN&sn=${encodeURIComponent(sn)}`);
                 const result = await response.json();
                 
-                // จัดการกล่องรายละเอียดสเปคเครื่อง
                 const detailsBox = document.getElementById('snDetailsBox');
                 const detailsContent = document.getElementById('snDetailsContent');
                 
@@ -551,7 +562,6 @@
                     detailsBox.classList.add('hidden');
                 }
 
-                // จัดการตารางประวัติ (Logs)
                 const tbody = document.getElementById('snHistoryTableBody');
                 if (result.logs && result.logs.length > 0) {
                     let html = '';
