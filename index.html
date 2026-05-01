@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สถานภาพอุปกณ์คอมพิวเตอร์ ADP-Inventory</title>
-    <!-- เพิ่ม Config ให้ Tailwind รองรับ Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' }
-    </script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/index.min.js"></script>
@@ -21,17 +18,14 @@
     <style>
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .toast-enter { transform: translateX(100%); opacity: 0; }
         .toast-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s ease-out; }
         .toast-exit { transform: translateX(100%); opacity: 0; transition: all 0.3s ease-in; }
         
-        @media screen {
-            .only-print { display: none !important; }
-        }
-
+        @media screen { .only-print { display: none !important; } }
         @media print {
             body * { visibility: hidden; } 
             .no-print { display: none !important; }
@@ -42,34 +36,41 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300">
+<body class="bg-slate-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 transition-colors duration-300 overflow-x-hidden">
 
-    <div id="toastContainer" class="fixed top-20 right-5 z-[200] flex flex-col gap-3 pointer-events-none no-print"></div>
+    <div id="toastContainer" class="fixed top-20 right-5 left-5 md:left-auto md:w-96 z-[200] flex flex-col gap-3 pointer-events-none no-print"></div>
 
-    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[100] hidden flex-col justify-center items-center backdrop-blur-sm no-print">
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[250] hidden flex-col justify-center items-center backdrop-blur-sm no-print">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-white font-bold text-lg">กำลังประมวลผล...</p>
     </div>
 
-    <!-- อินพุตซ่อนสำหรับอัปโหลดรูปภาพ -->
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-
-    <!-- พื้นที่สำหรับ Print QR Code -->
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- Modal ดูประวัติรายเครื่อง (จากการสแกน QR) -->
-    <div id="snHistoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] overflow-hidden border-t-4 border-blue-500">
+    <!-- 🌟 Modal ดูประวัติรายเครื่อง (Mobile Friendly) 🌟 -->
+    <div id="snHistoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border-t-4 border-blue-500">
             <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
                 <div>
-                    <h3 class="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">🔍 ประวัติการใช้งานอุปกรณ์</h3>
-                    <p id="snHistoryTitle" class="text-sm font-semibold text-blue-600 dark:text-blue-300 mt-1">S/N: -</p>
+                    <h3 class="text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">🔍 ข้อมูลและประวัติอุปกรณ์</h3>
+                    <p id="snHistoryTitle" class="text-xs md:text-sm font-semibold text-blue-600 dark:text-blue-300 mt-1">S/N: -</p>
                 </div>
-                <button onclick="closeSnHistory()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+                <button onclick="closeSnHistory()" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
-                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-                    <table class="w-full text-left border-collapse">
+            <div class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
+                
+                <!-- กล่องแสดงรายละเอียดอุปกรณ์ -->
+                <div id="snDetailsBox" class="mb-6 bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-lg p-4 shadow-sm hidden">
+                    <h4 class="font-bold text-gray-800 dark:text-gray-200 border-b dark:border-gray-700 pb-2 mb-3 flex items-center gap-2">📄 รายละเอียดปัจจุบัน</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm" id="snDetailsContent">
+                        <!-- ถูกเติมด้วย JS -->
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">🕒 ประวัติการแก้ไข (Logs)</h4>
+                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm w-full">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
                         <thead class="bg-blue-100 dark:bg-blue-800 text-blue-900 dark:text-blue-100 sticky top-0">
                             <tr>
                                 <th class="p-3 border dark:border-gray-600 font-bold w-32">วัน/เวลา</th>
@@ -83,21 +84,21 @@
                 </div>
             </div>
             <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end">
-                <button onclick="closeSnHistory()" class="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition">เข้าสู่หน้าหลักระบบ</button>
+                <button onclick="closeSnHistory()" class="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition w-full sm:w-auto">เข้าสู่หน้าหลักระบบ</button>
             </div>
         </div>
     </div>
 
     <!-- Modal ดูประวัติการแก้ไขรวม (Audit Log) -->
-    <div id="auditLogModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+    <div id="auditLogModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
             <div class="bg-indigo-50 dark:bg-indigo-900 p-4 border-b border-indigo-200 dark:border-indigo-700 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-indigo-800 dark:text-indigo-200 flex items-center gap-2">🕒 ประวัติการทำรายการ (50 รายการล่าสุด)</h3>
-                <button onclick="closeAuditLog()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+                <h3 class="text-lg md:text-xl font-bold text-indigo-800 dark:text-indigo-200 flex items-center gap-2">🕒 ประวัติการทำรายการ</h3>
+                <button onclick="closeAuditLog()" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
-                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
+            <div class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
+                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm w-full">
+                    <table class="w-full text-left border-collapse min-w-[500px]">
                         <thead class="bg-indigo-100 dark:bg-indigo-800 text-indigo-900 dark:text-indigo-100 sticky top-0">
                             <tr>
                                 <th class="p-3 border dark:border-gray-600 font-bold whitespace-nowrap w-40">วัน/เวลา</th>
@@ -110,21 +111,26 @@
                 </div>
             </div>
             <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end">
-                <button onclick="closeAuditLog()" class="px-6 py-2 rounded-lg font-bold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 shadow-sm transition">ปิดหน้าต่าง</button>
+                <button onclick="closeAuditLog()" class="px-6 py-2 rounded-lg font-bold text-gray-700 dark:text-gray-200 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 shadow-sm transition w-full sm:w-auto">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
 
     <!-- Modal คำแนะนำการกรอกข้อมูล -->
-    <div id="exampleModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+    <div id="exampleModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
             <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">📋 ตัวอย่างการกรอกข้อมูลที่ถูกต้อง</h3>
-                <button onclick="closeExampleModal()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+                <h3 class="text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">📋 คำแนะนำการใช้งาน</h3>
+                <button onclick="closeExampleModal()" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
-                <p class="mb-4 text-gray-700 dark:text-gray-300">การกรอกข้อมูลที่ครบถ้วนและเป็นรูปแบบเดียวกัน จะช่วยให้การค้นหาและสรุปรายงานมีประสิทธิภาพมากขึ้นครับ</p>
-                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm mb-4">
+            <div class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm w-full">
+                <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 mb-4">
+                    <ul class="list-disc pl-5 space-y-2">
+                        <li><strong>พิมพ์ภาษาไทย:</strong> ต้อง <span class="font-mono bg-white dark:bg-gray-800 px-1 border dark:border-gray-600 rounded">ดับเบิลคลิกช่องให้เคอร์เซอร์กระพริบ</span> ก่อนพิมพ์เสมอ</li>
+                        <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อแนบรูปเวลาแจ้งชำรุด ระบบจะสร้างปุ่มกดดูรูปให้ในตารางอัตโนมัติ</li>
+                    </ul>
+                </div>
+                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm mb-4 w-full">
                     <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead class="bg-blue-100 dark:bg-blue-800 text-blue-900 dark:text-blue-100">
                             <tr>
@@ -143,97 +149,83 @@
                                 <td class="p-3 border dark:border-gray-600 font-mono">ABC1234567</td>
                                 <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ฝกร. (ส่วนหน้า)</td>
                             </tr>
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="p-3 border dark:border-gray-600">ร.อ. หญิง มานี รักชาติ</td>
-                                <td class="p-3 border dark:border-gray-600">HP</td>
-                                <td class="p-3 border dark:border-gray-600">ProDesk 400 G7</td>
-                                <td class="p-3 border dark:border-gray-600 font-mono">8CG12345Z</td>
-                                <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ฝอ.3 (ส่วนหลัง)</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200">
-                    <ul class="list-disc pl-5 space-y-2">
-                        <li><strong>การพิมพ์ภาษาไทย:</strong> โปรดดับเบิลคลิกที่ช่องให้ <span class="font-mono bg-white dark:bg-gray-800 px-1 border dark:border-gray-600 rounded">|</span> กระพริบก่อนพิมพ์เสมอ</li>
-                        <li><strong>S/N (Serial Number):</strong> กรอกให้ถูกต้องเสมอเพื่อใช้ในการค้นหาเครื่องหายหรือเช็คประกัน</li>
-                        <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อถ่ายหรือแนบรูปเมื่อแจ้งชำรุด ระบบจะสร้างปุ่มกดดูรูปให้ในตารางอัตโนมัติ</li>
-                    </ul>
-                </div>
             </div>
             <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end">
-                <button onclick="closeExampleModal()" class="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md">เข้าใจแล้ว</button>
+                <button onclick="closeExampleModal()" class="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md w-full sm:w-auto">เข้าใจแล้ว</button>
             </div>
         </div>
     </div>
 
     <!-- Modal เซฟก่อนแก้ไข -->
     <div id="saveFirstModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 text-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
             <div class="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">กรุณาบันทึกข้อมูลก่อน</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-6">คุณมีการลบหรือนำเข้าอุปกรณ์ใหม่ กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> ก่อนครับ</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">คุณมีการเปลี่ยนแปลง กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> ก่อนครับ</p>
             <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">รับทราบ</button>
         </div>
     </div>
 
     <!-- Modal ลบ -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full flex flex-col overflow-hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-sm sm:max-w-lg w-full flex flex-col overflow-hidden">
             <div class="bg-red-50 dark:bg-red-900 p-4 border-b border-red-200 dark:border-red-700"><h3 class="text-xl font-bold text-red-800 dark:text-red-200">ยืนยันการลบอุปกรณ์</h3></div>
             <div class="p-6 bg-white dark:bg-gray-800 text-center">
-                <p class="mb-2 text-lg dark:text-gray-200">คุณแน่ใจหรือไม่ที่จะลบรายการนี้?</p>
-                <div id="deleteDetailText" class="p-3 bg-red-100 dark:bg-red-800 text-red-900 dark:text-red-100 rounded font-semibold break-words"></div>
+                <p class="mb-2 text-lg dark:text-gray-200">แน่ใจหรือไม่ที่จะลบรายการนี้?</p>
+                <div id="deleteDetailText" class="p-3 bg-red-100 dark:bg-red-800 text-red-900 dark:text-red-100 rounded font-semibold break-words text-sm sm:text-base"></div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-700 p-4 border-t dark:border-gray-600 flex justify-center gap-4">
-                <button onclick="closeDeleteModal()" class="px-6 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-600 border dark:border-gray-500">ยกเลิก</button>
-                <button onclick="executeDeleteRow()" class="px-6 py-2 rounded-lg font-bold text-white bg-red-600">ลบเลย</button>
+                <button onclick="closeDeleteModal()" class="w-full sm:w-auto px-6 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-600 border dark:border-gray-500">ยกเลิก</button>
+                <button onclick="executeDeleteRow()" class="w-full sm:w-auto px-6 py-2 rounded-lg font-bold text-white bg-red-600">ลบเลย</button>
             </div>
         </div>
     </div>
 
     <!-- Modal บันทึก -->
-    <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+    <div id="confirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
             <div class="bg-yellow-50 dark:bg-yellow-900 p-4 border-b border-yellow-200 dark:border-yellow-700"><h3 class="text-xl font-bold text-yellow-800 dark:text-yellow-200">ยืนยันการบันทึกข้อมูล</h3></div>
-            <div id="diffContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm"></div>
-            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-600 flex justify-end gap-3">
-                <button onclick="closeConfirmModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600">ยกเลิก</button>
-                <button onclick="executeSaveData()" class="px-5 py-2 rounded-lg font-bold text-white bg-green-600">✅ ยืนยันบันทึกข้อมูล</button>
+            <div id="diffContent" class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm"></div>
+            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-600 flex justify-end gap-3 flex-wrap">
+                <button onclick="closeConfirmModal()" class="w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600">ยกเลิก</button>
+                <button onclick="executeSaveData()" class="w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-white bg-green-600">✅ ยืนยันบันทึกข้อมูล</button>
             </div>
         </div>
     </div>
 
     <!-- Modal ยืนยันรายงานประจำเดือน -->
-    <div id="monthlyConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+    <div id="monthlyConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
             <div id="monthlyModalHeader" class="bg-purple-50 dark:bg-purple-900 p-4 border-b border-purple-200 dark:border-purple-700">
                 <h3 id="monthlyModalH3" class="text-xl font-bold text-purple-800 dark:text-purple-200 flex items-center gap-2">
                     <span id="monthlyModalTitle">สรุปรายงานสถานภาพประจำเดือน</span>
                 </h3>
-                <p id="monthlyModalSubtitle" class="text-purple-700 dark:text-purple-300 mt-1 font-semibold">กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน</p>
+                <p id="monthlyModalSubtitle" class="text-purple-700 dark:text-purple-300 mt-1 font-semibold text-sm md:text-base">กรุณาตรวจสอบยอดสรุปทั้งหมดของสถานีนี้ ก่อนกดยืนยัน</p>
             </div>
-            <div id="monthlySummaryContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm"></div>
-            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-600 flex justify-end gap-3">
-                <button onclick="closeMonthlyModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600">ยกเลิก</button>
-                <button id="monthlyConfirmBtn" onclick="executeConfirmMonth()" class="px-5 py-2 rounded-lg font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-md">✅ ยืนยันส่งรายงาน</button>
+            <div id="monthlySummaryContent" class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm"></div>
+            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-600 flex justify-end gap-3 flex-wrap">
+                <button onclick="closeMonthlyModal()" class="w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600">ยกเลิก</button>
+                <button id="monthlyConfirmBtn" onclick="executeConfirmMonth()" class="w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-md">✅ ยืนยันส่งรายงาน</button>
             </div>
         </div>
     </div>
 
     <!-- Modal สำหรับพรีวิว QR Code -->
-    <div id="qrPreviewModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+    <div id="qrPreviewModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-2 sm:p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
             <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
-                <h3 class="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">🖨️ ตัวอย่าง QR Code (พร้อมปริ้นต์)</h3>
-                <button onclick="closeQrModal()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+                <h3 class="text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">🖨️ พิมพ์ QR Code</h3>
+                <button onclick="closeQrModal()" class="text-gray-500 hover:text-red-500 font-bold text-2xl">&times;</button>
             </div>
-            <div id="qrPreviewContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-100 dark:bg-gray-700 flex flex-wrap gap-4 justify-center items-start"></div>
-            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end gap-3">
-                <button onclick="closeQrModal()" class="px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">ปิดหน้าต่าง</button>
-                <button onclick="window.print()" class="px-5 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md flex items-center gap-2">สั่งพิมพ์ (Print)</button>
+            <div id="qrPreviewContent" class="p-4 md:p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-100 dark:bg-gray-700 flex flex-wrap gap-4 justify-center items-start"></div>
+            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end gap-3 flex-wrap">
+                <button onclick="closeQrModal()" class="w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500">ปิดหน้าต่าง</button>
+                <button onclick="window.print()" class="w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md flex justify-center items-center gap-2">สั่งพิมพ์ (Print)</button>
             </div>
         </div>
     </div>
@@ -241,104 +233,106 @@
     <!-- Navbar -->
     <nav class="bg-blue-800 dark:bg-gray-900 text-white p-4 shadow-md sticky top-0 z-40 transition-colors border-b dark:border-gray-700 no-print">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">🖥️ ADP-Inventory</h1>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-white/20 transition text-xl" title="เปิด/ปิด โหมดกลางคืน"><span id="darkModeIcon">🌙</span></button>
-                <button id="btnHome" class="hidden bg-blue-600 dark:bg-blue-700 px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow text-sm font-bold">🏠 กลับหน้าหลัก</button>
+            <h1 class="text-lg md:text-2xl font-bold flex items-center gap-2">🖥️ ADP-Inventory</h1>
+            <div class="flex items-center gap-2 md:gap-3">
+                <button onclick="toggleDarkMode()" class="p-1 md:p-2 rounded-full hover:bg-white/20 transition text-lg md:text-xl" title="เปิด/ปิด โหมดกลางคืน"><span id="darkModeIcon">🌙</span></button>
+                <button id="btnHome" class="hidden bg-blue-600 dark:bg-blue-700 px-3 py-1 md:px-4 md:py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition shadow text-xs md:text-sm font-bold">🏠 หน้าหลัก</button>
             </div>
         </div>
     </nav>
 
     <!-- หน้าแรก (Dashboard) -->
-    <div id="homePage" class="max-w-7xl mx-auto p-6 mt-4 no-print">
+    <div id="homePage" class="max-w-7xl mx-auto p-4 md:p-6 no-print">
         <div class="mb-4 flex justify-end">
-            <button onclick="exportAllDataToExcel()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg shadow-md hover:bg-indigo-700 font-bold flex items-center gap-2">ดาวน์โหลด Excel รวมทุกสถานี</button>
+            <button onclick="exportAllDataToExcel()" class="bg-indigo-600 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg shadow-md hover:bg-indigo-700 font-bold flex items-center gap-2 text-sm md:text-base">ดาวน์โหลด Excel รวม</button>
         </div>
         <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="md:col-span-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="col-span-2 lg:col-span-4 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex flex-col justify-center">
-                    <p class="text-gray-500 dark:text-gray-400 font-bold mb-1">อุปกรณ์ทั้งหมดในระบบ</p><h3 class="text-4xl font-black text-blue-900 dark:text-blue-300" id="statTotal">-</h3>
+                <div class="col-span-2 lg:col-span-4 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border-l-4 border-blue-600 flex flex-col justify-center">
+                    <p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-sm md:text-base">อุปกรณ์ทั้งหมดในระบบ</p><h3 class="text-3xl md:text-4xl font-black text-blue-900 dark:text-blue-300" id="statTotal">-</h3>
                 </div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-sm">💻 CPU</p><h3 class="text-2xl font-bold text-indigo-800 dark:text-indigo-300" id="statCPU">-</h3></div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-sm">🖥️ จอมอนิเตอร์</p><h3 class="text-2xl font-bold text-green-800 dark:text-green-300" id="statMon">-</h3></div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-sm">🖨️ เครื่องพิมพ์</p><h3 class="text-2xl font-bold text-purple-800 dark:text-purple-300" id="statPrn">-</h3></div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-sm">🛠️ เครื่องมือพิเศษ</p><h3 class="text-2xl font-bold text-orange-800 dark:text-orange-300" id="statSpc">-</h3></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-indigo-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-xs md:text-sm">💻 CPU</p><h3 class="text-xl md:text-2xl font-bold text-indigo-800 dark:text-indigo-300" id="statCPU">-</h3></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-xs md:text-sm">🖥️ จอ</p><h3 class="text-xl md:text-2xl font-bold text-green-800 dark:text-green-300" id="statMon">-</h3></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-xs md:text-sm">🖨️ เครื่องพิมพ์</p><h3 class="text-xl md:text-2xl font-bold text-purple-800 dark:text-purple-300" id="statPrn">-</h3></div>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-l-4 border-orange-500"><p class="text-gray-500 dark:text-gray-400 font-bold mb-1 text-xs md:text-sm">🛠️ พิเศษ</p><h3 class="text-xl md:text-2xl font-bold text-orange-800 dark:text-orange-300" id="statSpc">-</h3></div>
             </div>
             <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border-t-4 border-gray-400 dark:border-gray-600 flex flex-col items-center">
-                <h3 class="font-bold text-gray-700 dark:text-gray-200 mb-2">สัดส่วนสถานะอุปกรณ์</h3>
-                <div class="relative w-full h-48"><canvas id="statusChart"></canvas></div>
+                <h3 class="font-bold text-gray-700 dark:text-gray-200 mb-2 text-sm md:text-base">สัดส่วนสถานะอุปกรณ์</h3>
+                <div class="relative w-full h-40 md:h-48"><canvas id="statusChart"></canvas></div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border-t-4 border-blue-600 mb-8">
-            <h2 class="text-xl font-bold text-blue-900 dark:text-blue-300 mb-4">🔍 ค้นหาอุปกรณ์ข้ามสถานี</h2>
-            <div class="flex flex-col md:flex-row gap-4">
-                <input type="text" id="searchInput" placeholder="พิมพ์ S/N, ชื่อรุ่น, ยี่ห้อ หรือ ชื่อผู้ใช้..." class="flex-1 p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg outline-none">
-                <button onclick="globalSearch()" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700">ค้นหา</button>
+        <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border-t-4 border-blue-600 mb-8">
+            <h2 class="text-lg md:text-xl font-bold text-blue-900 dark:text-blue-300 mb-4">🔍 ค้นหาอุปกรณ์ข้ามสถานี</h2>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="searchInput" placeholder="พิมพ์ S/N, ชื่อรุ่น, ยี่ห้อ หรือ ชื่อผู้ใช้..." class="flex-1 p-2 md:p-3 text-sm md:text-base border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg outline-none w-full">
+                <button onclick="globalSearch()" class="bg-blue-600 text-white px-6 py-2 md:py-3 rounded-lg font-bold hover:bg-blue-700 w-full sm:w-auto">ค้นหา</button>
             </div>
-            <div id="searchResults" class="mt-6 hidden">
+            <div id="searchResults" class="mt-6 hidden w-full overflow-x-auto">
                 <h3 class="font-bold text-gray-700 dark:text-gray-200 mb-2 border-b dark:border-gray-600 pb-2">ผลลัพธ์การค้นหา:</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left border dark:border-gray-600">
-                        <thead class="bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100">
-                            <tr><th class="p-3 border dark:border-gray-600">พื้นที่/สถานี</th><th class="p-3 border dark:border-gray-600">ประเภท</th><th class="p-3 border dark:border-gray-600">ผู้ใช้</th><th class="p-3 border dark:border-gray-600">ยี่ห้อ/รุ่น</th><th class="p-3 border dark:border-gray-600">S/N</th><th class="p-3 border dark:border-gray-600">สถานะ</th></tr>
-                        </thead>
-                        <tbody id="searchTableBody" class="dark:text-gray-200"></tbody>
-                    </table>
-                </div>
+                <table class="w-full text-xs md:text-sm text-left border dark:border-gray-600 min-w-[500px]">
+                    <thead class="bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100">
+                        <tr><th class="p-2 md:p-3 border dark:border-gray-600">สถานี</th><th class="p-2 border dark:border-gray-600">ประเภท</th><th class="p-2 border dark:border-gray-600">ผู้ใช้</th><th class="p-2 border dark:border-gray-600">ยี่ห้อ/รุ่น</th><th class="p-2 border dark:border-gray-600">S/N</th><th class="p-2 border dark:border-gray-600 text-center">สถานะ</th></tr>
+                    </thead>
+                    <tbody id="searchTableBody" class="dark:text-gray-200"></tbody>
+                </table>
             </div>
         </div>
 
         <div id="indexPage"></div>
     </div>
 
-    <!-- หน้าจัดการสถานี (Editor) -->
-    <div id="editorPage" class="max-w-full mx-auto p-6 mt-4 hidden bg-transparent m-4 no-print">
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-200 dark:border-gray-700">
-            <div>
-                <h2 id="currentStationTitle" class="text-2xl font-bold text-blue-700 dark:text-blue-400">ชื่อสถานี</h2>
-                <p id="currentGroupSubtitle" class="text-sm text-gray-500 dark:text-gray-400">กลุ่ม: </p>
+    <!-- 🌟 หน้าจัดการสถานี (Editor) จัดระเบียบปุ่มใหม่ให้ไม่ซ้อนบนมือถือ 🌟 -->
+    <div id="editorPage" class="max-w-full mx-auto p-2 sm:p-4 md:p-6 hidden bg-transparent no-print overflow-x-hidden">
+        <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border border-gray-200 dark:border-gray-700 w-full">
+            <div class="w-full">
+                <h2 id="currentStationTitle" class="text-xl md:text-2xl font-bold text-blue-700 dark:text-blue-400">ชื่อสถานี</h2>
+                <p id="currentGroupSubtitle" class="text-xs md:text-sm text-gray-500 dark:text-gray-400">กลุ่ม: </p>
             </div>
-            <div class="space-x-2 flex flex-wrap gap-y-2 justify-end">
-                <button onclick="openAuditLog()" class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-4 py-2 rounded shadow hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 font-bold flex items-center gap-2">🕒 ดูประวัติ</button>
-                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-2"><span id="btnConfirmText">ยืนยันรายงานประจำเดือน</span></button>
-                <button onclick="prepareSave()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
+            
+            <!-- 🌟 แผงปุ่มแอคชัน 🌟 -->
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto">
+                <button onclick="openAuditLog()" class="w-full sm:w-auto justify-center bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-3 py-2 rounded shadow hover:bg-gray-200 border border-gray-300 dark:border-gray-600 font-bold flex items-center gap-1 text-sm"><span class="hidden md:inline">🕒</span> ประวัติ</button>
+                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="w-full sm:w-auto justify-center bg-purple-600 text-white px-3 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-1 text-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
+                <button onclick="prepareSave()" class="w-full sm:w-auto justify-center bg-green-600 text-white px-3 py-2 rounded shadow hover:bg-green-700 font-bold flex items-center gap-1 text-sm"><span class="hidden md:inline">💾</span> บันทึก</button>
+                
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
-                <button onclick="document.getElementById('importExcelInput').click()" class="bg-teal-600 text-white px-4 py-2 rounded shadow hover:bg-teal-700 font-bold flex items-center gap-2">📤 นำเข้า</button>
-                <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export</button>
-                <button onclick="generateAllQRCodes()" class="bg-gray-800 dark:bg-black text-white px-4 py-2 rounded shadow hover:bg-gray-900 font-bold flex items-center gap-2">🖨️ ปริ้นต์ QR</button>
+                <button onclick="document.getElementById('importExcelInput').click()" class="w-full sm:w-auto justify-center bg-teal-600 text-white px-3 py-2 rounded shadow hover:bg-teal-700 font-bold flex items-center gap-1 text-sm"><span class="hidden md:inline">📤</span> นำเข้า</button>
+                
+                <button onclick="exportStationExcel()" class="w-full sm:w-auto justify-center bg-blue-600 text-white px-3 py-2 rounded shadow hover:bg-blue-700 font-bold flex items-center gap-1 text-sm"><span class="hidden md:inline">📥</span> Export</button>
+                <button onclick="generateAllQRCodes()" class="col-span-2 sm:col-span-1 w-full sm:w-auto justify-center bg-gray-800 dark:bg-black text-white px-3 py-2 rounded shadow hover:bg-gray-900 font-bold flex items-center gap-1 text-sm"><span class="hidden md:inline">🖨️</span> ปริ้นต์ QR</button>
             </div>
         </div>
 
-        <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 p-4 rounded-lg mb-6 border border-blue-200 dark:border-blue-800 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 p-4 rounded-lg mb-6 border border-blue-200 dark:border-blue-800 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 w-full">
             <div class="flex items-start gap-3">
-                <span class="text-2xl">💡</span>
+                <span class="text-2xl hidden md:block">💡</span>
                 <div>
-                    <h3 class="font-bold text-base mb-1">คำแนะนำในการกรอกข้อมูล</h3>
-                    <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                        <li><strong>การพิมพ์ภาษาไทย:</strong> ต้อง <span class="text-red-600 dark:text-red-400 font-bold">ดับเบิลคลิกที่ช่อง (Double-click)</span> ให้เคอร์เซอร์กระพริบก่อน จึงจะสามารถพิมพ์ภาษาไทยได้ปกติ</li>
-                        <li><strong>ช่องหมายเหตุ:</strong> ให้ระบุ <span class="text-blue-600 dark:text-blue-400 font-bold">สถานที่ตั้งของอุปกรณ์</span> ให้ชัดเจน เช่น <em>ฝกร. (ส่วนหน้า)</em>, <em>ฝอ.3 (ส่วนหลัง)</em> หรือ <em>ห้องประชุม 1</em></li>
-                        <li><strong>การนำเข้า Excel:</strong> ให้ทำการ <span class="text-teal-600 dark:text-teal-400 font-bold">Export Excel</span> สถานีนี้ออกไปก่อนเพื่อใช้เป็น Template ในการกรอกข้อมูลและ Import กลับเข้ามาครับ</li>
+                    <h3 class="font-bold text-sm md:text-base mb-1">คำแนะนำ</h3>
+                    <ul class="list-disc pl-5 space-y-1 text-xs md:text-sm text-gray-700 dark:text-gray-300">
+                        <li><strong>พิมพ์ภาษาไทย:</strong> ต้อง <span class="text-red-600 dark:text-red-400 font-bold">ดับเบิลคลิกช่องก่อน</span> ทุกครั้ง</li>
+                        <li><strong>หมายเหตุ:</strong> ให้ระบุจุดตั้งอุปกรณ์ เช่น ฝกร. (ส่วนหน้า)</li>
                     </ul>
                 </div>
             </div>
-            <button onclick="openExampleModal()" class="shrink-0 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg font-bold border-2 border-blue-300 dark:border-blue-700 shadow-sm transition-colors flex items-center justify-center gap-2 text-sm">
-                <span>👀</span> ดูตัวอย่างการใส่ข้อมูล
+            <button onclick="openExampleModal()" class="w-full sm:w-auto shrink-0 bg-white dark:bg-gray-800 hover:bg-gray-50 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg font-bold border-2 border-blue-300 dark:border-blue-700 shadow-sm flex items-center justify-center gap-2 text-sm">
+                <span>👀</span> ดูตัวอย่าง
             </button>
         </div>
 
-        <div class="grid grid-cols-1 gap-8">
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto">
-                <h3 class="text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3><div id="spreadsheet-cpu" class="w-full text-sm text-black"></div><button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded text-sm">➕ เพิ่มแถว</button>
+        <!-- 🌟 กำหนดความกว้างตารางให้ยืดหยุ่นด้วย overflow-x-auto 🌟 -->
+        <div class="grid grid-cols-1 gap-6 md:gap-8 w-full">
+            <div class="bg-white p-3 md:p-4 rounded-lg shadow border-t-4 border-blue-500 overflow-x-auto w-full">
+                <h3 class="text-lg md:text-xl font-bold mb-2 text-blue-800">💻 1. ตารางคอมพิวเตอร์ (CPU)</h3><div id="spreadsheet-cpu" class="w-full text-xs md:text-sm text-black min-w-full"></div><button onclick="addNewRow('spreadsheet-cpu')" class="mt-3 px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded text-sm w-full md:w-auto">➕ เพิ่มแถว</button>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-green-500 overflow-x-auto">
-                <h3 class="text-xl font-bold mb-2 text-green-800">🖥️ 2. ตารางจอมอนิเตอร์</h3><div id="spreadsheet-mon" class="w-full text-sm text-black"></div><button onclick="addNewRow('spreadsheet-mon')" class="mt-3 px-4 py-2 bg-green-100 text-green-700 font-bold rounded text-sm">➕ เพิ่มแถว</button>
+            <div class="bg-white p-3 md:p-4 rounded-lg shadow border-t-4 border-green-500 overflow-x-auto w-full">
+                <h3 class="text-lg md:text-xl font-bold mb-2 text-green-800">🖥️ 2. ตารางจอมอนิเตอร์</h3><div id="spreadsheet-mon" class="w-full text-xs md:text-sm text-black min-w-full"></div><button onclick="addNewRow('spreadsheet-mon')" class="mt-3 px-4 py-2 bg-green-100 text-green-700 font-bold rounded text-sm w-full md:w-auto">➕ เพิ่มแถว</button>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-purple-500 overflow-x-auto">
-                <h3 class="text-xl font-bold mb-2 text-purple-800">🖨️ 3. ตารางเครื่องพิมพ์</h3><div id="spreadsheet-prn" class="w-full text-sm text-black"></div><button onclick="addNewRow('spreadsheet-prn')" class="mt-3 px-4 py-2 bg-purple-100 text-purple-700 font-bold rounded text-sm">➕ เพิ่มแถว</button>
+            <div class="bg-white p-3 md:p-4 rounded-lg shadow border-t-4 border-purple-500 overflow-x-auto w-full">
+                <h3 class="text-lg md:text-xl font-bold mb-2 text-purple-800">🖨️ 3. ตารางเครื่องพิมพ์</h3><div id="spreadsheet-prn" class="w-full text-xs md:text-sm text-black min-w-full"></div><button onclick="addNewRow('spreadsheet-prn')" class="mt-3 px-4 py-2 bg-purple-100 text-purple-700 font-bold rounded text-sm w-full md:w-auto">➕ เพิ่มแถว</button>
             </div>
-            <div class="bg-white p-4 rounded-lg shadow border-t-4 border-orange-500 overflow-x-auto">
-                <h3 class="text-xl font-bold mb-2 text-orange-800">🛠️ 4. ตารางเครื่องมือพิเศษ</h3><div id="spreadsheet-spc" class="w-full text-sm text-black"></div><button onclick="addNewRow('spreadsheet-spc')" class="mt-3 px-4 py-2 bg-orange-100 text-orange-700 font-bold rounded text-sm">➕ เพิ่มแถว</button>
+            <div class="bg-white p-3 md:p-4 rounded-lg shadow border-t-4 border-orange-500 overflow-x-auto w-full">
+                <h3 class="text-lg md:text-xl font-bold mb-2 text-orange-800">🛠️ 4. ตารางเครื่องมือพิเศษ</h3><div id="spreadsheet-spc" class="w-full text-xs md:text-sm text-black min-w-full"></div><button onclick="addNewRow('spreadsheet-spc')" class="mt-3 px-4 py-2 bg-orange-100 text-orange-700 font-bold rounded text-sm w-full md:w-auto">➕ เพิ่มแถว</button>
             </div>
         </div>
     </div>
@@ -371,15 +365,13 @@
             loadDashboardStats();
             const urlParams = new URLSearchParams(window.location.search);
             const snParam = urlParams.get('sn');
-            if(snParam) {
-                openSnHistory(snParam);
-            }
+            if(snParam) openSnHistory(snParam);
         };
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
             const bgColor = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
-            toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg font-bold flex items-center gap-3 toast-enter pointer-events-auto`;
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg font-bold flex items-center gap-2 toast-enter pointer-events-auto text-sm md:text-base`;
             toast.innerHTML = `<span>${message}</span>`; container.appendChild(toast);
             requestAnimationFrame(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-enter-active'); });
             setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
@@ -387,18 +379,18 @@
 
         function getMonthBadge(lastConfirmedStr) {
             const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'); const currentDay = now.getDate();
-            if (lastConfirmedStr === currentMonthStr) { return '<span class="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700 font-bold border border-green-200">✅ ส่งรายงานแล้ว</span>'; } 
-            else { if (currentDay <= 5) return '<span class="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700 font-bold border border-yellow-300">⚠️ รอส่งรายงาน</span>'; else return '<span class="px-3 py-1 text-xs rounded-full bg-red-100 text-red-700 font-bold border border-red-200">❌ ยังไม่ส่งรายงาน</span>'; }
+            if (lastConfirmedStr === currentMonthStr) { return '<span class="px-2 py-1 text-[10px] md:text-xs rounded-full bg-green-100 text-green-700 font-bold border border-green-200 w-max mx-auto">✅ ส่งรายงานแล้ว</span>'; } 
+            else { if (currentDay <= 5) return '<span class="px-2 py-1 text-[10px] md:text-xs rounded-full bg-yellow-100 text-yellow-700 font-bold border border-yellow-300 w-max mx-auto">⚠️ รอส่งรายงาน</span>'; else return '<span class="px-2 py-1 text-[10px] md:text-xs rounded-full bg-red-100 text-red-700 font-bold border border-red-200 w-max mx-auto">❌ ยังไม่ส่งรายงาน</span>'; }
         }
 
         const indexPage = document.getElementById('indexPage');
         groupOrder.forEach(groupName => {
-            const groupSection = document.createElement('div'); groupSection.className = 'mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border-t-4 border-gray-400 hover:border-blue-500 transition-colors';
-            groupSection.innerHTML = `<h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2">📁 พื้นที่: ${groupName}</h2>`;
-            const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4';
+            const groupSection = document.createElement('div'); groupSection.className = 'mb-6 md:mb-8 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-lg shadow-sm border-t-4 border-gray-400 hover:border-blue-500 transition-colors w-full';
+            groupSection.innerHTML = `<h2 class="text-lg md:text-xl font-bold mb-3 md:mb-4 text-gray-800 dark:text-gray-100 border-b dark:border-gray-700 pb-2">📁 พื้นที่: ${groupName}</h2>`;
+            const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4';
             inventoryGroups[groupName].forEach(station => {
-                const btn = document.createElement('div'); btn.className = "bg-slate-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-600 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-900 dark:text-blue-300 flex flex-col items-center justify-center gap-2 min-h-[90px]";
-                btn.innerHTML = `<span>📍 ${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse px-3 py-1 text-xs rounded-full bg-gray-200 text-gray-500">ตรวจสอบ...</div>`; 
+                const btn = document.createElement('div'); btn.className = "bg-slate-50 dark:bg-gray-700 p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md border border-gray-200 dark:border-gray-600 cursor-pointer transform hover:-translate-y-1 transition text-center font-semibold text-blue-900 dark:text-blue-300 flex flex-col items-center justify-center gap-1 min-h-[80px]";
+                btn.innerHTML = `<span class="text-sm md:text-base">📍 ${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse px-2 py-1 text-[10px] rounded-full bg-gray-200 text-gray-500">ตรวจสอบ...</div>`; 
                 btn.onclick = () => openStation(groupName, station); gridDiv.appendChild(btn);
             });
             groupSection.appendChild(gridDiv); indexPage.appendChild(groupSection);
@@ -446,8 +438,8 @@
         }
 
         function createSearchRowHtml(g, s, t, r) {
-            let badge = `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded">${r[5]||'-'}</span>`; if(r[5]==='ปกติ') badge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded">${r[5]}</span>`; if(r[5]==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded">${r[5]}</span>`;
-            return `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-3 border dark:border-gray-600 font-semibold text-blue-800 dark:text-blue-300">${g} > ${s}</td><td class="p-3 border dark:border-gray-600">${t}</td><td class="p-3 border dark:border-gray-600">${r[1]||'-'}</td><td class="p-3 border dark:border-gray-600">${r[2]||''} ${r[3]||''}</td><td class="p-3 border dark:border-gray-600 font-mono bg-yellow-50 dark:bg-yellow-900">${r[4]||'-'}</td><td class="p-3 border dark:border-gray-600 text-center">${badge}</td></tr>`;
+            let badge = `<span class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-[10px] md:text-xs">${r[5]||'-'}</span>`; if(r[5]==='ปกติ') badge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded text-[10px] md:text-xs">${r[5]}</span>`; if(r[5]==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] md:text-xs">${r[5]}</span>`;
+            return `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"><td class="p-2 md:p-3 border dark:border-gray-600 font-semibold text-blue-800 dark:text-blue-300 whitespace-nowrap">${s}</td><td class="p-2 border dark:border-gray-600">${t}</td><td class="p-2 border dark:border-gray-600">${r[1]||'-'}</td><td class="p-2 border dark:border-gray-600">${r[2]||''} ${r[3]||''}</td><td class="p-2 border dark:border-gray-600 font-mono bg-yellow-50 dark:bg-yellow-900/30">${r[4]||'-'}</td><td class="p-2 border dark:border-gray-600 text-center">${badge}</td></tr>`;
         }
 
         async function openStation(groupName, stationName) {
@@ -464,22 +456,20 @@
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
                 const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.classList.remove('hidden'); 
                 if (dbData.lastConfirmed === currentMonthStr) { 
-                    isEditingConfirmedReport = true; btnConfirm.className = "bg-orange-500 text-white px-4 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
+                    isEditingConfirmedReport = true; btnConfirm.className = "w-full sm:w-auto justify-center bg-orange-500 text-white px-3 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-1 text-sm md:text-base"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 } else { 
-                    isEditingConfirmedReport = false; btnConfirm.className = "bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "ยืนยันรายงานประจำเดือน";
+                    isEditingConfirmedReport = false; btnConfirm.className = "w-full sm:w-auto justify-center bg-purple-600 text-white px-3 py-2 rounded shadow hover:bg-purple-700 font-bold flex items-center gap-1 text-sm md:text-base"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
                 }
                 initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
             finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 เปลี่ยนข้อความ [ดูรูป: url] เป็นปุ่มกดสวยๆ บนตาราง 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
             let colTitle = table.options.columns[col].title;
 
-            // 1. ปุ่มจัดการ
             if (col == tCols - 1) { 
                 cell.innerHTML = `<div class="flex justify-center gap-1">
                     <button onclick="triggerUpload('${instance.id}', ${row})" title="อัปโหลดรูปลงช่องหมายเหตุ" class="text-emerald-600 font-bold hover:bg-emerald-100 rounded px-2 py-1 text-lg border border-emerald-200 shadow-sm transition">📸</button>
@@ -488,71 +478,46 @@
                 </div>`; 
                 cell.style.textAlign = 'center'; 
             } 
-            
-            // 2. แปลงข้อความลิงก์รูป ให้กลายเป็นปุ่ม
             if (colTitle === 'หมายเหตุ' && val) {
                 let htmlVal = val.toString().replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
-                    return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-md font-bold text-xs ml-1 border border-blue-300 shadow-sm transition-colors cursor-pointer" title="คลิกเพื่อเปิดรูป">🖼️ เปิดดูรูปภาพ</a>`;
+                    return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 hover:text-blue-800 rounded-md font-bold text-[10px] md:text-xs ml-1 border border-blue-300 shadow-sm transition-colors cursor-pointer w-max" title="คลิกเพื่อเปิดรูป">🖼️ เปิดรูป</a>`;
                 });
-                // อัปเดตการแสดงผล (จะไม่กระทบข้อมูลดิบเวลาดับเบิลคลิกเพื่อแก้)
                 cell.innerHTML = htmlVal;
             }
         };
 
-        function triggerUpload(tableId, rowIdx) {
-            uploadTarget = { tableId, rowIdx };
-            document.getElementById('imageUploadInput').click(); 
-        }
+        function triggerUpload(tableId, rowIdx) { uploadTarget = { tableId, rowIdx }; document.getElementById('imageUploadInput').click(); }
 
         function handleImageUpload(event) {
             const file = event.target.files[0];
             if(!file || !uploadTarget) return;
-
             if(file.size > 5 * 1024 * 1024) { showToast("ไฟล์รูปภาพใหญ่เกินไป (ไม่ควรเกิน 5MB)", "error"); return; }
-
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const base64Data = e.target.result.split(',')[1];
-                
                 document.getElementById('loadingText').innerText = 'กำลังอัปโหลดรูปลง Google Drive...';
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                document.getElementById('loadingOverlay').classList.add('flex');
-                
+                document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
                 try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'UPLOAD_IMAGE', file: base64Data, filename: file.name, mimeType: file.type })
-                    });
+                    const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'UPLOAD_IMAGE', file: base64Data, filename: file.name, mimeType: file.type }) });
                     const res = await response.json();
-                    
                     if(res.status === 'success') {
                         showToast("อัปโหลดรูปสำเร็จ!");
                         const table = document.getElementById(uploadTarget.tableId).jexcel;
                         let remarkColIndex = table.options.columns.length - 2; 
-                        
                         let currentRemark = table.getValueFromCoords(remarkColIndex, uploadTarget.rowIdx);
                         let newRemark = currentRemark ? currentRemark + " [ดูรูป: " + res.url + "]" : "[ดูรูป: " + res.url + "]";
                         table.setValueFromCoords(remarkColIndex, uploadTarget.rowIdx, newRemark);
-                        
                         hasUnsavedDeletions = true; 
-                    } else {
-                        showToast("เกิดข้อผิดพลาด: " + res.message, "error");
-                    }
-                } catch(err) {
-                    console.error(err);
-                    showToast("อัปโหลดไม่สำเร็จ", "error");
-                } finally {
-                    document.getElementById('imageUploadInput').value = '';
-                    document.getElementById('loadingOverlay').classList.add('hidden');
-                    document.getElementById('loadingOverlay').classList.remove('flex');
-                    uploadTarget = null;
-                }
+                    } else showToast("เกิดข้อผิดพลาด: " + res.message, "error");
+                } catch(err) { console.error(err); showToast("อัปโหลดไม่สำเร็จ", "error"); } 
+                finally { document.getElementById('imageUploadInput').value = ''; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); uploadTarget = null; }
             };
             reader.readAsDataURL(file);
         }
 
+        // 🌟 อัปเดตฟังก์ชันดึงประวัติ และโชว์รายละเอียดสเปคเครื่อง 🌟
         async function openSnHistory(sn) {
-            document.getElementById('loadingText').innerText = 'กำลังค้นหาประวัติอุปกรณ์...';
+            document.getElementById('loadingText').innerText = 'กำลังดึงข้อมูลอุปกรณ์...';
             document.getElementById('loadingOverlay').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('flex');
             
@@ -561,32 +526,57 @@
                 const response = await fetch(`${API_URL}?action=GET_HISTORY_SN&sn=${encodeURIComponent(sn)}`);
                 const result = await response.json();
                 
+                // จัดการกล่องรายละเอียดสเปคเครื่อง
+                const detailsBox = document.getElementById('snDetailsBox');
+                const detailsContent = document.getElementById('snDetailsContent');
+                
+                if (result.details) {
+                    let stBadge = result.details.status === 'ปกติ' ? 'bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-100' : (result.details.status === 'ชำรุด' ? 'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-100' : 'bg-yellow-100 dark:bg-yellow-800 text-yellow-700 dark:text-yellow-100');
+                    
+                    let linkNote = result.details.note.replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
+                        return `<a href="${url}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded font-bold text-xs ml-1 border border-blue-300">🖼️ ดูรูป</a>`;
+                    });
+
+                    detailsContent.innerHTML = `
+                        <div><span class="text-gray-500 dark:text-gray-400">สถานี/พื้นที่:</span> <span class="font-bold dark:text-gray-200">${result.details.station}</span></div>
+                        <div><span class="text-gray-500 dark:text-gray-400">ประเภท:</span> <span class="font-bold dark:text-gray-200">${result.details.type}</span></div>
+                        <div><span class="text-gray-500 dark:text-gray-400">ผู้ใช้งาน:</span> <span class="font-bold dark:text-gray-200">${result.details.user}</span></div>
+                        <div><span class="text-gray-500 dark:text-gray-400">ยี่ห้อ/รุ่น:</span> <span class="font-bold dark:text-gray-200">${result.details.brand} ${result.details.model}</span></div>
+                        <div><span class="text-gray-500 dark:text-gray-400">ระบบเชื่อมต่อ:</span> <span class="font-bold dark:text-gray-200">${result.details.connection}</span></div>
+                        <div><span class="text-gray-500 dark:text-gray-400">สถานะล่าสุด:</span> <span class="px-2 py-1 rounded text-xs font-bold ${stBadge}">${result.details.status}</span></div>
+                        <div class="md:col-span-2"><span class="text-gray-500 dark:text-gray-400">หมายเหตุ:</span> <span class="font-bold dark:text-gray-200 break-words">${linkNote}</span></div>
+                    `;
+                    detailsBox.classList.remove('hidden');
+                } else {
+                    detailsBox.classList.add('hidden');
+                }
+
+                // จัดการตารางประวัติ (Logs)
                 const tbody = document.getElementById('snHistoryTableBody');
                 if (result.logs && result.logs.length > 0) {
                     let html = '';
                     result.logs.forEach(log => {
-                        let actionBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        if(log.action.includes("ส่งรายงาน") || log.action.includes("แก้ไขรายงาน")) actionBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        let actionBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold text-[10px] md:text-xs w-max inline-block">${log.action}</span>`;
+                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-semibold text-[10px] md:text-xs w-max inline-block">${log.action}</span>`;
+                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-md font-semibold text-[10px] md:text-xs w-max inline-block">${log.action}</span>`;
                         
                         let timeStr = log.time;
                         try {
                            let d = new Date(log.time);
-                           if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                           if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
                         } catch(e) {}
 
                         let detailText = log.detail;
                         let statusBadge = "-";
-                        if(detailText.includes("สถานะ: ปกติ")) statusBadge = `<span class="text-green-600 font-bold">ปกติ</span>`;
-                        if(detailText.includes("สถานะ: ชำรุด")) statusBadge = `<span class="text-red-600 font-bold">ชำรุด</span>`;
-                        if(detailText.includes("สถานะ: สำรอง")) statusBadge = `<span class="text-yellow-600 font-bold">สำรอง</span>`;
+                        if(detailText.includes("สถานะ: ปกติ")) statusBadge = `<span class="text-green-600 dark:text-green-400 font-bold">ปกติ</span>`;
+                        if(detailText.includes("สถานะ: ชำรุด")) statusBadge = `<span class="text-red-600 dark:text-red-400 font-bold">ชำรุด</span>`;
+                        if(detailText.includes("สถานะ: สำรอง")) statusBadge = `<span class="text-yellow-600 dark:text-yellow-400 font-bold">สำรอง</span>`;
 
-                        html += `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="p-3 border dark:border-gray-600 text-gray-500 dark:text-gray-400 whitespace-nowrap">${timeStr}</td>
-                            <td class="p-3 border dark:border-gray-600 font-semibold text-blue-700 dark:text-blue-300">${log.station}</td>
-                            <td class="p-3 border dark:border-gray-600 text-center">${statusBadge}</td>
-                            <td class="p-3 border dark:border-gray-600 text-gray-800 dark:text-gray-200"><div class="mb-1">${actionBadge}</div><div class="text-xs text-gray-500 dark:text-gray-400">${detailText}</div></td>
+                        html += `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs md:text-sm">
+                            <td class="p-2 md:p-3 border dark:border-gray-600 text-gray-500 dark:text-gray-400 whitespace-nowrap">${timeStr}</td>
+                            <td class="p-2 md:p-3 border dark:border-gray-600 font-semibold text-blue-700 dark:text-blue-300 whitespace-nowrap">${log.station}</td>
+                            <td class="p-2 md:p-3 border dark:border-gray-600 text-center">${statusBadge}</td>
+                            <td class="p-2 md:p-3 border dark:border-gray-600 text-gray-800 dark:text-gray-200 min-w-[200px]"><div class="mb-1">${actionBadge}</div><div class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 leading-tight">${detailText}</div></td>
                         </tr>`;
                     });
                     tbody.innerHTML = html;
@@ -598,7 +588,7 @@
                 document.getElementById('snHistoryModal').classList.add('flex');
             } catch (err) {
                 console.error(err);
-                showToast("โหลดประวัติไม่สำเร็จ", "error");
+                showToast("โหลดข้อมูลไม่สำเร็จ", "error");
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
@@ -625,27 +615,16 @@
         function executeDeleteRow() { 
             if (rowToDelete) { 
                 const table = document.getElementById(rowToDelete.id).jexcel;
-                
-                // 🌟 ระบบใหม่: ตรวจจับและลบรูปภาพใน Drive ก่อนลบแถว
-                let remarkColIndex = table.options.columns.length - 2; // คอลัมน์หมายเหตุ
+                let remarkColIndex = table.options.columns.length - 2; 
                 let remarkText = table.getValueFromCoords(remarkColIndex, rowToDelete.row);
-                
-                // ค้นหา ID รูปภาพจากลิงก์ [ดูรูป: https://...id=xxxxxx]
                 if (remarkText) {
                     let match = remarkText.match(/id=([a-zA-Z0-9_-]+)/);
                     if (match && match[1]) {
-                        let fileId = match[1];
-                        // แอบส่งคำสั่งไปลบรูปหลังบ้านแบบเงียบๆ (ไม่ให้หน้าเว็บค้างรอ)
-                        fetch(API_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: fileId })
-                        }).catch(e => console.error("ออโต้ลบรูปไม่สำเร็จ: ", e));
+                        fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
                     }
                 }
-
-                // ลบแถวออกจากหน้าจอตามปกติ
                 table.deleteRow(rowToDelete.row); 
-                showToast("ลบอุปกรณ์ (และลบรูปภาพในระบบ) เรียบร้อยแล้ว", "blue"); 
+                showToast("ลบอุปกรณ์เรียบร้อย", "blue"); 
                 hasUnsavedDeletions = true;
             } 
             closeDeleteModal(); 
@@ -655,59 +634,34 @@
 
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            // 🌟 เปลี่ยนให้ใช้ customRenderTable แทน renderManageBtn เดิม 🌟
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 120 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 120 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 120 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 120 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
         }
 
         async function openAuditLog() {
-            document.getElementById('loadingText').innerText = 'กำลังโหลดประวัติ...';
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingOverlay').classList.add('flex');
+            document.getElementById('loadingText').innerText = 'กำลังโหลดประวัติ...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const targetStation = `ADP_${currentGroup}_${currentStation}`;
                 const response = await fetch(`${API_URL}?action=GET_LOGS&station=${targetStation}`);
                 const result = await response.json();
-                
                 const tbody = document.getElementById('auditLogTableBody');
                 if (result.logs && result.logs.length > 0) {
                     let html = '';
                     result.logs.forEach(log => {
-                        let actionBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        if(log.action.includes("ส่งรายงาน") || log.action.includes("แก้ไขรายงาน")) actionBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded-md font-semibold text-xs">${log.action}</span>`;
-                        
+                        let actionBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold text-[10px] md:text-xs inline-block w-max">${log.action}</span>`;
+                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-semibold text-[10px] md:text-xs inline-block w-max">${log.action}</span>`;
+                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-md font-semibold text-[10px] md:text-xs inline-block w-max">${log.action}</span>`;
+                        if(log.action.includes("รายงาน")) actionBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded-md font-semibold text-[10px] md:text-xs inline-block w-max">${log.action}</span>`;
                         let timeStr = log.time;
-                        try {
-                           let d = new Date(log.time);
-                           if(!isNaN(d.getTime())) {
-                               timeStr = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                           }
-                        } catch(e) {}
-
-                        html += `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="p-3 border dark:border-gray-600 text-gray-500 dark:text-gray-400 whitespace-nowrap">${timeStr}</td>
-                            <td class="p-3 border dark:border-gray-600 text-center">${actionBadge}</td>
-                            <td class="p-3 border dark:border-gray-600 text-gray-800 dark:text-gray-200">${log.detail}</td>
-                        </tr>`;
+                        try { let d = new Date(log.time); if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); } catch(e) {}
+                        html += `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-xs md:text-sm"><td class="p-2 md:p-3 border dark:border-gray-600 text-gray-500 dark:text-gray-400 whitespace-nowrap">${timeStr}</td><td class="p-2 md:p-3 border dark:border-gray-600 text-center">${actionBadge}</td><td class="p-2 md:p-3 border dark:border-gray-600 text-gray-800 dark:text-gray-200 min-w-[200px]">${log.detail}</td></tr>`;
                     });
                     tbody.innerHTML = html;
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500 font-semibold">ยังไม่มีประวัติการทำรายการสำหรับสถานีนี้</td></tr>`;
-                }
-                
-                document.getElementById('auditLogModal').classList.remove('hidden');
-                document.getElementById('auditLogModal').classList.add('flex');
-            } catch (err) {
-                console.error(err);
-                showToast("โหลดประวัติไม่สำเร็จ", "error");
-            } finally {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('flex');
-            }
+                } else tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500 font-semibold">ยังไม่มีประวัติการทำรายการสำหรับสถานีนี้</td></tr>`;
+                document.getElementById('auditLogModal').classList.remove('hidden'); document.getElementById('auditLogModal').classList.add('flex');
+            } catch (err) { console.error(err); showToast("โหลดประวัติไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         function closeAuditLog() { document.getElementById('auditLogModal').classList.add('hidden'); document.getElementById('auditLogModal').classList.remove('flex'); }
@@ -723,8 +677,8 @@
             if (!tableCPU) return; let diff = calculateDiff(); let h = ''; pendingLogs = [];
             if (diff.added.length === 0 && diff.removed.length === 0) { h = `<div class="p-8 text-center text-gray-400 font-semibold">ไม่มีการเปลี่ยนแปลงข้อมูล</div>`; } 
             else {
-                if (diff.added.length > 0) { h += `<div class="mb-4 bg-green-50 p-4 rounded"><p class="font-bold text-green-700">รายการเพิ่ม/แก้ไข:</p><ul class="list-disc pl-5 text-green-800">`; diff.added.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'เพิ่ม/อัปเดต', detail: i }); }); h += `</ul></div>`; }
-                if (diff.removed.length > 0) { h += `<div class="bg-red-50 p-4 rounded"><p class="font-bold text-red-700">รายการที่ลบ:</p><ul class="list-disc pl-5 text-red-800">`; diff.removed.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'ลบ', detail: i }); }); h += `</ul></div>`; }
+                if (diff.added.length > 0) { h += `<div class="mb-4 bg-green-50 dark:bg-green-900/30 p-3 md:p-4 rounded"><p class="font-bold text-green-700 dark:text-green-300">รายการเพิ่ม/แก้ไข:</p><ul class="list-disc pl-5 text-green-800 dark:text-green-100 text-xs md:text-sm">`; diff.added.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'เพิ่ม/อัปเดต', detail: i }); }); h += `</ul></div>`; }
+                if (diff.removed.length > 0) { h += `<div class="bg-red-50 dark:bg-red-900/30 p-3 md:p-4 rounded"><p class="font-bold text-red-700 dark:text-red-300">รายการที่ลบ:</p><ul class="list-disc pl-5 text-red-800 dark:text-red-100 text-xs md:text-sm">`; diff.removed.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'ลบ', detail: i }); }); h += `</ul></div>`; }
             }
             document.getElementById('diffContent').innerHTML = h; document.getElementById('confirmModal').classList.remove('hidden'); document.getElementById('confirmModal').classList.add('flex');
         }
@@ -733,48 +687,27 @@
 
         function confirmMonthlyStatus() {
             if (!tableCPU) return;
-            if (hasUnsavedDeletions) {
-                document.getElementById('saveFirstModal').classList.remove('hidden');
-                document.getElementById('saveFirstModal').classList.add('flex');
-                return;
-            }
+            if (hasUnsavedDeletions) { document.getElementById('saveFirstModal').classList.remove('hidden'); document.getElementById('saveFirstModal').classList.add('flex'); return; }
 
-            const modalHeaderBox = document.getElementById('monthlyModalHeader');
-            const modalH3 = document.getElementById('monthlyModalH3');
-            const modalTitle = document.getElementById('monthlyModalTitle');
-            const modalSubtitle = document.getElementById('monthlyModalSubtitle');
-            const modalBtn = document.getElementById('monthlyConfirmBtn');
-
+            const mH = document.getElementById('monthlyModalHeader'), mH3 = document.getElementById('monthlyModalH3'), mTitle = document.getElementById('monthlyModalTitle'), mSub = document.getElementById('monthlyModalSubtitle'), mBtn = document.getElementById('monthlyConfirmBtn');
             if (isEditingConfirmedReport) {
-                modalTitle.innerText = "แก้ไขรายงานที่ส่งแล้ว";
-                modalSubtitle.innerText = "กรุณาตรวจสอบความถูกต้องอีกครั้ง ข้อมูลจะถูกอัปเดตไปที่ระบบหลังบ้าน";
-                
-                modalHeaderBox.className = "p-4 border-b bg-orange-50 dark:bg-orange-900 border-orange-200 dark:border-orange-700";
-                modalH3.className = "text-xl font-bold flex items-center gap-2 text-orange-800 dark:text-orange-200";
-                modalSubtitle.className = "mt-1 font-semibold text-orange-700 dark:text-orange-300";
-                modalBtn.className = "px-5 py-2 rounded-lg font-bold text-white shadow-md bg-orange-500 hover:bg-orange-600";
-                modalBtn.innerHTML = "✏️ ยืนยันแก้ไขรายงาน";
+                mTitle.innerText = "แก้ไขรายงานที่ส่งแล้ว"; mSub.innerText = "กรุณาตรวจสอบความถูกต้องอีกครั้ง ข้อมูลจะถูกอัปเดต";
+                mH.className = "p-4 border-b bg-orange-50 dark:bg-orange-900 border-orange-200 dark:border-orange-700"; mH3.className = "text-lg md:text-xl font-bold flex items-center gap-2 text-orange-800 dark:text-orange-200"; mSub.className = "mt-1 font-semibold text-orange-700 dark:text-orange-300 text-xs md:text-sm"; mBtn.className = "w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-white shadow-md bg-orange-500 hover:bg-orange-600"; mBtn.innerHTML = "✅ ยืนยันแก้ไขรายงาน";
             } else {
-                modalTitle.innerText = "สรุปรายงานสถานภาพประจำเดือน";
-                modalSubtitle.innerText = "กรุณาตรวจสอบยอดสรุปอุปกรณ์ทั้งหมดของสถานีนี้ ก่อนกดยืนยันส่งรายงาน";
-                
-                modalHeaderBox.className = "p-4 border-b bg-purple-50 dark:bg-purple-900 border-purple-200 dark:border-purple-700";
-                modalH3.className = "text-xl font-bold flex items-center gap-2 text-purple-800 dark:text-purple-200";
-                modalSubtitle.className = "mt-1 font-semibold text-purple-700 dark:text-purple-300";
-                modalBtn.className = "px-5 py-2 rounded-lg font-bold text-white shadow-md bg-purple-600 hover:bg-purple-700";
-                modalBtn.innerHTML = "✅ ยืนยันส่งรายงาน";
+                mTitle.innerText = "สรุปรายงานประจำเดือน"; mSub.innerText = "ตรวจสอบยอดสรุปทั้งหมดก่อนยืนยัน";
+                mH.className = "p-4 border-b bg-purple-50 dark:bg-purple-900 border-purple-200 dark:border-purple-700"; mH3.className = "text-lg md:text-xl font-bold flex items-center gap-2 text-purple-800 dark:text-purple-200"; mSub.className = "mt-1 font-semibold text-purple-700 dark:text-purple-300 text-xs md:text-sm"; mBtn.className = "w-full sm:w-auto px-5 py-2 rounded-lg font-bold text-white shadow-md bg-purple-600 hover:bg-purple-700"; mBtn.innerHTML = "✅ ยืนยันส่งรายงาน";
             }
 
             let summaryHtml = '<div class="space-y-4">';
-            const generateCategorySummary = (name, data, icon, colorClass) => {
-                let total = 0, normal = 0, broken = 0, spare = 0; let brokenList = [];
-                data.forEach(r => { if (r[1] || r[2] || r[3] || r[4]) { total++; let status = r[5]; if (status === 'ปกติ') normal++; else if (status === 'ชำรุด') { broken++; brokenList.push(`${r[2]||''} ${r[3]||''} (S/N: ${r[4]||'-'})`); } else if (status === 'สำรอง') spare++; else normal++; } });
-                if (total === 0) return '';
-                let html = `<div class="p-4 rounded-lg border ${colorClass}"><h4 class="font-bold mb-2 flex items-center gap-2">${icon} ${name} (รวม ${total} รายการ)</h4><div class="grid grid-cols-3 gap-2 text-sm text-center mb-2"><div class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 rounded py-1 font-semibold">ปกติ: ${normal}</div><div class="bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 rounded py-1 font-semibold">ชำรุด: ${broken}</div><div class="bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 rounded py-1 font-semibold">สำรอง: ${spare}</div></div>`;
-                if (brokenList.length > 0) { html += `<div class="text-xs text-red-600 dark:text-red-400 mt-2"><strong>⚠️ รายการชำรุด:</strong> ${brokenList.join(', ')}</div>`; } return html + `</div>`;
+            const genSum = (name, data, icon, col) => {
+                let t = 0, n = 0, b = 0, s = 0; let bL = [];
+                data.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) { t++; let st = r[5]; if (st === 'ปกติ') n++; else if (st === 'ชำรุด') { b++; bL.push(`${r[2]||''} ${r[3]||''} (S/N: ${r[4]||'-'})`); } else if (st === 'สำรอง') s++; else n++; } });
+                if (t === 0) return '';
+                let h = `<div class="p-3 md:p-4 rounded-lg border ${col}"><h4 class="font-bold mb-2 flex items-center gap-2 text-sm md:text-base">${icon} ${name} (${t} รายการ)</h4><div class="grid grid-cols-3 gap-2 text-xs md:text-sm text-center mb-2"><div class="bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-100 rounded py-1 font-semibold">ปกติ: ${n}</div><div class="bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-100 rounded py-1 font-semibold">ชำรุด: ${b}</div><div class="bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-100 rounded py-1 font-semibold">สำรอง: ${s}</div></div>`;
+                if (bL.length > 0) h += `<div class="text-[10px] md:text-xs text-red-600 dark:text-red-400 mt-2"><strong>⚠️ ชำรุด:</strong> ${bL.join(', ')}</div>`; return h + `</div>`;
             };
-            summaryHtml += generateCategorySummary('คอมพิวเตอร์ (CPU)', tableCPU.getData(), '💻', 'border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30'); summaryHtml += generateCategorySummary('จอมอนิเตอร์', tableMon.getData(), '🖥️', 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/30'); summaryHtml += generateCategorySummary('เครื่องพิมพ์', tablePrn.getData(), '🖨️', 'border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/30'); summaryHtml += generateCategorySummary('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️', 'border-orange-200 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/30');
-            if (summaryHtml === '<div class="space-y-4">') { summaryHtml = '<div class="text-center text-gray-500 py-4 font-semibold">ไม่มีข้อมูลอุปกรณ์ในสถานีนี้เลย</div>'; } else { summaryHtml += '</div>'; }
+            summaryHtml += genSum('คอมพิวเตอร์', tableCPU.getData(), '💻', 'border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30') + genSum('จอมอนิเตอร์', tableMon.getData(), '🖥️', 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/30') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️', 'border-purple-200 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/30') + genSum('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️', 'border-orange-200 dark:border-orange-700 bg-orange-50 dark:bg-orange-900/30');
+            if (summaryHtml === '<div class="space-y-4">') summaryHtml = '<div class="text-center text-gray-500 py-4 font-semibold">ไม่มีข้อมูลอุปกรณ์</div>'; else summaryHtml += '</div>';
             document.getElementById('monthlySummaryContent').innerHTML = summaryHtml; document.getElementById('monthlyConfirmModal').classList.remove('hidden'); document.getElementById('monthlyConfirmModal').classList.add('flex');
         }
 
@@ -782,13 +715,13 @@
 
         async function executeConfirmMonth() {
             closeMonthlyModal(); const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงานประจำเดือน', detail: `✏️ ยืนยันแก้ไขข้อมูลประจำเดือน ${currentMonthStr} อีกครั้ง` }] : [{ action: 'ส่งรายงานประจำเดือน', detail: `✅ ยืนยันความถูกต้องข้อมูลประจำเดือน ${currentMonthStr}` }];
+            pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงาน', detail: `✏️ ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ action: 'ส่งรายงาน', detail: `✅ ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
             document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
-                await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ!` : `ส่งรายงานประจำเดือนสำเร็จ!`); 
-                isEditingConfirmedReport = true; const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.className = "bg-orange-500 text-white px-4 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-2"; document.getElementById('btnConfirmText').innerText = "✏️ แก้ไขรายงานที่ส่งแล้ว";
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ!` : `ส่งรายงานสำเร็จ!`); 
+                isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "w-full sm:w-auto justify-center bg-orange-500 text-white px-3 py-2 rounded shadow hover:bg-orange-600 font-bold flex items-center gap-1 text-sm md:text-base"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 hasUnsavedDeletions = false; 
             } catch (e) { console.error(e); showToast("ส่งรายงานไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
@@ -797,64 +730,40 @@
             closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังบันทึก...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
-                await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
-                hasUnsavedDeletions = false;
-                showToast(`บันทึก ${currentStation} สำเร็จ!`);
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); hasUnsavedDeletions = false; showToast(`บันทึกสำเร็จ!`);
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         function createQRLabelElement(type, brand, model, sn, user, dateStr) {
             let baseUrl = window.location.href.split('?')[0]; 
             let qrUrl = baseUrl + "?sn=" + encodeURIComponent(sn);
-
-            let labelDiv = document.createElement('div');
-            labelDiv.className = 'qr-label flex flex-col items-center justify-center p-2 bg-white border border-gray-400 rounded-sm w-[4.5rem] h-[5.5rem] sm:w-48 sm:h-56 m-1';
-            let titleDiv = document.createElement('div');
-            titleDiv.className = 'text-[9px] sm:text-xs font-black text-center mb-1 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide leading-tight truncate';
-            titleDiv.innerText = `${currentStation}`;
-            let qrCanvas = document.createElement('canvas');
-            new QRious({ element: qrCanvas, value: qrUrl, size: 400, level: 'M' }); 
-            let qrImg = document.createElement('img');
-            qrImg.src = qrCanvas.toDataURL();
-            qrImg.className = "mx-auto border border-gray-200 p-1 w-16 h-16 sm:w-28 sm:h-28";
-            let textDiv = document.createElement('div');
-            textDiv.className = 'text-[8px] sm:text-[10px] text-center mt-1 sm:mt-2 font-bold text-gray-800 leading-tight w-full truncate';
+            let labelDiv = document.createElement('div'); labelDiv.className = 'qr-label flex flex-col items-center justify-center p-2 bg-white border border-gray-400 rounded-sm w-[4.5rem] h-[5.5rem] sm:w-48 sm:h-56 m-1';
+            let titleDiv = document.createElement('div'); titleDiv.className = 'text-[9px] sm:text-xs font-black text-center mb-1 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide leading-tight truncate'; titleDiv.innerText = `${currentStation}`;
+            let qrCanvas = document.createElement('canvas'); new QRious({ element: qrCanvas, value: qrUrl, size: 400, level: 'M' }); 
+            let qrImg = document.createElement('img'); qrImg.src = qrCanvas.toDataURL(); qrImg.className = "mx-auto border border-gray-200 p-1 w-16 h-16 sm:w-28 sm:h-28";
+            let textDiv = document.createElement('div'); textDiv.className = 'text-[8px] sm:text-[10px] text-center mt-1 sm:mt-2 font-bold text-gray-800 leading-tight w-full truncate';
             textDiv.innerHTML = `<span class="text-blue-700 uppercase tracking-widest">${type}</span><br>S/N: <span class="font-mono">${sn}</span><br><span class="text-[6px] sm:text-[8px] text-gray-400">(สแกนดูประวัติ)</span>`;
-            labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrImg); labelDiv.appendChild(textDiv);
-            return labelDiv;
+            labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrImg); labelDiv.appendChild(textDiv); return labelDiv;
         }
 
         function showSingleQR(instanceId, rowIdx) {
-            const table = document.getElementById(instanceId).jexcel;
-            const rData = table.getRowData(rowIdx);
-            if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR Code สำหรับแถวว่างได้", "error"); return; }
-            let type = instanceId==='spreadsheet-cpu'?"CPU":instanceId==='spreadsheet-mon'?"จอ":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
-            let user = rData[1] || '-'; let brand = rData[2] || '-'; let model = rData[3] || '-'; let sn = rData[4] || '-';
+            const table = document.getElementById(instanceId).jexcel; const rData = table.getRowData(rowIdx);
+            if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR สำหรับแถวว่าง", "error"); return; }
+            let type = instanceId==='spreadsheet-cpu'?"CPU":instanceId==='spreadsheet-mon'?"จอ":instanceId==='spreadsheet-prn'?"ปริ้นเตอร์":"เครื่องมือ";
             let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
-            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent');
-            printArea.innerHTML = ''; previewArea.innerHTML = '';
-            let labelElement = createQRLabelElement(type, brand, model, sn, user, dateStr);
+            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
+            let labelElement = createQRLabelElement(type, rData[2]||'-', rData[3]||'-', rData[4]||'-', rData[1]||'-', dateStr);
             previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true));
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
 
         function generateAllQRCodes() {
             if (!tableCPU) return;
-            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent');
-            printArea.innerHTML = ''; previewArea.innerHTML = '';
+            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
             let hasData = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
-            const appendQRs = (type, dataArray) => {
-                dataArray.forEach(r => {
-                    if (r[1] || r[2] || r[3] || r[4]) {
-                        hasData = true;
-                        let user = r[1] || '-'; let brand = r[2] || '-'; let model = r[3] || '-'; let sn = r[4] || '-';
-                        let labelElement = createQRLabelElement(type, brand, model, sn, user, dateStr);
-                        previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true));
-                    }
-                });
-            };
-            appendQRs('CPU', tableCPU.getData()); appendQRs('จอ', tableMon.getData()); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
+            const appendQRs = (type, dataArray) => { dataArray.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) { hasData = true; let labelElement = createQRLabelElement(type, r[2]||'-', r[3]||'-', r[4]||'-', r[1]||'-', dateStr); previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); } }); };
+            appendQRs('CPU', tableCPU.getData()); appendQRs('จอ', tableMon.getData()); appendQRs('ปริ้นเตอร์', tablePrn.getData()); appendQRs('เครื่องมือ', tableSpc.getData());
             if (!hasData) { showToast("ไม่มีข้อมูลอุปกรณ์", "error"); return; }
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
@@ -864,68 +773,26 @@
         function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
 
         async function handleImportExcel(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('loadingText').innerText = 'กำลังอ่านไฟล์ Excel...';
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingOverlay').classList.add('flex');
-            
+            const file = event.target.files[0]; if (!file) return;
+            document.getElementById('loadingText').innerText = 'กำลังอ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const wb = new ExcelJS.Workbook();
-                const buffer = await file.arrayBuffer();
-                await wb.xlsx.load(buffer);
-                
-                const extractSheetData = (sheetName, expectedColumns) => {
-                    const ws = wb.getWorksheet(sheetName);
-                    if (!ws) return [];
-                    let rowData = [];
-                    ws.eachRow((row, rowNumber) => {
-                        if (rowNumber > 1) {
-                            let r = [];
-                            for(let i = 1; i <= expectedColumns; i++) {
-                                let val = row.getCell(i).value;
-                                r.push(val !== null && val !== undefined ? val : "");
-                            }
-                            r.push(""); 
-                            rowData.push(r);
-                        }
-                    });
-                    return rowData;
-                };
-
-                const cpuData = extractSheetData("คอมพิวเตอร์", 8);
-                if(cpuData.length > 0) tableCPU.setData(cpuData);
-                
-                const monData = extractSheetData("จอมอนิเตอร์", 7);
-                if(monData.length > 0) tableMon.setData(monData);
-                
-                const prnData = extractSheetData("เครื่องพิมพ์", 8);
-                if(prnData.length > 0) tablePrn.setData(prnData);
-                
-                const spcData = extractSheetData("เครื่องมือพิเศษ", 7);
-                if(spcData.length > 0) tableSpc.setData(spcData);
-
-                showToast("อัปโหลดข้อมูลลงตารางสำเร็จ! กรุณากดบันทึกฐานข้อมูลเพื่อยืนยัน", "success");
-                hasUnsavedDeletions = true; 
-                
-            } catch (err) {
-                console.error(err);
-                showToast("รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาด", "error");
-            } finally {
-                document.getElementById('importExcelInput').value = ""; 
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('flex');
-            }
+                const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
+                const extractSheetData = (sheetName, expectedColumns) => { const ws = wb.getWorksheet(sheetName); if (!ws) return []; let rowData = []; ws.eachRow((row, rowNumber) => { if (rowNumber > 1) { let r = []; for(let i = 1; i <= expectedColumns; i++) { let val = row.getCell(i).value; r.push(val !== null && val !== undefined ? val : ""); } r.push(""); rowData.push(r); } }); return rowData; };
+                const cpuData = extractSheetData("คอมพิวเตอร์", 8); if(cpuData.length > 0) tableCPU.setData(cpuData);
+                const monData = extractSheetData("จอมอนิเตอร์", 7); if(monData.length > 0) tableMon.setData(monData);
+                const prnData = extractSheetData("เครื่องพิมพ์", 8); if(prnData.length > 0) tablePrn.setData(prnData);
+                const spcData = extractSheetData("เครื่องมือพิเศษ", 7); if(spcData.length > 0) tableSpc.setData(spcData);
+                showToast("อัปโหลดสำเร็จ! กดยืนยันด้วยครับ"); hasUnsavedDeletions = true; 
+            } catch (err) { console.error(err); showToast("เกิดข้อผิดพลาด", "error"); } finally { document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         async function exportStationExcel() {
             if (!tableCPU) return; showToast("เตรียมไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
             const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
-            const w1 = wb.addWorksheet("คอมพิวเตอร์"); w1.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableCPU.getData().forEach(r => w1.addRow(r.slice(0, -1))); formatWs(w1);
-            const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
-            const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
-            const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
+            const w1 = wb.addWorksheet("คอมพิวเตอร์"); w1.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableCPU.getData().forEach(r => w1.addRow(r.slice(0, -1))); formatWs(w1);
+            const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
+            const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
+            const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
             const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ส่งออกสำเร็จ!");
         }
 
@@ -937,13 +804,13 @@
                 const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
                 for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
                     const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
-                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์ (CPU)"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
-                    ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
+                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์ (CPU)"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
+                    ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
                     formatWs(ws); ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && firstCell.includes("หมวดหมู่:")) { ws.mergeCells(`A${rowNumber}:H${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }; cell.alignment = { horizontal: 'left' }; } });
                 }
-                if(wb.worksheets.length === 0) { wb.addWorksheet("ไม่มีข้อมูล"); }
+                if(wb.worksheets.length === 0) wb.addWorksheet("ไม่มีข้อมูล");
                 const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ส่งออกไฟล์สำเร็จ!");
             } catch (error) { console.error(error); showToast("เกิดข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
