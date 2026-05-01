@@ -624,8 +624,28 @@
         
         function executeDeleteRow() { 
             if (rowToDelete) { 
-                document.getElementById(rowToDelete.id).jexcel.deleteRow(rowToDelete.row); 
-                showToast("ลบออกจากตารางแล้ว อย่าลืมกดบันทึกฐานข้อมูลครับ", "blue"); 
+                const table = document.getElementById(rowToDelete.id).jexcel;
+                
+                // 🌟 ระบบใหม่: ตรวจจับและลบรูปภาพใน Drive ก่อนลบแถว
+                let remarkColIndex = table.options.columns.length - 2; // คอลัมน์หมายเหตุ
+                let remarkText = table.getValueFromCoords(remarkColIndex, rowToDelete.row);
+                
+                // ค้นหา ID รูปภาพจากลิงก์ [ดูรูป: https://...id=xxxxxx]
+                if (remarkText) {
+                    let match = remarkText.match(/id=([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                        let fileId = match[1];
+                        // แอบส่งคำสั่งไปลบรูปหลังบ้านแบบเงียบๆ (ไม่ให้หน้าเว็บค้างรอ)
+                        fetch(API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: fileId })
+                        }).catch(e => console.error("ออโต้ลบรูปไม่สำเร็จ: ", e));
+                    }
+                }
+
+                // ลบแถวออกจากหน้าจอตามปกติ
+                table.deleteRow(rowToDelete.row); 
+                showToast("ลบอุปกรณ์ (และลบรูปภาพในระบบ) เรียบร้อยแล้ว", "blue"); 
                 hasUnsavedDeletions = true;
             } 
             closeDeleteModal(); 
