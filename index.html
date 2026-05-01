@@ -278,13 +278,12 @@
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">สรุปสถานภาพอุปกรณ์ทั้งหมดในเครือข่าย</p>
             </div>
             <button onclick="exportAllDataToExcel()" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-all w-full md:w-auto justify-center">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 โหลด Excel รวม
             </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            <!-- Left Cards -->
             <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="col-span-2 md:col-span-4 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden">
                     <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl"></div>
@@ -296,23 +295,22 @@
                 </div>
                 
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">CPU</p></div>
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">คอมพิวเตอร์</p></div>
                     <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statCPU">-</h3>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">จอ</p></div>
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">จอมอนิเตอร์</p></div>
                     <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statMon">-</h3>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">เครื่องพิมพ์</p></div>
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">เครื่องพิมพ์</p></div>
                     <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statPrn">-</h3>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">พิเศษ</p></div>
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">เครื่องมือพิเศษ</p></div>
                     <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statSpc">-</h3>
                 </div>
             </div>
-            <!-- Chart -->
             <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full">
                 <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left">สัดส่วนสถานะ</h3>
                 <div class="relative w-full h-48 sm:h-56"><canvas id="statusChart"></canvas></div>
@@ -392,7 +390,7 @@
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์ (CPU)</h3>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์</h3>
                     <button onclick="addNewRow('spreadsheet-cpu')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-colors flex items-center gap-1">+ เพิ่มแถว</button>
                 </div>
                 <div id="spreadsheet-cpu" class="w-full text-black min-w-full"></div>
@@ -429,7 +427,7 @@
         const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
         const inventoryGroups = {
-            "เหนือตอนบน": ['ช.ม.', 'ม.ส.', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ล.ป.', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ข.ก.', 'น.ค.', 'น.พ.', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อ.บ.', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ป.ข.', 'ป.น.', 'น.ธ.', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
+            "เหนือตอนบน": ['เชียงใหม่', 'แม่ฮ่องสอน', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ลำปาง', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ขอนแก่น', 'หนองคาย', 'นครพนม', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อุบลราชธานี', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ประจวบคีรีขันธ์', 'ปัตตานี', 'นราธิวาส', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.นย.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; 
@@ -515,10 +513,10 @@
                 if (globalAllDataCache) {
                     for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
                         const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
-                        if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'CPU', row)); });
-                        if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอ', row)); });
-                        if (dbData.prn) dbData.prn.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'พิมพ์', row)); });
-                        if (dbData.spc) dbData.spc.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'พิเศษ', row)); });
+                        if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'คอมพิวเตอร์', row)); });
+                        if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอมอนิเตอร์', row)); });
+                        if (dbData.prn) dbData.prn.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row)); });
+                        if (dbData.spc) dbData.spc.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องมือพิเศษ', row)); });
                     }
                 }
                 const tbody = document.getElementById('searchTableBody');
@@ -699,7 +697,7 @@
 
         function promptDeleteRow(id, row) {
             const rData = document.getElementById(id).jexcel.getRowData(row);
-            let n = id==='spreadsheet-cpu'?"CPU":id==='spreadsheet-mon'?"จอ":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
+            let n = id==='spreadsheet-cpu'?"คอมพิวเตอร์":id==='spreadsheet-mon'?"จอมอนิเตอร์":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
             let str = `ผู้ใช้: ${rData[1]||'-'} | ${rData[2]||''} ${rData[3]||''} (S/N: ${rData[4]||'-'})`;
             if(!rData[1]&&!rData[2]&&!rData[3]&&!rData[4]) str = "แถวว่าง";
             document.getElementById('deleteDetailText').innerText = `[${n}] ${str}`; rowToDelete = { id, row };
@@ -764,8 +762,8 @@
         function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'})`); }); return items; }
         
         function calculateDiff() {
-            let oldItems = [...extractValid(originalDbData.cpu, 'CPU'), ...extractValid(originalDbData.mon, 'จอ'), ...extractValid(originalDbData.prn, 'พิมพ์'), ...extractValid(originalDbData.spc, 'พิเศษ')];
-            let newItems = [...extractValid(tableCPU.getData(), 'CPU'), ...extractValid(tableMon.getData(), 'จอ'), ...extractValid(tablePrn.getData(), 'พิมพ์'), ...extractValid(tableSpc.getData(), 'พิเศษ')];
+            let oldItems = [...extractValid(originalDbData.cpu, 'คอมพิวเตอร์'), ...extractValid(originalDbData.mon, 'จอมอนิเตอร์'), ...extractValid(originalDbData.prn, 'เครื่องพิมพ์'), ...extractValid(originalDbData.spc, 'เครื่องมือพิเศษ')];
+            let newItems = [...extractValid(tableCPU.getData(), 'คอมพิวเตอร์'), ...extractValid(tableMon.getData(), 'จอมอนิเตอร์'), ...extractValid(tablePrn.getData(), 'เครื่องพิมพ์'), ...extractValid(tableSpc.getData(), 'เครื่องมือพิเศษ')];
             let added = []; let tempOld = [...oldItems]; newItems.forEach(i => { let idx = tempOld.indexOf(i); if (idx > -1) { tempOld.splice(idx, 1); } else { added.push(i); } }); return { added, removed: tempOld };
         }
 
@@ -846,7 +844,7 @@
         function showSingleQR(instanceId, rowIdx) {
             const table = document.getElementById(instanceId).jexcel; const rData = table.getRowData(rowIdx);
             if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR สำหรับแถวว่าง", "error"); return; }
-            let type = instanceId==='spreadsheet-cpu'?"CPU":instanceId==='spreadsheet-mon'?"จอ":instanceId==='spreadsheet-prn'?"พิมพ์":"พิเศษ";
+            let type = instanceId==='spreadsheet-cpu'?"คอมพิวเตอร์":instanceId==='spreadsheet-mon'?"จอมอนิเตอร์":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
             let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
             const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
             let labelElement = createQRLabelElement(type, rData[2]||'-', rData[3]||'-', rData[4]||'-', rData[1]||'-', dateStr);
@@ -859,7 +857,7 @@
             const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
             let hasData = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
             const appendQRs = (type, dataArray) => { dataArray.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) { hasData = true; let labelElement = createQRLabelElement(type, r[2]||'-', r[3]||'-', r[4]||'-', r[1]||'-', dateStr); previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); } }); };
-            appendQRs('CPU', tableCPU.getData()); appendQRs('จอ', tableMon.getData()); appendQRs('พิมพ์', tablePrn.getData()); appendQRs('พิเศษ', tableSpc.getData());
+            appendQRs('คอมพิวเตอร์', tableCPU.getData()); appendQRs('จอมอนิเตอร์', tableMon.getData()); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
             if (!hasData) { showToast("ไม่พบข้อมูล", "error"); return; }
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
@@ -900,7 +898,7 @@
                 const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
                 for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
                     const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
-                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์ (CPU)"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
+                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
                     ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
                     ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
                     ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
