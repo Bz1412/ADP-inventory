@@ -34,12 +34,9 @@
 
         @media print {
             body * { visibility: hidden; } 
-            /* ซ่อนทุกอย่างยกเว้นพื้นที่ปริ้นต์ */
             .no-print { display: none !important; }
-            
             #printArea, #printArea * { visibility: visible; } 
             #printArea { position: absolute !important; left: 0 !important; top: 0 !important; opacity: 1 !important; z-index: 9999 !important; width: 100%; display: flex !important; flex-wrap: wrap !important; gap: 15px !important; padding: 10px; }
-            
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .qr-label { page-break-inside: avoid; border: 1px solid #ccc; background: white; }
         }
@@ -54,10 +51,44 @@
         <p id="loadingText" class="text-white font-bold text-lg">กำลังประมวลผล...</p>
     </div>
 
+    <!-- อินพุตซ่อนสำหรับอัปโหลดรูปภาพ -->
+    <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+
     <!-- พื้นที่สำหรับ Print QR Code -->
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- Modal ดูประวัติการแก้ไข -->
+    <!-- 🌟 Modal ดูประวัติรายเครื่อง (จากการสแกน QR) 🌟 -->
+    <div id="snHistoryModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] overflow-hidden border-t-4 border-blue-500">
+            <div class="bg-blue-50 dark:bg-blue-900 p-4 border-b border-blue-200 dark:border-blue-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center gap-2">🔍 ประวัติการใช้งานอุปกรณ์</h3>
+                    <p id="snHistoryTitle" class="text-sm font-semibold text-blue-600 dark:text-blue-300 mt-1">S/N: -</p>
+                </div>
+                <button onclick="closeSnHistory()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 dark:bg-gray-700 text-sm">
+                <div class="overflow-x-auto border dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-blue-100 dark:bg-blue-800 text-blue-900 dark:text-blue-100 sticky top-0">
+                            <tr>
+                                <th class="p-3 border dark:border-gray-600 font-bold w-32">วัน/เวลา</th>
+                                <th class="p-3 border dark:border-gray-600 font-bold w-40">สถานี</th>
+                                <th class="p-3 border dark:border-gray-600 font-bold text-center">สถานะ</th>
+                                <th class="p-3 border dark:border-gray-600 font-bold">รายละเอียด</th>
+                            </tr>
+                        </thead>
+                        <tbody id="snHistoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 border-t dark:border-gray-700 flex justify-end">
+                <button onclick="closeSnHistory()" class="px-6 py-2 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition">เข้าสู่หน้าหลักระบบ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ดูประวัติการแก้ไขรวม (Audit Log) -->
     <div id="auditLogModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div class="bg-indigo-50 dark:bg-indigo-900 p-4 border-b border-indigo-200 dark:border-indigo-700 flex justify-between items-center">
@@ -119,13 +150,6 @@
                                 <td class="p-3 border dark:border-gray-600 font-mono">8CG12345Z</td>
                                 <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ฝอ.3 (ส่วนหลัง)</td>
                             </tr>
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="p-3 border dark:border-gray-600">ส่วนรวม (ใช้งานทั่วไป)</td>
-                                <td class="p-3 border dark:border-gray-600">Lenovo</td>
-                                <td class="p-3 border dark:border-gray-600">ThinkCentre M70s</td>
-                                <td class="p-3 border dark:border-gray-600 font-mono">P0A1B2C3</td>
-                                <td class="p-3 border dark:border-gray-600 text-blue-700 dark:text-blue-300 font-semibold bg-blue-50 dark:bg-blue-900">ห้องประชุม 1</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -133,7 +157,7 @@
                     <ul class="list-disc pl-5 space-y-2">
                         <li><strong>การพิมพ์ภาษาไทย:</strong> โปรดดับเบิลคลิกที่ช่องให้ <span class="font-mono bg-white dark:bg-gray-800 px-1 border dark:border-gray-600 rounded">|</span> กระพริบก่อนพิมพ์เสมอ</li>
                         <li><strong>S/N (Serial Number):</strong> กรอกให้ถูกต้องเสมอเพื่อใช้ในการค้นหาเครื่องหายหรือเช็คประกัน</li>
-                        <li><strong>ผู้ใช้งาน:</strong> ระบุชื่อจริงและยศ เพื่อให้ทราบว่าเครื่องนั้นอยู่ในความรับผิดชอบของใคร</li>
+                        <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อถ่ายหรือแนบรูปเมื่อแจ้งชำรุด ลิงก์รูปจะถูกใส่ในช่องหมายเหตุให้อัตโนมัติ</li>
                     </ul>
                 </div>
             </div>
@@ -150,7 +174,7 @@
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">กรุณาบันทึกข้อมูลก่อน</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-6">คุณมีการลบหรือนำเข้าอุปกรณ์ใหม่ กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> ก่อนครับ</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-6">คุณมีการเปลี่ยนแปลงอุปกรณ์ กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> ก่อนครับ</p>
             <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">รับทราบ</button>
         </div>
     </div>
@@ -182,7 +206,7 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal ยืนยันรายงานประจำเดือน (แก้ไขโครงสร้างใหม่ให้แข็งแรง) 🌟 -->
+    <!-- Modal ยืนยันรายงานประจำเดือน -->
     <div id="monthlyConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[90vh] overflow-hidden">
             <div id="monthlyModalHeader" class="bg-purple-50 dark:bg-purple-900 p-4 border-b border-purple-200 dark:border-purple-700">
@@ -330,6 +354,7 @@
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null; let isEditingConfirmedReport = false; let hasUnsavedDeletions = false;
+        let uploadTarget = null; // เก็บข้อมูลว่ากำลังอัปโหลดรูปลงตารางไหน แถวไหน
 
         // 🌗 ระบบสลับ Dark Mode 
         function toggleDarkMode() {
@@ -342,6 +367,18 @@
             document.documentElement.classList.add('dark');
             document.getElementById('darkModeIcon').innerText = '☀️';
         }
+
+        // 🌟 ดักจับลิงก์จากการสแกน QR Code 🌟
+        window.onload = function() {
+            loadDashboardStats();
+            
+            // เช็คว่าลิงก์มี ?sn= เข้ามาหรือเปล่า
+            const urlParams = new URLSearchParams(window.location.search);
+            const snParam = urlParams.get('sn');
+            if(snParam) {
+                openSnHistory(snParam); // ถ้ามี ให้เปิดหน้าต่างโชว์ประวัติเครื่องนั้นเลย
+            }
+        };
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
@@ -440,18 +477,137 @@
             finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        document.getElementById('btnHome').onclick = () => window.location.reload();
-
+        // 🌟 อัปเดตคอลัมน์ "จัดการ" ให้มีปุ่มกล้องถ่ายรูป 🌟
         const renderManageBtn = function(i, c, col, r) { 
             let tCols = document.getElementById(i.id).jexcel.options.columns.length; 
             if (col == tCols - 1) { 
-                c.innerHTML = `<div class="flex justify-center gap-2">
+                c.innerHTML = `<div class="flex justify-center gap-1">
+                    <button onclick="triggerUpload('${i.id}', ${r})" title="อัปโหลดรูปลงช่องหมายเหตุ" class="text-emerald-600 font-bold hover:bg-emerald-100 rounded px-2 py-1 text-lg border border-emerald-200 shadow-sm transition">📸</button>
                     <button onclick="showSingleQR('${i.id}', ${r})" title="พิมพ์ QR Code" class="text-indigo-600 font-bold hover:bg-indigo-100 rounded px-2 py-1 text-lg border border-indigo-200 shadow-sm transition">🖨️</button>
                     <button onclick="promptDeleteRow('${i.id}', ${r})" title="ลบอุปกรณ์" class="text-red-500 font-bold hover:bg-red-100 rounded px-2 py-1 text-lg border border-red-200 shadow-sm transition">🗑️</button>
                 </div>`; 
                 c.style.textAlign = 'center'; 
             } 
         };
+
+        // 🌟 ฟังก์ชันจัดการการเลือกรูปภาพ 🌟
+        function triggerUpload(tableId, rowIdx) {
+            uploadTarget = { tableId, rowIdx };
+            document.getElementById('imageUploadInput').click(); // เปิดหน้าต่างเลือกไฟล์
+        }
+
+        // 🌟 ฟังก์ชันแปลงและส่งรูปไปเก็บบน Google Drive 🌟
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if(!file || !uploadTarget) return;
+
+            // ตรวจสอบขนาดคร่าวๆ ไม่เกิน 5MB
+            if(file.size > 5 * 1024 * 1024) { showToast("ไฟล์รูปภาพใหญ่เกินไป (ไม่ควรเกิน 5MB)", "error"); return; }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result.split(',')[1];
+                
+                document.getElementById('loadingText').innerText = 'กำลังอัปโหลดรูปลง Google Drive...';
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.getElementById('loadingOverlay').classList.add('flex');
+                
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'UPLOAD_IMAGE', file: base64Data, filename: file.name, mimeType: file.type })
+                    });
+                    const res = await response.json();
+                    
+                    if(res.status === 'success') {
+                        showToast("อัปโหลดรูปสำเร็จ!");
+                        // หาระยะคอลัมน์ "หมายเหตุ" (มักจะอยู่ก่อนคอลัมน์สุดท้าย 1 ช่อง)
+                        const table = document.getElementById(uploadTarget.tableId).jexcel;
+                        let remarkColIndex = table.options.columns.length - 2; 
+                        
+                        let currentRemark = table.getValueFromCoords(remarkColIndex, uploadTarget.rowIdx);
+                        let newRemark = currentRemark ? currentRemark + " [ดูรูป: " + res.url + "]" : "[ดูรูป: " + res.url + "]";
+                        table.setValueFromCoords(remarkColIndex, uploadTarget.rowIdx, newRemark);
+                        
+                        hasUnsavedDeletions = true; 
+                    } else {
+                        showToast("เกิดข้อผิดพลาด: " + res.message, "error");
+                    }
+                } catch(err) {
+                    console.error(err);
+                    showToast("อัปโหลดไม่สำเร็จ", "error");
+                } finally {
+                    document.getElementById('imageUploadInput').value = '';
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    document.getElementById('loadingOverlay').classList.remove('flex');
+                    uploadTarget = null;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 🌟 ดึงข้อมูลประวัติรายเครื่องจาก S/N 🌟
+        async function openSnHistory(sn) {
+            document.getElementById('loadingText').innerText = 'กำลังค้นหาประวัติอุปกรณ์...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
+            try {
+                document.getElementById('snHistoryTitle').innerText = "S/N: " + sn;
+                const response = await fetch(`${API_URL}?action=GET_HISTORY_SN&sn=${encodeURIComponent(sn)}`);
+                const result = await response.json();
+                
+                const tbody = document.getElementById('snHistoryTableBody');
+                if (result.logs && result.logs.length > 0) {
+                    let html = '';
+                    result.logs.forEach(log => {
+                        let actionBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        if(log.action.includes("ส่งรายงาน") || log.action.includes("แก้ไขรายงาน")) actionBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        
+                        let timeStr = log.time;
+                        try {
+                           let d = new Date(log.time);
+                           if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                        } catch(e) {}
+
+                        // หาคำว่าสถานะเพื่อทำ Badge
+                        let detailText = log.detail;
+                        let statusBadge = "-";
+                        if(detailText.includes("สถานะ: ปกติ")) statusBadge = `<span class="text-green-600 font-bold">ปกติ</span>`;
+                        if(detailText.includes("สถานะ: ชำรุด")) statusBadge = `<span class="text-red-600 font-bold">ชำรุด</span>`;
+                        if(detailText.includes("สถานะ: สำรอง")) statusBadge = `<span class="text-yellow-600 font-bold">สำรอง</span>`;
+
+                        html += `<tr class="border-b dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="p-3 border dark:border-gray-600 text-gray-500 dark:text-gray-400 whitespace-nowrap">${timeStr}</td>
+                            <td class="p-3 border dark:border-gray-600 font-semibold text-blue-700 dark:text-blue-300">${log.station}</td>
+                            <td class="p-3 border dark:border-gray-600 text-center">${statusBadge}</td>
+                            <td class="p-3 border dark:border-gray-600 text-gray-800 dark:text-gray-200"><div class="mb-1">${actionBadge}</div><div class="text-xs text-gray-500 dark:text-gray-400">${detailText}</div></td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-gray-500 font-semibold">ไม่พบประวัติการทำรายการของ S/N นี้</td></tr>`;
+                }
+                
+                document.getElementById('snHistoryModal').classList.remove('hidden');
+                document.getElementById('snHistoryModal').classList.add('flex');
+            } catch (err) {
+                console.error(err);
+                showToast("โหลดประวัติไม่สำเร็จ", "error");
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').classList.remove('flex');
+            }
+        }
+
+        function closeSnHistory() {
+            document.getElementById('snHistoryModal').classList.add('hidden');
+            document.getElementById('snHistoryModal').classList.remove('flex');
+            // ลบ parameter ?sn= ออกจาก URL เพื่อความสะอาด
+            window.history.pushState({}, document.title, window.location.pathname);
+        }
 
         function promptDeleteRow(id, row) {
             const rData = document.getElementById(id).jexcel.getRowData(row);
@@ -477,66 +633,10 @@
 
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
-        }
-
-        async function handleImportExcel(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('loadingText').innerText = 'กำลังอ่านไฟล์ Excel...';
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingOverlay').classList.add('flex');
-            
-            try {
-                const wb = new ExcelJS.Workbook();
-                const buffer = await file.arrayBuffer();
-                await wb.xlsx.load(buffer);
-                
-                const extractSheetData = (sheetName, expectedColumns) => {
-                    const ws = wb.getWorksheet(sheetName);
-                    if (!ws) return [];
-                    let rowData = [];
-                    ws.eachRow((row, rowNumber) => {
-                        if (rowNumber > 1) {
-                            let r = [];
-                            for(let i = 1; i <= expectedColumns; i++) {
-                                let val = row.getCell(i).value;
-                                r.push(val !== null && val !== undefined ? val : "");
-                            }
-                            r.push(""); 
-                            rowData.push(r);
-                        }
-                    });
-                    return rowData;
-                };
-
-                const cpuData = extractSheetData("คอมพิวเตอร์", 8);
-                if(cpuData.length > 0) tableCPU.setData(cpuData);
-                
-                const monData = extractSheetData("จอมอนิเตอร์", 7);
-                if(monData.length > 0) tableMon.setData(monData);
-                
-                const prnData = extractSheetData("เครื่องพิมพ์", 8);
-                if(prnData.length > 0) tablePrn.setData(prnData);
-                
-                const spcData = extractSheetData("เครื่องมือพิเศษ", 7);
-                if(spcData.length > 0) tableSpc.setData(spcData);
-
-                showToast("อัปโหลดข้อมูลลงตารางสำเร็จ! กรุณากดบันทึกฐานข้อมูลเพื่อยืนยัน", "success");
-                hasUnsavedDeletions = true; 
-                
-            } catch (err) {
-                console.error(err);
-                showToast("รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาด", "error");
-            } finally {
-                document.getElementById('importExcelInput').value = ""; 
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('flex');
-            }
+            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 120, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
         }
 
         async function openAuditLog() {
@@ -587,11 +687,7 @@
             }
         }
 
-        function closeAuditLog() {
-            document.getElementById('auditLogModal').classList.add('hidden');
-            document.getElementById('auditLogModal').classList.remove('flex');
-        }
-
+        function closeAuditLog() { document.getElementById('auditLogModal').classList.add('hidden'); document.getElementById('auditLogModal').classList.remove('flex'); }
         function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ผู้ใช้: ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) | สถานะ: ${r[5]||'-'}`); }); return items; }
         
         function calculateDiff() {
@@ -612,7 +708,6 @@
 
         function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
 
-        // 🌟 แก้ไขฟังก์ชันยืนยันรายงานให้แข็งแรง ไม่ Error แน่นอน 🌟
         function confirmMonthlyStatus() {
             if (!tableCPU) return;
             if (hasUnsavedDeletions) {
@@ -686,51 +781,26 @@
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        async function exportStationExcel() {
-            if (!tableCPU) return; showToast("เตรียมไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
-            const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
-            const w1 = wb.addWorksheet("คอมพิวเตอร์"); w1.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableCPU.getData().forEach(r => w1.addRow(r.slice(0, -1))); formatWs(w1);
-            const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
-            const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
-            const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
-            const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ส่งออกสำเร็จ!");
-        }
-
-        async function exportAllDataToExcel() {
-            if (!globalAllDataCache) { showToast("ข้อมูลยังโหลดไม่เสร็จ", "error"); return; }
-            showToast("กำลังสร้างไฟล์ Excel รวมทุกสถานี..."); document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
-            try {
-                const wb = new ExcelJS.Workbook();
-                const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
-                for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
-                    const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
-                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์ (CPU)"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
-                    ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
-                    formatWs(ws); ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && firstCell.includes("หมวดหมู่:")) { ws.mergeCells(`A${rowNumber}:H${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }; cell.alignment = { horizontal: 'left' }; } });
-                }
-                if(wb.worksheets.length === 0) { wb.addWorksheet("ไม่มีข้อมูล"); }
-                const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ส่งออกไฟล์สำเร็จ!");
-            } catch (error) { console.error(error); showToast("เกิดข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
-        }
-
+        // 🌟 อัปเดตการสร้าง QR Code เป็นลิงก์ URL แทนข้อความธรรมดา 🌟
         function createQRLabelElement(type, brand, model, sn, user, dateStr) {
-            let qrTextContent = `สถานี: ${currentStation}\nประเภท: ${type}\nยี่ห้อ/รุ่น: ${brand} ${model}\nS/N: ${sn}\nผู้ใช้: ${user}\nวันที่ออก QR: ${dateStr}`;
-            let utf8Text = unescape(encodeURIComponent(qrTextContent));
+            // สร้าง URL ที่ส่ง Parameter ไปด้วย (สมมติหน้าเว็บปัจจุบันคือหน้าแรก)
+            let baseUrl = window.location.href.split('?')[0]; 
+            let qrUrl = baseUrl + "?sn=" + encodeURIComponent(sn);
+
             let labelDiv = document.createElement('div');
             labelDiv.className = 'qr-label flex flex-col items-center justify-center p-2 bg-white border border-gray-400 rounded-sm w-[4.5rem] h-[5.5rem] sm:w-48 sm:h-56 m-1';
             let titleDiv = document.createElement('div');
             titleDiv.className = 'text-[9px] sm:text-xs font-black text-center mb-1 w-full bg-gray-900 text-white py-1 rounded-sm tracking-wide leading-tight truncate';
             titleDiv.innerText = `${currentStation}`;
             let qrCanvas = document.createElement('canvas');
-            new QRious({ element: qrCanvas, value: utf8Text, size: 400, level: 'M' }); 
+            // สร้าง QR เป็น URL แทน
+            new QRious({ element: qrCanvas, value: qrUrl, size: 400, level: 'M' }); 
             let qrImg = document.createElement('img');
             qrImg.src = qrCanvas.toDataURL();
             qrImg.className = "mx-auto border border-gray-200 p-1 w-16 h-16 sm:w-28 sm:h-28";
             let textDiv = document.createElement('div');
             textDiv.className = 'text-[8px] sm:text-[10px] text-center mt-1 sm:mt-2 font-bold text-gray-800 leading-tight w-full truncate';
-            textDiv.innerHTML = `<span class="text-blue-700 uppercase tracking-widest">${type}</span><br>S/N: <span class="font-mono">${sn}</span>`;
+            textDiv.innerHTML = `<span class="text-blue-700 uppercase tracking-widest">${type}</span><br>S/N: <span class="font-mono">${sn}</span><br><span class="text-[6px] sm:text-[8px] text-gray-400">(สแกนดูประวัติ)</span>`;
             labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrImg); labelDiv.appendChild(textDiv);
             return labelDiv;
         }
@@ -773,7 +843,35 @@
         function openExampleModal() { document.getElementById('exampleModal').classList.remove('hidden'); document.getElementById('exampleModal').classList.add('flex'); }
         function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
 
-        window.onload = loadDashboardStats;
+        // ให้ข้ามฟังก์ชันการดึง Excel ไปไว้ด้านล่างสุด
+        async function exportStationExcel() {
+            if (!tableCPU) return; showToast("เตรียมไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
+            const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
+            const w1 = wb.addWorksheet("คอมพิวเตอร์"); w1.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableCPU.getData().forEach(r => w1.addRow(r.slice(0, -1))); formatWs(w1);
+            const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
+            const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
+            const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
+            const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ส่งออกสำเร็จ!");
+        }
+
+        async function exportAllDataToExcel() {
+            if (!globalAllDataCache) { showToast("ข้อมูลยังโหลดไม่เสร็จ", "error"); return; }
+            showToast("กำลังสร้างไฟล์ Excel รวมทุกสถานี..."); document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            try {
+                const wb = new ExcelJS.Workbook();
+                const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
+                for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
+                    const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
+                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์ (CPU)"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
+                    ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อจอ", "รุ่นจอ", "S/N จอ", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER / ผู้ใช้", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
+                    formatWs(ws); ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && firstCell.includes("หมวดหมู่:")) { ws.mergeCells(`A${rowNumber}:H${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } }; cell.alignment = { horizontal: 'left' }; } });
+                }
+                if(wb.worksheets.length === 0) { wb.addWorksheet("ไม่มีข้อมูล"); }
+                const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ส่งออกไฟล์สำเร็จ!");
+            } catch (error) { console.error(error); showToast("เกิดข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
     </script>
 </body>
 </html>
