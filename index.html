@@ -45,6 +45,35 @@
 
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print"></div>
 
+    <!-- 🌟 Modal ดูประวัติการแก้ไข 🌟 -->
+    <div id="auditLogModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="bg-indigo-50 p-4 border-b border-indigo-200 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-indigo-800 flex items-center gap-2">🕒 ประวัติการทำรายการ (50 รายการล่าสุด)</h3>
+                <button onclick="closeAuditLog()" class="text-gray-500 hover:text-red-500 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50 text-sm">
+                <div class="overflow-x-auto border rounded-lg bg-white shadow-sm">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead class="bg-indigo-100 text-indigo-900 sticky top-0">
+                            <tr>
+                                <th class="p-3 border font-bold whitespace-nowrap w-40">วัน/เวลา</th>
+                                <th class="p-3 border font-bold whitespace-nowrap w-32 text-center">การกระทำ</th>
+                                <th class="p-3 border font-bold">รายละเอียดอุปกรณ์</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditLogTableBody">
+                            <!-- ข้อมูลจะถูกดึงมาใส่ตรงนี้ -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="bg-white p-4 border-t flex justify-end">
+                <button onclick="closeAuditLog()" class="px-6 py-2 rounded-lg font-bold text-gray-700 bg-gray-200 hover:bg-gray-300 shadow-sm transition">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal คำแนะนำการกรอกข้อมูล -->
     <div id="exampleModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
         <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col max-h-[90vh] overflow-hidden">
@@ -230,12 +259,14 @@
                 <p id="currentGroupSubtitle" class="text-sm text-gray-500">กลุ่ม: </p>
             </div>
             <div class="space-x-2 flex flex-wrap gap-y-2 justify-end">
+                <!-- 🌟 เพิ่มปุ่ม ดูประวัติ ตรงนี้ 🌟 -->
+                <button onclick="openAuditLog()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded shadow hover:bg-gray-200 border border-gray-300 font-bold flex items-center gap-2 transition">🕒 ดูประวัติ</button>
+                
                 <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 font-bold hidden flex items-center gap-2">
                     <span id="btnConfirmText">ยืนยันรายงานประจำเดือน</span>
                 </button>
                 <button onclick="prepareSave()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
                 
-                <!-- 🌟 ระบบ Import Excel เพิ่มปุ่มตรงนี้ 🌟 -->
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
                 <button onclick="document.getElementById('importExcelInput').click()" class="bg-teal-600 text-white px-4 py-2 rounded shadow hover:bg-teal-700 font-bold flex items-center gap-2">📤 นำเข้าจาก Excel</button>
                 
@@ -431,7 +462,6 @@
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
         }
 
-        // 🌟 ฟังก์ชันใหม่สำหรับ Import Excel (ทำงานฝั่งหน้าบ้าน) 🌟
         async function handleImportExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -445,27 +475,24 @@
                 const buffer = await file.arrayBuffer();
                 await wb.xlsx.load(buffer);
                 
-                // ฟังก์ชันดึงข้อมูลจาก Sheet แต่ละหน้ามาทำเป็น Array แบบที่ jspreadsheet ต้องการ
                 const extractSheetData = (sheetName, expectedColumns) => {
                     const ws = wb.getWorksheet(sheetName);
                     if (!ws) return [];
                     let rowData = [];
                     ws.eachRow((row, rowNumber) => {
-                        // ข้ามแถวที่ 1 (หัวข้อคอลัมน์)
                         if (rowNumber > 1) {
                             let r = [];
                             for(let i = 1; i <= expectedColumns; i++) {
                                 let val = row.getCell(i).value;
                                 r.push(val !== null && val !== undefined ? val : "");
                             }
-                            r.push(""); // เติมช่องว่างสำหรับคอลัมน์ "จัดการ (ปุ่มลบ/พิมพ์)"
+                            r.push(""); 
                             rowData.push(r);
                         }
                     });
                     return rowData;
                 };
 
-                // ดึงข้อมูลมาใส่ตาราง (จำนวนคอลัมน์ต้องตรงกับตอน Export)
                 const cpuData = extractSheetData("คอมพิวเตอร์", 8);
                 if(cpuData.length > 0) tableCPU.setData(cpuData);
                 
@@ -479,18 +506,71 @@
                 if(spcData.length > 0) tableSpc.setData(spcData);
 
                 showToast("อัปโหลดข้อมูลลงตารางสำเร็จ! กรุณากดบันทึกฐานข้อมูลเพื่อยืนยัน", "success");
-                
-                // บังคับให้ผู้ใช้ต้องกดปุ่ม "บันทึกฐานข้อมูล" ก่อนถึงจะกดรายงานได้
                 hasUnsavedDeletions = true; 
                 
             } catch (err) {
                 console.error(err);
                 showToast("รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาด", "error");
             } finally {
-                document.getElementById('importExcelInput').value = ""; // รีเซ็ตกล่องไฟล์
+                document.getElementById('importExcelInput').value = ""; 
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
             }
+        }
+
+        // 🌟 ฟังก์ชันใหม่ ดึงและแสดงประวัติย้อนหลัง 🌟
+        async function openAuditLog() {
+            document.getElementById('loadingText').innerText = 'กำลังโหลดประวัติ...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
+            try {
+                const targetStation = `ADP_${currentGroup}_${currentStation}`;
+                const response = await fetch(`${API_URL}?action=GET_LOGS&station=${targetStation}`);
+                const result = await response.json();
+                
+                const tbody = document.getElementById('auditLogTableBody');
+                if (result.logs && result.logs.length > 0) {
+                    let html = '';
+                    result.logs.forEach(log => {
+                        let actionBadge = `<span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-1 bg-red-100 text-red-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        if(log.action.includes("ส่งรายงาน") || log.action.includes("แก้ไขรายงาน")) actionBadge = `<span class="px-2 py-1 bg-green-100 text-green-700 rounded-md font-semibold text-xs">${log.action}</span>`;
+                        
+                        let timeStr = log.time;
+                        try {
+                           let d = new Date(log.time);
+                           if(!isNaN(d.getTime())) {
+                               // แปลงวันที่ให้อ่านง่าย เช่น "2 พ.ค. 2567 14:30"
+                               timeStr = d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                           }
+                        } catch(e) {}
+
+                        html += `<tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 border text-gray-500 whitespace-nowrap">${timeStr}</td>
+                            <td class="p-3 border text-center">${actionBadge}</td>
+                            <td class="p-3 border text-gray-800">${log.detail}</td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500 font-semibold">ยังไม่มีประวัติการทำรายการสำหรับสถานีนี้</td></tr>`;
+                }
+                
+                document.getElementById('auditLogModal').classList.remove('hidden');
+                document.getElementById('auditLogModal').classList.add('flex');
+            } catch (err) {
+                console.error(err);
+                showToast("โหลดประวัติไม่สำเร็จ", "error");
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').classList.remove('flex');
+            }
+        }
+
+        function closeAuditLog() {
+            document.getElementById('auditLogModal').classList.add('hidden');
+            document.getElementById('auditLogModal').classList.remove('flex');
         }
 
         function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ผู้ใช้: ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) | สถานะ: ${r[5]||'-'}`); }); return items; }
