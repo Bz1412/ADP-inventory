@@ -111,7 +111,7 @@
                 <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">กรุณาบันทึกข้อมูลก่อน</h3>
-            <p class="text-gray-600 mb-6">คุณมีการลบอุปกรณ์ออกจากตาราง กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> เพื่อยืนยันการเปลี่ยนแปลงก่อนจะกดยืนยันแก้ไขรายงานประจำเดือนครับ</p>
+            <p class="text-gray-600 mb-6">คุณมีการลบหรือนำเข้าอุปกรณ์ใหม่ กรุณากดปุ่ม <span class="font-bold text-green-600">"💾 บันทึกฐานข้อมูล"</span> เพื่อยืนยันการเปลี่ยนแปลงก่อนจะกดยืนยันส่งรายงานประจำเดือนครับ</p>
             <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">รับทราบ</button>
         </div>
     </div>
@@ -234,6 +234,11 @@
                     <span id="btnConfirmText">ยืนยันรายงานประจำเดือน</span>
                 </button>
                 <button onclick="prepareSave()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 font-bold">💾 บันทึกฐานข้อมูล</button>
+                
+                <!-- 🌟 ระบบ Import Excel เพิ่มปุ่มตรงนี้ 🌟 -->
+                <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
+                <button onclick="document.getElementById('importExcelInput').click()" class="bg-teal-600 text-white px-4 py-2 rounded shadow hover:bg-teal-700 font-bold flex items-center gap-2">📤 นำเข้าจาก Excel</button>
+                
                 <button onclick="exportStationExcel()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold">📥 Export Excel</button>
                 <button onclick="generateAllQRCodes()" class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-900 font-bold flex items-center gap-2">🖨️ ปริ้นต์ QR ทั้งสถานี</button>
             </div>
@@ -247,6 +252,7 @@
                     <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
                         <li><strong>การพิมพ์ภาษาไทย:</strong> ต้อง <span class="text-red-600 font-bold">ดับเบิลคลิกที่ช่อง (Double-click)</span> ให้เคอร์เซอร์กระพริบก่อน จึงจะสามารถพิมพ์ภาษาไทยได้ปกติ</li>
                         <li><strong>ช่องหมายเหตุ:</strong> ให้ระบุ <span class="text-blue-600 font-bold">สถานที่ตั้งของอุปกรณ์</span> ให้ชัดเจน เช่น <em>ฝกร. (ส่วนหน้า)</em>, <em>ฝอ.3 (ส่วนหลัง)</em> หรือ <em>ห้องประชุม 1</em></li>
+                        <li><strong>การนำเข้า Excel:</strong> ให้ทำการ <span class="text-teal-600 font-bold">Export Excel</span> สถานีนี้ออกไปก่อนเพื่อใช้เป็น Template ในการกรอกข้อมูลและ Import กลับเข้ามาครับ</li>
                     </ul>
                 </div>
             </div>
@@ -360,9 +366,7 @@
         }
 
         async function openStation(groupName, stationName) {
-            // 🌟 เลื่อนหน้าจอขึ้นไปด้านบนสุดเมื่อกดเข้ามา 🌟
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
             currentGroup = groupName; currentStation = stationName; hasUnsavedDeletions = false;
             document.getElementById('homePage').classList.add('hidden'); document.getElementById('editorPage').classList.remove('hidden'); document.getElementById('btnHome').classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = `📍 สถานี/ชุด: ${stationName}`; document.getElementById('currentGroupSubtitle').innerText = `กลุ่มพื้นที่: ${groupName}`;
@@ -425,6 +429,68 @@
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อจอ', width: 120 }, { type: 'text', title: 'รุ่นจอ', width: 140 }, { type: 'text', title: 'S/N จอ', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'dropdown', title: 'เชื่อมต่อ', width: 150, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 60 }, { type: 'text', title: 'USER', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 5], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: renderManageBtn });
+        }
+
+        // 🌟 ฟังก์ชันใหม่สำหรับ Import Excel (ทำงานฝั่งหน้าบ้าน) 🌟
+        async function handleImportExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('loadingText').innerText = 'กำลังอ่านไฟล์ Excel...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
+            try {
+                const wb = new ExcelJS.Workbook();
+                const buffer = await file.arrayBuffer();
+                await wb.xlsx.load(buffer);
+                
+                // ฟังก์ชันดึงข้อมูลจาก Sheet แต่ละหน้ามาทำเป็น Array แบบที่ jspreadsheet ต้องการ
+                const extractSheetData = (sheetName, expectedColumns) => {
+                    const ws = wb.getWorksheet(sheetName);
+                    if (!ws) return [];
+                    let rowData = [];
+                    ws.eachRow((row, rowNumber) => {
+                        // ข้ามแถวที่ 1 (หัวข้อคอลัมน์)
+                        if (rowNumber > 1) {
+                            let r = [];
+                            for(let i = 1; i <= expectedColumns; i++) {
+                                let val = row.getCell(i).value;
+                                r.push(val !== null && val !== undefined ? val : "");
+                            }
+                            r.push(""); // เติมช่องว่างสำหรับคอลัมน์ "จัดการ (ปุ่มลบ/พิมพ์)"
+                            rowData.push(r);
+                        }
+                    });
+                    return rowData;
+                };
+
+                // ดึงข้อมูลมาใส่ตาราง (จำนวนคอลัมน์ต้องตรงกับตอน Export)
+                const cpuData = extractSheetData("คอมพิวเตอร์", 8);
+                if(cpuData.length > 0) tableCPU.setData(cpuData);
+                
+                const monData = extractSheetData("จอมอนิเตอร์", 7);
+                if(monData.length > 0) tableMon.setData(monData);
+                
+                const prnData = extractSheetData("เครื่องพิมพ์", 8);
+                if(prnData.length > 0) tablePrn.setData(prnData);
+                
+                const spcData = extractSheetData("เครื่องมือพิเศษ", 7);
+                if(spcData.length > 0) tableSpc.setData(spcData);
+
+                showToast("อัปโหลดข้อมูลลงตารางสำเร็จ! กรุณากดบันทึกฐานข้อมูลเพื่อยืนยัน", "success");
+                
+                // บังคับให้ผู้ใช้ต้องกดปุ่ม "บันทึกฐานข้อมูล" ก่อนถึงจะกดรายงานได้
+                hasUnsavedDeletions = true; 
+                
+            } catch (err) {
+                console.error(err);
+                showToast("รูปแบบไฟล์ไม่ถูกต้อง หรือเกิดข้อผิดพลาด", "error");
+            } finally {
+                document.getElementById('importExcelInput').value = ""; // รีเซ็ตกล่องไฟล์
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').classList.remove('flex');
+            }
         }
 
         function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ผู้ใช้: ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) | สถานะ: ${r[5]||'-'}`); }); return items; }
