@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADP-Inventory Asset Management</title>
     
+    <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
+    <!-- Favicon โลโก้ ADP มินิมอล -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,7 +38,6 @@
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .toast-exit { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-in; }
         
-        /* 🌟 ระบบแอนิเมชัน 🌟 */
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -51,7 +52,6 @@
         .delay-300 { animation-delay: 300ms; }
         .delay-400 { animation-delay: 400ms; }
 
-        /* 🌟 ระบบ Tooltip อธิบายปุ่ม (Hover Hint) 🌟 */
         .has-tooltip { position: relative; }
         .has-tooltip::after {
             content: attr(data-tooltip);
@@ -64,7 +64,6 @@
         .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
         .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, -4px); }
 
-        /* Minimal Jspreadsheet overrides */
         .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
@@ -92,6 +91,7 @@
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
+    <!-- Modal ดูประวัติรายเครื่อง -->
     <div id="snHistoryModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
@@ -119,6 +119,7 @@
         </div>
     </div>
 
+    <!-- Modal Audit Log -->
     <div id="auditLogModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800">
@@ -138,6 +139,7 @@
         </div>
     </div>
 
+    <!-- Modal คู่มือการใช้งาน -->
     <div id="helpModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
@@ -149,6 +151,7 @@
             </div>
             
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full space-y-6">
+                <!-- ส่วนที่ 1: การจัดการข้อมูล -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การกรอกและแก้ไขข้อมูล (สำคัญ)</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -159,6 +162,7 @@
                     </ul>
                 </div>
 
+                <!-- ส่วนที่ 2: ระบบแจ้งชำรุดและรูปภาพ -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> ระบบแจ้งชำรุดและอัปโหลดรูปภาพ</h4>
                     <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">เมื่อมีอุปกรณ์เสีย แอดมินสามารถแนบรูปถ่ายความเสียหายเข้าระบบได้ทันที เพื่อให้ช่างประเมินอาการ:</p>
@@ -170,6 +174,7 @@
                     </ol>
                 </div>
 
+                <!-- ส่วนที่ 3: ระบบ QR Code -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> ระบบ QR Code ประจำเครื่อง</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -178,6 +183,7 @@
                     </ul>
                 </div>
 
+                <!-- ส่วนที่ 4: การส่งรายงานประจำเดือน -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-300">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-amber-500">4.</span> การส่งรายงานประจำเดือน</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -193,6 +199,7 @@
         </div>
     </div>
 
+    <!-- Modal เซฟก่อนแก้ไข -->
     <div id="saveFirstModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
@@ -204,6 +211,7 @@
         </div>
     </div>
 
+    <!-- Modal ลบ -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
@@ -219,6 +227,7 @@
         </div>
     </div>
 
+    <!-- Modal บันทึก -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
@@ -232,6 +241,7 @@
         </div>
     </div>
 
+    <!-- Modal ยืนยันรายงานประจำเดือน -->
     <div id="monthlyConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
@@ -246,6 +256,7 @@
         </div>
     </div>
 
+    <!-- Modal พรีวิว QR Code -->
     <div id="qrPreviewModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
@@ -262,15 +273,22 @@
         </div>
     </div>
 
+    <!-- 🌌 Clean Navbar 🌌 -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-slate-900 font-bold text-xl transition-transform hover:scale-110 cursor-pointer" onclick="goHome()">A</div>
                 <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer" onclick="goHome()">ADP<span class="font-normal text-slate-500 dark:text-slate-400">Inventory</span></h1>
             </div>
-            <div class="flex items-center gap-1 md:gap-3">
-                <button onclick="openHelpModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> <span class="hidden md:inline">คู่มือ</span>
+            
+            <!-- ⏰ นาฬิกาแบบ Real-time -->
+            <div class="hidden md:flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm ml-auto mr-4">
+                <span id="realtimeClock">กำลังโหลดเวลา...</span>
+            </div>
+
+            <div class="flex items-center gap-1 md:gap-2">
+                <button onclick="openHelpModal()" class="has-tooltip text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm" data-tooltip="คู่มืออธิบายการใช้งานระบบ">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> <span class="hidden lg:inline">คู่มือ</span>
                 </button>
                 <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                 <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="โหมดกลางคืน">
@@ -281,6 +299,7 @@
         </div>
     </nav>
 
+    <!-- 🏠 หน้าแรก (Dashboard) 🏠 -->
     <div id="homePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 no-print animate-fade-in">
         
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 animate-slide-up">
@@ -293,7 +312,7 @@
             </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up delay-100">
                 <div onclick="openAggregateView('ALL')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg active:scale-[0.98] col-span-2 md:col-span-4 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden transition-all duration-300">
                     <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors"></div>
@@ -327,6 +346,40 @@
             </div>
         </div>
 
+        <!-- 📋 การ์ดสรุปสถานะการส่งรายงาน 📋 -->
+        <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-200">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> สถานะการส่งรายงานประจำเดือน</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ยอดสรุปสถานีประจำเดือน: <span id="currentReportMonth" class="font-bold text-indigo-600 dark:text-indigo-400">...</span></p>
+                </div>
+                <div class="flex items-center gap-4 text-sm font-medium bg-slate-50 dark:bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-100 dark:border-slate-700">
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <span class="text-slate-600 dark:text-slate-300">ส่งแล้ว:</span> <span id="countReported" class="text-slate-900 dark:text-white font-bold">0</span></div>
+                    <div class="w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
+                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-slate-600 dark:text-slate-300">ยังไม่ส่ง:</span> <span id="countPending" class="text-slate-900 dark:text-white font-bold">0</span></div>
+                </div>
+            </div>
+            
+            <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-2.5 mb-6 overflow-hidden shadow-inner">
+                <div id="reportProgressBar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-1000 w-0 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div class="border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2"><span class="text-lg">✅</span> สถานีที่ส่งแล้ว</h3>
+                    <div id="listReported" class="flex flex-wrap gap-2 text-xs">
+                        <span class="text-slate-400 italic font-medium">กำลังโหลดข้อมูล...</span>
+                    </div>
+                </div>
+                <div class="border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-sm font-bold text-red-700 dark:text-red-400 mb-4 flex items-center gap-2"><span class="text-lg">❌</span> สถานีที่ยังไม่ส่ง</h3>
+                    <div id="listPending" class="flex flex-wrap gap-2 text-xs">
+                        <span class="text-slate-400 italic font-medium">กำลังโหลดข้อมูล...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-300">
             <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์ข้ามสถานี</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">ค้นหาเพื่อดูว่าอุปกรณ์ชิ้นนั้นๆ ถูกจ่ายให้ใคร หรืออยู่สถานีไหน</p>
@@ -348,6 +401,7 @@
         <div id="indexPage"></div>
     </div>
 
+    <!-- 📊 หน้าดูรายการรวม (Aggregate View) 📊 -->
     <div id="aggregatePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
             <div>
@@ -367,6 +421,7 @@
         </div>
     </div>
 
+    <!-- 📝 หน้าจัดการสถานี (Editor) 📝 -->
     <div id="editorPage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         
         <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
@@ -392,7 +447,7 @@
                 
                 <div class="col-span-2 w-full sm:w-px sm:h-8 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
                 
-                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" data-tooltip="ส่งยอดสรุปประจำเดือนเข้ากลุ่ม Telegram" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
+                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" data-tooltip="สรุปยอดแจ้งไปส่วนกลางเพื่อรายงานประจำเดือน" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
                 <button onclick="prepareSave()" data-tooltip="เซฟการเปลี่ยนแปลงลงฐานข้อมูลหลัก" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-md">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึก
                 </button>
@@ -446,6 +501,7 @@
         </div>
     </div>
 
+    <!-- Core Logic Script -->
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
@@ -467,6 +523,17 @@
         let globalAllDataCache = null; let isEditingConfirmedReport = false; let hasUnsavedDeletions = false;
         let uploadTarget = null; 
 
+        // 🌟 ฟังก์ชันนาฬิกา Real-time 🌟
+        function updateClock() {
+            const now = new Date();
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            const dateStr = `${now.getDate()} ${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
+            const timeStr = now.toLocaleTimeString('th-TH');
+            const clockEl = document.getElementById('realtimeClock');
+            if (clockEl) clockEl.innerHTML = `<span class="text-indigo-500 dark:text-indigo-400 mr-1.5">📅</span> ${dateStr} <span class="text-indigo-500 dark:text-indigo-400 ml-3 mr-1.5">⏰</span> ${timeStr}`;
+        }
+        setInterval(updateClock, 1000);
+
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             const isDark = document.documentElement.classList.contains('dark');
@@ -479,6 +546,7 @@
         }
 
         window.onload = function() {
+            updateClock();
             loadDashboardStats();
             const urlParams = new URLSearchParams(window.location.search);
             const snParam = urlParams.get('sn');
@@ -520,16 +588,62 @@
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json();
                 let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0; let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
+                
+                // 🌟 อัปเดตข้อมูลของการ์ดสรุปการส่งรายงาน 🌟
+                const now = new Date();
+                const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                document.getElementById('currentReportMonth').innerText = `${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
+
+                let reportedStations = [];
+                let pendingStations = [];
+                let processedStations = new Set();
+                let allExpectedStations = [];
+
+                groupOrder.forEach(g => { inventoryGroups[g].forEach(s => { allExpectedStations.push(s); }); });
+
                 groupOrder.forEach(g => inventoryGroups[g].forEach(s => { const badge = document.getElementById(`badge_${g}_${s}`); if(badge) badge.outerHTML = getMonthBadge(null).replace('<span', `<span id="badge_${g}_${s}"`); }));
+                
                 if (result.value) {
                     globalAllDataCache = result.value; 
                     for (const [dbKey, jsonValue] of Object.entries(result.value)) {
                         const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
-                        if(parts.length >= 3) { const badge = document.getElementById(`badge_${parts[1]}_${parts[2]}`); if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${parts[1]}_${parts[2]}"`); }
+                        if(parts.length >= 3) { 
+                            const stName = parts[2];
+                            processedStations.add(stName);
+                            
+                            // จัดกลุ่มส่งแล้วกับยังไม่ส่ง
+                            if (dbData.lastConfirmed === currentMonthStr) { reportedStations.push(stName); } 
+                            else { pendingStations.push(stName); }
+                            
+                            const badge = document.getElementById(`badge_${parts[1]}_${parts[2]}`); 
+                            if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${parts[1]}_${parts[2]}"`); 
+                        }
                         const countItems = (arr) => { if(!arr) return 0; let c = 0; arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c; };
                         totalCPU += countItems(dbData.cpu); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
                     }
                 }
+                
+                // สถานีที่ยังไม่มีฐานข้อมูลเลย ถือว่ายังไม่ส่ง
+                allExpectedStations.forEach(s => {
+                    if (!processedStations.has(s)) pendingStations.push(s);
+                });
+
+                document.getElementById('countReported').innerText = reportedStations.length;
+                document.getElementById('countPending').innerText = pendingStations.length;
+                
+                let totalSt = reportedStations.length + pendingStations.length;
+                let pct = totalSt === 0 ? 0 : (reportedStations.length / totalSt) * 100;
+                document.getElementById('reportProgressBar').style.width = `${pct}%`;
+
+                document.getElementById('listReported').innerHTML = reportedStations.length > 0 
+                    ? reportedStations.map(s => `<span class="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-lg shadow-sm font-medium hover:bg-emerald-50 transition-colors">${s}</span>`).join('')
+                    : '<span class="text-slate-400 italic">ยังไม่มีสถานีที่ส่งรายงานของเดือนนี้</span>';
+                    
+                document.getElementById('listPending').innerHTML = pendingStations.length > 0
+                    ? pendingStations.map(s => `<span class="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg shadow-sm font-medium hover:bg-red-50 transition-colors">${s}</span>`).join('')
+                    : '<span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg">✨ ยอดเยี่ยม! ทุกสถานีส่งรายงานครบแล้ว</span>';
+
                 document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc; document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statMon').innerText = totalMon; document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
                 const ctx = document.getElementById('statusChart').getContext('2d'); if(myChart) myChart.destroy();
                 Chart.defaults.font.family = 'Prompt'; Chart.defaults.color = '#94a3b8';
@@ -666,7 +780,6 @@
             loadDashboardStats();
         }
 
-        // 🌟 เพิ่ม Title ในตารางให้อ่านง่ายตอนเอาเมาส์ชี้ 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
