@@ -28,7 +28,7 @@
         body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #111827; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; }
         .dark .loader { border-top: 3px solid #f9fafb; border-color: #374151; border-top-color: #f9fafb; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
         .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -38,6 +38,22 @@
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .toast-exit { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-in; }
         
+        /* 🌟 ส่วนแอนิเมชันที่เพิ่มใหม่ 🌟 */
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* ดีเลย์สำหรับทำ Staggered Animation (ค่อยๆ โผล่มาทีละอัน) */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+
         /* Minimal Jspreadsheet overrides */
         .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
@@ -58,31 +74,31 @@
 
     <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
-    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md no-print">
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md no-print animate-fade-in">
         <div class="loader mb-4"></div>
-        <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide">กำลังซิงค์ข้อมูล...</p>
+        <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังซิงค์ข้อมูล...</p>
     </div>
 
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
     <!-- Modal ดูประวัติรายเครื่อง -->
-    <div id="snHistoryModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div id="snHistoryModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
                 <div>
                     <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🔍 ข้อมูลอุปกรณ์</h3>
                     <p id="snHistoryTitle" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider">S/N: -</p>
                 </div>
-                <button onclick="closeSnHistory()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
+                <button onclick="closeSnHistory()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm">
-                <div id="snDetailsBox" class="mb-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm hidden">
+                <div id="snDetailsBox" class="mb-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm hidden animate-slide-up">
                     <h4 class="font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-700 pb-3 mb-4 flex items-center gap-2">📄 รายละเอียดปัจจุบัน</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-sm" id="snDetailsContent"></div>
                 </div>
-                <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2 px-2">🕒 ประวัติการบันทึก (Activity Logs)</h4>
-                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full">
+                <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2 px-2 animate-slide-up delay-100">🕒 ประวัติการบันทึก (Activity Logs)</h4>
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full animate-slide-up delay-200">
                     <table class="w-full text-left border-collapse min-w-[500px]">
                         <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
                             <tr><th class="p-4 font-medium whitespace-nowrap">วัน/เวลา</th><th class="p-4 font-medium whitespace-nowrap">สถานที่</th><th class="p-4 font-medium text-center">สถานะ</th><th class="p-4 font-medium">บันทึก</th></tr>
@@ -95,14 +111,14 @@
     </div>
 
     <!-- Modal Audit Log -->
-    <div id="auditLogModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div id="auditLogModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800">
                 <div><h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🕒 ประวัติการทำรายการ</h3><p class="text-xs font-medium text-slate-500 mt-1">50 รายการล่าสุด</p></div>
-                <button onclick="closeAuditLog()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
+                <button onclick="closeAuditLog()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm">
-                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full">
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full animate-slide-up">
                     <table class="w-full text-left border-collapse min-w-[500px]">
                         <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
                             <tr><th class="p-4 font-medium whitespace-nowrap w-40">วัน/เวลา</th><th class="p-4 font-medium whitespace-nowrap w-32 text-center">แอคชัน</th><th class="p-4 font-medium">รายละเอียด</th></tr>
@@ -115,21 +131,21 @@
     </div>
 
     <!-- Modal คำแนะนำ -->
-    <div id="exampleModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div id="exampleModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">💡 คำแนะนำการใช้งาน</h3>
-                <button onclick="closeExampleModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
+                <button onclick="closeExampleModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 mb-6 shadow-sm">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 mb-6 shadow-sm animate-slide-up">
                     <ul class="list-disc pl-5 space-y-3">
                         <li><strong>พิมพ์ภาษาไทย:</strong> ต้อง <span class="font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 text-xs">ดับเบิลคลิกช่องให้เคอร์เซอร์กระพริบ</span> ก่อนพิมพ์เสมอ</li>
                         <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อแนบรูปเวลาแจ้งชำรุด ระบบจะฝากไฟล์และสร้างปุ่มดูรูปให้อัตโนมัติ</li>
                     </ul>
                 </div>
-                <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-3 px-2">ตัวอย่างการกรอกข้อมูลที่ถูกต้อง</h4>
-                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full">
+                <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-3 px-2 animate-slide-up delay-100">ตัวอย่างการกรอกข้อมูลที่ถูกต้อง</h4>
+                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full animate-slide-up delay-200">
                     <table class="w-full text-left border-collapse min-w-[600px]">
                         <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
                             <tr><th class="p-4 font-medium w-1/5">USER / ผู้ใช้</th><th class="p-4 font-medium">ยี่ห้อ</th><th class="p-4 font-medium">รุ่น</th><th class="p-4 font-medium">S/N</th><th class="p-4 font-medium w-1/5">หมายเหตุ (จุดตั้ง)</th></tr>
@@ -142,26 +158,26 @@
                 </div>
             </div>
             <div class="bg-white dark:bg-slate-800 p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-                <button onclick="closeExampleModal()" class="px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-all w-full sm:w-auto">เข้าใจแล้ว</button>
+                <button onclick="closeExampleModal()" class="px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95 w-full sm:w-auto">เข้าใจแล้ว</button>
             </div>
         </div>
     </div>
 
     <!-- Modal เซฟก่อนแก้ไข -->
-    <div id="saveFirstModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700">
+    <div id="saveFirstModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <svg class="w-8 h-8 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-2">บันทึกข้อมูลก่อน</h3>
             <p class="text-slate-500 dark:text-slate-400 mb-8 text-sm">คุณมีการเปลี่ยนแปลง กรุณากด <span class="font-semibold text-slate-700 dark:text-slate-300">บันทึกฐานข้อมูล</span> ก่อนทำรายการอื่น</p>
-            <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-medium rounded-xl hover:bg-black dark:hover:bg-white transition-all">รับทราบ</button>
+            <button onclick="document.getElementById('saveFirstModal').classList.add('hidden')" class="w-full py-3 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-medium rounded-xl hover:bg-black dark:hover:bg-white transition-transform active:scale-95">รับทราบ</button>
         </div>
     </div>
 
     <!-- Modal ลบ -->
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700">
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </div>
@@ -169,52 +185,52 @@
             <p class="text-slate-500 dark:text-slate-400 mb-6 text-sm">การลบนี้จะนำรูปภาพในระบบออกด้วย (ถ้ามี)</p>
             <div id="deleteDetailText" class="p-3 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-mono break-words mb-8 border border-slate-100 dark:border-slate-700"></div>
             <div class="flex justify-center gap-3">
-                <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">ยกเลิก</button>
-                <button onclick="executeDeleteRow()" class="flex-1 py-3 rounded-xl font-medium text-white bg-red-500 hover:bg-red-600 transition-all">ลบข้อมูล</button>
+                <button onclick="closeDeleteModal()" class="flex-1 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-transform active:scale-95">ยกเลิก</button>
+                <button onclick="executeDeleteRow()" class="flex-1 py-3 rounded-xl font-medium text-white bg-red-500 hover:bg-red-600 transition-transform active:scale-95 shadow-md shadow-red-500/30">ลบข้อมูล</button>
             </div>
         </div>
     </div>
 
     <!-- Modal บันทึก -->
-    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">ยืนยันการบันทึกฐานข้อมูล</h3>
             </div>
             <div id="diffContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm"></div>
             <div class="bg-white dark:bg-slate-800 p-5 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 flex-wrap">
-                <button onclick="closeConfirmModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">ยกเลิก</button>
-                <button onclick="executeSaveData()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition-all shadow-md">ยืนยันบันทึก</button>
+                <button onclick="closeConfirmModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-transform active:scale-95">ยกเลิก</button>
+                <button onclick="executeSaveData()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition-transform active:scale-95 shadow-lg shadow-slate-900/20">ยืนยันบันทึก</button>
             </div>
         </div>
     </div>
 
     <!-- Modal ยืนยันรายงานประจำเดือน -->
-    <div id="monthlyConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div id="monthlyConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
                 <h3 id="monthlyModalTitle" class="text-lg font-bold text-slate-800 dark:text-white">สรุปรายงานประจำเดือน</h3>
                 <p id="monthlyModalSubtitle" class="text-slate-500 dark:text-slate-400 mt-1 text-sm">โปรดตรวจสอบยอดสรุปก่อนยืนยันการส่งรายงาน</p>
             </div>
             <div id="monthlySummaryContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm"></div>
             <div class="bg-white dark:bg-slate-800 p-5 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 flex-wrap">
-                <button onclick="closeMonthlyModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">ยกเลิก</button>
-                <button id="monthlyConfirmBtn" onclick="executeConfirmMonth()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md">ยืนยันส่งรายงาน</button>
+                <button onclick="closeMonthlyModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-transform active:scale-95">ยกเลิก</button>
+                <button id="monthlyConfirmBtn" onclick="executeConfirmMonth()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-transform active:scale-95 shadow-md shadow-indigo-500/30">ยืนยันส่งรายงาน</button>
             </div>
         </div>
     </div>
 
     <!-- Modal พรีวิว QR Code -->
-    <div id="qrPreviewModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700">
+    <div id="qrPreviewModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                 <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white">🖨️ พิมพ์ QR Code</h3>
-                <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
+                <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             <div id="qrPreviewContent" class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] flex flex-wrap gap-4 justify-center items-start"></div>
             <div class="bg-white dark:bg-slate-800 p-5 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-3 flex-wrap">
-                <button onclick="closeQrModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">ปิดหน้าต่าง</button>
-                <button onclick="window.print()" class="w-full sm:w-auto px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-all flex justify-center items-center gap-2">
+                <button onclick="closeQrModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-transform active:scale-95">ปิดหน้าต่าง</button>
+                <button onclick="window.print()" class="w-full sm:w-auto px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95 flex justify-center items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> พิมพ์
                 </button>
             </div>
@@ -225,77 +241,72 @@
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-slate-900 font-bold text-xl">A</div>
-                <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight">ADP<span class="font-normal text-slate-500 dark:text-slate-400">Inventory</span></h1>
+                <div class="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-slate-900 font-bold text-xl transition-transform hover:scale-110 cursor-pointer" onclick="goHome()">A</div>
+                <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer" onclick="goHome()">ADP<span class="font-normal text-slate-500 dark:text-slate-400">Inventory</span></h1>
             </div>
             <div class="flex items-center gap-2 md:gap-4">
                 <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="โหมดกลางคืน">
                     <span id="darkModeIcon" class="text-lg">🌙</span>
                 </button>
-                <button id="btnHome" onclick="goHome()" class="hidden bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-full transition-colors text-sm font-medium border border-slate-200 dark:border-slate-700">หน้าหลัก</button>
+                <button id="btnHome" onclick="goHome()" class="hidden bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95 text-sm font-medium border border-slate-200 dark:border-slate-700">หน้าหลัก</button>
             </div>
         </div>
     </nav>
 
     <!-- 🏠 หน้าแรก (Dashboard) 🏠 -->
-    <div id="homePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 no-print transition-all">
+    <div id="homePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 no-print animate-fade-in">
         
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 animate-slide-up">
             <div>
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ภาพรวมระบบ</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">สรุปสถานภาพอุปกรณ์ทั้งหมดในเครือข่าย</p>
             </div>
-            <button onclick="exportAllDataToExcel()" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-all w-full md:w-auto justify-center">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                โหลด Excel รวม
+            <button onclick="exportAllDataToExcel()" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 w-full md:w-auto justify-center">
+                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
             </button>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-            <!-- 🌟 ทำการ์ดให้กดได้ (Clickable Cards) 🌟 -->
-            <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div onclick="openAggregateView('ALL')" class="cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md active:scale-[0.98] col-span-2 md:col-span-4 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden transition-all">
-                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl"></div>
+            <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up delay-100">
+                <div onclick="openAggregateView('ALL')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg active:scale-[0.98] col-span-2 md:col-span-4 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden transition-all duration-300">
+                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors"></div>
                     <div class="relative z-10">
                         <p class="text-slate-500 dark:text-slate-400 font-medium mb-1 text-sm uppercase tracking-wider">อุปกรณ์ทั้งหมด</p>
                         <h3 class="text-5xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight" id="statTotal">-</h3>
                     </div>
-                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-slate-700 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl relative z-10">📦</div>
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-slate-700 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl relative z-10 group-hover:scale-110 transition-transform">📦</div>
                 </div>
                 
-                <div onclick="openAggregateView('CPU')" class="cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">คอมพิวเตอร์</p></div>
-                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statCPU">-</h3>
+                <div onclick="openAggregateView('CPU')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">คอมพิวเตอร์</p></div>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statCPU">-</h3>
                 </div>
-                <div onclick="openAggregateView('MON')" class="cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">จอมอนิเตอร์</p></div>
-                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statMon">-</h3>
+                <div onclick="openAggregateView('MON')" class="group cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">จอมอนิเตอร์</p></div>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statMon">-</h3>
                 </div>
-                <div onclick="openAggregateView('PRN')" class="cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">เครื่องพิมพ์</p></div>
-                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statPrn">-</h3>
+                <div onclick="openAggregateView('PRN')" class="group cursor-pointer hover:border-purple-400 dark:hover:border-purple-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-purple-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">เครื่องพิมพ์</p></div>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statPrn">-</h3>
                 </div>
-                <div onclick="openAggregateView('SPC')" class="cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">เครื่องมือพิเศษ</p></div>
-                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100" id="statSpc">-</h3>
+                <div onclick="openAggregateView('SPC')" class="group cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-orange-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">เครื่องมือพิเศษ</p></div>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statSpc">-</h3>
                 </div>
             </div>
-            <!-- Chart -->
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full animate-slide-up delay-200">
                 <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left">สัดส่วนสถานะ</h3>
                 <div class="relative w-full h-48 sm:h-56"><canvas id="statusChart"></canvas></div>
             </div>
         </div>
 
-        <!-- 🔍 ค้นหา -->
-        <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10">
+        <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-300">
             <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์</h2>
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="searchInput" placeholder="S/N, ชื่อรุ่น, ยี่ห้อ, หรือ ชื่อผู้ใช้งาน..." class="flex-1 px-5 py-3.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 transition-all w-full">
-                <button onclick="globalSearch()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-8 py-3.5 rounded-2xl font-medium hover:bg-black dark:hover:bg-white shadow-sm transition-all w-full sm:w-auto">ค้นหา</button>
+                <button onclick="globalSearch()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-8 py-3.5 rounded-2xl font-medium hover:bg-black dark:hover:bg-white shadow-sm transition-transform active:scale-95 w-full sm:w-auto">ค้นหา</button>
             </div>
-            
-            <div id="searchResults" class="mt-6 hidden w-full overflow-x-auto">
+            <div id="searchResults" class="mt-6 hidden w-full overflow-x-auto animate-fade-in">
                 <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">ผลลัพธ์ (กดที่แถวเพื่อไปหน้าแก้ไข):</h3>
                 <table class="w-full text-sm text-left border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden min-w-[600px]">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
@@ -310,97 +321,101 @@
     </div>
 
     <!-- 📊 หน้าดูรายการรวม (Aggregate View) 📊 -->
-    <div id="aggregatePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden transition-all">
-        <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full">
+    <div id="aggregatePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
             <div>
                 <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">รายการอุปกรณ์</p>
                 <h2 id="aggregateTitle" class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">ทั้งหมด</h2>
             </div>
         </div>
         
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto animate-slide-up delay-100">
             <h3 class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">กดที่อุปกรณ์เพื่อไปยังหน้าสถานี:</h3>
             <table class="w-full text-sm text-left border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden min-w-[800px]">
                 <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-                    <tr>
-                        <th class="p-3 font-medium">พื้นที่</th>
-                        <th class="p-3 font-medium">สถานี</th>
-                        <th class="p-3 font-medium">ประเภท</th>
-                        <th class="p-3 font-medium">ผู้ใช้งาน</th>
-                        <th class="p-3 font-medium">ยี่ห้อ/รุ่น</th>
-                        <th class="p-3 font-medium text-xs font-mono">S/N</th>
-                        <th class="p-3 font-medium text-center">สถานะ</th>
-                    </tr>
+                    <tr><th class="p-3 font-medium">พื้นที่</th><th class="p-3 font-medium">สถานี</th><th class="p-3 font-medium">ประเภท</th><th class="p-3 font-medium">ผู้ใช้งาน</th><th class="p-3 font-medium">ยี่ห้อ/รุ่น</th><th class="p-3 font-medium text-xs font-mono">S/N</th><th class="p-3 font-medium text-center">สถานะ</th></tr>
                 </thead>
-                <tbody id="aggregateTableBody" class="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                </tbody>
+                <tbody id="aggregateTableBody" class="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"></tbody>
             </table>
         </div>
     </div>
 
     <!-- 📝 หน้าจัดการสถานี (Editor) 📝 -->
-    <div id="editorPage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden transition-all">
+    <div id="editorPage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         
-        <!-- Action Header -->
-        <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full">
+        <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
             <div class="w-full lg:w-1/3">
                 <p id="currentGroupSubtitle" class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">กลุ่ม: </p>
                 <h2 id="currentStationTitle" class="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">ชื่อสถานี</h2>
             </div>
             
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto lg:justify-end">
-                <button onclick="openAuditLog()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-all shadow-sm">
+                <button onclick="openAuditLog()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ประวัติ
                 </button>
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
-                <button onclick="document.getElementById('importExcelInput').click()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-all shadow-sm">
+                <button onclick="document.getElementById('importExcelInput').click()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า
                 </button>
-                <button onclick="exportStationExcel()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-all shadow-sm">
+                <button onclick="exportStationExcel()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
                 </button>
-                <button onclick="generateAllQRCodes()" class="col-span-2 sm:col-span-1 w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-all shadow-sm">
+                <button onclick="generateAllQRCodes()" class="col-span-2 sm:col-span-1 w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> พิมพ์ QR
                 </button>
                 
                 <div class="col-span-2 w-full sm:w-px sm:h-8 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
                 
-                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-all shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
-                <button onclick="prepareSave()" class="w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-all shadow-md">
+                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
+                <button onclick="prepareSave()" class="w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-md">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึก
                 </button>
             </div>
         </div>
 
+        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl mb-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 w-full animate-slide-up delay-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <p class="text-xs md:text-sm text-slate-600 dark:text-slate-300">ดับเบิลคลิกเพื่อพิมพ์ • แนบรูปได้ในช่องหมายเหตุ</p>
+                </div>
+            </div>
+            <button onclick="openExampleModal()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl font-medium border border-slate-200 dark:border-slate-600 transition-transform active:scale-95 flex items-center justify-center gap-2 text-xs md:text-sm">
+                ดูตัวอย่าง
+            </button>
+        </div>
+
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
-            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative">
+            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์</h3>
-                    <button onclick="addNewRow('spreadsheet-cpu')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-colors flex items-center gap-1">+ เพิ่มแถว</button>
+                    <button onclick="addNewRow('spreadsheet-cpu')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
                 </div>
                 <div id="spreadsheet-cpu" class="w-full text-black min-w-full"></div>
             </div>
             
-            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative">
+            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-300">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 2. จอมอนิเตอร์</h3>
-                    <button onclick="addNewRow('spreadsheet-mon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-colors flex items-center gap-1">+ เพิ่มแถว</button>
+                    <button onclick="addNewRow('spreadsheet-mon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
                 </div>
                 <div id="spreadsheet-mon" class="w-full text-black min-w-full"></div>
             </div>
             
-            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative">
+            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span> 3. เครื่องพิมพ์</h3>
-                    <button onclick="addNewRow('spreadsheet-prn')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-colors flex items-center gap-1">+ เพิ่มแถว</button>
+                    <button onclick="addNewRow('spreadsheet-prn')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
                 </div>
                 <div id="spreadsheet-prn" class="w-full text-black min-w-full"></div>
             </div>
             
-            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative">
+            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 4. เครื่องมือพิเศษ</h3>
-                    <button onclick="addNewRow('spreadsheet-spc')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-colors flex items-center gap-1">+ เพิ่มแถว</button>
+                    <button onclick="addNewRow('spreadsheet-spc')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
                 </div>
                 <div id="spreadsheet-spc" class="w-full text-black min-w-full"></div>
             </div>
@@ -456,8 +471,10 @@
         }
 
         const indexPage = document.getElementById('indexPage');
-        groupOrder.forEach(groupName => {
-            const groupSection = document.createElement('div'); groupSection.className = 'mb-8 w-full';
+        groupOrder.forEach((groupName, idx) => {
+            const groupSection = document.createElement('div'); 
+            groupSection.className = `mb-8 w-full animate-slide-up`;
+            groupSection.style.animationDelay = `${(idx+1) * 100}ms`; // ดีเลย์ตามลำดับ 
             groupSection.innerHTML = `<h2 class="text-sm font-semibold mb-3 text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">${groupName}</h2>`;
             const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
             inventoryGroups[groupName].forEach(station => {
@@ -485,14 +502,19 @@
                 document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc; document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statMon').innerText = totalMon; document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
                 const ctx = document.getElementById('statusChart').getContext('2d'); if(myChart) myChart.destroy();
                 Chart.defaults.font.family = 'Prompt'; Chart.defaults.color = '#94a3b8';
-                myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง'], datasets: [{ data: [statCounts['ปกติ'], statCounts['ชำรุด'], statCounts['สำรอง']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } });
+                myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง'], datasets: [{ data: [statCounts['ปกติ'], statCounts['ชำรุด'], statCounts['สำรอง']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } });
             } catch (error) { console.error(error); document.getElementById('statTotal').innerText = "Err"; }
         }
 
-        // 🌟 เพิ่มฟังก์ชันเปิดหน้ารวมอุปกรณ์ (Aggregate View) 🌟
         function openAggregateView(type) {
             if (!globalAllDataCache) { showToast("รอระบบโหลดข้อมูลสักครู่...", "error"); return; }
             
+            // รีเซ็ตคลาสแอนิเมชันให้มันเล่นใหม่ตอนเปลี่ยนหน้า
+            const aggPage = document.getElementById('aggregatePage');
+            aggPage.classList.remove('animate-fade-in');
+            void aggPage.offsetWidth; // trigger reflow
+            aggPage.classList.add('animate-fade-in');
+
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('aggregatePage').classList.remove('hidden');
@@ -518,7 +540,6 @@
                             if(r[5]==='ปกติ') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded font-medium text-[10px] md:text-xs">${r[5]}</span>`; 
                             if(r[5]==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-50 text-red-500 rounded font-medium text-[10px] md:text-xs">${r[5]}</span>`;
                             
-                            // แถวตารางกดได้ (พาไปหน้า Station นั้น)
                             html += `<tr onclick="openStation('${group}', '${station}')" class="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                                 <td class="p-3 border-l border-transparent font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">${group}</td>
                                 <td class="p-3 border-l border-transparent font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">${station}</td>
@@ -560,11 +581,13 @@
                 }
                 const tbody = document.getElementById('searchTableBody');
                 if (allResults.length > 0) { tbody.innerHTML = allResults.join(''); showToast(`พบ ${allResults.length} รายการ`); } else { tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500 font-medium">ไม่พบอุปกรณ์ที่ค้นหา</td></tr>`; showToast("ไม่พบข้อมูล", "error"); }
-                document.getElementById('searchResults').classList.remove('hidden');
+                
+                const searchRes = document.getElementById('searchResults');
+                searchRes.classList.remove('hidden');
+                searchRes.classList.remove('animate-fade-in'); void searchRes.offsetWidth; searchRes.classList.add('animate-fade-in');
             } catch (error) { console.error(error); showToast("ระบบขัดข้อง", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 อัปเดตให้กดที่แถวค้นหาแล้วเปิดสถานีได้ 🌟
         function createSearchRowHtml(g, s, t, r) {
             let badge = `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-medium text-[10px] md:text-xs">${r[5]||'-'}</span>`; if(r[5]==='ปกติ') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 rounded font-medium text-[10px] md:text-xs">${r[5]}</span>`; if(r[5]==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-50 text-red-500 rounded font-medium text-[10px] md:text-xs">${r[5]}</span>`;
             return `<tr onclick="openStation('${g}', '${s}')" class="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="p-3 md:p-4 font-medium text-slate-800 dark:text-slate-200 whitespace-nowrap">${s}</td><td class="p-3 border-l border-transparent text-slate-500">${t}</td><td class="p-3 border-l border-transparent">${r[1]||'-'}</td><td class="p-3 border-l border-transparent">${r[2]||''} ${r[3]||''}</td><td class="p-3 border-l border-transparent font-mono text-xs text-slate-500">${r[4]||'-'}</td><td class="p-3 border-l border-transparent text-center">${badge}</td></tr>`;
@@ -573,8 +596,12 @@
         async function openStation(groupName, stationName) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             currentGroup = groupName; currentStation = stationName; hasUnsavedDeletions = false;
+            
+            const editPage = document.getElementById('editorPage');
+            editPage.classList.remove('animate-fade-in'); void editPage.offsetWidth; editPage.classList.add('animate-fade-in');
+
             document.getElementById('homePage').classList.add('hidden');
-            document.getElementById('aggregatePage').classList.add('hidden'); // ซ่อนหน้ารวมด้วย
+            document.getElementById('aggregatePage').classList.add('hidden'); 
             document.getElementById('editorPage').classList.remove('hidden'); 
             document.getElementById('btnHome').classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = stationName; document.getElementById('currentGroupSubtitle').innerText = `กลุ่ม: ${groupName}`;
@@ -587,17 +614,19 @@
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
                 const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.classList.remove('hidden'); 
                 if (dbData.lastConfirmed === currentMonthStr) { 
-                    isEditingConfirmedReport = true; btnConfirm.className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-all shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                    isEditingConfirmedReport = true; btnConfirm.className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 } else { 
-                    isEditingConfirmedReport = false; btnConfirm.className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-all shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
+                    isEditingConfirmedReport = false; btnConfirm.className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
                 }
                 initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
             finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 อัปเดตให้ซ่อนหน้า Aggregate View ตอนกดกลับ Home 🌟
         function goHome() {
+            const homePage = document.getElementById('homePage');
+            homePage.classList.remove('animate-fade-in'); void homePage.offsetWidth; homePage.classList.add('animate-fade-in');
+
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('aggregatePage').classList.add('hidden');
             document.getElementById('homePage').classList.remove('hidden');
@@ -831,10 +860,10 @@
             const mTitle = document.getElementById('monthlyModalTitle'), mSub = document.getElementById('monthlyModalSubtitle'), mBtn = document.getElementById('monthlyConfirmBtn');
             if (isEditingConfirmedReport) {
                 mTitle.innerText = "แก้ไขรายงาน"; mSub.innerText = "ตรวจสอบความถูกต้อง ข้อมูลจะถูกอัปเดตใหม่";
-                mBtn.className = "w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white shadow-md bg-amber-500 hover:bg-amber-600 transition-all"; mBtn.innerHTML = "ยืนยันแก้ไขรายงาน";
+                mBtn.className = "w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white shadow-md bg-amber-500 hover:bg-amber-600 transition-transform active:scale-95"; mBtn.innerHTML = "ยืนยันแก้ไขรายงาน";
             } else {
                 mTitle.innerText = "สรุปรายงานประจำเดือน"; mSub.innerText = "ตรวจสอบยอดสรุปทั้งหมดก่อนยืนยันส่ง";
-                mBtn.className = "w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white shadow-md bg-indigo-600 hover:bg-indigo-700 transition-all"; mBtn.innerHTML = "ยืนยันส่งรายงาน";
+                mBtn.className = "w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white shadow-md bg-indigo-600 hover:bg-indigo-700 transition-transform active:scale-95"; mBtn.innerHTML = "ยืนยันส่งรายงาน";
             }
 
             let summaryHtml = '<div class="space-y-4">';
@@ -860,7 +889,7 @@
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
-                isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-all shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 hasUnsavedDeletions = false; 
             } catch (e) { console.error(e); showToast("ส่งรายงานล้มเหลว", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
