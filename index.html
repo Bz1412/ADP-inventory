@@ -55,14 +55,14 @@
         .has-tooltip { position: relative; }
         .has-tooltip::after {
             content: attr(data-tooltip);
-            position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -8px);
+            position: absolute; top: 100%; left: 50%; transform: translate(-50%, 8px);
             background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 8px;
             font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none;
             opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 100;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
-        .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, -4px); }
+        .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, 4px); }
 
         .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
@@ -90,6 +90,26 @@
 
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
+
+    <!-- 🌟 Modal ดูรูปภาพแบบ Popup (มาใหม่!) 🌟 -->
+    <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 z-[400] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="relative w-full max-w-4xl flex flex-col items-center animate-pop-in">
+            <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white hover:text-red-400 text-4xl transition-colors">&times;</button>
+            <div class="bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-700">
+                <img id="viewerImageSrc" src="" class="max-h-[70vh] object-contain rounded-xl">
+            </div>
+            
+            <div class="mt-6 flex flex-wrap justify-center gap-4 w-full">
+                <button onclick="deleteImageFromViewer()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg shadow-red-500/30 transition-transform active:scale-95 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> 
+                    ลบรูปภาพนี้
+                </button>
+                <button onclick="closeImageModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-medium transition-transform active:scale-95">
+                    ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal ดูประวัติรายเครื่อง -->
     <div id="snHistoryModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
@@ -170,7 +190,8 @@
                         <li>เปลี่ยนคอลัมน์ "สถานะ" เป็น <strong>"ชำรุด"</strong></li>
                         <li>กดไอคอน <span class="font-bold text-emerald-600">📸 (กล้อง)</span> ที่คอลัมน์จัดการขวาสุด</li>
                         <li>เลือกรูปภาพในมือถือหรือคอมพิวเตอร์ (ขนาดไม่เกิน 5MB)</li>
-                        <li>ระบบจะสร้างลิงก์ <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">🖼️ เปิดรูป</span> ไว้ในช่องหมายเหตุให้อัตโนมัติ (อย่าลืมกดบันทึก)</li>
+                        <li>ระบบจะสร้างปุ่ม <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">🖼️ รูป</span> ไว้ในช่องหมายเหตุให้อัตโนมัติ (อย่าลืมกดบันทึก)</li>
+                        <li><strong>การลบรูป:</strong> สามารถกดที่ปุ่ม 🖼️ รูป เพื่อเปิดรูปขึ้นมา แล้วกดปุ่ม "ลบรูปภาพนี้" ได้เลย (เหมาะสำหรับตอนที่ซ่อมเสร็จแล้ว)</li>
                     </ol>
                 </div>
 
@@ -287,15 +308,14 @@
             </div>
 
             <div class="flex items-center gap-1 md:gap-2">
+                <!-- 🌟 ปุ่มคู่มือ (ปรับ Tooltip ให้เด้งลงล่าง) 🌟 -->
                 <button onclick="openHelpModal()" class="relative group text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> 
-    <span class="hidden lg:inline">คู่มือ</span>
-    
-    <!-- ป้ายคำอธิบาย บังคับชี้ลงด้านล่าง (Drop-down Tooltip) -->
-    <span class="absolute top-full right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-max px-3 py-1.5 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 text-xs font-semibold rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        คู่มืออธิบายการใช้งานระบบ
-    </span>
-</button>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> 
+                    <span class="hidden lg:inline">คู่มือ</span>
+                    <span class="absolute top-full right-0 md:left-1/2 md:-translate-x-1/2 mt-2 w-max px-3 py-1.5 bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-800 text-xs font-semibold rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        คู่มืออธิบายการใช้งานระบบ
+                    </span>
+                </button>
                 <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                 <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="โหมดกลางคืน">
                     <span id="darkModeIcon" class="text-lg">🌙</span>
@@ -313,6 +333,7 @@
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ภาพรวมระบบ</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">คลิกที่การ์ดเพื่อดูรายชื่ออุปกรณ์ทั้งหมดในหมวดหมู่นั้นๆ</p>
             </div>
+            <!-- Tooltip ตรงปุ่ม Export -->
             <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 w-full md:w-auto justify-center">
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
             </button>
@@ -461,6 +482,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
+            <!-- 🌟 เพิ่มคำอธิบายการลบที่ตาราง 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
@@ -509,7 +531,7 @@
 
     <!-- Core Logic Script -->
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzXbSmSKz99nE-qkNZDmgHaYhUYcV7uKicaIs_Mrcy95hGOCEkf4FTSj_DiEXhl4HYM/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
         
         const inventoryGroups = {
@@ -595,7 +617,6 @@
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json();
                 let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0; let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
                 
-                // 🌟 อัปเดตข้อมูลของการ์ดสรุปการส่งรายงาน 🌟
                 const now = new Date();
                 const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
                 const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -617,11 +638,8 @@
                         if(parts.length >= 3) { 
                             const stName = parts[2];
                             processedStations.add(stName);
-                            
-                            // จัดกลุ่มส่งแล้วกับยังไม่ส่ง
                             if (dbData.lastConfirmed === currentMonthStr) { reportedStations.push(stName); } 
                             else { pendingStations.push(stName); }
-                            
                             const badge = document.getElementById(`badge_${parts[1]}_${parts[2]}`); 
                             if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${parts[1]}_${parts[2]}"`); 
                         }
@@ -630,10 +648,7 @@
                     }
                 }
                 
-                // สถานีที่ยังไม่มีฐานข้อมูลเลย ถือว่ายังไม่ส่ง
-                allExpectedStations.forEach(s => {
-                    if (!processedStations.has(s)) pendingStations.push(s);
-                });
+                allExpectedStations.forEach(s => { if (!processedStations.has(s)) pendingStations.push(s); });
 
                 document.getElementById('countReported').innerText = reportedStations.length;
                 document.getElementById('countPending').innerText = pendingStations.length;
@@ -661,9 +676,7 @@
             if (!globalAllDataCache) { showToast("รอระบบโหลดข้อมูลสักครู่...", "error"); return; }
             
             const aggPage = document.getElementById('aggregatePage');
-            aggPage.classList.remove('animate-fade-in');
-            void aggPage.offsetWidth; 
-            aggPage.classList.add('animate-fade-in');
+            aggPage.classList.remove('animate-fade-in'); void aggPage.offsetWidth; aggPage.classList.add('animate-fade-in');
 
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('editorPage').classList.add('hidden');
@@ -786,6 +799,7 @@
             loadDashboardStats();
         }
 
+        // 🌟 อัปเดตตารางให้เรียกเปิด Popup ดูรูป 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
@@ -801,11 +815,52 @@
             } 
             if (colTitle === 'หมายเหตุ' && val) {
                 let htmlVal = val.toString().replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
-                    return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max" title="คลิกเปิดรูปภาพแบบเต็ม"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</a>`;
+                    return `<button onclick="openImageModal('${url}', ${row}, '${instance.id}'); event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max" title="คลิกดูรูปภาพ"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</button>`;
                 });
                 cell.innerHTML = htmlVal;
             }
         };
+
+        // 🌟 ฟังก์ชันจัดการ Popup รูปภาพ 🌟
+        let currentViewingImage = null;
+        function openImageModal(url, rowIdx, tableId) {
+            currentViewingImage = { url, rowIdx, tableId };
+            document.getElementById('viewerImageSrc').src = url;
+            document.getElementById('imageViewerModal').classList.remove('hidden');
+            document.getElementById('imageViewerModal').classList.add('flex');
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageViewerModal').classList.add('hidden');
+            document.getElementById('imageViewerModal').classList.remove('flex');
+            document.getElementById('viewerImageSrc').src = '';
+            currentViewingImage = null;
+        }
+
+        function deleteImageFromViewer() {
+            if(!currentViewingImage) return;
+            
+            let url = currentViewingImage.url;
+            let rowIdx = currentViewingImage.rowIdx;
+            let tableId = currentViewingImage.tableId;
+            
+            let match = url.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
+            }
+            
+            const table = document.getElementById(tableId).jexcel;
+            let remarkColIndex = table.options.columns.length - 2; 
+            let currentRemark = table.getValueFromCoords(remarkColIndex, rowIdx);
+            
+            let textToRemove = `[ดูรูป: ${url}]`;
+            let newRemark = currentRemark.replace(textToRemove, '').trim();
+            table.setValueFromCoords(remarkColIndex, rowIdx, newRemark);
+            
+            hasUnsavedDeletions = true;
+            showToast("นำรูปลบออกจากระบบแล้ว (อย่าลืมกดบันทึกฐานข้อมูล)");
+            closeImageModal();
+        }
 
         function triggerUpload(tableId, rowIdx) { uploadTarget = { tableId, rowIdx }; document.getElementById('imageUploadInput').click(); }
 
