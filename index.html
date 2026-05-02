@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADP-Inventory Asset Management</title>
     
-    <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- เพิ่ม Favicon โลโก้ ADP มินิมอลบนแท็บเบราว์เซอร์ -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,7 +36,7 @@
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .toast-exit { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-in; }
         
-        /* 🌟 ส่วนแอนิเมชันที่เพิ่มใหม่ 🌟 */
+        /* 🌟 ระบบแอนิเมชัน 🌟 */
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -48,11 +46,23 @@
         .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* ดีเลย์สำหรับทำ Staggered Animation (ค่อยๆ โผล่มาทีละอัน) */
         .delay-100 { animation-delay: 100ms; }
         .delay-200 { animation-delay: 200ms; }
         .delay-300 { animation-delay: 300ms; }
         .delay-400 { animation-delay: 400ms; }
+
+        /* 🌟 ระบบ Tooltip อธิบายปุ่ม (Hover Hint) 🌟 */
+        .has-tooltip { position: relative; }
+        .has-tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, -8px);
+            background-color: #1e293b; color: white; padding: 6px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 500; white-space: nowrap; pointer-events: none;
+            opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 100;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
+        .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, -4px); }
 
         /* Minimal Jspreadsheet overrides */
         .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
@@ -82,7 +92,6 @@
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- Modal ดูประวัติรายเครื่อง -->
     <div id="snHistoryModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
@@ -110,11 +119,10 @@
         </div>
     </div>
 
-    <!-- Modal Audit Log -->
     <div id="auditLogModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800">
-                <div><h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🕒 ประวัติการทำรายการ</h3><p class="text-xs font-medium text-slate-500 mt-1">50 รายการล่าสุด</p></div>
+                <div><h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🕒 ประวัติการทำรายการ</h3><p class="text-xs font-medium text-slate-500 mt-1">50 รายการล่าสุดของสถานีนี้</p></div>
                 <button onclick="closeAuditLog()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm">
@@ -130,40 +138,61 @@
         </div>
     </div>
 
-    <!-- Modal คำแนะนำ -->
-    <div id="exampleModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
+    <div id="helpModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">💡 คำแนะนำการใช้งาน</h3>
-                <button onclick="closeExampleModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
+                <div>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📖 คู่มือการใช้งานระบบ ADP-Inventory</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">อธิบายการทำงานและทริคการใช้งานต่างๆ เพื่อให้แอดมินทำงานง่ายขึ้น</p>
+                </div>
+                <button onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
-            <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 mb-6 shadow-sm animate-slide-up">
-                    <ul class="list-disc pl-5 space-y-3">
-                        <li><strong>พิมพ์ภาษาไทย:</strong> ต้อง <span class="font-mono bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-slate-800 dark:text-slate-200 text-xs">ดับเบิลคลิกช่องให้เคอร์เซอร์กระพริบ</span> ก่อนพิมพ์เสมอ</li>
-                        <li><strong>รูปภาพ:</strong> กดปุ่ม 📸 เพื่อแนบรูปเวลาแจ้งชำรุด ระบบจะฝากไฟล์และสร้างปุ่มดูรูปให้อัตโนมัติ</li>
+            
+            <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full space-y-6">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
+                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การกรอกและแก้ไขข้อมูล (สำคัญ)</h4>
+                    <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                        <li><strong>การพิมพ์ภาษาไทย:</strong> ระบบนี้ใช้ตารางแบบพิเศษ คุณต้อง <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">ดับเบิลคลิก (Double-Click)</span> ให้เคอร์เซอร์กระพริบในช่องก่อน ถึงจะพิมพ์ภาษาไทยได้โดยที่สระไม่ลอย</li>
+                        <li><strong>การลบแถวที่พิมพ์ผิด:</strong> ห้ามลบข้อความทิ้งให้เป็นช่องว่างเฉยๆ ให้กดไอคอน <span class="font-mono">🗑️ (ถังขยะ)</span> ที่คอลัมน์ขวาสุด เพื่อนำข้อมูลและรูปภาพออกจากระบบอย่างสมบูรณ์</li>
+                        <li><strong>การเพิ่มทีละเยอะๆ:</strong> หากต้องการเพิ่มอุปกรณ์ 50 ชิ้น แนะนำให้กดปุ่ม <strong>"📥 Export"</strong> เพื่อโหลดไฟล์เปล่าไปทำในโปรแกรม Excel ก่อน แล้วค่อยกด <strong>"📤 นำเข้า"</strong> ทีหลัง</li>
+                        <li><span class="text-red-500 font-bold">จุดระวัง:</span> ทุกครั้งที่มีการแก้ไข/ลบ/นำเข้า ต้องกดปุ่ม <strong>"💾 บันทึก"</strong> เสมอ ข้อมูลถึงจะส่งไปเก็บที่เซิร์ฟเวอร์</li>
                     </ul>
                 </div>
-                <h4 class="font-semibold text-slate-800 dark:text-slate-200 mb-3 px-2 animate-slide-up delay-100">ตัวอย่างการกรอกข้อมูลที่ถูกต้อง</h4>
-                <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl bg-white dark:bg-slate-800 shadow-sm w-full animate-slide-up delay-200">
-                    <table class="w-full text-left border-collapse min-w-[600px]">
-                        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider">
-                            <tr><th class="p-4 font-medium w-1/5">USER / ผู้ใช้</th><th class="p-4 font-medium">ยี่ห้อ</th><th class="p-4 font-medium">รุ่น</th><th class="p-4 font-medium">S/N</th><th class="p-4 font-medium w-1/5">หมายเหตุ (จุดตั้ง)</th></tr>
-                        </thead>
-                        <tbody class="text-slate-700 dark:text-slate-300 divide-y divide-slate-100 dark:divide-slate-700">
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-4">จ.ส.อ. สมชาย ใจดี</td><td class="p-4">DELL</td><td class="p-4">Optiplex 7090</td><td class="p-4 font-mono text-xs">ABC1234567</td><td class="p-4 text-slate-500">ฝกร. (ส่วนหน้า)</td></tr>
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-4">ร.อ. หญิง มานี รักชาติ</td><td class="p-4">HP</td><td class="p-4">ProDesk 400 G7</td><td class="p-4 font-mono text-xs">8CG12345Z</td><td class="p-4 text-slate-500">ฝอ.3 (ส่วนหลัง)</td></tr>
-                        </tbody>
-                    </table>
+
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
+                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> ระบบแจ้งชำรุดและอัปโหลดรูปภาพ</h4>
+                    <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">เมื่อมีอุปกรณ์เสีย แอดมินสามารถแนบรูปถ่ายความเสียหายเข้าระบบได้ทันที เพื่อให้ช่างประเมินอาการ:</p>
+                    <ol class="list-decimal pl-5 space-y-2 text-slate-600 dark:text-slate-300">
+                        <li>เปลี่ยนคอลัมน์ "สถานะ" เป็น <strong>"ชำรุด"</strong></li>
+                        <li>กดไอคอน <span class="font-bold text-emerald-600">📸 (กล้อง)</span> ที่คอลัมน์จัดการขวาสุด</li>
+                        <li>เลือกรูปภาพในมือถือหรือคอมพิวเตอร์ (ขนาดไม่เกิน 5MB)</li>
+                        <li>ระบบจะสร้างลิงก์ <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">🖼️ เปิดรูป</span> ไว้ในช่องหมายเหตุให้อัตโนมัติ (อย่าลืมกดบันทึก)</li>
+                    </ol>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
+                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> ระบบ QR Code ประจำเครื่อง</h4>
+                    <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                        <li>สามารถกดพิมพ์ป้าย QR Code ไปแปะติดอุปกรณ์ได้ โดยกดปุ่ม <strong>"🖨️ พิมพ์ QR"</strong> เพื่อพิมพ์รวดเดียวทั้งสถานี หรือกดไอคอนเครื่องพิมพ์ท้ายแถวเพื่อพิมพ์ทีละเครื่อง</li>
+                        <li>เมื่อนำมือถือมาสแกน QR Code ระบบจะพาเข้าสู่หน้าเว็บ พร้อมโชว์ <strong>ประวัติการซ่อมและการเปลี่ยนสถานะ</strong> ของเครื่องนั้นตั้งแต่เริ่มใช้งานให้ดูทันที</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-300">
+                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-amber-500">4.</span> การส่งรายงานประจำเดือน</h4>
+                    <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                        <li>เมื่อตรวจสอบข้อมูลครบถ้วนแล้ว ให้กดปุ่ม <strong>"ส่งรายงาน"</strong> ระบบจะสรุปยอดทั้งหมดให้ดูอีกครั้งเพื่อยืนยัน</li>
+                        <li>สถานีที่ส่งแล้ว จะมีป้ายกำกับสีเขียวว่า <span class="bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded text-xs">✅ ส่งแล้ว</span> แสดงที่หน้าหลัก</li>
+                        <li>หากมีข้อผิดพลาด สามารถแก้ข้อมูล กดบันทึก และกด <strong>"แก้ไขรายงาน"</strong> ส่งซ้ำได้ตลอดเวลา</li>
+                    </ul>
                 </div>
             </div>
             <div class="bg-white dark:bg-slate-800 p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-                <button onclick="closeExampleModal()" class="px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95 w-full sm:w-auto">เข้าใจแล้ว</button>
+                <button onclick="closeHelpModal()" class="px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95 w-full sm:w-auto">เข้าใจแล้ว, เริ่มใช้งานเลย</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal เซฟก่อนแก้ไข -->
     <div id="saveFirstModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
@@ -175,7 +204,6 @@
         </div>
     </div>
 
-    <!-- Modal ลบ -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
@@ -191,7 +219,6 @@
         </div>
     </div>
 
-    <!-- Modal บันทึก -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
@@ -205,7 +232,6 @@
         </div>
     </div>
 
-    <!-- Modal ยืนยันรายงานประจำเดือน -->
     <div id="monthlyConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
@@ -220,7 +246,6 @@
         </div>
     </div>
 
-    <!-- Modal พรีวิว QR Code -->
     <div id="qrPreviewModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
@@ -237,14 +262,17 @@
         </div>
     </div>
 
-    <!-- 🌌 Clean Navbar 🌌 -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-slate-900 dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-slate-900 font-bold text-xl transition-transform hover:scale-110 cursor-pointer" onclick="goHome()">A</div>
                 <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer" onclick="goHome()">ADP<span class="font-normal text-slate-500 dark:text-slate-400">Inventory</span></h1>
             </div>
-            <div class="flex items-center gap-2 md:gap-4">
+            <div class="flex items-center gap-1 md:gap-3">
+                <button onclick="openHelpModal()" class="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> <span class="hidden md:inline">คู่มือ</span>
+                </button>
+                <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                 <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="โหมดกลางคืน">
                     <span id="darkModeIcon" class="text-lg">🌙</span>
                 </button>
@@ -253,15 +281,14 @@
         </div>
     </nav>
 
-    <!-- 🏠 หน้าแรก (Dashboard) 🏠 -->
     <div id="homePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 no-print animate-fade-in">
         
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 animate-slide-up">
             <div>
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ภาพรวมระบบ</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">สรุปสถานภาพอุปกรณ์ทั้งหมดในเครือข่าย</p>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">คลิกที่การ์ดเพื่อดูรายชื่ออุปกรณ์ทั้งหมดในหมวดหมู่นั้นๆ</p>
             </div>
-            <button onclick="exportAllDataToExcel()" class="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 w-full md:w-auto justify-center">
+            <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 w-full md:w-auto justify-center">
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
             </button>
         </div>
@@ -294,16 +321,17 @@
                     <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statSpc">-</h3>
                 </div>
             </div>
-            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full animate-slide-up delay-200">
-                <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left">สัดส่วนสถานะ</h3>
+            <div class="has-tooltip bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full animate-slide-up delay-200" data-tooltip="สัดส่วนเพื่อเตรียมอะไหล่ซ่อมบำรุง">
+                <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left flex items-center gap-2">สัดส่วนสถานะ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></h3>
                 <div class="relative w-full h-48 sm:h-56"><canvas id="statusChart"></canvas></div>
             </div>
         </div>
 
         <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-300">
-            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์</h2>
+            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์ข้ามสถานี</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">ค้นหาเพื่อดูว่าอุปกรณ์ชิ้นนั้นๆ ถูกจ่ายให้ใคร หรืออยู่สถานีไหน</p>
             <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="searchInput" placeholder="S/N, ชื่อรุ่น, ยี่ห้อ, หรือ ชื่อผู้ใช้งาน..." class="flex-1 px-5 py-3.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 transition-all w-full">
+                <input type="text" id="searchInput" placeholder="พิมพ์ S/N, ชื่อรุ่น, ยี่ห้อ, หรือ ชื่อผู้ใช้งาน..." class="flex-1 px-5 py-3.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 transition-all w-full">
                 <button onclick="globalSearch()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-8 py-3.5 rounded-2xl font-medium hover:bg-black dark:hover:bg-white shadow-sm transition-transform active:scale-95 w-full sm:w-auto">ค้นหา</button>
             </div>
             <div id="searchResults" class="mt-6 hidden w-full overflow-x-auto animate-fade-in">
@@ -320,7 +348,6 @@
         <div id="indexPage"></div>
     </div>
 
-    <!-- 📊 หน้าดูรายการรวม (Aggregate View) 📊 -->
     <div id="aggregatePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
             <div>
@@ -340,7 +367,6 @@
         </div>
     </div>
 
-    <!-- 📝 หน้าจัดการสถานี (Editor) 📝 -->
     <div id="editorPage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         
         <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
@@ -350,85 +376,90 @@
             </div>
             
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto lg:justify-end">
-                <button onclick="openAuditLog()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
+                <button onclick="openAuditLog()" data-tooltip="ดูประวัติการเพิ่ม/ลบ/แก้ไข ของสถานีนี้" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ประวัติ
                 </button>
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
-                <button onclick="document.getElementById('importExcelInput').click()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
+                <button onclick="document.getElementById('importExcelInput').click()" data-tooltip="อัปโหลดไฟล์ Excel เพื่อเพิ่มข้อมูลลงตาราง" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า
                 </button>
-                <button onclick="exportStationExcel()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
+                <button onclick="exportStationExcel()" data-tooltip="ดาวน์โหลดข้อมูลเป็น Excel (ใช้เป็น Template นำเข้าได้)" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
                 </button>
-                <button onclick="generateAllQRCodes()" class="col-span-2 sm:col-span-1 w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
+                <button onclick="generateAllQRCodes()" data-tooltip="สั่งพิมพ์ QR Code ของอุปกรณ์ทุกชิ้นในสถานีนี้" class="has-tooltip col-span-2 sm:col-span-1 w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> พิมพ์ QR
                 </button>
                 
                 <div class="col-span-2 w-full sm:w-px sm:h-8 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
                 
-                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" class="w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
-                <button onclick="prepareSave()" class="w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-md">
+                <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" data-tooltip="ส่งยอดสรุปประจำเดือนเข้ากลุ่ม Telegram" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
+                <button onclick="prepareSave()" data-tooltip="เซฟการเปลี่ยนแปลงลงฐานข้อมูลหลัก" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-md">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึก
                 </button>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl mb-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 w-full animate-slide-up delay-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-xs md:text-sm text-slate-600 dark:text-slate-300">ดับเบิลคลิกเพื่อพิมพ์ • แนบรูปได้ในช่องหมายเหตุ</p>
-                </div>
-            </div>
-            <button onclick="openExampleModal()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl font-medium border border-slate-200 dark:border-slate-600 transition-transform active:scale-95 flex items-center justify-center gap-2 text-xs md:text-sm">
-                ดูตัวอย่าง
-            </button>
-        </div>
-
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์</h3>
-                    <button onclick="addNewRow('spreadsheet-cpu')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                    </div>
+                    <button onclick="addNewRow('spreadsheet-cpu')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
                 <div id="spreadsheet-cpu" class="w-full text-black min-w-full"></div>
             </div>
             
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-300">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 2. จอมอนิเตอร์</h3>
-                    <button onclick="addNewRow('spreadsheet-mon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 2. จอมอนิเตอร์</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                    </div>
+                    <button onclick="addNewRow('spreadsheet-mon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
                 <div id="spreadsheet-mon" class="w-full text-black min-w-full"></div>
             </div>
             
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span> 3. เครื่องพิมพ์</h3>
-                    <button onclick="addNewRow('spreadsheet-prn')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span> 3. เครื่องพิมพ์</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                    </div>
+                    <button onclick="addNewRow('spreadsheet-prn')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
                 <div id="spreadsheet-prn" class="w-full text-black min-w-full"></div>
             </div>
             
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 4. เครื่องมือพิเศษ</h3>
-                    <button onclick="addNewRow('spreadsheet-spc')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1">+ เพิ่มแถว</button>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 4. เครื่องมือพิเศษ</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                    </div>
+                    <button onclick="addNewRow('spreadsheet-spc')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
                 <div id="spreadsheet-spc" class="w-full text-black min-w-full"></div>
             </div>
         </div>
     </div>
 
-    <!-- Core Logic Script -->
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec';
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
+        
         const inventoryGroups = {
-            "เหนือตอนบน": ['เชียงใหม่', 'แม่ฮ่องสอน', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], "เหนือตอนล่าง": ['ลำปาง', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], "อีสานตอนบน": ['ขอนแก่น', 'หนองคาย', 'นครพนม', 'สุรศักดิ์มนตรี'], "อีสานตอนล่าง": ['อุบลราชธานี', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], "ใต้-ตะวันตก": ['ประจวบคีรีขันธ์', 'ปัตตานี', 'นราธิวาส', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], "ตะวันออก": ['อรัญประเทศ', 'ฉก.นย.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
+            "เหนือตอนบน": ['เชียงใหม่', 'แม่ฮ่องสอน', 'ฝาง', 'ผาเมือง', 'B1', 'B2', 'B3', 'B6', 'L1'], 
+            "เหนือตอนล่าง": ['ลำปาง', 'แม่สอด', 'เชียงคำ', 'นเรศวร', 'B4'], 
+            "อีสานตอนบน": ['ขอนแก่น', 'หนองคาย', 'นครพนม', 'สุรศักดิ์มนตรี'], 
+            "อีสานตอนล่าง": ['อุบลราชธานี', 'โขงเจียม', 'ผามอ', 'พนมรุ้ง', 'สุรนารี', 'C1', 'C3', 'C4'], 
+            "ใต้-ตะวันตก": ['ประจวบคีรีขันธ์', 'ปัตตานี', 'นราธิวาส', 'เทพสตรี', 'ทองผาภูมิ', 'สุรสีห์', 'I5', 'I6'], 
+            "ตะวันออก": ['อรัญประเทศ', 'ฉก.นย.182', 'โป่งน้ำร้อน', 'บูรพา', 'กปช.จต.', 'C2'], 
+            "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
+        
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; 
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null };
@@ -474,7 +505,7 @@
         groupOrder.forEach((groupName, idx) => {
             const groupSection = document.createElement('div'); 
             groupSection.className = `mb-8 w-full animate-slide-up`;
-            groupSection.style.animationDelay = `${(idx+1) * 100}ms`; // ดีเลย์ตามลำดับ 
+            groupSection.style.animationDelay = `${(idx+1) * 100}ms`; 
             groupSection.innerHTML = `<h2 class="text-sm font-semibold mb-3 text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">${groupName}</h2>`;
             const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
             inventoryGroups[groupName].forEach(station => {
@@ -509,10 +540,9 @@
         function openAggregateView(type) {
             if (!globalAllDataCache) { showToast("รอระบบโหลดข้อมูลสักครู่...", "error"); return; }
             
-            // รีเซ็ตคลาสแอนิเมชันให้มันเล่นใหม่ตอนเปลี่ยนหน้า
             const aggPage = document.getElementById('aggregatePage');
             aggPage.classList.remove('animate-fade-in');
-            void aggPage.offsetWidth; // trigger reflow
+            void aggPage.offsetWidth; 
             aggPage.classList.add('animate-fade-in');
 
             document.getElementById('homePage').classList.add('hidden');
@@ -614,9 +644,9 @@
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
                 const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.classList.remove('hidden'); 
                 if (dbData.lastConfirmed === currentMonthStr) { 
-                    isEditingConfirmedReport = true; btnConfirm.className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                    isEditingConfirmedReport = true; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 } else { 
-                    isEditingConfirmedReport = false; btnConfirm.className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
+                    isEditingConfirmedReport = false; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
                 }
                 initSpreadsheets(dbData);
             } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
@@ -636,6 +666,7 @@
             loadDashboardStats();
         }
 
+        // 🌟 เพิ่ม Title ในตารางให้อ่านง่ายตอนเอาเมาส์ชี้ 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
@@ -643,15 +674,15 @@
 
             if (col == tCols - 1) { 
                 cell.innerHTML = `<div class="flex justify-center gap-1">
-                    <button onclick="triggerUpload('${instance.id}', ${row})" title="อัปโหลดรูปภาพ" class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
-                    <button onclick="showSingleQR('${instance.id}', ${row})" title="พิมพ์ QR" class="text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button>
-                    <button onclick="promptDeleteRow('${instance.id}', ${row})" title="ลบข้อมูล" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    <button onclick="triggerUpload('${instance.id}', ${row})" title="แนบรูปภาพความเสียหาย (ลิงก์รูปจะถูกใส่ในช่องหมายเหตุ)" class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
+                    <button onclick="showSingleQR('${instance.id}', ${row})" title="ดูหรือพิมพ์ QR Code สำหรับติดที่เครื่อง" class="text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button>
+                    <button onclick="promptDeleteRow('${instance.id}', ${row})" title="ลบอุปกรณ์ชิ้นนี้ออกจากระบบ" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                 </div>`; 
                 cell.style.textAlign = 'center'; 
             } 
             if (colTitle === 'หมายเหตุ' && val) {
                 let htmlVal = val.toString().replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
-                    return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</a>`;
+                    return `<a href="${url}" target="_blank" onclick="event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max" title="คลิกเปิดรูปภาพแบบเต็ม"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</a>`;
                 });
                 cell.innerHTML = htmlVal;
             }
@@ -889,7 +920,7 @@
                 const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
-                isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 hasUnsavedDeletions = false; 
             } catch (e) { console.error(e); showToast("ส่งรายงานล้มเหลว", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
@@ -937,8 +968,8 @@
         }
 
         function closeQrModal() { document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); }
-        function openExampleModal() { document.getElementById('exampleModal').classList.remove('hidden'); document.getElementById('exampleModal').classList.add('flex'); }
-        function closeExampleModal() { document.getElementById('exampleModal').classList.add('hidden'); document.getElementById('exampleModal').classList.remove('flex'); }
+        function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
+        function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
 
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
