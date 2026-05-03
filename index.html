@@ -2,16 +2,15 @@
 <html lang="th" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADP-Inventory Asset Management</title>
-    
-    <!-- 🌟 PWA Meta Tags (เพิ่มเข้ามาใหม่) 🌟 -->
+
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
     <link id="pwa-manifest" rel="manifest">
-
+    
     <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -102,9 +101,9 @@
     <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 z-[400] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="relative w-full max-w-4xl flex flex-col items-center animate-pop-in">
             <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white hover:text-red-400 text-4xl transition-colors">&times;</button>
-            <div class="bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-700 w-full flex justify-center min-h-[200px] items-center relative overflow-hidden">
+            <div class="bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-700 w-full flex justify-center min-h-[200px] items-center">
                 <!-- เพิ่มข้อความกำลังโหลดเผื่อเน็ตช้า -->
-                <span id="imageLoadingText" class="absolute text-slate-400 font-medium z-0">กำลังโหลดรูปภาพ...</span>
+                <span id="imageLoadingText" class="absolute text-slate-400 font-medium">กำลังโหลดรูปภาพ...</span>
                 <img id="viewerImageSrc" src="" class="max-h-[70vh] object-contain rounded-xl relative z-10" onload="document.getElementById('imageLoadingText').style.display='none'" onerror="document.getElementById('imageLoadingText').innerText='❌ ไม่สามารถโหลดรูปภาพได้'">
             </div>
             
@@ -317,12 +316,7 @@
             </div>
 
             <div class="flex items-center gap-1 md:gap-2">
-                <!-- 🌟 ปุ่ม PWA Install (จะโผล่มาเมื่อรองรับ) 🌟 -->
-                <button id="btnInstallApp" onclick="installApp()" class="hidden relative group text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors text-sm border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
-                    <span class="hidden lg:inline">ติดตั้งแอป</span>
-                </button>
-
+                <!-- 🌟 ปุ่มคู่มือ (ปรับ Tooltip ให้เด้งลงล่าง) 🌟 -->
                 <button onclick="openHelpModal()" class="relative group text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> 
                     <span class="hidden lg:inline">คู่มือ</span>
@@ -495,21 +489,8 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl mb-6 border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 w-full animate-slide-up delay-100">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-xs md:text-sm text-slate-600 dark:text-slate-300">ดับเบิลคลิกเพื่อพิมพ์ • แนบรูปได้ในช่องหมายเหตุ</p>
-                </div>
-            </div>
-            <button onclick="openExampleModal()" class="w-full sm:w-auto bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-xl font-medium border border-slate-200 dark:border-slate-600 transition-transform active:scale-95 flex items-center justify-center gap-2 text-xs md:text-sm">
-                ดูตัวอย่าง
-            </button>
-        </div>
-
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
+            <!-- 🌟 เพิ่มคำอธิบายการลบที่ตาราง 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
@@ -620,9 +601,24 @@
 
         function getMonthBadge(lastConfirmedStr) {
             const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'); const currentDay = now.getDate();
-            if (lastConfirmedStr === currentMonthStr) { return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-emerald-50 text-emerald-600 font-semibold border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">✅ ส่งแล้ว</span>'; } 
-            else { if (currentDay <= 5) return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-amber-50 text-amber-600 font-semibold border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">⚠️ รอส่ง</span>'; else return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-red-50 text-red-500 font-semibold border border-red-100 dark:bg-red-900/20 dark:border-red-800">❌ ค้างส่ง</span>'; }
+            if (lastConfirmedStr === currentMonthStr) { return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-emerald-50 text-emerald-600 font-semibold w-max mx-auto border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">✅ ส่งแล้ว</span>'; } 
+            else { if (currentDay <= 5) return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-amber-50 text-amber-600 font-semibold w-max mx-auto border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">⚠️ รอส่ง</span>'; else return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-red-50 text-red-500 font-semibold w-max mx-auto border border-red-100 dark:bg-red-900/20 dark:border-red-800">❌ ค้างส่ง</span>'; }
         }
+
+        const indexPage = document.getElementById('indexPage');
+        groupOrder.forEach((groupName, idx) => {
+            const groupSection = document.createElement('div'); 
+            groupSection.className = `mb-8 w-full animate-slide-up`;
+            groupSection.style.animationDelay = `${(idx+1) * 100}ms`; 
+            groupSection.innerHTML = `<h2 class="text-sm font-semibold mb-3 text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">${groupName}</h2>`;
+            const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
+            inventoryGroups[groupName].forEach(station => {
+                const btn = document.createElement('div'); btn.className = "bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-2 min-h-[80px]";
+                btn.innerHTML = `<span class="text-sm font-medium text-slate-800 dark:text-slate-200">${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse w-12 h-3 rounded bg-slate-100 dark:bg-slate-700"></div>`; 
+                btn.onclick = () => openStation(groupName, station); gridDiv.appendChild(btn);
+            });
+            groupSection.appendChild(gridDiv); indexPage.appendChild(groupSection);
+        });
 
         async function loadDashboardStats() {
             try {
@@ -1209,47 +1205,6 @@
                 if(wb.worksheets.length === 0) wb.addWorksheet("Empty");
                 const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
             } catch (error) { console.error(error); showToast("ข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
-        }
-
-        // 🌟 PWA Setup 🌟
-        const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='#ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>`);
-        const manifest = {
-            "name": "ADP Inventory",
-            "short_name": "ADP",
-            "start_url": window.location.href.split('?')[0],
-            "display": "standalone",
-            "background_color": "#f8fafc",
-            "theme_color": "#0f172a",
-            "icons": [
-                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
-                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
-            ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const manifestUrl = URL.createObjectURL(manifestBlob);
-        document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
-
-        if ('serviceWorker' in navigator) {
-            const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            const swUrl = URL.createObjectURL(swBlob);
-            navigator.serviceWorker.register(swUrl).catch(console.error);
-        }
-
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e;
-            document.getElementById('btnInstallApp').classList.remove('hidden');
-        });
-        
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden');
-                    deferredPrompt = null;
-                });
-            }
         }
     </script>
 </body>
