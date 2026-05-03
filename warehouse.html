@@ -9,6 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><path d='M25 30 L50 15 L75 30 L75 70 L50 85 L25 70 Z' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='%233b82f6'/></svg>">
+    <link id="pwa-manifest" rel="manifest">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +33,10 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
         
+        .toast-enter { transform: translateY(-100%); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .toast-exit { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-in; }
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -40,7 +45,6 @@
         .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
         .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; }
         
-        /* Minimal Jspreadsheet overrides */
         .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
@@ -53,6 +57,8 @@
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
+
+    <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md animate-fade-in">
@@ -68,6 +74,11 @@
                 <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight">ADP<span class="font-normal text-slate-500">Warehouse</span></h1>
             </div>
             <div class="flex items-center gap-2">
+                <button id="btnInstallApp" onclick="installApp()" class="hidden relative group text-blue-500 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors text-sm border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
+                    <span class="hidden lg:inline">ติดตั้งแอปคลัง</span>
+                </button>
+                <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
                 <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <span id="darkModeIcon" class="text-lg">🌙</span>
                 </button>
@@ -88,11 +99,11 @@
         <div id="view-dashboard" class="animate-fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 relative overflow-hidden">
-                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของในคลังส่วนกลาง</p><h3 class="text-4xl font-black" id="dashWHCount">-</h3></div>
+                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">📦</div>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">อุปกรณ์หลักในคลัง (PC/Mon/Prn)</p></div>
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">อุปกรณ์หลักทั้งหมดในระบบ</p></div>
                     <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dashWHMain">-</h3>
                 </div>
                 <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg border border-blue-400 text-white relative overflow-hidden">
@@ -122,13 +133,13 @@
 
         <!-- 📦 Tab 2: Warehouse Stock -->
         <div id="view-warehouse" class="hidden animate-fade-in">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">จัดการคลังส่วนกลาง</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">บันทึกสต็อกอะไหล่และอุปกรณ์ที่รอเบิกจ่าย</p>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">จัดการคลังส่วนกลาง (Master Data)</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียน S/N เข้าสู่ระบบ เพื่อให้สถานีเบิกจ่ายได้</p>
                 </div>
-                <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
+                <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 w-full sm:w-auto justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลังส่วนกลาง
                 </button>
             </div>
 
@@ -156,7 +167,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖲️</span> อุปกรณ์เสริม & วัสดุสิ้นเปลือง</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 หมึกพิมพ์, เมาส์, คีย์บอร์ด, สายไฟ (ใช้วิธีนับจำนวนสต็อกคงเหลือ)</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 หมึกพิมพ์, เมาส์, คีย์บอร์ด, สายไฟ (ใช้วิธีนับจำนวนสต็อกคงเหลือ ไม่มี S/N)</p>
                         </div>
                         <button onclick="document.getElementById('wh-consumables').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                     </div>
@@ -170,7 +181,7 @@
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ข้อมูลการเบิกจ่าย (Deployed Assets)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">ดึงข้อมูลอัปเดตแบบเรียลไทม์จากระบบรายงานสถานะของทุกสถานี</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">อุปกรณ์ทั้งหมดที่จ่ายไปตามสถานีต่างๆ ทั่วประเทศ</p>
                 </div>
                 <div class="relative w-full md:w-auto">
                     <input type="text" id="globalSearchInput" onkeyup="filterDeployedTable()" placeholder="ค้นหา S/N, ยี่ห้อ, สถานี..." class="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
@@ -197,18 +208,29 @@
 
     <!-- Script Logic -->
     <script>
-        // ⚠️ อย่าลืมใส่ API_URL ของคุณที่นี่ (URL เดียวกับหน้าเว็บสถานีได้เลย)
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyADoMz5DNInDADo1QMjEiDp8si8gcx3cyxeUPX54gKzYaOj1u5L_W2e8_c4d12sVyb/exec'; 
+        // ⚠️ อย่าลืมใส่ API_URL ของคุณที่นี่
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxmMo7Ep-PT2fXCRFrvbOVAnoM6p4Vk73uvLf0nITbHv8pBGljfUt_QnV4uACE7Uk0d/exec'; 
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
 
         let whMainTable = null, whPartsTable = null, whConsumablesTable = null;
         let globalDeployedData = []; 
         let originalWhData = { main: [], parts: [], consumables: [] };
 
-        const whStatusOptions = ['ดี (พร้อมจ่าย)', 'ส่งซ่อม', 'รอแทงจำหน่าย'];
+        // 🌟 เพิ่มสถานะใหม่สำหรับคลัง 🌟
+        const whStatusOptions = ['ว่าง (พร้อมจ่าย)', 'จ่ายแล้ว', 'ส่งซ่อม', 'รอแทงจำหน่าย'];
         const whConsumableUnits = ['ชิ้น', 'อัน', 'เส้น', 'ตลับ', 'ขวด', 'กล่อง'];
         const whMainTypes = ['PC', 'Notebook', 'Monitor', 'Printer', 'UPS', 'เครื่องมือพิเศษ'];
         const whPartsTypes = ['RAM', 'SSD', 'HDD', 'Mainboard', 'Power Supply', 'VGA', 'อะไหล่อื่นๆ'];
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-500' : 'bg-slate-800 dark:bg-slate-700');
+            toast.className = `${bgColor} text-white px-5 py-3 rounded-2xl shadow-xl font-medium flex items-center gap-3 toast-enter pointer-events-auto text-sm fixed top-20 left-1/2 -translate-x-1/2 z-[300]`;
+            toast.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> <span>${message}</span>`; 
+            container.appendChild(toast);
+            requestAnimationFrame(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-enter-active'); });
+            setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
@@ -319,12 +341,23 @@
 
                 // Render Dashboard
                 let whMainCount = 0;
-                if(whDataJSON.main) whDataJSON.main.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) whMainCount++; });
+                let whAvailableCount = 0; // นับเฉพาะของที่สถานะ = ว่าง (พร้อมจ่าย)
+                if(whDataJSON.main) whDataJSON.main.forEach(r => { 
+                    if(r[1]||r[2]||r[3]||r[4]) {
+                        whMainCount++; 
+                        if(r[5] === 'ว่าง (พร้อมจ่าย)') whAvailableCount++;
+                    }
+                });
                 let whPartsCount = 0;
-                if(whDataJSON.parts) whDataJSON.parts.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) whPartsCount++; });
+                if(whDataJSON.parts) whDataJSON.parts.forEach(r => { 
+                    if(r[1]||r[2]||r[3]||r[4]) {
+                        whPartsCount++;
+                        if(r[5] === 'ว่าง (พร้อมจ่าย)') whAvailableCount++;
+                    }
+                });
                 
                 document.getElementById('dashWHMain').innerText = whMainCount;
-                document.getElementById('dashWHCount').innerText = whMainCount + whPartsCount;
+                document.getElementById('dashWHAvailable').innerText = whAvailableCount;
                 document.getElementById('dashDeployedCount').innerText = totalDeployed;
                 document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
@@ -351,7 +384,7 @@
 
             } catch (error) { 
                 console.error(error); 
-                document.getElementById('dashWHCount').innerText = "Err";
+                document.getElementById('dashWHAvailable').innerText = "Err";
                 initWarehouseSpreadsheets({ main: [], parts: [], consumables: [] });
             }
         }
@@ -400,27 +433,66 @@
                     consumables: whConsumablesTable.getData().map(r => r.slice(0, -1))
                 };
                 
-                // แจ้งเตือนเข้า Telegram สั้นๆ (Log)
-                let logs = [{ action: 'อัปเดตคลังส่วนกลาง', detail: 'บันทึกสต็อกอุปกรณ์และอะไหล่ (Admin)' }];
+                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
                 
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: WAREHOUSE_KEY, value: JSON.stringify(newPayload), logs: logs }) });
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'SYNC_ASSETS',
+                        updates: [{ key: WAREHOUSE_KEY, value: JSON.stringify(newPayload) }],
+                        logs: logs 
+                    }) 
+                });
+                
                 originalWhData = JSON.parse(JSON.stringify(newPayload)); 
-                
-                // แจ้งเตือนในเว็บ
-                const toast = document.createElement('div');
-                toast.className = `bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl font-medium flex items-center gap-3 toast-enter pointer-events-auto text-sm fixed top-20 left-1/2 -translate-x-1/2 z-[300]`;
-                toast.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> <span>บันทึกสต็อกคลังสำเร็จ!</span>`; 
-                document.body.appendChild(toast);
-                requestAnimationFrame(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-enter-active'); });
-                setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
-                
-                // รีโหลด Dashboard เบื้องหลัง
-                fetchAllData();
+                showToast("บันทึกสต็อกคลังสำเร็จ!");
+                fetchAllData(); // Refresh UI
             } catch (e) { 
-                console.error(e); alert("บันทึกไม่สำเร็จ"); 
+                console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); 
             } finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); 
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
+        }
+
+        // PWA Setup
+        const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><path d='M25 30 L50 15 L75 30 L75 70 L50 85 L25 70 Z' fill='none' stroke='#ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='#3b82f6'/></svg>`);
+        const manifest = {
+            "name": "ADP Warehouse",
+            "short_name": "Warehouse",
+            "start_url": window.location.href.split('?')[0],
+            "display": "standalone",
+            "background_color": "#f8fafc",
+            "theme_color": "#0f172a",
+            "icons": [
+                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
+
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl).catch(console.error);
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            document.getElementById('btnInstallApp').classList.remove('hidden');
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden');
+                    deferredPrompt = null;
+                });
             }
         }
     </script>
