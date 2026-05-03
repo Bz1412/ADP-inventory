@@ -258,7 +258,7 @@
 
     <!-- Script Logic -->
     <script>
-        // ⚠️ อย่าลืมใส่ API_URL ของคุณที่นี่
+        // 🌟 ใส่ API_URL ของคุณ BenP แล้วครับ
         const API_URL = 'https://script.google.com/macros/s/AKfycbxmMo7Ep-PT2fXCRFrvbOVAnoM6p4Vk73uvLf0nITbHv8pBGljfUt_QnV4uACE7Uk0d/exec'; 
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
 
@@ -266,7 +266,6 @@
         let globalDeployedData = []; 
         let originalWhData = { main: [], parts: [], consumables: [] };
         
-        // สำหรับเก็บข้อมูล Modal Cards และสถิติ
         let cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
         let categoryStats = {}; 
 
@@ -312,24 +311,35 @@
             targetView.classList.add('animate-fade-in');
         }
 
+        // 🌟 แก้ปัญหาโหลดค้างด้วย try..catch..finally 🌟
         window.onload = async function() {
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingOverlay').classList.add('flex');
-            await fetchAllData();
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            document.getElementById('loadingOverlay').classList.remove('flex');
+            try {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                document.getElementById('loadingOverlay').classList.add('flex');
+                await fetchAllData();
+            } catch (e) {
+                console.error("Load Error:", e);
+                showToast("ดึงข้อมูลไม่สำเร็จ ตรวจสอบการตั้งค่า API", "error");
+            } finally {
+                // บังคับปิดหน้าโหลดไม่ว่าจะเกิดอะไรขึ้น
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').classList.remove('flex');
+            }
         };
 
+        // 🌟 ป้องกันตาราง Error ตอนสร้างปุ่มลบ 🌟
         const customWhRender = function(instance, cell, col, row, val, label, cellName) { 
-            let table = document.getElementById(instance.id).jexcel;
-            let tCols = table.options.columns.length; 
+            if (!instance || !instance.id) return;
+            let table = document.getElementById(instance.id);
+            if (!table || !table.jexcel) return;
+            
+            let tCols = table.jexcel.options.columns.length; 
             if (col == tCols - 1) { 
                 cell.innerHTML = `<button onclick="document.getElementById('${instance.id}').jexcel.deleteRow(${row})" title="ลบข้อมูล" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors w-full flex justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`; 
                 cell.style.textAlign = 'center'; 
             }
         };
 
-        // 🌟 ฟังก์ชันค้นหาในคลัง (jspreadsheet native search) 🌟
         function searchWarehouse() {
             let query = document.getElementById('whSearchInput').value.toLowerCase();
             if(whMainTable) whMainTable.search(query);
@@ -337,10 +347,8 @@
             if(whConsumablesTable) whConsumablesTable.search(query);
         }
 
-        // 🌟 ฟังก์ชันจัดการสถิติแยกประเภท 🌟
         function addStat(category, type, count) {
             if (!category) return;
-            // Normalize names
             if (category === 'คอมพิวเตอร์' || category === 'PC' || category === 'Notebook' || category === 'คอมพิวเตอร์ (CPU)') category = 'PC / Notebook';
             if (category === 'จอ' || category === 'จอมอนิเตอร์' || category === 'Monitor') category = 'Monitor (จอ)';
             if (category === 'เครื่องพิมพ์' || category === 'Printer') category = 'Printer';
@@ -357,7 +365,7 @@
                 let whDataJSON = { main: [], parts: [], consumables: [] };
                 globalDeployedData = [];
                 cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
-                categoryStats = {}; // Reset stats
+                categoryStats = {}; 
 
                 let totalDeployed = 0, brokenDeployed = 0;
                 
@@ -416,7 +424,7 @@
                             if(r[5] === 'ว่าง (พร้อมจ่าย)') {
                                 whAvailableCount++;
                                 cardData.AVAILABLE.push(itemObj);
-                                addStat(cat, 'wh', 1); // นับเข้าส่วนพร้อมจ่าย
+                                addStat(cat, 'wh', 1); 
                             } else if (r[5] === 'ส่งซ่อม' || r[5] === 'รอแทงจำหน่าย') {
                                 cardData.BROKEN.push(itemObj);
                                 brokenDeployed++;
@@ -429,7 +437,6 @@
                 processWhArray(whDataJSON.main);
                 processWhArray(whDataJSON.parts);
                 
-                // สิ้นเปลืองนับแยก (เพราะใช้วิธีนับจำนวน ไม่ได้นับเป็นชิ้นๆ มี SN)
                 if(whDataJSON.consumables) {
                     whDataJSON.consumables.forEach(r => {
                         let qty = parseFloat(r[3]);
@@ -439,13 +446,11 @@
                     });
                 }
 
-                // Update Cards
                 document.getElementById('dashWHMain').innerText = whMainCount;
                 document.getElementById('dashWHAvailable').innerText = whAvailableCount;
                 document.getElementById('dashDeployedCount').innerText = totalDeployed;
                 document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
-                // 🌟 Render Detailed Stats Grid 🌟
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
                     statsHtml += `
@@ -459,7 +464,6 @@
                 }
                 document.getElementById('detailedStatsGrid').innerHTML = statsHtml || '<p class="text-slate-400 text-sm col-span-full">ไม่พบข้อมูลอุปกรณ์</p>';
 
-                // Render Low Stock (consumables < 5)
                 let lowStockHtml = '';
                 if(whDataJSON.consumables) {
                     whDataJSON.consumables.forEach(r => {
@@ -485,7 +489,28 @@
             }
         }
 
-        // 🌟 เปิด Modal ดูรายละเอียดการ์ด 🌟
+        function initWarehouseSpreadsheets(data) {
+            document.getElementById('wh-main').innerHTML=''; document.getElementById('wh-parts').innerHTML=''; document.getElementById('wh-consumables').innerHTML='';
+            
+            whMainTable = jspreadsheet(document.getElementById('wh-main'), { 
+                data: data.main || [[]], 
+                columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'dropdown', title: 'ประเภท', width: 120, source: whMainTypes }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 150 }, { type: 'dropdown', title: 'สถานะในคลัง', width: 120, source: whStatusOptions }, { type: 'calendar', title: 'วันที่รับเข้า', width: 100, options: { format:'DD/MM/YYYY' } }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], 
+                minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customWhRender 
+            });
+
+            whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { 
+                data: data.parts || [[]], 
+                columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'dropdown', title: 'ประเภท', width: 120, source: whPartsTypes }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'สเปค/รายละเอียด', width: 180 }, { type: 'text', title: 'S/N', width: 120 }, { type: 'dropdown', title: 'สถานะในคลัง', width: 120, source: whStatusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], 
+                minDimensions: [8, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customWhRender 
+            });
+
+            whConsumablesTable = jspreadsheet(document.getElementById('wh-consumables'), { 
+                data: data.consumables || [[]], 
+                columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'ประเภท (เช่น หมึก, เมาส์)', width: 150 }, { type: 'text', title: 'ยี่ห้อ/รุ่น/รายละเอียด', width: 220 }, { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, { type: 'text', title: 'จุดเก็บ/ชั้นวาง', width: 100 }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], 
+                minDimensions: [8, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customWhRender 
+            });
+        }
+
         function openCardModal(type) {
             let title = "", subtitle = "", dataArray = [];
             
@@ -551,10 +576,8 @@
         function filterDeployedTable() {
             const q = document.getElementById('globalSearchInput').value.toLowerCase();
             const filtered = globalDeployedData.filter(i => 
-                i.sn.toLowerCase().includes(q) || 
-                i.specs.toLowerCase().includes(q) || 
-                i.station.toLowerCase().includes(q) || 
-                i.user.toLowerCase().includes(q)
+                i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || 
+                i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q)
             );
             renderDeployedTable(filtered);
         }
@@ -569,68 +592,43 @@
                     parts: whPartsTable.getData().map(r => r.slice(0, -1)), 
                     consumables: whConsumablesTable.getData().map(r => r.slice(0, -1))
                 };
-                
                 let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
                 
                 await fetch(API_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ 
-                        action: 'SYNC_ASSETS',
-                        updates: [{ key: WAREHOUSE_KEY, value: JSON.stringify(newPayload) }],
-                        logs: logs 
-                    }) 
+                    body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: WAREHOUSE_KEY, value: JSON.stringify(newPayload) }], logs: logs }) 
                 });
                 
                 originalWhData = JSON.parse(JSON.stringify(newPayload)); 
                 showToast("บันทึกสต็อกคลังสำเร็จ!");
-                fetchAllData(); // Refresh UI
+                fetchAllData(); 
             } catch (e) { 
                 console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); 
             } finally { 
-                document.getElementById('loadingOverlay').classList.add('hidden'); 
-                document.getElementById('loadingOverlay').classList.remove('flex'); 
+                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
             }
         }
 
         // PWA Setup
         const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><path d='M25 30 L50 15 L75 30 L75 70 L50 85 L25 70 Z' fill='none' stroke='#ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='#3b82f6'/></svg>`);
         const manifest = {
-            "name": "ADP Warehouse",
-            "short_name": "Warehouse",
-            "start_url": window.location.href.split('?')[0],
-            "display": "standalone",
-            "background_color": "#f8fafc",
-            "theme_color": "#0f172a",
-            "icons": [
-                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
-                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
-            ]
+            "name": "ADP Warehouse", "short_name": "Warehouse", "start_url": window.location.href.split('?')[0], "display": "standalone",
+            "background_color": "#f8fafc", "theme_color": "#0f172a",
+            "icons": [ { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" }, { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" } ]
         };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const manifestUrl = URL.createObjectURL(manifestBlob);
-        document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
+        document.getElementById('pwa-manifest').setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'})));
 
         if ('serviceWorker' in navigator) {
             const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            const swUrl = URL.createObjectURL(swBlob);
-            navigator.serviceWorker.register(swUrl).catch(console.error);
+            navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode], {type: 'application/javascript'}))).catch(console.error);
         }
 
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e;
-            document.getElementById('btnInstallApp').classList.remove('hidden');
+            e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallApp').classList.remove('hidden');
         });
-        
         function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden');
-                    deferredPrompt = null;
-                });
-            }
+            if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((c) => { if (c.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden'); deferredPrompt = null; }); }
         }
     </script>
 </body>
