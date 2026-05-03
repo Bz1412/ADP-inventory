@@ -801,21 +801,54 @@
             document.getElementById('btnHome').classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = stationName; document.getElementById('currentGroupSubtitle').innerText = `กลุ่ม: ${groupName}`;
             document.getElementById('loadingText').innerText = 'กำลังโหลดข้อมูล...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            
             try {
-                const response = await fetch(`${API_URL}?key=ADP_${groupName}_${stationName}`); const result = await response.json();
+                // 1. ดึงข้อมูลสถานี
+                const response = await fetch(`${API_URL}?key=ADP_${groupName}_${stationName}`); 
+                const result = await response.json();
+                
+                // 🌟 2. ส่วนที่เพิ่ม: แอบดึงข้อมูลคลัง (Warehouse) มาอัปเดตสต็อกล่าสุดแบบ Real-time 🌟
+                try {
+                    const whRes = await fetch(`${API_URL}?key=ADP_WAREHOUSE_CENTRAL`);
+                    const whResult = await whRes.json();
+                    if (whResult.value) {
+                        let whData = JSON.parse(whResult.value);
+                        warehouseStock = []; // เคลียร์สต็อกเก่า
+                        const extractWh = (arr) => {
+                            if(!arr) return;
+                            arr.forEach(r => {
+                                // เก็บเฉพาะของที่ "ว่าง (พร้อมจ่าย)"
+                                if (r[5] === 'ว่าง (พร้อมจ่าย)') warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); 
+                            });
+                        };
+                        extractWh(whData.main);
+                        extractWh(whData.parts);
+                    }
+                } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ', e); }
+
+                // 3. นำข้อมูลไปสร้างตาราง
                 let dbData = { cpu: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
                 if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
+                
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
                 const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.classList.remove('hidden'); 
+                
                 if (dbData.lastConfirmed === currentMonthStr) { 
                     isEditingConfirmedReport = true; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 } else { 
                     isEditingConfirmedReport = false; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
                 }
                 initSpreadsheets(dbData);
-            } catch (error) { console.error(error); showToast("ดึงข้อมูลพลาด", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); } 
-            finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+                
+            } catch (error) { 
+                console.error(error); 
+                showToast("ดึงข้อมูลพลาด กรุณารีเฟรชหน้าเว็บ", "error"); 
+                initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
+            } 
+            finally { 
+                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
         function goHome() {
