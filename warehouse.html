@@ -206,9 +206,12 @@
                     <div id="wh-main" class="w-full text-black min-w-full"></div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์ (RAM, SSD, HDD, PSU)</h3>
+                        <div>
+                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์ (RAM, SSD, HDD, PSU)</h3>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ใช้วิธีนับจำนวนสต็อกคงเหลือ (ไม่มี S/N)</p>
+                        </div>
                         <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                     </div>
                     <div id="wh-parts" class="w-full text-black min-w-full"></div>
@@ -384,7 +387,7 @@
                 globalDeployedData = [];
                 cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
                 categoryStats = {}; 
-                categoryDetailedItems = {};
+                categoryDetailedItems = {}; // 🌟 รีเซ็ตออบเจกต์เก็บรายละเอียด
 
                 let totalDeployed = 0, brokenDeployed = 0;
                 
@@ -412,9 +415,9 @@
                                         if(r[5] === 'ชำรุด') {
                                             brokenDeployed++;
                                             cardData.BROKEN.push(itemObj);
-                                            addStat(cat, 'broken', 1, itemObj);
+                                            addStat(cat, 'broken', 1, itemObj); // 🌟 แนบ Object ไว้กดดูรายละเอียด
                                         } else {
-                                            addStat(cat, 'deployed', 1, itemObj);
+                                            addStat(cat, 'deployed', 1, itemObj); // 🌟 แนบ Object ไว้กดดูรายละเอียด
                                         }
                                     }
                                 });
@@ -443,28 +446,36 @@
                             if(r[5] === 'ว่าง (พร้อมจ่าย)') {
                                 whAvailableCount++;
                                 cardData.AVAILABLE.push(itemObj);
-                                addStat(cat, 'wh', 1, itemObj); 
+                                addStat(cat, 'wh', 1, itemObj); // 🌟 แนบ Object
                             } else if (r[5] === 'ส่งซ่อม' || r[5] === 'รอแทงจำหน่าย') {
                                 cardData.BROKEN.push(itemObj);
                                 brokenDeployed++;
-                                addStat(cat, 'broken', 1, itemObj);
+                                addStat(cat, 'broken', 1, itemObj); // 🌟 แนบ Object
                             }
                         }
                     });
                 };
                 
+                // ประมวลผลเฉพาะอุปกรณ์หลัก (Main) ที่มี S/N
                 processWhArray(whDataJSON.main);
-                processWhArray(whDataJSON.parts);
                 
-                if(whDataJSON.consumables) {
-                    whDataJSON.consumables.forEach(r => {
-                        let qty = parseFloat(r[3]);
-                        if(!isNaN(qty) && r[1]) {
-                            addStat(r[1], 'wh', qty); 
-                        }
+                // 🌟 ประมวลผลอะไหล่ (Parts) แบบนับจำนวน 🌟
+                if(whDataJSON.parts) {
+                    whDataJSON.parts.forEach(r => {
+                        let qty = parseFloat(r[4]); // จำนวนอยู่คอลัมน์ที่ 4 (Index 4)
+                        if(!isNaN(qty) && r[1]) addStat(r[1], 'wh', qty); 
                     });
                 }
 
+                // 🌟 ประมวลผลสิ้นเปลือง (Consumables) แบบนับจำนวน 🌟
+                if(whDataJSON.consumables) {
+                    whDataJSON.consumables.forEach(r => {
+                        let qty = parseFloat(r[3]); // จำนวนอยู่คอลัมน์ที่ 3 (Index 3)
+                        if(!isNaN(qty) && r[1]) addStat(r[1], 'wh', qty); 
+                    });
+                }
+
+                // Update Dashboard Cards Count
                 document.getElementById('dashWHMain').innerText = whMainCount;
                 document.getElementById('dashWHAvailable').innerText = whAvailableCount;
                 document.getElementById('dashDeployedCount').innerText = totalDeployed;
@@ -484,22 +495,33 @@
                 }
                 document.getElementById('detailedStatsGrid').innerHTML = statsHtml || '<p class="text-slate-400 text-sm col-span-full">ไม่พบข้อมูลอุปกรณ์</p>';
 
+                // 🌟 อัปเดตแจ้งเตือนของใกล้หมด (เช็คทั้งอะไหล่และสิ้นเปลือง) 🌟
                 let lowStockHtml = '';
-                if(whDataJSON.consumables) {
-                    whDataJSON.consumables.forEach(r => {
-                        let qty = parseFloat(r[3]);
-                        if(!isNaN(qty) && qty <= 5 && r[1]) {
+                const checkLowStock = (arr, isParts) => {
+                    if(!arr) return;
+                    arr.forEach(r => {
+                        let qty = isParts ? parseFloat(r[4]) : parseFloat(r[3]);
+                        let typeName = r[1];
+                        let desc = isParts ? `${r[2]||'-'} ${r[3]||''}` : `${r[2]||'-'}`;
+                        let unit = isParts ? (r[5]||'') : (r[4]||'');
+
+                        if(!isNaN(qty) && qty <= 5 && typeName) {
                             let badge = qty <= 2 ? `<span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold">วิกฤต (เหลือ ${qty})</span>` : `<span class="px-2 py-1 bg-amber-100 text-amber-600 rounded text-xs font-bold">ใกล้หมด (เหลือ ${qty})</span>`;
-                            lowStockHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-4 border-b border-slate-100 dark:border-slate-700 font-medium dark:text-slate-200">${r[1]}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400">${r[2]||'-'}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-center font-bold text-lg text-slate-800 dark:text-white">${qty} <span class="text-xs font-normal text-slate-500">${r[4]||''}</span></td><td class="p-4 border-b border-slate-100 dark:border-slate-700">${badge}</td></tr>`;
+                            lowStockHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-4 border-b border-slate-100 dark:border-slate-700 font-medium dark:text-slate-200">${typeName}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400">${desc}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-center font-bold text-lg text-slate-800 dark:text-white">${qty} <span class="text-xs font-normal text-slate-500">${unit}</span></td><td class="p-4 border-b border-slate-100 dark:border-slate-700">${badge}</td></tr>`;
                         }
                     });
-                }
-                if(lowStockHtml === '') lowStockHtml = `<tr><td colspan="4" class="p-6 text-center text-slate-400">สต็อกวัสดุสิ้นเปลืองยังอยู่ในเกณฑ์ปลอดภัย 🎉</td></tr>`;
+                };
+                
+                checkLowStock(whDataJSON.parts, true); // ตรวจสอบอะไหล่
+                checkLowStock(whDataJSON.consumables, false); // ตรวจสอบสิ้นเปลือง
+
+                if(lowStockHtml === '') lowStockHtml = `<tr><td colspan="4" class="p-6 text-center text-slate-400">สต็อกอะไหล่และวัสดุสิ้นเปลืองยังอยู่ในเกณฑ์ปลอดภัย 🎉</td></tr>`;
                 document.getElementById('lowStockTableBody').innerHTML = lowStockHtml;
 
+                // อัปเดตตารางใหญ่แท็บที่ 3
                 renderDeployedTable(globalDeployedData);
 
-                // Initialize Only if not silent
+                // สร้างตารางเฉพาะตอนไม่ได้รีโหลดเงียบๆ หรือเพิ่งเปิดเว็บครั้งแรก
                 if(!isSilent || !whMainTable) {
                     originalWhData = JSON.parse(JSON.stringify(whDataJSON));
                     initWarehouseSpreadsheets(whDataJSON);
@@ -508,6 +530,7 @@
             } catch (error) { 
                 console.error(error); 
                 document.getElementById('dashWHAvailable').innerText = "Err";
+                if(!isSilent || !whMainTable) initWarehouseSpreadsheets({ main: [], parts: [], consumables: [] });
             }
         }
 
@@ -550,8 +573,18 @@
 
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { 
                 data: data.parts || [[]], 
-                columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'dropdown', title: 'ประเภท', width: 120, source: whPartsTypes }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'สเปค/รายละเอียด', width: 180 }, { type: 'text', title: 'S/N', width: 120 }, { type: 'dropdown', title: 'สถานะในคลัง', width: 120, source: whStatusOptions }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], 
-                minDimensions: [8, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 50 }, 
+                    { type: 'dropdown', title: 'ประเภท', width: 120, source: whPartsTypes }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
+                    { type: 'text', title: 'สเปค/รายละเอียด', width: 180 }, 
+                    { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, 
+                    { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, 
+                    { type: 'text', title: 'ชั้นวาง/จุดเก็บ', width: 120 }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
+                ], 
+                minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
                 onchange: () => hasUnsavedWhChanges = true, updateTable: customWhRender 
             });
 
