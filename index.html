@@ -2,9 +2,16 @@
 <html lang="th" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ADP-Inventory Asset Management</title>
     
+    <!-- 🌟 PWA Meta Tags (รองรับ iOS และ Android) 🌟 -->
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
+    <link id="pwa-manifest" rel="manifest">
+
     <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -91,22 +98,20 @@
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- 🌟 Modal ดูรูปภาพแบบ Popup (มาใหม่!) 🌟 -->
+    <!-- Modal ดูรูปภาพแบบ Popup -->
     <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 z-[400] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="relative w-full max-w-4xl flex flex-col items-center animate-pop-in">
             <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white hover:text-red-400 text-4xl transition-colors">&times;</button>
-            <div class="bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-700">
-                <img id="viewerImageSrc" src="" class="max-h-[70vh] object-contain rounded-xl">
+            <div class="bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-700 w-full flex justify-center min-h-[200px] items-center">
+                <span id="imageLoadingText" class="absolute text-slate-400 font-medium">กำลังโหลดรูปภาพ...</span>
+                <img id="viewerImageSrc" src="" class="max-h-[70vh] object-contain rounded-xl relative z-10" onload="document.getElementById('imageLoadingText').style.display='none'" onerror="document.getElementById('imageLoadingText').innerText='❌ ไม่สามารถโหลดรูปภาพได้'">
             </div>
             
             <div class="mt-6 flex flex-wrap justify-center gap-4 w-full">
                 <button onclick="deleteImageFromViewer()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg shadow-red-500/30 transition-transform active:scale-95 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> 
-                    ลบรูปภาพนี้
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> ลบรูปภาพนี้
                 </button>
-                <button onclick="closeImageModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-medium transition-transform active:scale-95">
-                    ปิดหน้าต่าง
-                </button>
+                <button onclick="closeImageModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-xl font-medium transition-transform active:scale-95">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
@@ -171,7 +176,7 @@
             </div>
             
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full space-y-6">
-                <!-- ส่วนที่ 1: การจัดการข้อมูล -->
+                <!-- ส่วนที่ 1 -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การกรอกและแก้ไขข้อมูล (สำคัญ)</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -182,7 +187,7 @@
                     </ul>
                 </div>
 
-                <!-- ส่วนที่ 2: ระบบแจ้งชำรุดและรูปภาพ -->
+                <!-- ส่วนที่ 2 -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> ระบบแจ้งชำรุดและอัปโหลดรูปภาพ</h4>
                     <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">เมื่อมีอุปกรณ์เสีย แอดมินสามารถแนบรูปถ่ายความเสียหายเข้าระบบได้ทันที เพื่อให้ช่างประเมินอาการ:</p>
@@ -195,7 +200,7 @@
                     </ol>
                 </div>
 
-                <!-- ส่วนที่ 3: ระบบ QR Code -->
+                <!-- ส่วนที่ 3 -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> ระบบ QR Code ประจำเครื่อง</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -204,7 +209,7 @@
                     </ul>
                 </div>
 
-                <!-- ส่วนที่ 4: การส่งรายงานประจำเดือน -->
+                <!-- ส่วนที่ 4 -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-300">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-amber-500">4.</span> การส่งรายงานประจำเดือน</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -308,7 +313,12 @@
             </div>
 
             <div class="flex items-center gap-1 md:gap-2">
-                <!-- 🌟 ปุ่มคู่มือ (ปรับ Tooltip ให้เด้งลงล่าง) 🌟 -->
+                <!-- 🌟 ปุ่ม PWA Install (จะโผล่มาเมื่อรองรับ) 🌟 -->
+                <button id="btnInstallApp" onclick="installApp()" class="hidden relative group text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors text-sm border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
+                    <span class="hidden lg:inline">ติดตั้งแอป</span>
+                </button>
+
                 <button onclick="openHelpModal()" class="relative group text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> 
                     <span class="hidden lg:inline">คู่มือ</span>
@@ -799,7 +809,6 @@
             loadDashboardStats();
         }
 
-        // 🌟 อัปเดตตารางให้เรียกเปิด Popup ดูรูป 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
@@ -821,11 +830,17 @@
             }
         };
 
-        // 🌟 ฟังก์ชันจัดการ Popup รูปภาพ 🌟
         let currentViewingImage = null;
         function openImageModal(url, rowIdx, tableId) {
             currentViewingImage = { url, rowIdx, tableId };
-            document.getElementById('viewerImageSrc').src = url;
+            let displayUrl = url;
+            let match = url.match(/id=([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                displayUrl = 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1200';
+            }
+            document.getElementById('imageLoadingText').style.display = 'block';
+            document.getElementById('imageLoadingText').innerText = 'กำลังโหลดรูปภาพ...';
+            document.getElementById('viewerImageSrc').src = displayUrl;
             document.getElementById('imageViewerModal').classList.remove('hidden');
             document.getElementById('imageViewerModal').classList.add('flex');
         }
@@ -839,24 +854,19 @@
 
         function deleteImageFromViewer() {
             if(!currentViewingImage) return;
-            
             let url = currentViewingImage.url;
             let rowIdx = currentViewingImage.rowIdx;
             let tableId = currentViewingImage.tableId;
-            
             let match = url.match(/id=([a-zA-Z0-9_-]+)/);
             if (match && match[1]) {
                 fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
             }
-            
             const table = document.getElementById(tableId).jexcel;
             let remarkColIndex = table.options.columns.length - 2; 
             let currentRemark = table.getValueFromCoords(remarkColIndex, rowIdx);
-            
             let textToRemove = `[ดูรูป: ${url}]`;
             let newRemark = currentRemark.replace(textToRemove, '').trim();
             table.setValueFromCoords(remarkColIndex, rowIdx, newRemark);
-            
             hasUnsavedDeletions = true;
             showToast("นำรูปลบออกจากระบบแล้ว (อย่าลืมกดบันทึกฐานข้อมูล)");
             closeImageModal();
@@ -889,128 +899,6 @@
                 finally { document.getElementById('imageUploadInput').value = ''; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); uploadTarget = null; }
             };
             reader.readAsDataURL(file);
-        }
-
-        async function openSnHistory(sn) {
-            document.getElementById('loadingText').innerText = 'กำลังดึงข้อมูล...';
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            document.getElementById('loadingOverlay').classList.add('flex');
-            
-            try {
-                document.getElementById('snHistoryTitle').innerText = "S/N: " + sn;
-                const response = await fetch(`${API_URL}?action=GET_HISTORY_SN&sn=${encodeURIComponent(sn)}`);
-                const result = await response.json();
-                
-                const detailsBox = document.getElementById('snDetailsBox');
-                const detailsContent = document.getElementById('snDetailsContent');
-                
-                if (result.details) {
-                    let stBadge = result.details.status === 'ปกติ' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800' : (result.details.status === 'ชำรุด' ? 'bg-red-50 text-red-500 border border-red-100 dark:bg-red-900/20 dark:border-red-800' : 'bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800');
-                    
-                    let linkNote = result.details.note.replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
-                        return `<a href="${url}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</a>`;
-                    });
-
-                    detailsContent.innerHTML = `
-                        <div><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">สถานี/พื้นที่</span> <span class="font-medium text-slate-800 dark:text-slate-200">${result.details.station}</span></div>
-                        <div><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">ประเภท</span> <span class="font-medium text-slate-800 dark:text-slate-200">${result.details.type}</span></div>
-                        <div><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">ผู้ใช้งาน</span> <span class="font-medium text-slate-800 dark:text-slate-200">${result.details.user}</span></div>
-                        <div><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">ยี่ห้อ/รุ่น</span> <span class="font-medium text-slate-800 dark:text-slate-200">${result.details.brand} ${result.details.model}</span></div>
-                        <div><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">การเชื่อมต่อ</span> <span class="font-medium text-slate-800 dark:text-slate-200">${result.details.connection}</span></div>
-                        <div><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">สถานะล่าสุด</span> <span class="px-2.5 py-0.5 rounded-md text-xs font-semibold ${stBadge}">${result.details.status}</span></div>
-                        <div class="md:col-span-2"><span class="text-slate-400 text-xs block mb-0.5 uppercase tracking-wider">หมายเหตุ</span> <span class="font-medium text-slate-800 dark:text-slate-200 break-words flex items-center flex-wrap gap-2">${linkNote}</span></div>
-                    `;
-                    detailsBox.classList.remove('hidden');
-                } else {
-                    detailsBox.classList.add('hidden');
-                }
-
-                const tbody = document.getElementById('snHistoryTableBody');
-                if (result.logs && result.logs.length > 0) {
-                    let html = '';
-                    result.logs.forEach(log => {
-                        let actionBadge = `<span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
-                        if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
-                        if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-0.5 bg-red-50 text-red-500 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
-                        
-                        let timeStr = log.time;
-                        try {
-                           let d = new Date(log.time);
-                           if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                        } catch(e) {}
-
-                        let detailText = log.detail;
-                        let statusBadge = "-";
-                        if(detailText.includes("สถานะ: ปกติ")) statusBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">ปกติ</span>`;
-                        if(detailText.includes("สถานะ: ชำรุด")) statusBadge = `<span class="text-red-500 dark:text-red-400 font-semibold">ชำรุด</span>`;
-                        if(detailText.includes("สถานะ: สำรอง")) statusBadge = `<span class="text-amber-500 dark:text-amber-400 font-semibold">สำรอง</span>`;
-
-                        html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                            <td class="p-3 md:p-4 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td>
-                            <td class="p-3 md:p-4 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap text-xs md:text-sm">${log.station}</td>
-                            <td class="p-3 md:p-4 text-center">${statusBadge}</td>
-                            <td class="p-3 md:p-4 text-slate-600 dark:text-slate-300 min-w-[200px]"><div class="mb-1">${actionBadge}</div><div class="text-[10px] md:text-xs text-slate-500 leading-tight">${detailText}</div></td>
-                        </tr>`;
-                    });
-                    tbody.innerHTML = html;
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 font-medium">ไม่พบประวัติการแก้ไขอุปกรณ์นี้</td></tr>`;
-                }
-                
-                document.getElementById('snHistoryModal').classList.remove('hidden');
-                document.getElementById('snHistoryModal').classList.add('flex');
-            } catch (err) {
-                console.error(err);
-                showToast("โหลดข้อมูลล้มเหลว", "error");
-            } finally {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('flex');
-            }
-        }
-
-        function closeSnHistory() {
-            document.getElementById('snHistoryModal').classList.add('hidden');
-            document.getElementById('snHistoryModal').classList.remove('flex');
-            window.history.pushState({}, document.title, window.location.pathname);
-        }
-
-        function promptDeleteRow(id, row) {
-            const rData = document.getElementById(id).jexcel.getRowData(row);
-            let n = id==='spreadsheet-cpu'?"คอมพิวเตอร์":id==='spreadsheet-mon'?"จอมอนิเตอร์":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
-            let str = `ผู้ใช้: ${rData[1]||'-'} | ${rData[2]||''} ${rData[3]||''} (S/N: ${rData[4]||'-'})`;
-            if(!rData[1]&&!rData[2]&&!rData[3]&&!rData[4]) str = "แถวว่าง";
-            document.getElementById('deleteDetailText').innerText = `[${n}] ${str}`; rowToDelete = { id, row };
-            document.getElementById('deleteConfirmModal').classList.remove('hidden'); document.getElementById('deleteConfirmModal').classList.add('flex');
-        }
-
-        function closeDeleteModal() { rowToDelete = null; document.getElementById('deleteConfirmModal').classList.add('hidden'); document.getElementById('deleteConfirmModal').classList.remove('flex'); }
-        
-        function executeDeleteRow() { 
-            if (rowToDelete) { 
-                const table = document.getElementById(rowToDelete.id).jexcel;
-                let remarkColIndex = table.options.columns.length - 2; 
-                let remarkText = table.getValueFromCoords(remarkColIndex, rowToDelete.row);
-                if (remarkText) {
-                    let match = remarkText.match(/id=([a-zA-Z0-9_-]+)/);
-                    if (match && match[1]) {
-                        fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
-                    }
-                }
-                table.deleteRow(rowToDelete.row); 
-                showToast("ลบข้อมูลสำเร็จ"); 
-                hasUnsavedDeletions = true;
-            } 
-            closeDeleteModal(); 
-        }
-
-        function addNewRow(id) { document.getElementById(id).jexcel.insertRow(); showToast("เพิ่มแถวเรียบร้อย"); }
-
-        function initSpreadsheets(data) {
-            document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, updateTable: customRenderTable });
         }
 
         async function openAuditLog() {
@@ -1186,6 +1074,47 @@
                 if(wb.worksheets.length === 0) wb.addWorksheet("Empty");
                 const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
             } catch (error) { console.error(error); showToast("ข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
+
+        // 🌟 PWA Setup 🌟
+        const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='#ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>`);
+        const manifest = {
+            "name": "ADP Inventory",
+            "short_name": "ADP",
+            "start_url": window.location.href.split('?')[0],
+            "display": "standalone",
+            "background_color": "#f8fafc",
+            "theme_color": "#0f172a",
+            "icons": [
+                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
+
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl).catch(console.error);
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            document.getElementById('btnInstallApp').classList.remove('hidden');
+        });
+        
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden');
+                    deferredPrompt = null;
+                });
+            }
         }
     </script>
 </body>
