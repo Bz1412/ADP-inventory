@@ -514,12 +514,38 @@
         function initWarehouseSpreadsheets(data) {
             document.getElementById('wh-main').innerHTML=''; document.getElementById('wh-parts').innerHTML=''; document.getElementById('wh-consumables').innerHTML='';
             
-            // 🌟 เพิ่ม onchange เพื่อดักจับการแก้ไข ป้องกันการ Auto-reload ทับสิ่งที่พิมพ์อยู่ 🌟
             whMainTable = jspreadsheet(document.getElementById('wh-main'), { 
                 data: data.main || [[]], 
-                columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'dropdown', title: 'ประเภท', width: 120, source: whMainTypes }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 150 }, { type: 'dropdown', title: 'สถานะในคลัง', width: 120, source: whStatusOptions }, { type: 'calendar', title: 'วันที่รับเข้า', width: 100, options: { format:'DD/MM/YYYY' } }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], 
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 50 }, 
+                    { type: 'dropdown', title: 'ประเภท', width: 120, source: whMainTypes }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
+                    { type: 'text', title: 'รุ่น', width: 120 }, 
+                    { type: 'text', title: 'S/N', width: 150 }, 
+                    { type: 'dropdown', title: 'สถานะในคลัง', width: 120, source: whStatusOptions }, 
+                    // 🌟 จุดที่ 1: ใส่ readOnly ปิดปฏิทินไม่ให้กวนใจ
+                    { type: 'calendar', title: 'วันที่รับเข้า', width: 100, options: { format:'DD/MM/YYYY' }, readOnly: true }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
+                ], 
                 minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
-                onchange: () => hasUnsavedWhChanges = true, updateTable: customWhRender 
+                // 🌟 จุดที่ 2: ระบบ Auto-fill วันที่ เมื่อเริ่มพิมพ์ข้อมูล
+                onchange: function(instance, cell, col, row, val) {
+                    hasUnsavedWhChanges = true;
+                    // ถ้าแอดมินพิมพ์ข้อมูลช่องอื่น (ที่ไม่ใช่ช่องวันที่และช่องลบ)
+                    if (col !== 6 && col !== 8 && val) {
+                        let table = document.getElementById(instance.id).jexcel;
+                        let currentDate = table.getValueFromCoords(6, row);
+                        // ถ้าช่องวันที่ยังว่างอยู่ ให้ใส่วันที่ของวันนี้ทันที!
+                        if (!currentDate) {
+                            let today = new Date();
+                            // รูปแบบ YYYY-MM-DD เพื่อให้ปฏิทินของ jspreadsheet อ่านค่าได้ถูกต้อง
+                            let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                            table.setValueFromCoords(6, row, dateStr);
+                        }
+                    }
+                }, 
+                updateTable: customWhRender 
             });
 
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { 
