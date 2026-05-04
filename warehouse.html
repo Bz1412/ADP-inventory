@@ -103,7 +103,7 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง 🌟 -->
+    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง (กดจากตาราง) 🌟 -->
     <div id="withdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
@@ -133,15 +133,12 @@
                 <button onclick="closeQuickWithdrawModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
             </div>
             
-            <!-- ส่วนค้นหา -->
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800" id="qwSearchSection">
                 <input type="text" id="qwSearchInput" placeholder="พิมพ์ชื่ออะไหล่ หรือ วัสดุสิ้นเปลือง..." class="w-full px-5 py-4 text-base bg-slate-50 dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-blue-500 transition-all font-bold shadow-inner" autocomplete="off" oninput="searchQuickWithdraw(this.value)">
             </div>
             
-            <!-- ส่วนแสดงผลลัพธ์ -->
             <div id="qwListSection" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]"></div>
 
-            <!-- ส่วนฟอร์มกรอกจำนวนและยืนยัน (ซ่อนไว้ก่อน) -->
             <div id="qwFormSection" class="p-6 bg-white dark:bg-slate-800 hidden flex-col gap-5 border-t border-slate-100 dark:border-slate-700">
                 <div class="flex justify-between items-center bg-blue-50 dark:bg-slate-700 p-4 rounded-xl border border-blue-100 dark:border-slate-600">
                     <div>
@@ -204,6 +201,7 @@
 
         <!-- 📊 Tab 1: Dashboard -->
         <div id="view-dashboard" class="animate-fade-in">
+            
             <!-- 🌟 ปุ่มเบิกจ่ายด่วนหน้าแรก 🌟 -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div>
@@ -214,6 +212,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ทำรายการเบิกจ่าย
                 </button>
             </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
@@ -313,7 +312,7 @@
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ข้อมูลการเบิกจ่าย (Deployed Assets)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">อุปกรณ์ทั้งหมดที่จ่ายไปตามสถานีต่างๆ ทั่วประเทศ</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">อุปกรณ์ทั้งหมดที่จ่ายไปตามสถานี และประวัติเบิกอะไหล่</p>
                 </div>
                 <div class="relative w-full md:w-auto">
                     <input type="text" id="globalSearchInput" onkeyup="filterDeployedTable()" placeholder="ค้นหา S/N, ยี่ห้อ, สถานี..." class="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
@@ -325,8 +324,8 @@
                 <table class="w-full text-sm text-left min-w-[900px]">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase tracking-wider text-xs">
                         <tr>
-                            <th class="p-4 font-medium">พื้นที่</th><th class="p-4 font-medium">สถานี</th><th class="p-4 font-medium">หมวดหมู่</th>
-                            <th class="p-4 font-medium">ผู้ใช้งาน / จุดตั้ง</th><th class="p-4 font-medium">ยี่ห้อ/รุ่น</th><th class="p-4 font-medium font-mono text-[10px]">S/N</th>
+                            <th class="p-4 font-medium">พื้นที่</th><th class="p-4 font-medium">สถานี/วันที่เบิก</th><th class="p-4 font-medium">หมวดหมู่</th>
+                            <th class="p-4 font-medium">ผู้ใช้งาน / ปลายทาง</th><th class="p-4 font-medium">ยี่ห้อ/รุ่น/รายละเอียด</th><th class="p-4 font-medium font-mono text-[10px]">S/N / จำนวน</th>
                             <th class="p-4 font-medium text-center">สถานะ</th>
                         </tr>
                     </thead>
@@ -340,22 +339,21 @@
 
     <!-- Script Logic -->
     <script>
-        // ⚠️ อย่าลืมเช็คให้ API_URL ตรงกับตัวใหม่ของคุณ
         const API_URL = 'https://script.google.com/macros/s/AKfycbxmMo7Ep-PT2fXCRFrvbOVAnoM6p4Vk73uvLf0nITbHv8pBGljfUt_QnV4uACE7Uk0d/exec'; 
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
 
         let whMainTable = null, whPartsTable = null, whConsumablesTable = null;
         let globalDeployedData = []; 
-        let originalWhData = { main: [], parts: [], consumables: [] };
+        let originalWhData = { main: [], parts: [], consumables: [], withdrawals: [] };
         
         let cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
-        
-        // 🌟 ตัวแปรเก็บสถิติและสถานะ 🌟
         let categoryStats = {}; 
         let categoryDetailedItems = {}; 
+        
         let hasUnsavedWhChanges = false; 
         let whPendingLogs = []; 
         let currentWithdrawTarget = null; 
+        let whWithdrawals = []; // 🌟 ตัวแปรเก็บประวัติเบิกจ่าย
 
         const whStatusOptions = ['ว่าง (พร้อมจ่าย)', 'จ่ายแล้ว', 'ส่งซ่อม', 'รอแทงจำหน่าย'];
         const whConsumableUnits = ['ชิ้น', 'อัน', 'เส้น', 'ตลับ', 'ขวด', 'กล่อง'];
@@ -400,15 +398,13 @@
             targetView.classList.add('animate-fade-in');
         }
 
-        // 🌟 Auto Reload
         window.onload = async function() {
             try {
                 document.getElementById('loadingOverlay').classList.remove('hidden');
                 document.getElementById('loadingOverlay').classList.add('flex');
                 await fetchAllData();
             } catch (e) {
-                console.error("Load Error:", e);
-                showToast("ดึงข้อมูลไม่สำเร็จ", "error");
+                console.error("Load Error:", e); showToast("ดึงข้อมูลไม่สำเร็จ", "error");
             } finally {
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('loadingOverlay').classList.remove('flex');
@@ -419,15 +415,13 @@
             }, 60000); 
         };
 
-        // 🌟 อัปเดตตารางให้รันลำดับออโต้ และแทรกปุ่ม "เบิก" 🌟
+        // 🌟 อัปเดตตารางคลังให้รันลำดับออโต้ และแทรกปุ่มเบิก 🌟
         const customWhRender = function(instance, cell, col, row, val, label, cellName) { 
             if (!instance || !instance.id) return;
             let table = document.getElementById(instance.id);
             if (!table || !table.jexcel) return;
-            
             let tCols = table.jexcel.options.columns.length; 
             
-            // 🌟 รันเลขลำดับอัตโนมัติในช่องแรก 🌟
             if (col == 0) {
                 cell.innerText = parseInt(row) + 1;
                 cell.style.textAlign = 'center';
@@ -436,25 +430,22 @@
                 cell.style.fontWeight = 'bold';
             }
 
-            // ถ้าเป็นตารางอะไหล่ หรือสิ้นเปลือง ให้มีปุ่มทำเบิก (อยู่ก่อนช่องลบ 1 คอลัมน์)
             if ((instance.id === 'wh-parts' || instance.id === 'wh-consumables') && col == tCols - 2) {
                 cell.innerHTML = `<button onclick="openWithdrawModal('${instance.id}', ${row})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold text-xs w-full shadow-sm">📤 เบิก</button>`;
                 cell.style.textAlign = 'center';
             }
 
-            // ปุ่มลบแถว
             if (col == tCols - 1) { 
                 cell.innerHTML = `<button onclick="document.getElementById('${instance.id}').jexcel.deleteRow(${row})" title="ลบข้อมูล" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors w-full flex justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>`; 
                 cell.style.textAlign = 'center'; 
             }
         };
 
-        // 🌟 ระบบจัดการ Modal ทำเบิก 🌟
+        // 🌟 ระบบจัดการ Modal ทำเบิก (จากตาราง) 🌟
         function openWithdrawModal(tableId, row) {
             let table = document.getElementById(tableId).jexcel;
             let rData = table.getRowData(row);
             
-            // หา Index ของจำนวนและหน่วย (อะไหล่ช่อง 4, สิ้นเปลืองช่อง 3)
             let qtyCol = tableId === 'wh-parts' ? 4 : 3;
             let unitCol = tableId === 'wh-parts' ? 5 : 4;
             
@@ -463,10 +454,12 @@
                 showToast("ของในคลังหมด ไม่สามารถทำเบิกได้!", "error"); return;
             }
 
-            let itemName = tableId === 'wh-parts' ? `${rData[1]||''} ${rData[2]||''} ${rData[3]||''}` : `${rData[1]||''} ${rData[2]||''}`;
+            let category = rData[1] || '';
+            let specs = tableId === 'wh-parts' ? `${rData[2]||''} ${rData[3]||''}` : `${rData[2]||''}`;
+            let itemName = `${category} ${specs}`.trim();
             let unit = rData[unitCol] || 'ชิ้น';
 
-            currentWithdrawTarget = { tableId, row, qtyCol, currentQty, itemName, unit };
+            currentWithdrawTarget = { tableId, row, qtyCol, currentQty, itemName, unit, category, specs };
             
             document.getElementById('withdrawItemName').innerText = itemName;
             document.getElementById('withdrawMaxLabel').innerText = `(มีในสต็อก: ${currentQty} ${unit})`;
@@ -490,26 +483,164 @@
             let qty = parseFloat(document.getElementById('withdrawQtyInput').value);
             let user = document.getElementById('withdrawUserInput').value.trim();
             
-            if (!qty || qty <= 0 || qty > currentWithdrawTarget.currentQty) {
-                showToast("กรุณาระบุจำนวนให้ถูกต้อง (ไม่เกินสต็อกที่มี)", "error"); return;
-            }
-            if (!user) {
-                showToast("กรุณาระบุชื่อผู้เบิกหรือปลายทาง", "error"); return;
-            }
+            if (!qty || qty <= 0 || qty > currentWithdrawTarget.currentQty) { showToast("กรุณาระบุจำนวนให้ถูกต้อง", "error"); return; }
+            if (!user) { showToast("กรุณาระบุชื่อผู้เบิกหรือปลายทาง", "error"); return; }
 
             let table = document.getElementById(currentWithdrawTarget.tableId).jexcel;
             let newQty = currentWithdrawTarget.currentQty - qty;
             
-            // ตัดสต็อกในตาราง
             table.setValueFromCoords(currentWithdrawTarget.qtyCol, currentWithdrawTarget.row, newQty);
             
-            // บันทึก Log รอส่ง
             let logDetail = `[เบิกจ่าย] ${currentWithdrawTarget.itemName} จำนวน ${qty} ${currentWithdrawTarget.unit} โดย: ${user}`;
             whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกของ', detail: logDetail });
             
+            // 🌟 เพิ่มลงประวัติเบิกจ่าย 🌟
+            let dStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+            whWithdrawals.push({
+                date: dStr,
+                category: currentWithdrawTarget.category,
+                specs: currentWithdrawTarget.specs,
+                user: user,
+                qty: qty,
+                unit: currentWithdrawTarget.unit
+            });
+
             hasUnsavedWhChanges = true;
-            showToast(`✅ เบิกสำเร็จ! ระบบตัดสต็อกเหลือ ${newQty} ${currentWithdrawTarget.unit}`);
+            showToast(`✅ เบิกสำเร็จ! ระบบตัดสต็อกเหลือ ${newQty} ${currentWithdrawTarget.unit} (อย่าลืมกดบันทึกคลัง)`);
             closeWithdrawModal();
+        }
+
+        // =======================================================
+        // 🌟 ระบบจัดการ เบิกจ่ายด่วนหน้าแรก (Quick Withdraw) 🌟
+        // =======================================================
+        let qwItemsData = [];
+        let qwCurrentTarget = null;
+
+        function openQuickWithdrawModal() {
+            if (!whPartsTable || !whConsumablesTable) {
+                showToast("ระบบยังโหลดข้อมูลไม่เสร็จ กรุณารอสักครู่", "error"); return;
+            }
+
+            qwItemsData = [];
+            whPartsTable.getData().forEach((r, rowIdx) => {
+                let qty = parseFloat(r[4]);
+                if (!isNaN(qty) && qty > 0 && r[1]) {
+                    qwItemsData.push({ tableId: 'wh-parts', row: rowIdx, qtyCol: 4, category: r[1], specs: `${r[2]||''} ${r[3]||''}`.trim(), itemName: `${r[1]} ${r[2]||''} ${r[3]||''}`.trim(), qty: qty, unit: r[5] || 'ชิ้น' });
+                }
+            });
+            whConsumablesTable.getData().forEach((r, rowIdx) => {
+                let qty = parseFloat(r[3]);
+                if (!isNaN(qty) && qty > 0 && r[1]) {
+                    qwItemsData.push({ tableId: 'wh-consumables', row: rowIdx, qtyCol: 3, category: r[1], specs: `${r[2]||''}`.trim(), itemName: `${r[1]} ${r[2]||''}`.trim(), qty: qty, unit: r[4] || 'ชิ้น' });
+                }
+            });
+
+            document.getElementById('qwSearchInput').value = '';
+            cancelQwSelection(); 
+            searchQuickWithdraw('');
+            
+            document.getElementById('quickWithdrawModal').classList.remove('hidden');
+            document.getElementById('quickWithdrawModal').classList.add('flex');
+            setTimeout(() => document.getElementById('qwSearchInput').focus(), 100);
+        }
+
+        function closeQuickWithdrawModal() {
+            document.getElementById('quickWithdrawModal').classList.add('hidden');
+            document.getElementById('quickWithdrawModal').classList.remove('flex');
+        }
+
+        function searchQuickWithdraw(query) {
+            query = query.toLowerCase().trim();
+            let listEl = document.getElementById('qwListSection');
+            
+            if (qwItemsData.length === 0) {
+                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-400 text-center"><div class="text-4xl mb-3 opacity-30">📦</div><p class="font-medium">ไม่มีอุปกรณ์/อะไหล่ ในคลังให้เบิกเลย</p></div>`; return;
+            }
+
+            let matches = qwItemsData;
+            if (query) { matches = qwItemsData.filter(i => i.itemName.toLowerCase().includes(query) || i.category.toLowerCase().includes(query)); }
+
+            if (matches.length === 0) {
+                listEl.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold">❌ ไม่พบรายการที่ค้นหา</div>`; return;
+            }
+
+            let html = '';
+            matches.forEach(item => {
+                html += `
+                <div onclick="selectQwItem('${item.tableId}', ${item.row})" class="p-4 hover:bg-blue-50 dark:hover:bg-slate-700/50 cursor-pointer border-b border-slate-100 dark:border-slate-700 transition-colors flex justify-between items-center group">
+                    <div>
+                        <p class="font-bold text-slate-800 dark:text-slate-200 text-base">${item.category}</p>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">${item.specs}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 px-3 py-1 rounded text-xs">เหลือ ${item.qty} ${item.unit}</span>
+                        <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity font-bold">กดเพื่อทำเบิก ➡</p>
+                    </div>
+                </div>`;
+            });
+            listEl.innerHTML = html;
+        }
+
+        function selectQwItem(tableId, rowIdx) {
+            let item = qwItemsData.find(i => i.tableId === tableId && i.row === rowIdx);
+            if (!item) return;
+
+            qwCurrentTarget = { tableId: item.tableId, row: item.row, qtyCol: item.qtyCol, currentQty: item.qty, itemName: item.itemName, unit: item.unit, category: item.category, specs: item.specs };
+
+            document.getElementById('qwSelectedItemName').innerText = item.itemName;
+            document.getElementById('qwMaxQtyLabel').innerText = `${item.qty} ${item.unit}`;
+            document.getElementById('qwQtyInput').value = 1;
+            document.getElementById('qwQtyInput').max = item.qty;
+            document.getElementById('qwUserInput').value = '';
+
+            document.getElementById('qwSearchSection').classList.add('hidden');
+            document.getElementById('qwListSection').classList.add('hidden');
+            document.getElementById('qwFormSection').classList.remove('hidden');
+            document.getElementById('qwFormSection').classList.add('flex');
+            setTimeout(() => document.getElementById('qwQtyInput').focus(), 100);
+        }
+
+        function cancelQwSelection() {
+            qwCurrentTarget = null;
+            document.getElementById('qwSearchSection').classList.remove('hidden');
+            document.getElementById('qwListSection').classList.remove('hidden');
+            document.getElementById('qwFormSection').classList.add('hidden');
+            document.getElementById('qwFormSection').classList.remove('flex');
+            document.getElementById('qwSearchInput').focus();
+        }
+
+        async function submitQuickWithdraw() {
+            if (!qwCurrentTarget) return;
+            
+            let qty = parseFloat(document.getElementById('qwQtyInput').value);
+            let user = document.getElementById('qwUserInput').value.trim();
+            
+            if (!qty || qty <= 0 || qty > qwCurrentTarget.currentQty) { showToast("จำนวนที่เบิกไม่ถูกต้อง", "error"); return; }
+            if (!user) { showToast("กรุณาระบุชื่อผู้เบิก", "error"); return; }
+
+            let table = document.getElementById(qwCurrentTarget.tableId).jexcel;
+            let newQty = qwCurrentTarget.currentQty - qty;
+            
+            table.setValueFromCoords(qwCurrentTarget.qtyCol, qwCurrentTarget.row, newQty);
+            
+            let logDetail = `[เบิกจ่ายด่วน] ${qwCurrentTarget.itemName} จำนวน ${qty} ${qwCurrentTarget.unit} โดย: ${user}`;
+            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกของ', detail: logDetail });
+            
+            // 🌟 เพิ่มลงประวัติเบิกจ่าย 🌟
+            let dStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+            whWithdrawals.push({
+                date: dStr,
+                category: qwCurrentTarget.category,
+                specs: qwCurrentTarget.specs,
+                user: user,
+                qty: qty,
+                unit: qwCurrentTarget.unit
+            });
+
+            closeQuickWithdrawModal();
+            hasUnsavedWhChanges = true;
+            
+            await saveWarehouseData();
         }
 
         function searchWarehouse() {
@@ -541,7 +672,7 @@
                 const response = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await response.json();
                 
-                let whDataJSON = { main: [], parts: [], consumables: [] };
+                let whDataJSON = { main: [], parts: [], consumables: [], withdrawals: [] };
                 globalDeployedData = [];
                 cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
                 categoryStats = {}; 
@@ -555,6 +686,7 @@
                         
                         if (dbKey === WAREHOUSE_KEY) {
                             whDataJSON = dbData;
+                            whWithdrawals = dbData.withdrawals || []; // 🌟 ดึงประวัติเบิก
                             continue;
                         }
                         
@@ -591,7 +723,6 @@
                 let whMainCount = 0;
                 let whAvailableCount = 0; 
                 
-                // เฉพาะ Main Asset ที่มี S/N ถึงจะนำไปบวกใน whAvailableCount 
                 const processWhArray = (arr) => {
                     if(!arr) return;
                     arr.forEach(r => { 
@@ -614,10 +745,8 @@
                         }
                     });
                 };
-                
                 processWhArray(whDataJSON.main);
                 
-                // 🌟 ประมวลผลอะไหล่ (Parts) 🌟
                 if(whDataJSON.parts) {
                     whDataJSON.parts.forEach(r => {
                         let qty = parseFloat(r[4]); 
@@ -628,7 +757,6 @@
                     });
                 }
 
-                // 🌟 ประมวลผลสิ้นเปลือง (Consumables) 🌟
                 if(whDataJSON.consumables) {
                     whDataJSON.consumables.forEach(r => {
                         let qty = parseFloat(r[3]); 
@@ -639,12 +767,30 @@
                     });
                 }
 
+                // 🌟 แทรกประวัติการเบิกอะไหล่/สิ้นเปลืองลงในหน้า Deployed Assets 🌟
+                if (whWithdrawals && whWithdrawals.length > 0) {
+                    whWithdrawals.forEach(w => {
+                        let itemObj = { 
+                            group: 'ประวัติเบิก (คลัง)', 
+                            station: `วันที่ ${w.date || '-'}`, 
+                            category: w.category || '-', 
+                            user: w.user || '-', 
+                            specs: w.specs || '-', 
+                            sn: `(เบิก ${w.qty} ${w.unit})`, 
+                            status: 'จ่ายแล้ว' 
+                        };
+                        globalDeployedData.push(itemObj);
+                        cardData.DEPLOYED.push(itemObj);
+                        totalDeployed += parseInt(w.qty) || 1; 
+                        addStat(w.category, 'deployed', parseFloat(w.qty) || 1, itemObj); 
+                    });
+                }
+
                 document.getElementById('dashWHMain').innerText = whMainCount;
                 document.getElementById('dashWHAvailable').innerText = whAvailableCount;
                 document.getElementById('dashDeployedCount').innerText = totalDeployed;
                 document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
-                // 🌟 อัปเดต HTML กล่องสถิติ (ทุกกล่องกดดูได้) 🌟
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
                     statsHtml += `
@@ -658,7 +804,6 @@
                 }
                 document.getElementById('detailedStatsGrid').innerHTML = statsHtml || '<p class="text-slate-400 text-sm col-span-full">ไม่พบข้อมูลอุปกรณ์</p>';
 
-                // 🌟 อัปเดตแจ้งเตือนของใกล้หมด 🌟
                 let lowStockHtml = '';
                 const checkLowStock = (arr, isParts) => {
                     if(!arr) return;
@@ -695,26 +840,20 @@
             }
         }
 
-        // 🌟 ล็อกคอลัมน์แรกให้อ่านได้อย่างเดียว (readOnly) 🌟
+        // 🌟 ล็อกคอลัมน์แรกให้อ่านได้อย่างเดียว และแก้วันที่รับเข้าออโต้ 🌟
         function initWarehouseSpreadsheets(data) {
             document.getElementById('wh-main').innerHTML=''; document.getElementById('wh-parts').innerHTML=''; document.getElementById('wh-consumables').innerHTML='';
             
-            // ฟังก์ชันเสริมสำหรับยัดวันที่ทะลุ readOnly
             const autoFillDate = function(instance, cell, col, row, val) {
                 hasUnsavedWhChanges = true;
-                // ถ้ากรอกข้อมูลช่องอื่นที่ไม่ใช่ช่องวันที่และปุ่มลบ แล้วมีข้อมูล
                 if (col !== 6 && col !== 8 && val) {
                     let table = document.getElementById(instance.id).jexcel;
                     let currentDate = table.getValueFromCoords(6, row);
-                    
                     if (!currentDate) {
                         let today = new Date();
                         let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-                        
-                        // ปลดล็อกช่องวันที่ชั่วคราวเพื่อยัดข้อมูล
                         table.options.columns[6].readOnly = false;
                         table.setValueFromCoords(6, row, dateStr);
-                        // ล็อกกลับทันที
                         table.options.columns[6].readOnly = true;
                     }
                 }
@@ -734,7 +873,7 @@
                     { type: 'html', title: 'ลบ', width: 60, readOnly: true }
                 ], 
                 minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
-                onchange: autoFillDate, // 👈 เรียกใช้ฟังก์ชันยัดวันที่
+                onchange: autoFillDate, 
                 updateTable: customWhRender 
             });
 
@@ -779,7 +918,7 @@
             
             if (type === 'AVAILABLE') { title = "📦 ของว่างในคลัง (พร้อมจ่าย)"; subtitle = "รายการอุปกรณ์ที่ยังไม่ได้เบิก"; dataArray = cardData.AVAILABLE; }
             if (type === 'MAIN') { title = "💻 อุปกรณ์หลักทั้งหมด"; subtitle = "รวมทั้งที่ว่างอยู่และเบิกไปแล้ว"; dataArray = cardData.MAIN; }
-            if (type === 'DEPLOYED') { title = "🌍 จ่ายออกไปสถานีแล้ว"; subtitle = "รายการอุปกรณ์ที่อยู่ตามสถานีต่างๆ"; dataArray = cardData.DEPLOYED; }
+            if (type === 'DEPLOYED') { title = "🌍 จ่ายออกไปสถานีแล้ว"; subtitle = "รายการอุปกรณ์ที่อยู่ตามสถานีต่างๆ และประวัติการเบิก"; dataArray = cardData.DEPLOYED; }
             if (type === 'BROKEN') { title = "🛠️ เครื่องชำรุด (รอดำเนินการ)"; subtitle = "อุปกรณ์ที่เสีย ทั้งในคลังและที่สถานี"; dataArray = cardData.BROKEN; }
 
             document.getElementById('modalCardTitle').innerHTML = title;
@@ -832,7 +971,7 @@
                 </tr>`;
             });
 
-            if (html === '') html = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">ไม่พบรายการ</td></tr>';
+            if (html === '') html = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">ไม่พบรายการที่มี S/N (อาจเป็นวัสดุสิ้นเปลือง)</td></tr>';
             document.getElementById('cardDetailTableBody').innerHTML = html;
 
             document.getElementById('cardDetailModal').classList.remove('hidden');
@@ -850,7 +989,7 @@
                 let badge = `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-medium text-[10px] md:text-xs">${item.status}</span>`; 
                 if(item.status==='ปกติ') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded font-medium text-[10px] md:text-xs">ปกติ</span>`; 
                 if(item.status==='ชำรุด') badge = `<span class="px-2 py-1 bg-red-50 text-red-500 border border-red-100 rounded font-medium text-[10px] md:text-xs">ชำรุด</span>`;
-                if(item.status==='สำรอง') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded font-medium text-[10px] md:text-xs">สำรอง</span>`;
+                if(item.status==='สำรอง' || item.status==='จ่ายแล้ว') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded font-medium text-[10px] md:text-xs">${item.status}</span>`;
                 
                 html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <td class="p-4 whitespace-nowrap text-slate-500 text-xs">${item.group}</td>
@@ -885,15 +1024,13 @@
                 const newPayload = { 
                     main: whMainTable.getData().map(r => r.slice(0, -1)), 
                     parts: whPartsTable.getData().map(r => r.slice(0, -2)), 
-                    consumables: whConsumablesTable.getData().map(r => r.slice(0, -2))
+                    consumables: whConsumablesTable.getData().map(r => r.slice(0, -2)),
+                    withdrawals: whWithdrawals // 🌟 เซฟประวัติการเบิกลงฐานข้อมูล
                 };
                 
                 let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
                 
-                // 🌟 ยัดประวัติทำเบิกส่งไปด้วย 🌟
-                if (whPendingLogs.length > 0) {
-                    logs = logs.concat(whPendingLogs);
-                }
+                if (whPendingLogs.length > 0) { logs = logs.concat(whPendingLogs); }
                 
                 await fetch(API_URL, { 
                     method: 'POST', 
@@ -905,7 +1042,7 @@
                 });
                 
                 originalWhData = JSON.parse(JSON.stringify(newPayload)); 
-                whPendingLogs = []; // เคลียร์ของเก่า
+                whPendingLogs = []; 
                 showToast("บันทึกสต็อกคลังสำเร็จ!");
                 hasUnsavedWhChanges = false; 
                 fetchAllData(); 
@@ -916,145 +1053,6 @@
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
             }
         }
-
-        // =======================================================
-        // 🌟 ระบบจัดการ เบิกจ่ายด่วนหน้าแรก (Quick Withdraw) 🌟
-        // =======================================================
-        let qwItemsData = [];
-        let qwCurrentTarget = null;
-
-        function openQuickWithdrawModal() {
-            if (!whPartsTable || !whConsumablesTable) {
-                showToast("ระบบยังโหลดข้อมูลไม่เสร็จ กรุณารอสักครู่", "error");
-                return;
-            }
-
-            // กวาดข้อมูลจากตารางอะไหล่และสิ้นเปลือง มาทำเป็นฐานข้อมูลค้นหาชั่วคราว
-            qwItemsData = [];
-            
-            whPartsTable.getData().forEach((r, rowIdx) => {
-                let qty = parseFloat(r[4]);
-                if (!isNaN(qty) && qty > 0 && r[1]) {
-                    qwItemsData.push({ tableId: 'wh-parts', row: rowIdx, qtyCol: 4, category: r[1], specs: `${r[2]||''} ${r[3]||''}`, itemName: `${r[1]} ${r[2]||''} ${r[3]||''}`.trim(), qty: qty, unit: r[5] || 'ชิ้น' });
-                }
-            });
-            
-            whConsumablesTable.getData().forEach((r, rowIdx) => {
-                let qty = parseFloat(r[3]);
-                if (!isNaN(qty) && qty > 0 && r[1]) {
-                    qwItemsData.push({ tableId: 'wh-consumables', row: rowIdx, qtyCol: 3, category: r[1], specs: `${r[2]||''}`, itemName: `${r[1]} ${r[2]||''}`.trim(), qty: qty, unit: r[4] || 'ชิ้น' });
-                }
-            });
-
-            document.getElementById('qwSearchInput').value = '';
-            cancelQwSelection(); 
-            searchQuickWithdraw('');
-            
-            document.getElementById('quickWithdrawModal').classList.remove('hidden');
-            document.getElementById('quickWithdrawModal').classList.add('flex');
-            setTimeout(() => document.getElementById('qwSearchInput').focus(), 100);
-        }
-
-        function closeQuickWithdrawModal() {
-            document.getElementById('quickWithdrawModal').classList.add('hidden');
-            document.getElementById('quickWithdrawModal').classList.remove('flex');
-        }
-
-        function searchQuickWithdraw(query) {
-            query = query.toLowerCase().trim();
-            let listEl = document.getElementById('qwListSection');
-            
-            if (qwItemsData.length === 0) {
-                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-400 text-center"><div class="text-4xl mb-3 opacity-30">📦</div><p class="font-medium">ไม่มีอุปกรณ์/อะไหล่ ในคลังให้เบิกเลย</p></div>`;
-                return;
-            }
-
-            let matches = qwItemsData;
-            if (query) {
-                matches = qwItemsData.filter(i => i.itemName.toLowerCase().includes(query) || i.category.toLowerCase().includes(query));
-            }
-
-            if (matches.length === 0) {
-                listEl.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold">❌ ไม่พบรายการที่ค้นหา</div>`;
-                return;
-            }
-
-            let html = '';
-            matches.forEach(item => {
-                html += `
-                <div onclick="selectQwItem('${item.tableId}', ${item.row})" class="p-4 hover:bg-blue-50 dark:hover:bg-slate-700/50 cursor-pointer border-b border-slate-100 dark:border-slate-700 transition-colors flex justify-between items-center group">
-                    <div>
-                        <p class="font-bold text-slate-800 dark:text-slate-200 text-base">${item.category}</p>
-                        <p class="text-xs text-slate-500 mt-1 font-medium">${item.specs}</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 px-3 py-1 rounded text-xs">เหลือ ${item.qty} ${item.unit}</span>
-                        <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity font-bold">กดเพื่อทำเบิก ➡</p>
-                    </div>
-                </div>`;
-            });
-            listEl.innerHTML = html;
-        }
-
-        function selectQwItem(tableId, rowIdx) {
-            let item = qwItemsData.find(i => i.tableId === tableId && i.row === rowIdx);
-            if (!item) return;
-
-            qwCurrentTarget = { tableId: item.tableId, row: item.row, qtyCol: item.qtyCol, currentQty: item.qty, itemName: item.itemName, unit: item.unit };
-
-            document.getElementById('qwSelectedItemName').innerText = item.itemName;
-            document.getElementById('qwMaxQtyLabel').innerText = `${item.qty} ${item.unit}`;
-            document.getElementById('qwQtyInput').value = 1;
-            document.getElementById('qwQtyInput').max = item.qty;
-            document.getElementById('qwUserInput').value = '';
-
-            document.getElementById('qwSearchSection').classList.add('hidden');
-            document.getElementById('qwListSection').classList.add('hidden');
-            document.getElementById('qwFormSection').classList.remove('hidden');
-            document.getElementById('qwFormSection').classList.add('flex');
-            
-            setTimeout(() => document.getElementById('qwQtyInput').focus(), 100);
-        }
-
-        function cancelQwSelection() {
-            qwCurrentTarget = null;
-            document.getElementById('qwSearchSection').classList.remove('hidden');
-            document.getElementById('qwListSection').classList.remove('hidden');
-            document.getElementById('qwFormSection').classList.add('hidden');
-            document.getElementById('qwFormSection').classList.remove('flex');
-            document.getElementById('qwSearchInput').focus();
-        }
-
-        async function submitQuickWithdraw() {
-            if (!qwCurrentTarget) return;
-            
-            let qty = parseFloat(document.getElementById('qwQtyInput').value);
-            let user = document.getElementById('qwUserInput').value.trim();
-            
-            if (!qty || qty <= 0 || qty > qwCurrentTarget.currentQty) {
-                showToast("จำนวนที่เบิกไม่ถูกต้อง", "error"); return;
-            }
-            if (!user) {
-                showToast("กรุณาระบุชื่อผู้เบิก", "error"); return;
-            }
-
-            let table = document.getElementById(qwCurrentTarget.tableId).jexcel;
-            let newQty = qwCurrentTarget.currentQty - qty;
-            
-            // ตัดสต็อกในตารางให้ทันที
-            table.setValueFromCoords(qwCurrentTarget.qtyCol, qwCurrentTarget.row, newQty);
-            
-            // บันทึก Log เข้าระบบคลังส่วนกลาง
-            let logDetail = `[เบิกจ่ายด่วน] ${qwCurrentTarget.itemName} จำนวน ${qty} ${qwCurrentTarget.unit} โดย: ${user}`;
-            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกของ', detail: logDetail });
-            
-            closeQuickWithdrawModal();
-            hasUnsavedWhChanges = true;
-            
-            // 🌟 พระเอกของงาน: สั่งอัปโหลดข้อมูลลงเซิร์ฟเวอร์แบบอัตโนมัติทันที
-            await saveWarehouseData();
-        }
-        
     </script>
 </body>
 </html>
