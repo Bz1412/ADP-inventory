@@ -722,7 +722,10 @@
             extractWh(whData.parts);
         }
                     for (const [dbKey, jsonValue] of Object.entries(result.value)) {
-                        const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
+    // 🌟 บล็อกไม่ให้คลังส่วนกลาง (CENTRAL) ถูกนับรวมในการส่งรายงาน 🌟
+    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+
+    const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
                         if(parts.length >= 3) { 
                             const stName = parts[2];
                             processedStations.add(stName);
@@ -780,8 +783,10 @@
             
             let html = '';
             for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
-                const parts = dbKey.split('_'); if (parts.length < 3) continue; 
-                const group = parts[1]; const station = parts[2]; const dbData = JSON.parse(jsonValue);
+    // 🌟 บล็อกคลังส่วนกลาง ไม่ให้มาโผล่ในตารางรวมของสถานี 🌟
+    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+
+    const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                 
                 const addRows = (dataArr, itemType) => {
                     if(!dataArr) return;
@@ -823,7 +828,10 @@
                 let allResults = [];
                 if (globalAllDataCache) {
                     for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
-                        const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
+    // 🌟 บล็อกคลังส่วนกลาง ไม่ให้ค้นหาซ้ำซ้อนกับของในสถานี 🌟
+    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+
+    const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                         if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'คอมพิวเตอร์', row)); });
                         if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอมอนิเตอร์', row)); });
                         if (dbData.prn) dbData.prn.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row)); });
