@@ -810,16 +810,20 @@
                 const response = await fetch(`${API_URL}?key=ADP_${groupName}_${stationName}`); 
                 const result = await response.json();
                 
+                // 🌟 แก้ไข: ดึงข้อมูลคลังแบบแข็งแกร่ง (กันเว้นวรรคผิด) 🌟
                 try {
                     const whRes = await fetch(`${API_URL}?key=ADP_WAREHOUSE_CENTRAL`);
                     const whResult = await whRes.json();
+                    warehouseStock = []; 
                     if (whResult.value) {
                         let whData = JSON.parse(whResult.value);
-                        warehouseStock = []; 
                         const extractWh = (arr) => {
                             if(!arr) return;
                             arr.forEach(r => {
-                                if (r[5] === 'ว่าง (พร้อมจ่าย)') warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); 
+                                // .trim() เพื่อตัดช่องว่างเผื่อแอดมินเผลอเคาะสเปซบาร์ตอนลงคลัง
+                                if (String(r[5]).trim() === 'ว่าง (พร้อมจ่าย)') {
+                                    warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); 
+                                }
                             });
                         };
                         extractWh(whData.main);
@@ -842,11 +846,8 @@
                 initSpreadsheets(dbData);
                 
             } catch (error) { 
-                console.error(error); 
-                showToast("ดึงข้อมูลพลาด กรุณารีเฟรชหน้าเว็บ", "error"); 
-                initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
-            } 
-            finally { 
+                console.error(error); showToast("ดึงข้อมูลพลาด กรุณารีเฟรชหน้าเว็บ", "error"); initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
+            } finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
             }
         }
@@ -1242,14 +1243,13 @@
         }
 
         // =======================================================
-        // 🌟 ระบบ Popup แนะนำ S/N (Smart Autocomplete) - ทะลุตาราง 100% 🌟
+        // 🌟 ระบบ Popup แนะนำ S/N (Smart Autocomplete) - เจาะพิกัดทะลุหลอด 🌟
         // =======================================================
         
         let snSuggestionBox = document.getElementById('snSuggestionBox');
         if (!snSuggestionBox) {
             snSuggestionBox = document.createElement('div');
             snSuggestionBox.id = 'snSuggestionBox';
-            // ปรับ z-index ให้สูงสุดระดับ 2 พันล้าน เพื่อไม่ให้มีอะไรมาบังได้อีก
             snSuggestionBox.className = 'fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-[0_15px_50px_rgba(0,0,0,0.3)] rounded-xl z-[2147483647] hidden flex-col max-h-64 overflow-y-auto text-sm w-80 animate-fade-in custom-scrollbar';
             document.body.appendChild(snSuggestionBox);
         }
@@ -1259,47 +1259,51 @@
             snSuggestionBox.classList.remove('flex');
         }
 
-        // ซ่อนเมื่อคลิกที่อื่น
         document.addEventListener('click', function(e) {
             if (!e.target.closest('#snSuggestionBox')) hideSuggestions();
         });
 
-        // จับการพิมพ์ทุกรูปแบบ ไม่ว่าจะมาจาก input หรือ textarea ของตาราง
-        document.addEventListener('keyup', function(e) {
-            let editor = document.querySelector('.jexcel_textarea'); // Jspreadsheet จะสร้างตัวนี้ขึ้นมาเวลาดับเบิลคลิกพิมพ์
+        // 🌟 1. ดักจับตอนดับเบิลคลิกช่อง ถ้าของในคลังเป็น 0 จะได้รู้ทันที
+        document.addEventListener('dblclick', function(e) {
+            let td = e.target.closest('td');
+            if(!td) return;
+            let container = td.closest('.jexcel_container');
+            if (!container) return;
             
-            if (!editor || document.activeElement !== editor) {
-                return; // ถ้าไม่ได้กำลังพิมพ์ในตาราง ให้ออกไปเลย
+            let tableId = container.parentElement.id;
+            let table = document.getElementById(tableId).jexcel;
+            let x = parseInt(td.getAttribute('data-x'));
+            
+            if (table.options.columns[x].title === 'S/N') {
+                if(!warehouseStock || warehouseStock.length === 0) {
+                    showToast("⚠️ คลังไม่มีของที่สถานะ 'ว่าง (พร้อมจ่าย)'", "error");
+                }
             }
+        });
 
-            // หาช่อง td ที่กำลังถูกพิมพ์
-            let td = editor.closest('td') || document.querySelector('td.edition');
+        // 🌟 2. ดักจับตอนพิมพ์ S/N
+        document.addEventListener('input', function(e) {
+            let editor = e.target;
+            let td = editor.closest('td.edition') || document.querySelector('td.edition');
             if (!td) return hideSuggestions();
 
             let x = parseInt(td.getAttribute('data-x'));
             let y = parseInt(td.getAttribute('data-y'));
-            
             let container = td.closest('.jexcel_container');
             if (!container) return;
             
             let tableId = container.parentElement.id;
             let table = document.getElementById(tableId).jexcel;
             
-            // ตรวจสอบว่าคอลัมน์นี้คือ "S/N" ใช่ไหม
             if (table.options.columns[x].title === 'S/N') {
                 let val = String(editor.value).toLowerCase().trim();
-                
-                if (val.length < 2) return hideSuggestions(); // พิมพ์ 2 ตัวถึงเริ่มหา
-
-                // ถ้าในคลังไม่มีของว่างเลย
+                if (val.length < 2) return hideSuggestions();
                 if (!warehouseStock || warehouseStock.length === 0) return hideSuggestions();
 
-                // กรองข้อมูลจากคลัง (ดึงมาเฉพาะของที่สถานะ "ว่าง (พร้อมจ่าย)")
                 let matches = warehouseStock.filter(item => item.sn && String(item.sn).toLowerCase().includes(val));
-                
                 if (matches.length === 0) return hideSuggestions();
 
-                let html = `<div class="sticky top-0 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600 shadow-sm z-10">พบ ${matches.length} อุปกรณ์ในคลัง (คลิกเลือก)</div>`;
+                let html = `<div class="sticky top-0 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600 shadow-sm z-10">พบ ${matches.length} อุปกรณ์ในคลัง</div>`;
                 
                 matches.slice(0, 15).forEach(item => {
                     let safeSN = String(item.sn).replace(/'/g, "\\'").replace(/"/g, "&quot;");
@@ -1317,12 +1321,9 @@
                 });
                 
                 snSuggestionBox.innerHTML = html;
-
-                // จัดตำแหน่งป็อปอัพให้ชิดใต้กล่องที่กำลังพิมพ์เป๊ะๆ
                 let rect = td.getBoundingClientRect();
                 snSuggestionBox.style.top = (rect.bottom + 5) + 'px'; 
                 snSuggestionBox.style.left = rect.left + 'px';
-                
                 snSuggestionBox.classList.remove('hidden');
                 snSuggestionBox.classList.add('flex');
             } else {
@@ -1330,8 +1331,8 @@
             }
         });
 
+        // 🌟 3. เติมข้อมูลเมื่อคลิกเลือก
         window.selectSuggestion = function(tableId, col, row, sn, brand, model) {
-            let editor = document.querySelector('.jexcel_textarea');
             let table = document.getElementById(tableId).jexcel;
             let tCols = table.options.columns;
             
@@ -1342,7 +1343,7 @@
                 if(tCols[i].title === 'สถานะ') statusCol = i;
             }
 
-            // บังคับปิดกล่องพิมพ์อย่างถูกวิธีของ Jspreadsheet
+            let editor = document.querySelector('td.edition input, td.edition textarea');
             if (editor) {
                 editor.value = sn;
                 table.closeEditor(editor, true);
@@ -1350,7 +1351,6 @@
                 table.setValueFromCoords(col, row, sn);
             }
             
-            // เติมยี่ห้อ รุ่น และเปลี่ยนสถานะให้เลย
             if(brandCol !== -1 && brand) table.setValueFromCoords(brandCol, row, brand);
             if(modelCol !== -1 && model) table.setValueFromCoords(modelCol, row, model);
             if(statusCol !== -1) table.setValueFromCoords(statusCol, row, 'ปกติ');
