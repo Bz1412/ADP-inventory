@@ -928,11 +928,20 @@
             loadDashboardStats();
         }
 
-        // 🌟 อัปเดตตารางให้เรียกเปิด Popup ดูรูป 🌟
+        // 🌟 อัปเดตตารางให้รันลำดับออโต้ และเรียกเปิด Popup ดูรูป 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
             let colTitle = table.options.columns[col].title;
+
+            // 🌟 รันเลขลำดับอัตโนมัติในช่องแรก 🌟
+            if (col == 0) {
+                cell.innerText = parseInt(row) + 1; // รันเลขแถว
+                cell.style.textAlign = 'center';
+                cell.style.color = '#64748b'; // ใส่สีเทาให้ดูรู้ว่าเป็นช่องออโต้
+                cell.style.backgroundColor = '#f1f5f9'; 
+                cell.style.fontWeight = 'bold';
+            }
 
             if (col == tCols - 1) { 
                 cell.innerHTML = `<div class="flex justify-center gap-1">
@@ -1161,10 +1170,10 @@
         // 🌟 2. อัปเดตตารางให้เรียกใช้ oneditionstart
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50 }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
         }
 
         async function openAuditLog() {
@@ -1329,7 +1338,11 @@
             try {
                 const wb = new ExcelJS.Workbook();
                 const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
+                
                 for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
+                    // 🌟 บล็อกไม่ให้ส่งออกข้อมูลคลังส่วนกลางเด็ดขาด 🌟
+                    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+
                     const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
                     ws.addRow(["หมวดหมู่: คอมพิวเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
                     ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
