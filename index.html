@@ -1331,14 +1331,14 @@
         }
 
         // =======================================================
-        // 🌟 ระบบ Popup แนะนำ S/N (Smart Autocomplete) - ทะลุตาราง 100% 🌟
+        // 🌟 ระบบ Popup แนะนำ S/N (Smart Autocomplete) - เจาะทะลุตาราง 100% 🌟
         // =======================================================
         
         let snSuggestionBox = document.getElementById('snSuggestionBox');
         if (!snSuggestionBox) {
             snSuggestionBox = document.createElement('div');
             snSuggestionBox.id = 'snSuggestionBox';
-            // ปรับ z-index ให้สูงสุดระดับ 2 พันล้าน เพื่อไม่ให้มีอะไรมาบังได้อีก
+            // Z-index สูงลิบ เพื่อให้แน่ใจว่าลอยเหนือตาราง
             snSuggestionBox.className = 'fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-[0_15px_50px_rgba(0,0,0,0.3)] rounded-xl z-[2147483647] hidden flex-col max-h-64 overflow-y-auto text-sm w-80 animate-fade-in custom-scrollbar';
             document.body.appendChild(snSuggestionBox);
         }
@@ -1348,22 +1348,22 @@
             snSuggestionBox.classList.remove('flex');
         }
 
-        // ซ่อนเมื่อคลิกที่อื่น
         document.addEventListener('click', function(e) {
             if (!e.target.closest('#snSuggestionBox')) hideSuggestions();
-        });
+        }, true);
 
-        // จับการพิมพ์ทุกรูปแบบ ไม่ว่าจะมาจาก input หรือ textarea ของตาราง
-        document.addEventListener('keyup', function(e) {
-            let editor = document.querySelector('.jexcel_textarea'); // Jspreadsheet จะสร้างตัวนี้ขึ้นมาเวลาดับเบิลคลิกพิมพ์
+        // 🌟 1. ดัก Event แบบ 'Capture' (พารามิเตอร์ตัวที่ 3 = true) เพื่อดักจับการพิมพ์ก่อนที่ตารางจะบล็อก! 🌟
+        document.addEventListener('input', function(e) {
             
-            if (!editor || document.activeElement !== editor) {
-                return; // ถ้าไม่ได้กำลังพิมพ์ในตาราง ให้ออกไปเลย
-            }
+            // เช็คว่าผู้ใช้กำลังพิมพ์ลงในช่องกรอกข้อมูลหรือไม่
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') return;
 
-            // หาช่อง td ที่กำลังถูกพิมพ์
-            let td = editor.closest('td') || document.querySelector('td.edition');
-            if (!td) return hideSuggestions();
+            // หาช่องตาราง (td) ที่เรืองแสง (ถูกแก้ไขอยู่)
+            let td = e.target.closest('td') || document.querySelector('td.edition');
+            if (!td) {
+                hideSuggestions();
+                return;
+            }
 
             let x = parseInt(td.getAttribute('data-x'));
             let y = parseInt(td.getAttribute('data-y'));
@@ -1374,27 +1374,26 @@
             let tableId = container.parentElement.id;
             let table = document.getElementById(tableId).jexcel;
             
-            // ตรวจสอบว่าคอลัมน์นี้คือ "S/N" ใช่ไหม
+            // ถ้าคอลัมน์ที่พิมพ์คือช่อง S/N
             if (table.options.columns[x].title === 'S/N') {
-                let val = String(editor.value).toLowerCase().trim();
+                let val = String(e.target.value).toLowerCase().trim();
                 
-                if (val.length < 2) return hideSuggestions(); // พิมพ์ 2 ตัวถึงเริ่มหา
-
-                // ถ้าในคลังไม่มีของว่างเลย
+                if (val.length < 2) return hideSuggestions();
                 if (!warehouseStock || warehouseStock.length === 0) return hideSuggestions();
 
-                // กรองข้อมูลจากคลัง (ดึงมาเฉพาะของที่สถานะ "ว่าง (พร้อมจ่าย)")
+                // ค้นหา S/N จากของว่างในคลัง
                 let matches = warehouseStock.filter(item => item.sn && String(item.sn).toLowerCase().includes(val));
                 
                 if (matches.length === 0) return hideSuggestions();
 
-                let html = `<div class="sticky top-0 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600 shadow-sm z-10">พบ ${matches.length} อุปกรณ์ในคลัง (คลิกเลือก)</div>`;
+                let html = `<div class="sticky top-0 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider border-b border-slate-200 dark:border-slate-600 shadow-sm z-10">พบ ${matches.length} อุปกรณ์ในคลัง</div>`;
                 
                 matches.slice(0, 15).forEach(item => {
                     let safeSN = String(item.sn).replace(/'/g, "\\'").replace(/"/g, "&quot;");
                     let safeBrand = String(item.brand || "").replace(/'/g, "\\'");
                     let safeModel = String(item.model || "").replace(/'/g, "\\'");
                     
+                    // onmousedown ทำให้กดปุ๊บทำงานปั๊บ ก่อนที่ตารางจะเซฟและปิดช่องหนี
                     html += `
                     <div onmousedown="selectSuggestion('${tableId}', ${x}, ${y}, '${safeSN}', '${safeBrand}', '${safeModel}')" class="p-3 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-50 dark:border-slate-700/50 last:border-0 transition-colors flex flex-col gap-0.5">
                         <div class="font-mono text-indigo-600 dark:text-indigo-400 font-bold text-sm">${item.sn}</div>
@@ -1407,7 +1406,7 @@
                 
                 snSuggestionBox.innerHTML = html;
 
-                // จัดตำแหน่งป็อปอัพให้ชิดใต้กล่องที่กำลังพิมพ์เป๊ะๆ
+                // เลื่อน Popup ไปเกาะใต้ช่องที่พิมพ์
                 let rect = td.getBoundingClientRect();
                 snSuggestionBox.style.top = (rect.bottom + 5) + 'px'; 
                 snSuggestionBox.style.left = rect.left + 'px';
@@ -1417,10 +1416,10 @@
             } else {
                 hideSuggestions();
             }
-        });
+        }, true); // 👈 (สำคัญมาก) true คือการบังคับดักจับ Event ก่อนที่จะโดนตารางขโมยไป
 
         window.selectSuggestion = function(tableId, col, row, sn, brand, model) {
-            let editor = document.querySelector('.jexcel_textarea');
+            let editor = document.querySelector('td.edition input, td.edition textarea');
             let table = document.getElementById(tableId).jexcel;
             let tCols = table.options.columns;
             
@@ -1431,7 +1430,7 @@
                 if(tCols[i].title === 'สถานะ') statusCol = i;
             }
 
-            // บังคับปิดกล่องพิมพ์อย่างถูกวิธีของ Jspreadsheet
+            // ถ้ายัดค่าผ่านกล่องพิมพ์ได้ ให้ยัดแล้วสั่งปิดกล่อง
             if (editor) {
                 editor.value = sn;
                 table.closeEditor(editor, true);
@@ -1439,7 +1438,7 @@
                 table.setValueFromCoords(col, row, sn);
             }
             
-            // เติมยี่ห้อ รุ่น และเปลี่ยนสถานะให้เลย
+            // เติมยี่ห้อ รุ่น และสถานะ ให้จบในคลิกเดียว!
             if(brandCol !== -1 && brand) table.setValueFromCoords(brandCol, row, brand);
             if(modelCol !== -1 && model) table.setValueFromCoords(modelCol, row, model);
             if(statusCol !== -1) table.setValueFromCoords(statusCol, row, 'ปกติ');
