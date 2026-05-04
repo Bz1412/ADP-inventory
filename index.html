@@ -411,7 +411,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up delay-100">
+            <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-5 gap-4 animate-slide-up delay-100">
                 <div onclick="openAggregateView('ALL')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg active:scale-[0.98] col-span-2 md:col-span-4 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden transition-all duration-300">
                     <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors"></div>
                     <div class="relative z-10">
@@ -424,6 +424,10 @@
                 <div onclick="openAggregateView('CPU')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
                     <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">คอมพิวเตอร์</p></div>
                     <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statCPU">-</h3>
+                </div>
+                <div onclick="openAggregateView('NB')" class="group cursor-pointer hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-sky-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">โน๊ตบุ๊ค</p></div>
+                    <h3 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 group-hover:-translate-y-1 transition-transform" id="statNB">-</h3>
                 </div>
                 <div onclick="openAggregateView('MON')" class="group cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 hover:shadow-md active:scale-[0.98] bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center transition-all duration-300">
                     <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-500 group-hover:animate-ping"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs">จอมอนิเตอร์</p></div>
@@ -564,6 +568,17 @@
                 </div>
                 <div id="spreadsheet-cpu" class="w-full text-black min-w-full"></div>
             </div>
+
+            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                    <div>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-500"></span> 5. โน๊ตบุ๊ค</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                    </div>
+                    <button onclick="addNewRow('spreadsheet-nb')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
+                </div>
+                <div id="spreadsheet-nb" class="w-full text-black min-w-full"></div>
+            </div>
             
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-300">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
@@ -616,8 +631,8 @@
         };
         
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
-        let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null; 
-        let originalDbData = { cpu: [], mon: [], prn: [], spc: [], lastConfirmed: null };
+        let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null, tableNB = null;; 
+        let originalDbData = { cpu: [], mon: [], prn: [], spc: [], nb: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null; let isEditingConfirmedReport = false; let hasUnsavedDeletions = false;
         let uploadTarget = null;
@@ -687,7 +702,7 @@
         async function loadDashboardStats() {
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json();
-                let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0; let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
+                let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0, totalNB = 0; let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0 };
                 
                 const now = new Date();
                 const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -735,7 +750,7 @@
                             if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${parts[1]}_${parts[2]}"`); 
                         }
                         const countItems = (arr) => { if(!arr) return 0; let c = 0; arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c; };
-                        totalCPU += countItems(dbData.cpu); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
+                        totalCPU += countItems(dbData.cpu); totalNB += countItems(dbData.nb); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
                     }
                 }
                 
@@ -756,7 +771,7 @@
                     ? pendingStations.map(s => `<span class="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg shadow-sm font-medium hover:bg-red-50 transition-colors">${s}</span>`).join('')
                     : '<span class="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg">✨ ยอดเยี่ยม! ทุกสถานีส่งรายงานครบแล้ว</span>';
 
-                document.getElementById('statTotal').innerText = totalCPU + totalMon + totalPrn + totalSpc; document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statMon').innerText = totalMon; document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
+                document.getElementById('statTotal').innerText = totalCPU + totalNB + totalMon + totalPrn + totalSpc; document.getElementById('statCPU').innerText = totalCPU; document.getElementById('statNB').innerText = totalNB; document.getElementById('statMon').innerText = totalMon; document.getElementById('statPrn').innerText = totalPrn; document.getElementById('statSpc').innerText = totalSpc;
                 const ctx = document.getElementById('statusChart').getContext('2d'); if(myChart) myChart.destroy();
                 Chart.defaults.font.family = 'Prompt'; Chart.defaults.color = '#94a3b8';
                 myChart = new Chart(ctx, { type: 'doughnut', data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง'], datasets: [{ data: [statCounts['ปกติ'], statCounts['ชำรุด'], statCounts['สำรอง']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } });
@@ -776,6 +791,7 @@
             
             let title = "ทั้งหมด";
             if(type === 'CPU') title = "คอมพิวเตอร์";
+            if(type === 'NB') title = "โน๊ตบุ๊ค";
             if(type === 'MON') title = "จอมอนิเตอร์";
             if(type === 'PRN') title = "เครื่องพิมพ์";
             if(type === 'SPC') title = "เครื่องมือพิเศษ";
@@ -810,6 +826,7 @@
                 };
 
                 if (type === 'ALL' || type === 'CPU') addRows(dbData.cpu, 'คอมพิวเตอร์');
+                if (type === 'ALL' || type === 'NB') addRows(dbData.nb, 'โน๊ตบุ๊ค');
                 if (type === 'ALL' || type === 'MON') addRows(dbData.mon, 'จอมอนิเตอร์');
                 if (type === 'ALL' || type === 'PRN') addRows(dbData.prn, 'เครื่องพิมพ์');
                 if (type === 'ALL' || type === 'SPC') addRows(dbData.spc, 'เครื่องมือพิเศษ');
@@ -833,6 +850,7 @@
 
     const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                         if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'คอมพิวเตอร์', row)); });
+                        if (dbData.nb) dbData.nb.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'โน๊ตบุ๊ค', row)); });
                         if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอมอนิเตอร์', row)); });
                         if (dbData.prn) dbData.prn.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row)); });
                         if (dbData.spc) dbData.spc.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องมือพิเศษ', row)); });
@@ -1169,8 +1187,9 @@
 
         // 🌟 2. อัปเดตตารางให้เรียกใช้ oneditionstart
         function initSpreadsheets(data) {
-            document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
+            document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-nb').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
             tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { data: data.nb, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
             tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
@@ -1205,12 +1224,14 @@
         
         function calculateDiff() {
             // ดึงข้อมูลเก่า (Original) แยกตามหมวด
-            let oldCpu = originalDbData.cpu || []; let oldMon = originalDbData.mon || []; 
-            let oldPrn = originalDbData.prn || []; let oldSpc = originalDbData.spc || [];
+            let oldCpu = originalDbData.cpu || []; let oldNb = originalDbData.nb || [];
+            let oldMon = originalDbData.mon || []; let oldPrn = originalDbData.prn || []; 
+            let oldSpc = originalDbData.spc || [];
             
             // ดึงข้อมูลใหม่จากหน้าจอ (Current) แยกตามหมวด
-            let newCpu = tableCPU ? tableCPU.getData() : []; let newMon = tableMon ? tableMon.getData() : [];
-            let newPrn = tablePrn ? tablePrn.getData() : []; let newSpc = tableSpc ? tableSpc.getData() : [];
+            let newCpu = tableCPU ? tableCPU.getData() : []; let newNb = tableNB ? tableNB.getData() : [];
+            let newMon = tableMon ? tableMon.getData() : []; let newPrn = tablePrn ? tablePrn.getData() : [];
+            let newSpc = tableSpc ? tableSpc.getData() : [];
 
             let added = []; let removed = []; let updated = [];
 
@@ -1258,6 +1279,7 @@
             };
 
             compareArrays(oldCpu, newCpu, 'คอมพิวเตอร์');
+            compareArrays(oldNb, newNb, 'โน๊ตบุ๊ค');
             compareArrays(oldMon, newMon, 'จอมอนิเตอร์');
             compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์');
             compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ');
@@ -1340,7 +1362,7 @@
                 let h = `<div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"><h4 class="font-semibold mb-3 flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">${icon} ${name} <span class="text-slate-400 text-xs font-normal">(${t} รายการ)</span></h4><div class="grid grid-cols-3 gap-2 text-xs text-center mb-1"><div class="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg py-1.5 font-medium">ปกติ ${n}</div><div class="bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg py-1.5 font-medium">ชำรุด ${b}</div><div class="bg-amber-50 dark:bg-amber-900/20 text-amber-500 dark:text-amber-400 rounded-lg py-1.5 font-medium">สำรอง ${s}</div></div>`;
                 if (bL.length > 0) h += `<div class="text-[10px] text-red-500 mt-2 px-1"><strong>⚠️ ชำรุด:</strong> ${bL.join(', ')}</div>`; return h + `</div>`;
             };
-            summaryHtml += genSum('คอมพิวเตอร์', tableCPU.getData(), '💻') + genSum('จอมอนิเตอร์', tableMon.getData(), '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️') + genSum('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️');
+            summaryHtml += genSum('คอมพิวเตอร์', tableCPU.getData(), '💻') + genSum('โน๊ตบุ๊ค', tableNB.getData(), '💻') + genSum('จอมอนิเตอร์', tableMon.getData(), '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️') + genSum('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️');
             if (summaryHtml === '<div class="space-y-4">') summaryHtml = '<div class="text-center text-slate-400 py-6 font-medium">ไม่พบอุปกรณ์ในระบบ</div>'; else summaryHtml += '</div>';
             document.getElementById('monthlySummaryContent').innerHTML = summaryHtml; document.getElementById('monthlyConfirmModal').classList.remove('hidden'); document.getElementById('monthlyConfirmModal').classList.add('flex');
         }
@@ -1352,7 +1374,7 @@
             pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
             document.getElementById('loadingText').innerText = 'บันทึกรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
+                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), nb: tableNB.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
                 isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
@@ -1363,7 +1385,7 @@
         async function executeSaveData() {
             closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
+                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), nb: tableNB.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); hasUnsavedDeletions = false; showToast(`บันทึกข้อมูลเรียบร้อย`);
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
@@ -1397,7 +1419,7 @@
             const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
             let hasData = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
             const appendQRs = (type, dataArray) => { dataArray.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) { hasData = true; let labelElement = createQRLabelElement(type, r[2]||'-', r[3]||'-', r[4]||'-', r[1]||'-', dateStr); previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); } }); };
-            appendQRs('คอมพิวเตอร์', tableCPU.getData()); appendQRs('จอมอนิเตอร์', tableMon.getData()); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
+            appendQRs('คอมพิวเตอร์', tableCPU.getData()); appendQRs('โน๊ตบุ๊ค', tableNB.getData()); appendQRs('จอมอนิเตอร์', tableMon.getData()); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
             if (!hasData) { showToast("ไม่พบข้อมูล", "error"); return; }
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
@@ -1413,6 +1435,7 @@
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
                 const extractSheetData = (sheetName, expectedColumns) => { const ws = wb.getWorksheet(sheetName); if (!ws) return []; let rowData = []; ws.eachRow((row, rowNumber) => { if (rowNumber > 1) { let r = []; for(let i = 1; i <= expectedColumns; i++) { let val = row.getCell(i).value; r.push(val !== null && val !== undefined ? val : ""); } r.push(""); rowData.push(r); } }); return rowData; };
                 const cpuData = extractSheetData("คอมพิวเตอร์", 8); if(cpuData.length > 0) tableCPU.setData(cpuData);
+                const nbData = extractSheetData("โน๊ตบุ๊ค", 8); if(nbData.length > 0) tableNB.setData(nbData);
                 const monData = extractSheetData("จอมอนิเตอร์", 7); if(monData.length > 0) tableMon.setData(monData);
                 const prnData = extractSheetData("เครื่องพิมพ์", 8); if(prnData.length > 0) tablePrn.setData(prnData);
                 const spcData = extractSheetData("เครื่องมือพิเศษ", 7); if(spcData.length > 0) tableSpc.setData(spcData);
@@ -1427,6 +1450,7 @@
             const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
             const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
             const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
+            const w5 = wb.addWorksheet("โน๊ตบุ๊ค"); w5.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableNB.getData().forEach(r => w5.addRow(r.slice(0, -1))); formatWs(w5);
             const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
         }
 
@@ -1442,7 +1466,8 @@
                     if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
 
                     const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
-                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]); 
+                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]);
+                    ws.addRow(["หมวดหมู่: โน๊ตบุ๊ค"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.nb) dbData.nb.forEach(row => ws.addRow(row)); ws.addRow([]);
                     ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
                     ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
                     ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
