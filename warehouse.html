@@ -103,11 +103,32 @@
         </div>
     </div>
 
+    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง 🌟 -->
+    <div id="withdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">📤 ทำรายการเบิกจ่าย</h3>
+                <button onclick="closeWithdrawModal()" class="text-slate-400 hover:text-red-500 font-medium text-xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <p id="withdrawItemName" class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-center text-lg">-</p>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">จำนวนที่ต้องการเบิก <span id="withdrawMaxLabel" class="text-xs text-amber-500 font-bold ml-2"></span></label>
+                    <input type="number" id="withdrawQtyInput" min="1" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">ชื่อผู้เบิก / ปลายทาง</label>
+                    <input type="text" id="withdrawUserInput" placeholder="เช่น ส.ต.อ.สมชาย หรือ นราธิวาส" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <button onclick="confirmWithdraw()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors shadow-md">ยืนยันการเบิกจ่าย (ตัดสต็อกทันที)</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
             
-            <!-- 🌟 แก้ไข: ทำให้โลโก้และชื่อเว็บกดได้ 🌟 -->
             <div class="flex items-center gap-3">
                 <div onclick="switchTab('dashboard')" class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30 cursor-pointer transition-transform hover:scale-110">W</div>
                 <h1 onclick="switchTab('dashboard')" class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer">ADP<span class="font-normal text-slate-500">Warehouse</span></h1>
@@ -185,7 +206,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">จัดการคลังส่วนกลาง (Master Data)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียน S/N เข้าสู่ระบบ เพื่อให้สถานีเบิกจ่ายได้</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียน S/N และอะไหล่ เข้าสู่ระบบ เพื่อให้สถานีเบิกจ่ายได้</p>
                 </div>
                 
                 <div class="flex items-center gap-3 w-full md:w-auto">
@@ -212,7 +233,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์ (RAM, SSD, HDD, PSU)</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ใช้วิธีนับจำนวนสต็อกคงเหลือ (ไม่มี S/N)</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ใช้วิธีนับจำนวนสต็อกคงเหลือ (กดปุ่มเบิกในตารางเพื่อตัดสต็อก)</p>
                         </div>
                         <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                     </div>
@@ -223,7 +244,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <div>
                             <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖲️</span> อุปกรณ์เสริม & วัสดุสิ้นเปลือง</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 หมึกพิมพ์, เมาส์, คีย์บอร์ด, สายไฟ (ใช้วิธีนับจำนวนสต็อกคงเหลือ ไม่มี S/N)</p>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 หมึกพิมพ์, เมาส์, คีย์บอร์ด, สายไฟ (กดปุ่มเบิกในตารางเพื่อตัดสต็อก)</p>
                         </div>
                         <button onclick="document.getElementById('wh-consumables').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                     </div>
@@ -274,10 +295,12 @@
         
         let cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
         
-        // 🌟 ตัวแปรเก็บสถิติแยกประเภท 🌟
+        // 🌟 ตัวแปรเก็บสถิติและสถานะ 🌟
         let categoryStats = {}; 
         let categoryDetailedItems = {}; 
         let hasUnsavedWhChanges = false; 
+        let whPendingLogs = []; 
+        let currentWithdrawTarget = null; 
 
         const whStatusOptions = ['ว่าง (พร้อมจ่าย)', 'จ่ายแล้ว', 'ส่งซ่อม', 'รอแทงจำหน่าย'];
         const whConsumableUnits = ['ชิ้น', 'อัน', 'เส้น', 'ตลับ', 'ขวด', 'กล่อง'];
@@ -300,6 +323,7 @@
             document.getElementById('darkModeIcon').innerText = isDark ? '☀️' : '🌙';
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
+        
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark'); document.getElementById('darkModeIcon').innerText = '☀️';
         }
@@ -321,7 +345,7 @@
             targetView.classList.add('animate-fade-in');
         }
 
-        // 🌟 Auto Reload และ Load Error Handling 🌟
+        // 🌟 Auto Reload
         window.onload = async function() {
             try {
                 document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -335,15 +359,12 @@
                 document.getElementById('loadingOverlay').classList.remove('flex');
             }
 
-            // รีโหลดอัตโนมัติทุกๆ 1 นาที (ถ้าไม่ได้กำลังพิมพ์อยู่)
             setInterval(() => {
-                if (!hasUnsavedWhChanges) {
-                    fetchAllData(true); 
-                }
+                if (!hasUnsavedWhChanges) fetchAllData(true); 
             }, 60000); 
         };
 
-        // 🌟 อัปเดตตารางคลังให้รันลำดับออโต้ 🌟
+        // 🌟 อัปเดตตารางให้รันลำดับออโต้ และแทรกปุ่ม "เบิก" 🌟
         const customWhRender = function(instance, cell, col, row, val, label, cellName) { 
             if (!instance || !instance.id) return;
             let table = document.getElementById(instance.id);
@@ -353,11 +374,17 @@
             
             // 🌟 รันเลขลำดับอัตโนมัติในช่องแรก 🌟
             if (col == 0) {
-                cell.innerText = parseInt(row) + 1; // รันเลขแถว
+                cell.innerText = parseInt(row) + 1;
                 cell.style.textAlign = 'center';
-                cell.style.color = '#64748b'; // ใส่สีเทาให้รู้ว่าเป็นช่องออโต้
+                cell.style.color = '#64748b';
                 cell.style.backgroundColor = '#f1f5f9'; 
                 cell.style.fontWeight = 'bold';
+            }
+
+            // ถ้าเป็นตารางอะไหล่ หรือสิ้นเปลือง ให้มีปุ่มทำเบิก (อยู่ก่อนช่องลบ 1 คอลัมน์)
+            if ((instance.id === 'wh-parts' || instance.id === 'wh-consumables') && col == tCols - 2) {
+                cell.innerHTML = `<button onclick="openWithdrawModal('${instance.id}', ${row})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold text-xs w-full shadow-sm">📤 เบิก</button>`;
+                cell.style.textAlign = 'center';
             }
 
             // ปุ่มลบแถว
@@ -367,6 +394,69 @@
             }
         };
 
+        // 🌟 ระบบจัดการ Modal ทำเบิก 🌟
+        function openWithdrawModal(tableId, row) {
+            let table = document.getElementById(tableId).jexcel;
+            let rData = table.getRowData(row);
+            
+            // หา Index ของจำนวนและหน่วย (อะไหล่ช่อง 4, สิ้นเปลืองช่อง 3)
+            let qtyCol = tableId === 'wh-parts' ? 4 : 3;
+            let unitCol = tableId === 'wh-parts' ? 5 : 4;
+            
+            let currentQty = parseFloat(rData[qtyCol]) || 0;
+            if (currentQty <= 0) {
+                showToast("ของในคลังหมด ไม่สามารถทำเบิกได้!", "error"); return;
+            }
+
+            let itemName = tableId === 'wh-parts' ? `${rData[1]||''} ${rData[2]||''} ${rData[3]||''}` : `${rData[1]||''} ${rData[2]||''}`;
+            let unit = rData[unitCol] || 'ชิ้น';
+
+            currentWithdrawTarget = { tableId, row, qtyCol, currentQty, itemName, unit };
+            
+            document.getElementById('withdrawItemName').innerText = itemName;
+            document.getElementById('withdrawMaxLabel').innerText = `(มีในสต็อก: ${currentQty} ${unit})`;
+            document.getElementById('withdrawQtyInput').value = 1;
+            document.getElementById('withdrawQtyInput').max = currentQty;
+            document.getElementById('withdrawUserInput').value = '';
+            
+            document.getElementById('withdrawModal').classList.remove('hidden');
+            document.getElementById('withdrawModal').classList.add('flex');
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').classList.add('hidden');
+            document.getElementById('withdrawModal').classList.remove('flex');
+            currentWithdrawTarget = null;
+        }
+
+        function confirmWithdraw() {
+            if (!currentWithdrawTarget) return;
+            
+            let qty = parseFloat(document.getElementById('withdrawQtyInput').value);
+            let user = document.getElementById('withdrawUserInput').value.trim();
+            
+            if (!qty || qty <= 0 || qty > currentWithdrawTarget.currentQty) {
+                showToast("กรุณาระบุจำนวนให้ถูกต้อง (ไม่เกินสต็อกที่มี)", "error"); return;
+            }
+            if (!user) {
+                showToast("กรุณาระบุชื่อผู้เบิกหรือปลายทาง", "error"); return;
+            }
+
+            let table = document.getElementById(currentWithdrawTarget.tableId).jexcel;
+            let newQty = currentWithdrawTarget.currentQty - qty;
+            
+            // ตัดสต็อกในตาราง
+            table.setValueFromCoords(currentWithdrawTarget.qtyCol, currentWithdrawTarget.row, newQty);
+            
+            // บันทึก Log รอส่ง
+            let logDetail = `[เบิกจ่าย] ${currentWithdrawTarget.itemName} จำนวน ${qty} ${currentWithdrawTarget.unit} โดย: ${user}`;
+            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกของ', detail: logDetail });
+            
+            hasUnsavedWhChanges = true;
+            showToast(`✅ เบิกสำเร็จ! ระบบตัดสต็อกเหลือ ${newQty} ${currentWithdrawTarget.unit}`);
+            closeWithdrawModal();
+        }
+
         function searchWarehouse() {
             let query = document.getElementById('whSearchInput').value.toLowerCase();
             if(whMainTable) whMainTable.search(query);
@@ -374,7 +464,6 @@
             if(whConsumablesTable) whConsumablesTable.search(query);
         }
 
-        // 🌟 อัปเดตเก็บสถิติให้จำรายละเอียดชิ้นของได้ 🌟
         function addStat(category, type, count, itemObj = null) {
             if (!category) return;
             if (category === 'คอมพิวเตอร์' || category === 'PC' || category === 'Notebook' || category === 'คอมพิวเตอร์ (CPU)') category = 'PC / Notebook';
@@ -401,7 +490,7 @@
                 globalDeployedData = [];
                 cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
                 categoryStats = {}; 
-                categoryDetailedItems = {}; // 🌟 รีเซ็ตออบเจกต์เก็บรายละเอียด
+                categoryDetailedItems = {}; 
 
                 let totalDeployed = 0, brokenDeployed = 0;
                 
@@ -429,9 +518,9 @@
                                         if(r[5] === 'ชำรุด') {
                                             brokenDeployed++;
                                             cardData.BROKEN.push(itemObj);
-                                            addStat(cat, 'broken', 1, itemObj); // 🌟 แนบ Object ไว้กดดูรายละเอียด
+                                            addStat(cat, 'broken', 1, itemObj);
                                         } else {
-                                            addStat(cat, 'deployed', 1, itemObj); // 🌟 แนบ Object ไว้กดดูรายละเอียด
+                                            addStat(cat, 'deployed', 1, itemObj);
                                         }
                                     }
                                 });
@@ -447,6 +536,7 @@
                 let whMainCount = 0;
                 let whAvailableCount = 0; 
                 
+                // เฉพาะ Main Asset ที่มี S/N ถึงจะนำไปบวกใน whAvailableCount 
                 const processWhArray = (arr) => {
                     if(!arr) return;
                     arr.forEach(r => { 
@@ -460,74 +550,60 @@
                             if(r[5] === 'ว่าง (พร้อมจ่าย)') {
                                 whAvailableCount++;
                                 cardData.AVAILABLE.push(itemObj);
-                                addStat(cat, 'wh', 1, itemObj); // 🌟 แนบ Object
+                                addStat(cat, 'wh', 1, itemObj); 
                             } else if (r[5] === 'ส่งซ่อม' || r[5] === 'รอแทงจำหน่าย') {
                                 cardData.BROKEN.push(itemObj);
                                 brokenDeployed++;
-                                addStat(cat, 'broken', 1, itemObj); // 🌟 แนบ Object
+                                addStat(cat, 'broken', 1, itemObj); 
                             }
                         }
                     });
                 };
                 
-                // ประมวลผลเฉพาะอุปกรณ์หลัก (Main) ที่มี S/N
                 processWhArray(whDataJSON.main);
                 
-                // 🌟 ประมวลผลอะไหล่ (Parts) แบบนับจำนวน 🌟
+                // 🌟 ประมวลผลอะไหล่ (Parts) 🌟
                 if(whDataJSON.parts) {
                     whDataJSON.parts.forEach(r => {
-                        let qty = parseFloat(r[4]); // จำนวนอยู่คอลัมน์ที่ 4 (Index 4)
-                        if(!isNaN(qty) && r[1]) addStat(r[1], 'wh', qty); 
+                        let qty = parseFloat(r[4]); 
+                        if(!isNaN(qty) && qty > 0 && r[1]) {
+                            let itemObj = { group: 'คลังส่วนกลาง', station: r[6]||'โกดัง', category: r[1], user: '-', specs: `${r[2]||''} ${r[3]||''}`, sn: `(คงเหลือ ${qty} ${r[5]||''})`, status: 'พร้อมจ่าย' };
+                            addStat(r[1], 'wh', qty, itemObj); 
+                        }
                     });
                 }
 
-                // 🌟 ประมวลผลสิ้นเปลือง (Consumables) แบบนับจำนวน 🌟
+                // 🌟 ประมวลผลสิ้นเปลือง (Consumables) 🌟
                 if(whDataJSON.consumables) {
                     whDataJSON.consumables.forEach(r => {
-                        let qty = parseFloat(r[3]); // จำนวนอยู่คอลัมน์ที่ 3 (Index 3)
-                        if(!isNaN(qty) && r[1]) addStat(r[1], 'wh', qty); 
+                        let qty = parseFloat(r[3]); 
+                        if(!isNaN(qty) && qty > 0 && r[1]) {
+                            let itemObj = { group: 'คลังส่วนกลาง', station: r[5]||'โกดัง', category: r[1], user: '-', specs: `${r[2]||''}`, sn: `(คงเหลือ ${qty} ${r[4]||''})`, status: 'พร้อมจ่าย' };
+                            addStat(r[1], 'wh', qty, itemObj); 
+                        }
                     });
                 }
 
-                // Update Dashboard Cards Count
                 document.getElementById('dashWHMain').innerText = whMainCount;
                 document.getElementById('dashWHAvailable').innerText = whAvailableCount;
                 document.getElementById('dashDeployedCount').innerText = totalDeployed;
                 document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
-                // 🌟 อัปเดต HTML กล่องสถิติ (แยกของมี S/N กับ ของนับจำนวน) 🌟
+                // 🌟 อัปเดต HTML กล่องสถิติ (ทุกกล่องกดดูได้) 🌟
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
-                    
-                    // เช็คว่าเป็นอุปกรณ์หลัก (คอม, จอ, ปริ้นเตอร์ ฯลฯ) ที่มีข้อมูล S/N เก็บไว้หรือไม่
-                    let isMainAsset = ['PC / Notebook', 'Monitor (จอ)', 'Printer', 'UPS', 'เครื่องมือพิเศษ'].includes(catName) || 
-                                      (categoryDetailedItems[catName] && categoryDetailedItems[catName].wh && categoryDetailedItems[catName].wh.length > 0) || 
-                                      (categoryDetailedItems[catName] && categoryDetailedItems[catName].deployed && categoryDetailedItems[catName].deployed.length > 0);
-
-                    if (isMainAsset) {
-                        // อุปกรณ์หลัก (มี S/N) -> กดดู Modal ได้ตามปกติ
-                        statsHtml += `
-                        <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between">
-                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mb-2">${catName}</p>
-                            <div class="flex justify-between items-center text-xs">
-                                <span onclick="openCategoryModal('${catName}', 'wh')" class="text-emerald-600 dark:text-emerald-400 font-medium cursor-pointer hover:underline" data-tooltip="คลิกดูของในคลัง">พร้อมจ่าย: ${counts.wh}</span>
-                                <span onclick="openCategoryModal('${catName}', 'deployed')" class="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline" data-tooltip="คลิกดูของที่สถานี">เบิกแล้ว: ${counts.deployed}</span>
-                            </div>
-                        </div>`;
-                    } else {
-                        // อะไหล่ และ วัสดุสิ้นเปลือง -> ไม่ต้องกดดู โชว์แค่จำนวนสต็อกคงเหลือ
-                        statsHtml += `
-                        <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between border-l-4 border-l-amber-500">
-                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mb-2">${catName}</p>
-                            <div class="flex justify-between items-center text-xs">
-                                <span class="text-amber-600 dark:text-amber-500 font-bold text-sm">จำนวน: ${counts.wh}</span>
-                                <span class="text-slate-400 text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-medium">นับสต็อก</span>
-                            </div>
-                        </div>`;
-                    }
+                    statsHtml += `
+                    <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                        <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mb-2">${catName}</p>
+                        <div class="flex justify-between items-center text-xs">
+                            <span onclick="openCategoryModal('${catName}', 'wh')" class="text-emerald-600 dark:text-emerald-400 font-medium cursor-pointer hover:underline" data-tooltip="คลิกดูของในคลัง">ในคลัง: ${counts.wh}</span>
+                            <span onclick="openCategoryModal('${catName}', 'deployed')" class="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline" data-tooltip="คลิกดูของที่สถานี">เบิกแล้ว: ${counts.deployed}</span>
+                        </div>
+                    </div>`;
                 }
                 document.getElementById('detailedStatsGrid').innerHTML = statsHtml || '<p class="text-slate-400 text-sm col-span-full">ไม่พบข้อมูลอุปกรณ์</p>';
-                // 🌟 อัปเดตแจ้งเตือนของใกล้หมด (เช็คทั้งอะไหล่และสิ้นเปลือง) 🌟
+
+                // 🌟 อัปเดตแจ้งเตือนของใกล้หมด 🌟
                 let lowStockHtml = '';
                 const checkLowStock = (arr, isParts) => {
                     if(!arr) return;
@@ -544,16 +620,14 @@
                     });
                 };
                 
-                checkLowStock(whDataJSON.parts, true); // ตรวจสอบอะไหล่
-                checkLowStock(whDataJSON.consumables, false); // ตรวจสอบสิ้นเปลือง
+                checkLowStock(whDataJSON.parts, true);
+                checkLowStock(whDataJSON.consumables, false);
 
                 if(lowStockHtml === '') lowStockHtml = `<tr><td colspan="4" class="p-6 text-center text-slate-400">สต็อกอะไหล่และวัสดุสิ้นเปลืองยังอยู่ในเกณฑ์ปลอดภัย 🎉</td></tr>`;
                 document.getElementById('lowStockTableBody').innerHTML = lowStockHtml;
 
-                // อัปเดตตารางใหญ่แท็บที่ 3
                 renderDeployedTable(globalDeployedData);
 
-                // สร้างตารางเฉพาะตอนไม่ได้รีโหลดเงียบๆ หรือเพิ่งเปิดเว็บครั้งแรก
                 if(!isSilent || !whMainTable) {
                     originalWhData = JSON.parse(JSON.stringify(whDataJSON));
                     initWarehouseSpreadsheets(whDataJSON);
@@ -566,9 +640,31 @@
             }
         }
 
+        // 🌟 ล็อกคอลัมน์แรกให้อ่านได้อย่างเดียว (readOnly) 🌟
         function initWarehouseSpreadsheets(data) {
             document.getElementById('wh-main').innerHTML=''; document.getElementById('wh-parts').innerHTML=''; document.getElementById('wh-consumables').innerHTML='';
             
+            // ฟังก์ชันเสริมสำหรับยัดวันที่ทะลุ readOnly
+            const autoFillDate = function(instance, cell, col, row, val) {
+                hasUnsavedWhChanges = true;
+                // ถ้ากรอกข้อมูลช่องอื่นที่ไม่ใช่ช่องวันที่และปุ่มลบ แล้วมีข้อมูล
+                if (col !== 6 && col !== 8 && val) {
+                    let table = document.getElementById(instance.id).jexcel;
+                    let currentDate = table.getValueFromCoords(6, row);
+                    
+                    if (!currentDate) {
+                        let today = new Date();
+                        let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                        
+                        // ปลดล็อกช่องวันที่ชั่วคราวเพื่อยัดข้อมูล
+                        table.options.columns[6].readOnly = false;
+                        table.setValueFromCoords(6, row, dateStr);
+                        // ล็อกกลับทันที
+                        table.options.columns[6].readOnly = true;
+                    }
+                }
+            };
+
             whMainTable = jspreadsheet(document.getElementById('wh-main'), { 
                 data: data.main || [[]], 
                 columns: [
@@ -583,19 +679,7 @@
                     { type: 'html', title: 'ลบ', width: 60, readOnly: true }
                 ], 
                 minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
-                onchange: function(instance, cell, col, row, val) {
-                    hasUnsavedWhChanges = true;
-                    // Auto-fill วันที่ เมื่อกรอกข้อมูลใหม่
-                    if (col !== 6 && col !== 8 && val) {
-                        let table = document.getElementById(instance.id).jexcel;
-                        let currentDate = table.getValueFromCoords(6, row);
-                        if (!currentDate) {
-                            let today = new Date();
-                            let dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-                            table.setValueFromCoords(6, row, dateStr);
-                        }
-                    }
-                }, 
+                onchange: autoFillDate, // 👈 เรียกใช้ฟังก์ชันยัดวันที่
                 updateTable: customWhRender 
             });
 
@@ -610,6 +694,7 @@
                     { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, 
                     { type: 'text', title: 'ชั้นวาง/จุดเก็บ', width: 120 }, 
                     { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                    { type: 'html', title: 'เบิกจ่าย', width: 80, readOnly: true }, 
                     { type: 'html', title: 'ลบ', width: 60, readOnly: true }
                 ], 
                 minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
@@ -618,7 +703,17 @@
 
             whConsumablesTable = jspreadsheet(document.getElementById('wh-consumables'), { 
                 data: data.consumables || [[]], 
-                columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ประเภท (เช่น หมึก, เมาส์)', width: 150 }, { type: 'text', title: 'ยี่ห้อ/รุ่น/รายละเอียด', width: 220 }, { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, { type: 'text', title: 'จุดเก็บ/ชั้นวาง', width: 100 }, { type: 'text', title: 'หมายเหตุ', width: 150 }, { type: 'html', title: 'ลบ', width: 60, readOnly: true }], 
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
+                    { type: 'text', title: 'ประเภท (เช่น หมึก, เมาส์)', width: 150 }, 
+                    { type: 'text', title: 'ยี่ห้อ/รุ่น/รายละเอียด', width: 220 }, 
+                    { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, 
+                    { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, 
+                    { type: 'text', title: 'จุดเก็บ/ชั้นวาง', width: 100 }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                    { type: 'html', title: 'เบิกจ่าย', width: 80, readOnly: true }, 
+                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
+                ], 
                 minDimensions: [8, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
                 onchange: () => hasUnsavedWhChanges = true, updateTable: customWhRender 
             });
@@ -659,7 +754,6 @@
             document.getElementById('cardDetailModal').classList.add('flex');
         }
 
-        // 🌟 เปิด Modal ดูรายละเอียดตามประเภทย่อย 🌟
         function openCategoryModal(catName, type) {
             let dataArray = categoryDetailedItems[catName][type] || [];
             let title = type === 'wh' ? `📦 พร้อมจ่าย: ${catName}` : `🌍 เบิกแล้ว: ${catName}`;
@@ -683,7 +777,7 @@
                 </tr>`;
             });
 
-            if (html === '') html = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">ไม่พบรายการที่มี S/N (อาจเป็นวัสดุสิ้นเปลือง)</td></tr>';
+            if (html === '') html = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">ไม่พบรายการ</td></tr>';
             document.getElementById('cardDetailTableBody').innerHTML = html;
 
             document.getElementById('cardDetailModal').classList.remove('hidden');
@@ -735,11 +829,16 @@
             try {
                 const newPayload = { 
                     main: whMainTable.getData().map(r => r.slice(0, -1)), 
-                    parts: whPartsTable.getData().map(r => r.slice(0, -1)), 
-                    consumables: whConsumablesTable.getData().map(r => r.slice(0, -1))
+                    parts: whPartsTable.getData().map(r => r.slice(0, -2)), 
+                    consumables: whConsumablesTable.getData().map(r => r.slice(0, -2))
                 };
                 
                 let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
+                
+                // 🌟 ยัดประวัติทำเบิกส่งไปด้วย 🌟
+                if (whPendingLogs.length > 0) {
+                    logs = logs.concat(whPendingLogs);
+                }
                 
                 await fetch(API_URL, { 
                     method: 'POST', 
@@ -751,55 +850,15 @@
                 });
                 
                 originalWhData = JSON.parse(JSON.stringify(newPayload)); 
+                whPendingLogs = []; // เคลียร์ของเก่า
                 showToast("บันทึกสต็อกคลังสำเร็จ!");
-                hasUnsavedWhChanges = false; // ปลดล็อกให้ Auto-reload ทำงานต่อ
+                hasUnsavedWhChanges = false; 
                 fetchAllData(); 
             } catch (e) { 
                 console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); 
             } finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); 
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
-            }
-        }
-
-        // PWA Setup
-        const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><path d='M25 30 L50 15 L75 30 L75 70 L50 85 L25 70 Z' fill='none' stroke='#ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='#3b82f6'/></svg>`);
-        const manifest = {
-            "name": "ADP Warehouse",
-            "short_name": "Warehouse",
-            "start_url": window.location.href.split('?')[0],
-            "display": "standalone",
-            "background_color": "#f8fafc",
-            "theme_color": "#0f172a",
-            "icons": [
-                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
-                { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
-            ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-        const manifestUrl = URL.createObjectURL(manifestBlob);
-        document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
-
-        if ('serviceWorker' in navigator) {
-            const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            const swUrl = URL.createObjectURL(swBlob);
-            navigator.serviceWorker.register(swUrl).catch(console.error);
-        }
-
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); deferredPrompt = e;
-            document.getElementById('btnInstallApp').classList.remove('hidden');
-        });
-        
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden');
-                    deferredPrompt = null;
-                });
             }
         }
     </script>
