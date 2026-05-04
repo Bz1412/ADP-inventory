@@ -1204,19 +1204,117 @@
         function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'})`); }); return items; }
         
         function calculateDiff() {
-            let oldItems = [...extractValid(originalDbData.cpu, 'คอมพิวเตอร์'), ...extractValid(originalDbData.mon, 'จอมอนิเตอร์'), ...extractValid(originalDbData.prn, 'เครื่องพิมพ์'), ...extractValid(originalDbData.spc, 'เครื่องมือพิเศษ')];
-            let newItems = [...extractValid(tableCPU.getData(), 'คอมพิวเตอร์'), ...extractValid(tableMon.getData(), 'จอมอนิเตอร์'), ...extractValid(tablePrn.getData(), 'เครื่องพิมพ์'), ...extractValid(tableSpc.getData(), 'เครื่องมือพิเศษ')];
-            let added = []; let tempOld = [...oldItems]; newItems.forEach(i => { let idx = tempOld.indexOf(i); if (idx > -1) { tempOld.splice(idx, 1); } else { added.push(i); } }); return { added, removed: tempOld };
+            // ดึงข้อมูลเก่า (Original) แยกตามหมวด
+            let oldCpu = originalDbData.cpu || []; let oldMon = originalDbData.mon || []; 
+            let oldPrn = originalDbData.prn || []; let oldSpc = originalDbData.spc || [];
+            
+            // ดึงข้อมูลใหม่จากหน้าจอ (Current) แยกตามหมวด
+            let newCpu = tableCPU ? tableCPU.getData() : []; let newMon = tableMon ? tableMon.getData() : [];
+            let newPrn = tablePrn ? tablePrn.getData() : []; let newSpc = tableSpc ? tableSpc.getData() : [];
+
+            let added = []; let removed = []; let updated = [];
+
+            // Helper: เปรียบเทียบข้อมูล 2 ชุด (ใช้ S/N เป็น Key หลัก)
+            const compareArrays = (oldArr, newArr, type) => {
+                // สร้าง Map ของเก่า { "SN": "ทั้งแถว" } (ถ้าไม่มี S/N ใช้ ยี่ห้อ+รุ่น เป็น Key รอง)
+                let oldMap = new Map();
+                oldArr.forEach(r => {
+                    if (r[1] || r[2] || r[3] || r[4]) {
+                        let key = r[4] ? r[4].toString().trim() : (r[2] + '_' + r[3]).trim();
+                        if(key) oldMap.set(key, r);
+                    }
+                });
+
+                let newMap = new Map();
+                newArr.forEach(r => {
+                    if (r[1] || r[2] || r[3] || r[4]) {
+                        let key = r[4] ? r[4].toString().trim() : (r[2] + '_' + r[3]).trim();
+                        if(key) newMap.set(key, r);
+                        
+                        // 1. เช็คว่ามีของใหม่มา หรือมีการอัปเดต?
+                        if (oldMap.has(key)) {
+                            let oldRow = oldMap.get(key);
+                            let oldStatus = oldRow[5] || 'ปกติ';
+                            let newStatus = r[5] || 'ปกติ';
+                            
+                            // ถ้าสถานะเปลี่ยนไปจากเดิม ให้อยู่หมวด "อัปเดต"
+                            if (oldStatus !== newStatus) {
+                                let label = `[${type}] ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) เปลี่ยนสถานะเป็น: ${newStatus}`;
+                                updated.push({ label: label, status: newStatus });
+                            }
+                        } else {
+                            // ถ้าไม่มีในของเก่าเลย แปลว่าเพิ่งเพิ่มเข้ามา
+                            added.push(`[${type}] ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'})`);
+                        }
+                    }
+                });
+
+                // 2. หาของที่ถูกลบ (มีในของเก่า แต่ไม่มีในของใหม่)
+                for (let [key, oldRow] of oldMap.entries()) {
+                    if (!newMap.has(key)) {
+                        removed.push(`[${type}] ${oldRow[1]||'-'} | ${oldRow[2]||'-'} ${oldRow[3]||'-'} (S/N: ${oldRow[4]||'-'})`);
+                    }
+                }
+            };
+
+            compareArrays(oldCpu, newCpu, 'คอมพิวเตอร์');
+            compareArrays(oldMon, newMon, 'จอมอนิเตอร์');
+            compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์');
+            compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ');
+
+            return { added, removed, updated };
         }
 
         function prepareSave() {
-            if (!tableCPU) return; let diff = calculateDiff(); let h = ''; pendingLogs = [];
-            if (diff.added.length === 0 && diff.removed.length === 0) { h = `<div class="p-8 text-center text-slate-400 font-medium">ไม่พบการเปลี่ยนแปลง</div>`; } 
-            else {
-                if (diff.added.length > 0) { h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30"><p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเพิ่ม/อัปเดต:</p><ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; diff.added.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'เพิ่ม/อัปเดต', detail: i }); }); h += `</ul></div>`; }
-                if (diff.removed.length > 0) { h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30"><p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง:</p><ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; diff.removed.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'ลบ', detail: i }); }); h += `</ul></div>`; }
+            if (!tableCPU) return; 
+            let diff = calculateDiff(); 
+            let h = ''; 
+            pendingLogs = [];
+
+            if (diff.added.length === 0 && diff.removed.length === 0 && diff.updated.length === 0) { 
+                h = `<div class="p-8 text-center text-slate-400 font-medium">ไม่พบการเปลี่ยนแปลง</div>`; 
+            } else {
+                // ส่วนของข้อมูลที่ถูกอัปเดตสถานะ (เน้นโชว์ชำรุด)
+                if (diff.updated.length > 0) { 
+                    h += `<div class="mb-4 bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/30">
+                            <p class="font-bold text-amber-700 dark:text-amber-400 mb-2 text-sm">การเปลี่ยนสถานะ:</p>
+                            <ul class="list-disc pl-5 text-amber-600 dark:text-amber-300 text-xs space-y-1">`; 
+                    diff.updated.forEach(i => { 
+                        h += `<li>${i.label}</li>`; 
+                        let actionWord = (i.status === 'ชำรุด') ? 'แจ้งชำรุด' : 'อัปเดตสถานะ'; // ถ้าเป็นชำรุด ให้ใช้คำว่า "แจ้งชำรุด" แจ้งเตือนบอท
+                        pendingLogs.push({ action: actionWord, detail: i.label }); 
+                    }); 
+                    h += `</ul></div>`; 
+                }
+
+                // ส่วนของข้อมูลเพิ่มใหม่
+                if (diff.added.length > 0) { 
+                    h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                            <p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเบิก/เพิ่มใหม่:</p>
+                            <ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; 
+                    diff.added.forEach(i => { 
+                        h += `<li>${i}</li>`; 
+                        pendingLogs.push({ action: 'เพิ่มอุปกรณ์', detail: i }); 
+                    }); 
+                    h += `</ul></div>`; 
+                }
+
+                // ส่วนของข้อมูลลบทิ้ง
+                if (diff.removed.length > 0) { 
+                    h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30">
+                            <p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง (ส่งคืน):</p>
+                            <ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; 
+                    diff.removed.forEach(i => { 
+                        h += `<li>${i}</li>`; 
+                        pendingLogs.push({ action: 'ลบอุปกรณ์', detail: i }); 
+                    }); 
+                    h += `</ul></div>`; 
+                }
             }
-            document.getElementById('diffContent').innerHTML = h; document.getElementById('confirmModal').classList.remove('hidden'); document.getElementById('confirmModal').classList.add('flex');
+            
+            document.getElementById('diffContent').innerHTML = h; 
+            document.getElementById('confirmModal').classList.remove('hidden'); 
+            document.getElementById('confirmModal').classList.add('flex');
         }
 
         function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
