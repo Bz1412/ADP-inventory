@@ -909,7 +909,7 @@
                 } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ', e); }
 
                 // 3. นำข้อมูลไปสร้างตาราง
-                let dbData = { cpu: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
+                let dbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
                 if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
