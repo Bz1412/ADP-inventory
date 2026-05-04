@@ -125,6 +125,51 @@
         </div>
     </div>
 
+    <!-- 🌟 Modal เบิกจ่ายด่วนหน้าแรก (Quick Withdraw) 🌟 -->
+    <div id="quickWithdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh] animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📤 เบิกจ่ายด่วน</h3>
+                <button onclick="closeQuickWithdrawModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
+            </div>
+            
+            <!-- ส่วนค้นหา -->
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800" id="qwSearchSection">
+                <input type="text" id="qwSearchInput" placeholder="พิมพ์ชื่ออะไหล่ หรือ วัสดุสิ้นเปลือง..." class="w-full px-5 py-4 text-base bg-slate-50 dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-blue-500 transition-all font-bold shadow-inner" autocomplete="off" oninput="searchQuickWithdraw(this.value)">
+            </div>
+            
+            <!-- ส่วนแสดงผลลัพธ์ -->
+            <div id="qwListSection" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]"></div>
+
+            <!-- ส่วนฟอร์มกรอกจำนวนและยืนยัน (ซ่อนไว้ก่อน) -->
+            <div id="qwFormSection" class="p-6 bg-white dark:bg-slate-800 hidden flex-col gap-5 border-t border-slate-100 dark:border-slate-700">
+                <div class="flex justify-between items-center bg-blue-50 dark:bg-slate-700 p-4 rounded-xl border border-blue-100 dark:border-slate-600">
+                    <div>
+                        <p id="qwSelectedItemName" class="font-bold text-slate-800 dark:text-white text-base sm:text-lg">-</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">คงเหลือ: <span id="qwMaxQtyLabel" class="font-bold text-blue-600 dark:text-blue-400">-</span></p>
+                    </div>
+                    <button onclick="cancelQwSelection()" class="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline whitespace-nowrap ml-2">เปลี่ยนของ</button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">จำนวนที่เบิก</label>
+                        <input type="number" id="qwQtyInput" min="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500 font-bold text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">ชื่อผู้เบิก / ปลายทาง</label>
+                        <input type="text" id="qwUserInput" placeholder="ระบุผู้เบิก..." class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500 font-medium text-base">
+                    </div>
+                </div>
+                
+                <button onclick="submitQuickWithdraw()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-transform active:scale-95 shadow-lg mt-2 flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> 
+                    ยืนยันเบิกและบันทึกคลังทันที
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
@@ -159,6 +204,16 @@
 
         <!-- 📊 Tab 1: Dashboard -->
         <div id="view-dashboard" class="animate-fade-in">
+            <!-- 🌟 ปุ่มเบิกจ่ายด่วนหน้าแรก 🌟 -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและเบิกอะไหล่ซ่อม/อุปกรณ์สิ้นเปลือง ตัดสต็อกทันที</p>
+                </div>
+                <button onclick="openQuickWithdrawModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ทำรายการเบิกจ่าย
+                </button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
@@ -861,6 +916,145 @@
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
             }
         }
+
+        // =======================================================
+        // 🌟 ระบบจัดการ เบิกจ่ายด่วนหน้าแรก (Quick Withdraw) 🌟
+        // =======================================================
+        let qwItemsData = [];
+        let qwCurrentTarget = null;
+
+        function openQuickWithdrawModal() {
+            if (!whPartsTable || !whConsumablesTable) {
+                showToast("ระบบยังโหลดข้อมูลไม่เสร็จ กรุณารอสักครู่", "error");
+                return;
+            }
+
+            // กวาดข้อมูลจากตารางอะไหล่และสิ้นเปลือง มาทำเป็นฐานข้อมูลค้นหาชั่วคราว
+            qwItemsData = [];
+            
+            whPartsTable.getData().forEach((r, rowIdx) => {
+                let qty = parseFloat(r[4]);
+                if (!isNaN(qty) && qty > 0 && r[1]) {
+                    qwItemsData.push({ tableId: 'wh-parts', row: rowIdx, qtyCol: 4, category: r[1], specs: `${r[2]||''} ${r[3]||''}`, itemName: `${r[1]} ${r[2]||''} ${r[3]||''}`.trim(), qty: qty, unit: r[5] || 'ชิ้น' });
+                }
+            });
+            
+            whConsumablesTable.getData().forEach((r, rowIdx) => {
+                let qty = parseFloat(r[3]);
+                if (!isNaN(qty) && qty > 0 && r[1]) {
+                    qwItemsData.push({ tableId: 'wh-consumables', row: rowIdx, qtyCol: 3, category: r[1], specs: `${r[2]||''}`, itemName: `${r[1]} ${r[2]||''}`.trim(), qty: qty, unit: r[4] || 'ชิ้น' });
+                }
+            });
+
+            document.getElementById('qwSearchInput').value = '';
+            cancelQwSelection(); 
+            searchQuickWithdraw('');
+            
+            document.getElementById('quickWithdrawModal').classList.remove('hidden');
+            document.getElementById('quickWithdrawModal').classList.add('flex');
+            setTimeout(() => document.getElementById('qwSearchInput').focus(), 100);
+        }
+
+        function closeQuickWithdrawModal() {
+            document.getElementById('quickWithdrawModal').classList.add('hidden');
+            document.getElementById('quickWithdrawModal').classList.remove('flex');
+        }
+
+        function searchQuickWithdraw(query) {
+            query = query.toLowerCase().trim();
+            let listEl = document.getElementById('qwListSection');
+            
+            if (qwItemsData.length === 0) {
+                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-400 text-center"><div class="text-4xl mb-3 opacity-30">📦</div><p class="font-medium">ไม่มีอุปกรณ์/อะไหล่ ในคลังให้เบิกเลย</p></div>`;
+                return;
+            }
+
+            let matches = qwItemsData;
+            if (query) {
+                matches = qwItemsData.filter(i => i.itemName.toLowerCase().includes(query) || i.category.toLowerCase().includes(query));
+            }
+
+            if (matches.length === 0) {
+                listEl.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold">❌ ไม่พบรายการที่ค้นหา</div>`;
+                return;
+            }
+
+            let html = '';
+            matches.forEach(item => {
+                html += `
+                <div onclick="selectQwItem('${item.tableId}', ${item.row})" class="p-4 hover:bg-blue-50 dark:hover:bg-slate-700/50 cursor-pointer border-b border-slate-100 dark:border-slate-700 transition-colors flex justify-between items-center group">
+                    <div>
+                        <p class="font-bold text-slate-800 dark:text-slate-200 text-base">${item.category}</p>
+                        <p class="text-xs text-slate-500 mt-1 font-medium">${item.specs}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-600 font-bold bg-emerald-50 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 px-3 py-1 rounded text-xs">เหลือ ${item.qty} ${item.unit}</span>
+                        <p class="text-[10px] text-blue-600 dark:text-blue-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity font-bold">กดเพื่อทำเบิก ➡</p>
+                    </div>
+                </div>`;
+            });
+            listEl.innerHTML = html;
+        }
+
+        function selectQwItem(tableId, rowIdx) {
+            let item = qwItemsData.find(i => i.tableId === tableId && i.row === rowIdx);
+            if (!item) return;
+
+            qwCurrentTarget = { tableId: item.tableId, row: item.row, qtyCol: item.qtyCol, currentQty: item.qty, itemName: item.itemName, unit: item.unit };
+
+            document.getElementById('qwSelectedItemName').innerText = item.itemName;
+            document.getElementById('qwMaxQtyLabel').innerText = `${item.qty} ${item.unit}`;
+            document.getElementById('qwQtyInput').value = 1;
+            document.getElementById('qwQtyInput').max = item.qty;
+            document.getElementById('qwUserInput').value = '';
+
+            document.getElementById('qwSearchSection').classList.add('hidden');
+            document.getElementById('qwListSection').classList.add('hidden');
+            document.getElementById('qwFormSection').classList.remove('hidden');
+            document.getElementById('qwFormSection').classList.add('flex');
+            
+            setTimeout(() => document.getElementById('qwQtyInput').focus(), 100);
+        }
+
+        function cancelQwSelection() {
+            qwCurrentTarget = null;
+            document.getElementById('qwSearchSection').classList.remove('hidden');
+            document.getElementById('qwListSection').classList.remove('hidden');
+            document.getElementById('qwFormSection').classList.add('hidden');
+            document.getElementById('qwFormSection').classList.remove('flex');
+            document.getElementById('qwSearchInput').focus();
+        }
+
+        async function submitQuickWithdraw() {
+            if (!qwCurrentTarget) return;
+            
+            let qty = parseFloat(document.getElementById('qwQtyInput').value);
+            let user = document.getElementById('qwUserInput').value.trim();
+            
+            if (!qty || qty <= 0 || qty > qwCurrentTarget.currentQty) {
+                showToast("จำนวนที่เบิกไม่ถูกต้อง", "error"); return;
+            }
+            if (!user) {
+                showToast("กรุณาระบุชื่อผู้เบิก", "error"); return;
+            }
+
+            let table = document.getElementById(qwCurrentTarget.tableId).jexcel;
+            let newQty = qwCurrentTarget.currentQty - qty;
+            
+            // ตัดสต็อกในตารางให้ทันที
+            table.setValueFromCoords(qwCurrentTarget.qtyCol, qwCurrentTarget.row, newQty);
+            
+            // บันทึก Log เข้าระบบคลังส่วนกลาง
+            let logDetail = `[เบิกจ่ายด่วน] ${qwCurrentTarget.itemName} จำนวน ${qty} ${qwCurrentTarget.unit} โดย: ${user}`;
+            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกของ', detail: logDetail });
+            
+            closeQuickWithdrawModal();
+            hasUnsavedWhChanges = true;
+            
+            // 🌟 พระเอกของงาน: สั่งอัปโหลดข้อมูลลงเซิร์ฟเวอร์แบบอัตโนมัติทันที
+            await saveWarehouseData();
+        }
+        
     </script>
 </body>
 </html>
