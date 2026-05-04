@@ -652,7 +652,7 @@
 
         function addStat(category, type, count, itemObj = null) {
             if (!category) return;
-            if (category === 'คอมพิวเตอร์' || category === 'PC' || category === 'Notebook' || category === 'คอมพิวเตอร์ (CPU)') category = 'PC / Notebook';
+            if (category === 'คอมพิวเตอร์' || category === 'PC' || category === 'Notebook' || category === 'คอมพิวเตอร์ (CPU)' || category === 'โน๊ตบุ๊ค') category = 'PC / Notebook';
             if (category === 'จอ' || category === 'จอมอนิเตอร์' || category === 'Monitor') category = 'Monitor (จอ)';
             if (category === 'เครื่องพิมพ์' || category === 'Printer') category = 'Printer';
             
@@ -713,6 +713,7 @@
                                 });
                             };
                             extractDeployed(dbData.cpu, 'คอมพิวเตอร์');
+                            extractDeployed(dbData.nb, 'โน๊ตบุ๊ค');
                             extractDeployed(dbData.mon, 'จอมอนิเตอร์');
                             extractDeployed(dbData.prn, 'เครื่องพิมพ์');
                             extractDeployed(dbData.spc, 'เครื่องมือพิเศษ');
