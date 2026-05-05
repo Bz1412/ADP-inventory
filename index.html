@@ -1555,7 +1555,7 @@
         function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + อัปเดตคลังอัตโนมัติ
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + อัปเดตคลังอัตโนมัติ (แก้ไขให้บันทึกทะลุทะลวง)
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -1576,16 +1576,21 @@
                 let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
-                // 🌟 ดึงข้อมูลคลังมาเตรียมพร้อม
+                // 🌟 1. ดึงข้อมูลคลังมาเตรียมพร้อม (ถ้าว่างก็สร้างใหม่)
+                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
                 let whMainData = [];
                 let existingSNs = new Set();
                 let newlyAddedToWarehouse = 0;
-                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
                 
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try {
-                        whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
-                        whMainData = whDb.main || [];
+                        let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                        whDb.main = parsedWh.main || [];
+                        whDb.parts = parsedWh.parts || [];
+                        whDb.consumables = parsedWh.consumables || [];
+                        whDb.withdrawals = parsedWh.withdrawals || [];
+                        whMainData = whDb.main;
+                        
                         whMainData.forEach(r => {
                             let sn = String(r[4]).trim().toLowerCase();
                             if (sn && sn !== '-' && sn !== '') existingSNs.add(sn);
@@ -1741,8 +1746,9 @@
 
                 // 🌟 สร้างคำสั่งเซฟ 2 เด้ง: เด้ง 1 เซฟลงสถานี / เด้ง 2 เซฟเข้าคลังส่วนกลาง
                 let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
-                let logs = [{ station: currentStation, action: 'นำเข้าไฟล์รวม', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
+                let logs = [{ station: currentStation, action: 'นำเข้าไฟล์', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
                 
+                // 🌟 บังคับเซฟลงคลัง ถ้ามี S/N ใหม่ (ตัดเงื่อนไข if ซ้ำซ้อนออก)
                 if (newlyAddedToWarehouse > 0) {
                     whDb.main = whMainData; 
                     currentUpdates.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) });
@@ -1995,7 +2001,7 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี (จากหน้าแรก Dashboard) + อัปเดตคลังอัตโนมัติ
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี (อัปเกรด: เพิ่มเข้าคลังส่วนกลางอัตโนมัติแบบทะลุทะลวง)
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -2010,17 +2016,22 @@
                 const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 
                 let saveQueue = []; 
-                let newlyAddedToWarehouse = 0;
+                let newlyAddedToWarehouse = 0; 
 
-                // 🌟 ดึงข้อมูลคลังส่วนกลาง (Warehouse) มาเช็คก่อน ป้องกันการแอด S/N ซ้ำ
+                // 🌟 1. ดึงข้อมูลคลังส่วนกลาง (Warehouse) มาเตรียมไว้ (ถ้าคลังว่างก็สร้างโครงเปล่ารอเลย)
+                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
                 let whMainData = [];
                 let existingSNs = new Set();
-                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; // ป้องกันบัคถ้าคลังว่างเปล่า
-
+                
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try {
-                        whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
-                        whMainData = whDb.main || [];
+                        let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                        whDb.main = parsedWh.main || [];
+                        whDb.parts = parsedWh.parts || [];
+                        whDb.consumables = parsedWh.consumables || [];
+                        whDb.withdrawals = parsedWh.withdrawals || [];
+                        whMainData = whDb.main;
+                        
                         whMainData.forEach(r => {
                             let sn = String(r[4]).trim().toLowerCase();
                             if (sn && sn !== '-' && sn !== '') existingSNs.add(sn);
@@ -2028,7 +2039,7 @@
                     } catch(e) {}
                 }
 
-                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง
+                // 🌟 ฟังก์ชันย่อยสำหรับ แอด S/N ใหม่เข้าคลังหลัก
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim();
                     if (!cleanSN || cleanSN === '-' || cleanSN === '') return;
@@ -2042,6 +2053,7 @@
                         
                         let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
                         
+                        // ยัดข้อมูลลง Array ของคลังหลัก: ["ลำดับ", "ประเภท", "ยี่ห้อ", "รุ่น", "S/N", "สถานะในคลัง", "วันที่รับเข้า", "หมายเหตุ", "ลบ"]
                         whMainData.push(["", whType, brand || '', model || '', cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
                         existingSNs.add(cleanSN.toLowerCase());
                         newlyAddedToWarehouse++;
@@ -2190,11 +2202,11 @@
                     saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: logs });
                 });
 
-                // 🌟 ทยอยส่งทีละสถานี 🌟
+                // 🌟 ทยอยส่งข้อมูลทีละสถานี 🌟
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
                     
-                    // 🌟 ถ้าเจอ S/N ใหม่ ให้ยัดข้อมูลคลังเข้าไปด้วย
+                    // 🌟 ถ้าเจอ S/N ใหม่ ให้ยัดข้อมูลคลังเข้าไปด้วย (ตัดเงื่อนไขเช็คคลังออก เพื่อบังคับสร้างถ้าไม่มี)
                     if (newlyAddedToWarehouse > 0) {
                         try {
                             whDb.main = whMainData; 
