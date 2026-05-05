@@ -1329,17 +1329,21 @@
             const compareArrays = (oldArr, newArr, type, isPrn=false, isSpc=false) => {
                 let oldMap = new Map();
                 oldArr.forEach(r => {
-                    if (r[1] || r[2] || r[3] || r[4]) {
-                        let key = r[4] ? r[4].toString().trim() : (isSpc ? r[3] : (r[2] + '_' + r[3])).trim();
-                        if(key) oldMap.set(key, r);
+                    // 🌟 ดึงข้อมูลเก่า ยึดตาม S/N เป็นหลักเท่านั้น
+                    let hasData = (r[4] && String(r[4]).trim() !== '-' && String(r[4]).trim() !== '');
+                    if(hasData) {
+                        let key = String(r[4]).trim().toLowerCase();
+                        oldMap.set(key, r);
                     }
                 });
 
                 let newMap = new Map();
                 newArr.forEach(r => {
-                    if (r[1] || r[2] || r[3] || r[4]) {
-                        let key = r[4] ? r[4].toString().trim() : (isSpc ? r[3] : (r[2] + '_' + r[3])).trim();
-                        if(key) newMap.set(key, r);
+                    // 🌟 ดึงข้อมูลใหม่ ยึดตาม S/N เป็นหลัก
+                    let hasData = (r[4] && String(r[4]).trim() !== '-' && String(r[4]).trim() !== '');
+                    if(hasData) {
+                        let key = String(r[4]).trim().toLowerCase();
+                        newMap.set(key, r);
                         
                         let statusIdx = isPrn ? 7 : 5;
                         let user = isSpc ? r[2] : r[1];
@@ -1347,20 +1351,24 @@
                         let sn = r[4];
                         let actualType = isSpc ? (r[1] || type) : type;
 
+                        // ตรวจสอบว่าของชิ้นนี้เคยมีอยู่แล้วไหม?
                         if (oldMap.has(key)) {
                             let oldRow = oldMap.get(key);
                             let oldStatus = oldRow[statusIdx] || 'ปกติ';
                             let newStatus = r[statusIdx] || 'ปกติ';
+                            // ถ้ามีอยู่แล้ว แต่สถานะเปลี่ยน
                             if (oldStatus !== newStatus) {
                                 let label = `[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${sn||'-'}) เปลี่ยนสถานะเป็น: ${newStatus}`;
                                 updated.push({ label: label, status: newStatus });
                             }
                         } else {
+                            // ถ้าของเก่าไม่มี แปลว่าเพิ่งเพิ่มเข้ามาใหม่
                             added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
                         }
                     }
                 });
 
+                // ตรวจสอบของที่ถูกลบออกไป
                 for (let [key, oldRow] of oldMap.entries()) {
                     if (!newMap.has(key)) {
                         let statusIdx = isPrn ? 7 : 5;
