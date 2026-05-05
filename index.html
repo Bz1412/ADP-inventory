@@ -1555,6 +1555,7 @@
         function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
 
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + อัปเดตคลังอัตโนมัติ
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -1575,18 +1576,48 @@
                 let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
+                // 🌟 ดึงข้อมูลคลังมาเตรียมพร้อม
+                let whMainData = [];
+                let existingSNs = new Set();
+                let newlyAddedToWarehouse = 0;
+                if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
+                    try {
+                        let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                        whMainData = whDb.main || [];
+                        whMainData.forEach(r => {
+                            let sn = String(r[4]).trim().toLowerCase();
+                            if (sn && sn !== '-' && sn !== '') existingSNs.add(sn);
+                        });
+                    } catch(e) {}
+                }
+
+                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง
+                const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
+                    let cleanSN = String(sn).trim();
+                    if (!cleanSN || cleanSN === '-' || cleanSN === '') return;
+                    
+                    if (!existingSNs.has(cleanSN.toLowerCase())) {
+                        let whType = type;
+                        if (type === 'คอมพิวเตอร์' || type === 'CPU') whType = 'PC';
+                        else if (type === 'โน๊ตบุ๊ค') whType = 'Notebook';
+                        else if (type === 'จอมอนิเตอร์') whType = 'Monitor';
+                        else if (type === 'เครื่องพิมพ์') whType = 'Printer';
+                        
+                        let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                        
+                        whMainData.push(["", whType, brand || '', model || '', cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
+                        existingSNs.add(cleanSN.toLowerCase());
+                        newlyAddedToWarehouse++;
+                    }
+                };
+                
                 const mapConn = (c) => {
                     let l = String(c).toLowerCase().trim();
                     if(!l || l === '-') return '';
-                    
                     if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5';
-                    
                     if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6';
-                    
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
-                    
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
-                    
                     return c;
                 };
 
@@ -1663,24 +1694,27 @@
 
                         if (currentMode === 'CPUMON') { 
                             cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, monBrand, monModel, monSN, status, conn, remark]); 
+                            autoRegisterToWarehouse('CPU', cpuBrand, cpuModel, cpuSN, currentStation);
+                            autoRegisterToWarehouse('Monitor', monBrand, monModel, monSN, currentStation);
                         } 
                         else if (currentMode === 'NB') { 
                             nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); 
+                            autoRegisterToWarehouse('Notebook', cpuBrand, cpuModel, cpuSN, currentStation);
                         } 
                         else if (currentMode === 'PRN') { 
-                            let colorType = getVal(colMap.colorType);
-                            let scanner = getVal(colMap.scanner);
+                            let colorType = getVal(colMap.colorType); let scanner = getVal(colMap.scanner);
                             prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
+                            autoRegisterToWarehouse('Printer', cpuBrand, cpuModel, cpuSN, currentStation);
                         } 
                         else if (currentMode === 'SPC') { 
-                            let spcType = 'เครื่องมือพิเศษ/Server/อื่นๆ';
-                            let rmkLower = remark.toLowerCase();
+                            let spcType = 'เครื่องมือพิเศษ'; let rmkLower = remark.toLowerCase();
                             if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS';
                             else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server';
                             else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) spcType = 'RCF';
                             else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
 
                             spcData.push(["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(status), String(remark)]); 
+                            autoRegisterToWarehouse(spcType, cpuBrand, cpuModel, cpuSN, currentStation);
                         }
                     }
                 });
@@ -1690,7 +1724,25 @@
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
                 
-                showToast("ดึงข้อมูลและจัดเรียงสำเร็จ"); hasUnsavedDeletions = true; 
+                // 🌟 เซฟเข้าคลังจริงจัง 🌟
+                if (newlyAddedToWarehouse > 0 && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
+                    let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                    whDb.main = whMainData; 
+                    
+                    fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            action: 'SYNC_ASSETS',
+                            updates: [{ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }],
+                            logs: [{ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่ ${newlyAddedToWarehouse} รายการ จากการนำเข้าสถานี ${currentStation}` }] 
+                        }) 
+                    });
+                }
+                
+                let msg = "ดึงข้อมูลและจัดเรียงสำเร็จ";
+                if (newlyAddedToWarehouse > 0) msg += `\n📦 ส่งลงทะเบียน S/N เข้าคลังใหม่ ${newlyAddedToWarehouse} เครื่อง`;
+                
+                showToast(msg); hasUnsavedDeletions = true; 
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
@@ -1923,6 +1975,7 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี (จากหน้าแรก Dashboard) + อัปเดตคลังอัตโนมัติ
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -1936,8 +1989,44 @@
                 
                 const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 
-                let saveQueue = [];
+                let saveQueue = []; 
+                let newlyAddedToWarehouse = 0;
 
+                // 🌟 ดึงข้อมูลคลังส่วนกลาง (Warehouse) มาเช็คก่อน ป้องกันการแอด S/N ซ้ำ
+                let whMainData = [];
+                let existingSNs = new Set();
+                if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
+                    try {
+                        let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                        whMainData = whDb.main || [];
+                        whMainData.forEach(r => {
+                            let sn = String(r[4]).trim().toLowerCase();
+                            if (sn && sn !== '-' && sn !== '') existingSNs.add(sn);
+                        });
+                    } catch(e) {}
+                }
+
+                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง
+                const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
+                    let cleanSN = String(sn).trim();
+                    if (!cleanSN || cleanSN === '-' || cleanSN === '') return;
+                    
+                    if (!existingSNs.has(cleanSN.toLowerCase())) {
+                        let whType = type;
+                        if (type === 'คอมพิวเตอร์' || type === 'CPU') whType = 'PC';
+                        else if (type === 'โน๊ตบุ๊ค') whType = 'Notebook';
+                        else if (type === 'จอมอนิเตอร์') whType = 'Monitor';
+                        else if (type === 'เครื่องพิมพ์') whType = 'Printer';
+                        
+                        let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                        
+                        whMainData.push(["", whType, brand || '', model || '', cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
+                        existingSNs.add(cleanSN.toLowerCase());
+                        newlyAddedToWarehouse++;
+                    }
+                };
+
+                // วนลูปอ่านทุก Sheet ในไฟล์
                 wb.eachSheet((ws) => {
                     let sName = ws.name.trim();
                     let fullStationName = abbrMap[sName] || sName;
@@ -1945,14 +2034,10 @@
 
                     for (let g in inventoryGroups) {
                         let found = inventoryGroups[g].find(s => s === fullStationName || s.includes(fullStationName) || fullStationName.includes(s));
-                        if (found) {
-                            fullStationName = found;
-                            groupName = g;
-                            break;
-                        }
+                        if (found) { fullStationName = found; groupName = g; break; }
                     }
 
-                    if (!groupName) return;
+                    if (!groupName) return; 
 
                     let cpumonData = [], nbData = [], prnData = [], spcData = [];
                     let currentMode = 'CPUMON'; 
@@ -2041,22 +2126,27 @@
 
                             if (currentMode === 'CPUMON') { 
                                 cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, monBrand, monModel, monSN, status, conn, remark]); 
+                                autoRegisterToWarehouse('CPU', cpuBrand, cpuModel, cpuSN, fullStationName);
+                                autoRegisterToWarehouse('Monitor', monBrand, monModel, monSN, fullStationName);
                             } 
                             else if (currentMode === 'NB') { 
                                 nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); 
+                                autoRegisterToWarehouse('Notebook', cpuBrand, cpuModel, cpuSN, fullStationName);
                             } 
                             else if (currentMode === 'PRN') { 
                                 let colorType = getVal(colMap.colorType); let scanner = getVal(colMap.scanner);
                                 prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
+                                autoRegisterToWarehouse('Printer', cpuBrand, cpuModel, cpuSN, fullStationName);
                             } 
                             else if (currentMode === 'SPC') { 
-                                let spcType = 'เครื่องมือพิเศษ/Server/อื่นๆ'; let rmkLower = remark.toLowerCase();
+                                let spcType = 'เครื่องมือพิเศษ'; let rmkLower = remark.toLowerCase();
                                 if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS';
                                 else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server';
                                 else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) spcType = 'RCF';
                                 else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
 
                                 spcData.push(["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(status), String(remark)]); 
+                                autoRegisterToWarehouse(spcType, cpuBrand, cpuModel, cpuSN, fullStationName);
                             }
                         }
                     });
@@ -2066,7 +2156,7 @@
 
                     let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null };
                     let cacheKey = `ADP_${groupName}_${fullStationName}`;
-
+                    
                     if (globalAllDataCache && globalAllDataCache[cacheKey]) {
                         try {
                             let oldData = JSON.parse(globalAllDataCache[cacheKey]);
@@ -2075,26 +2165,40 @@
                     }
 
                     let logs = [{ action: 'นำเข้าไฟล์รวม', detail: `อัปเดตข้อมูล ${fullStationName} อัตโนมัติด้วยไฟล์รวม` }];
-
-                    saveQueue.push({
-                        name: fullStationName,
-                        key: cacheKey,
-                        payload: newPayload,
-                        logs: logs
-                    });
+                    saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: logs });
                 });
 
+                // 🌟 ทยอยส่งทีละสถานีป้องกัน Server ล่ม 🌟
                 if (saveQueue.length > 0) {
+                    let updatesPayload = [];
+                    
+                    // 🌟 ถ้าเจอ S/N ใหม่ ให้เตรียมอัปเดตคลัง (Central Warehouse) ด้วย!
+                    if (newlyAddedToWarehouse > 0) {
+                        try {
+                            let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                            whDb.main = whMainData; // ยัดข้อมูลใหม่ที่ถูกเพิ่มเข้าไป
+                            updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) });
+                        } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); }
+                    }
+
                     for (let i = 0; i < saveQueue.length; i++) {
                         let q = saveQueue[i];
-                        document.getElementById('loadingText').innerText = `กำลังบันทึก ${q.name} (${i + 1}/${saveQueue.length})...`;
+                        document.getElementById('loadingText').innerText = `กำลังบันทึกสถานี: ${q.name} (${i + 1}/${saveQueue.length})...`;
                         
+                        let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
+                        
+                        // ถ้ารอบสุดท้าย ให้พ่วงการเซฟ Master Data ของคลังไปด้วย
+                        if (i === saveQueue.length - 1 && updatesPayload.length > 0) {
+                            currentUpdates.push(updatesPayload[0]);
+                            q.logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่ ${newlyAddedToWarehouse} รายการ จากการนำเข้าไฟล์` });
+                        }
+
                         try {
                             await fetch(API_URL, { 
                                 method: 'POST', 
                                 body: JSON.stringify({ 
-                                    key: q.key, 
-                                    value: JSON.stringify(q.payload), 
+                                    action: 'SYNC_ASSETS',
+                                    updates: currentUpdates,
                                     logs: q.logs 
                                 }) 
                             });
@@ -2103,8 +2207,11 @@
                         }
                     }
                     
-                    showToast(`✅ นำเข้าและบันทึกครบ ${saveQueue.length} สถานีเรียบร้อยแล้ว!`);
-                    loadDashboardStats();
+                    let msg = `✅ นำเข้าสำเร็จ ${saveQueue.length} สถานี`;
+                    if (newlyAddedToWarehouse > 0) msg += `\n📦 และลงทะเบียนของใหม่เข้าคลัง ${newlyAddedToWarehouse} รายการ!`;
+                    
+                    showToast(msg);
+                    loadDashboardStats(); // รีเฟรชยอดใหม่
                 } else {
                     showToast("ไม่พบข้อมูลสถานีที่ตรงกันเลย", "error");
                 }
