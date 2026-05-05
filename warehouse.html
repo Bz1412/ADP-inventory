@@ -683,10 +683,8 @@
                             const extractDeployed = (arr, cat, isSpc = false, isPrn = false) => {
                                 if(!arr) return;
                                 arr.forEach(r => {
-                                    // นับของชิ้นนั้น ถ้ามี ยี่ห้อ หรือ รุ่น หรือ S/N อย่างน้อย 1 ช่อง
-                                    let hasData = false;
-                                    if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
-                                    else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                                    // 🌟 นับของชิ้นนั้น ถ้ามี S/N เท่านั้น (ป้องกันจอที่ 2 กลายเป็นคอม)
+                                    let hasData = (r[4] && String(r[4]).trim() !== '-' && String(r[4]).trim() !== '');
 
                                     if (hasData) {
                                         totalDeployed++;
@@ -696,7 +694,7 @@
                                         let statusIdx = isPrn ? 7 : 5;
                                         let status = r[statusIdx] || '-';
                                         
-                                        // 🌟 จุดสำคัญ: ถ้าเป็นเครื่องมือพิเศษ ให้อ่านประเภทจากคอลัมน์แรกสุดมาโชว์เลย (เช่น UPS, Server)
+                                        // ถ้าเป็นเครื่องมือพิเศษ ให้อ่านประเภทจากคอลัมน์แรกสุดมาโชว์เลย
                                         let actualCat = isSpc ? (r[1] || cat) : cat;
 
                                         let itemObj = { group, station, category: actualCat, user: user||'-', specs: specs.trim(), sn: sn||'-', status: status };
@@ -724,7 +722,8 @@
                 const processWhArray = (arr) => {
                     if(!arr) return;
                     arr.forEach(r => { 
-                        let hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                        // 🌟 นับเฉพาะชิ้นที่มี S/N
+                        let hasData = (r[4] && String(r[4]).trim() !== '-' && String(r[4]).trim() !== '');
                         if (hasData) {
                             whMainCount++; 
                             let cat = r[1];
