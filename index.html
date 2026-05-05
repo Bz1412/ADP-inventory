@@ -592,7 +592,8 @@
             "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
         
-        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone'];
+        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; 
+        const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; 
         let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null; 
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], nb: [], lastConfirmed: null };
@@ -1137,7 +1138,7 @@
             }
             if (cpumonData.length === 0) cpumonData = [[]];
 
-            // 🌟 ตั้งค่าให้ตารางกาง 100% พอดีจอ ไม่ต้องเลื่อน
+            // 🌟 ตั้งค่าตารางให้ขยายเต็มและ Scroll ได้สะดวก
             const tableConfig = {
                 tableOverflow: true,
                 tableWidth: "100%",
@@ -1153,18 +1154,18 @@
                 ...tableConfig,
                 data: cpumonData, 
                 columns: [
-                    { type: 'numeric', title: 'ลำดับ', width: 40, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 100 }, 
-                    { type: 'text', title: 'ยี่ห้อ CPU', width: 80 }, 
-                    { type: 'text', title: 'รุ่น CPU', width: 90 }, 
-                    { type: 'text', title: 'S/N CPU', width: 110 }, 
-                    { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 80 }, 
-                    { type: 'text', title: 'รุ่น จอภาพ', width: 90 }, 
-                    { type: 'text', title: 'S/N จอภาพ', width: 110 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 70, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 90, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 100 }, 
-                    { type: 'html', title: 'จัดการ', width: 60, readOnly: true }
+                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 140 }, 
+                    { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, 
+                    { type: 'text', title: 'รุ่น CPU', width: 120 }, 
+                    { type: 'text', title: 'S/N CPU', width: 130 }, 
+                    { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, 
+                    { type: 'text', title: 'รุ่น จอภาพ', width: 120 }, 
+                    { type: 'text', title: 'S/N จอภาพ', width: 130 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
                 ], 
                 minDimensions: [12, 3]
             });
@@ -1173,53 +1174,51 @@
                 ...tableConfig,
                 data: data.nb||[[]], 
                 columns: [
-                    { type: 'numeric', title: 'ลำดับ', width: 40, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 120 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 90 }, 
-                    { type: 'text', title: 'รุ่น', width: 110 }, 
-                    { type: 'text', title: 'S/N', width: 130 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 70, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 100, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 120 }, 
-                    { type: 'html', title: 'จัดการ', width: 60, readOnly: true }
+                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
+                    { type: 'text', title: 'รุ่น', width: 130 }, 
+                    { type: 'text', title: 'S/N', width: 150 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
+                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
                 ], 
                 minDimensions: [9, 3]
             });
 
-            // 🌟 เพิ่ม ลักษณะสี และ Scanner เข้าไปในเครื่องพิมพ์
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { 
                 ...tableConfig,
                 data: data.prn||[[]], 
                 columns: [
-                    { type: 'numeric', title: 'ลำดับ', width: 40, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 120 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 80 }, 
-                    { type: 'text', title: 'รุ่น', width: 100 }, 
-                    { type: 'text', title: 'S/N', width: 120 }, 
-                    { type: 'text', title: 'ลักษณะสี', width: 80 }, 
-                    { type: 'text', title: 'Scanner', width: 80 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 70, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 100, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 100 }, 
-                    { type: 'html', title: 'จัดการ', width: 60, readOnly: true }
+                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
+                    { type: 'text', title: 'รุ่น', width: 120 }, 
+                    { type: 'text', title: 'S/N', width: 140 }, 
+                    { type: 'text', title: 'ลักษณะสี', width: 90 }, 
+                    { type: 'text', title: 'Scanner', width: 90 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
                 ], 
                 minDimensions: [11, 3]
             });
 
-            // 🌟 เพิ่มคอลัมน์ ประเภท เข้าไปในเครื่องมือพิเศษ
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { 
                 ...tableConfig,
                 data: data.spc||[[]], 
                 columns: [
-                    { type: 'numeric', title: 'ลำดับ', width: 40, readOnly: true }, 
-                    { type: 'text', title: 'ประเภท', width: 100 }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 120 }, 
+                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
+                    { type: 'text', title: 'ประเภท', width: 120 }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
                     { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น', width: 120 }, 
-                    { type: 'text', title: 'S/N', width: 130 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 70, source: statusOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 120 }, 
-                    { type: 'html', title: 'จัดการ', width: 60, readOnly: true }
+                    { type: 'text', title: 'รุ่น', width: 130 }, 
+                    { type: 'text', title: 'S/N', width: 150 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
+                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
                 ], 
                 minDimensions: [9, 3]
             });
@@ -1508,6 +1507,11 @@
                         rowVals[colNumber] = cell.value ? String(cell.result !== undefined ? cell.result : cell.value).trim() : '';
                     });
                     let rowStr = rowVals.join(' ').toLowerCase();
+
+                    // 🌟 กรองข้อความขยะ/คำอธิบายออกจากไฟล์ Excel 🌟
+                    if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) {
+                        return; // ข้ามบรรทัดนี้ไปเลย
+                    }
                     
                     if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
                     if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
@@ -1539,7 +1543,6 @@
                                 else colMap.cpuSN = idx;
                             }
                             
-                            // 🌟 ดักหัวตารางปริ้นเตอร์
                             if (h.includes('สี') || h.includes('color')) colMap.colorType = idx;
                             if (h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
                         });
@@ -1550,7 +1553,7 @@
                         const getVal = (idx) => { let v = idx ? (rowVals[idx] || '') : ''; return v === '-' ? '' : v; };
                         
                         let user = getVal(colMap.user);
-                        if (!user || user.trim() === '') user = currentStation; // 🌟 เติมชื่อสถานีออโต้ถ้าว่าง
+                        if (!user || user.trim() === '') user = currentStation; 
                         
                         let cpuBrand = getVal(colMap.cpuBrand); let cpuModel = getVal(colMap.cpuModel); let cpuSN = getVal(colMap.cpuSN);
                         let monBrand = getVal(colMap.monBrand); let monModel = getVal(colMap.monModel); let monSN = getVal(colMap.monSN);
@@ -1558,7 +1561,6 @@
                         let conn = mapConn(getVal(colMap.conn)); let status = mapStatus(getVal(colMap.status)); let remark = getVal(colMap.remark);
 
                         if (!cpuBrand && !cpuSN && !monSN && !cpuModel && !monModel && (!remark || currentMode !== 'SPC')) return;
-                        if (rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
 
                         if (currentMode === 'CPUMON') { 
                             cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, monBrand, monModel, monSN, status, conn, remark]); 
@@ -1572,7 +1574,6 @@
                             prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
                         } 
                         else if (currentMode === 'SPC') { 
-                            // 🌟 เช็คหมายเหตุเพื่อแยกประเภท
                             let spcType = 'เครื่องมือพิเศษ';
                             let rmkLower = remark.toLowerCase();
                             if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS';
