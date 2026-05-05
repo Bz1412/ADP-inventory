@@ -1433,24 +1433,210 @@
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
-                const extractSheetData = (sheetName, expectedColumns) => { const ws = wb.getWorksheet(sheetName); if (!ws) return []; let rowData = []; ws.eachRow((row, rowNumber) => { if (rowNumber > 1) { let r = []; for(let i = 1; i <= expectedColumns; i++) { let val = row.getCell(i).value; r.push(val !== null && val !== undefined ? val : ""); } r.push(""); rowData.push(r); } }); return rowData; };
-                const cpuData = extractSheetData("คอมพิวเตอร์", 8); if(cpuData.length > 0) tableCPU.setData(cpuData);
-                const nbData = extractSheetData("โน๊ตบุ๊ค", 8); if(nbData.length > 0) tableNB.setData(nbData);
-                const monData = extractSheetData("จอมอนิเตอร์", 7); if(monData.length > 0) tableMon.setData(monData);
-                const prnData = extractSheetData("เครื่องพิมพ์", 8); if(prnData.length > 0) tablePrn.setData(prnData);
-                const spcData = extractSheetData("เครื่องมือพิเศษ", 7); if(spcData.length > 0) tableSpc.setData(spcData);
-                showToast("ดึงข้อมูลสำเร็จ"); hasUnsavedDeletions = true; 
-            } catch (err) { console.error(err); showToast("ไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+                
+                // 🌟 1. ค้นหา Sheet ที่ตรงกับสถานีปัจจุบัน (รองรับตัวย่อ)
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                let targetSheet = null;
+                wb.eachSheet((ws) => {
+                    let sName = ws.name.trim();
+                    if (sName === currentStation || abbrMap[sName] === currentStation || currentStation.includes(sName) || sName.includes(currentStation)) {
+                        targetSheet = ws;
+                    }
+                });
+                if (!targetSheet) targetSheet = wb.worksheets[0]; // ถ้าหาไม่เจอ ให้ดึงจากหน้าแรก
+                
+                let cpuData = [], nbData = [], monData = [], prnData = [], spcData = [];
+                let currentMode = 'CPU'; // โหมดเริ่มต้น (CPU & Monitor คู่กัน)
+                let colMap = {};
+                
+                // 🌟 Helper แปลงสถานะการเชื่อมต่อ
+                const mapConn = (c) => {
+                    let l = String(c).toLowerCase();
+                    if(!l) return '';
+                    if(l.includes('lan') || l.includes('6') || l.includes('ภายใน')) return 'LAN กอง 6';
+                    if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
+                    if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
+                    return c;
+                };
+
+                const mapStatus = (s) => {
+                    let l = String(s).toLowerCase();
+                    if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด';
+                    if(l.includes('สำรอง')) return 'สำรอง';
+                    return 'ปกติ'; 
+                };
+
+                targetSheet.eachRow((row, rowNumber) => {
+                    let rowVals = [];
+                    row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                        rowVals[colNumber] = cell.value ? String(cell.result !== undefined ? cell.result : cell.value).trim() : '';
+                    });
+                    let rowStr = rowVals.join(' ').toLowerCase();
+                    
+                    // 🌟 2. ตรวจจับการเปลี่ยน Section (หมวดหมู่อุปกรณ์)
+                    if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) {
+                        currentMode = 'SPC'; colMap = {}; return;
+                    }
+                    if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) {
+                        currentMode = 'NB'; colMap = {}; return;
+                    }
+                    if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) {
+                        currentMode = 'PRN'; colMap = {}; return;
+                    }
+
+                    // 🌟 3. ตรวจจับหัวตาราง (Mapping Columns อัตโนมัติ)
+                    if (rowStr.includes('ผู้ใช้') || rowStr.includes('s/n') || rowStr.includes('ยี่ห้อ')) {
+                        colMap = {}; 
+                        rowVals.forEach((val, idx) => {
+                            if (!val) return;
+                            let h = val.toLowerCase();
+                            if (h.includes('ผู้ใช้') || h.includes('user') || h.includes('สถานที่')) colMap.user = idx;
+                            if (h.includes('สถานะ') || h.includes('status')) colMap.status = idx;
+                            if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network')) colMap.conn = idx;
+                            if (h.includes('หมายเหตุ') || h.includes('remark')) colMap.remark = idx;
+
+                            if (h.includes('ยี่ห้อ') || h.includes('brand')) {
+                                if (h.includes('จอ') || h.includes('mon')) colMap.monBrand = idx;
+                                else if (h.includes('พิมพ์') || h.includes('print')) colMap.prnBrand = idx;
+                                else if (colMap.cpuBrand === undefined) colMap.cpuBrand = idx;
+                            }
+                            if (h.includes('รุ่น') || h.includes('model') || h.includes('สเปค')) {
+                                if (h.includes('จอ') || h.includes('mon')) colMap.monModel = idx;
+                                else if (h.includes('พิมพ์') || h.includes('print')) colMap.prnModel = idx;
+                                else if (colMap.cpuModel === undefined) colMap.cpuModel = idx;
+                            }
+                            if (h.includes('s/n') || h.includes('serial')) {
+                                if (h.includes('จอ') || h.includes('mon')) colMap.monSN = idx;
+                                else if (h.includes('พิมพ์') || h.includes('print')) colMap.prnSN = idx;
+                                else if (h.includes('server') || h.includes('ups') || h.includes('พิเศษ')) colMap.spcSN = idx;
+                                else if (colMap.cpuSN === undefined) colMap.cpuSN = idx;
+                            }
+                        });
+                        return; 
+                    }
+
+                    // 🌟 4. ดึงข้อมูลจากแถว
+                    if (Object.keys(colMap).length > 0) {
+                        const getVal = (idx) => idx ? (rowVals[idx] || '') : '';
+                        
+                        let user = getVal(colMap.user);
+                        let cpuBrand = getVal(colMap.cpuBrand);
+                        let cpuModel = getVal(colMap.cpuModel);
+                        let cpuSN = getVal(colMap.cpuSN);
+                        
+                        let monBrand = getVal(colMap.monBrand);
+                        let monModel = getVal(colMap.monModel);
+                        let monSN = getVal(colMap.monSN);
+                        
+                        let conn = mapConn(getVal(colMap.conn));
+                        let status = mapStatus(getVal(colMap.status));
+                        let remark = getVal(colMap.remark);
+
+                        // ข้ามแถวที่ว่างเปล่าจริงๆ
+                        if (!user && !cpuBrand && !cpuSN && !monSN && !getVal(colMap.prnSN) && !getVal(colMap.spcSN)) return;
+
+                        if (currentMode === 'CPU') {
+                            // นำเข้า CPU
+                            if (user || cpuBrand || cpuSN) cpuData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]);
+                            // นำเข้า Monitor (จับคู่อัตโนมัติจากบรรทัดเดียวกัน)
+                            if (monBrand || monSN) monData.push(["", user, monBrand, monModel, monSN, status, remark]);
+                        } else if (currentMode === 'NB') {
+                            nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]);
+                        } else if (currentMode === 'PRN') {
+                            prnData.push(["", user, getVal(colMap.cpuBrand)||getVal(colMap.prnBrand), getVal(colMap.cpuModel)||getVal(colMap.prnModel), cpuSN||getVal(colMap.prnSN), status, conn, remark]);
+                        } else if (currentMode === 'SPC') {
+                            spcData.push(["", user, getVal(colMap.cpuBrand), getVal(colMap.cpuModel), cpuSN||getVal(colMap.spcSN), status, remark]);
+                        }
+                    }
+                });
+
+                // ยัดข้อมูลลงตารางหน้าเว็บ
+                if(cpuData.length > 0) tableCPU.setData(cpuData);
+                if(nbData.length > 0) tableNB.setData(nbData);
+                if(monData.length > 0) tableMon.setData(monData);
+                if(prnData.length > 0) tablePrn.setData(prnData);
+                if(spcData.length > 0) tableSpc.setData(spcData);
+                
+                showToast("ดึงข้อมูลและจัดเรียงสำเร็จ"); hasUnsavedDeletions = true; 
+            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         async function exportStationExcel() {
             if (!tableCPU) return; showToast("สร้างไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
-            const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
-            const w1 = wb.addWorksheet("คอมพิวเตอร์"); w1.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableCPU.getData().forEach(r => w1.addRow(r.slice(0, -1))); formatWs(w1);
-            const w2 = wb.addWorksheet("จอมอนิเตอร์"); w2.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableMon.getData().forEach(r => w2.addRow(r.slice(0, -1))); w2.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w2);
-            const w3 = wb.addWorksheet("เครื่องพิมพ์"); w3.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tablePrn.getData().forEach(r => w3.addRow(r.slice(0, -1))); formatWs(w3);
-            const w4 = wb.addWorksheet("เครื่องมือพิเศษ"); w4.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); tableSpc.getData().forEach(r => w4.addRow(r.slice(0, -1))); w4.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 30}]; formatWs(w4);
-            const w5 = wb.addWorksheet("โน๊ตบุ๊ค"); w5.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "การเชื่อมต่อ", "หมายเหตุ"]); tableNB.getData().forEach(r => w5.addRow(r.slice(0, -1))); formatWs(w5);
+            const ws = wb.addWorksheet(currentStation);
+            
+            const formatHeader = (rowObj, bgArgb) => {
+                rowObj.eachCell((c) => { 
+                    c.font = {bold: true, color: {argb: 'FFFFFFFF'}}; 
+                    c.alignment = {vertical: 'middle', horizontal: 'center'}; 
+                    c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: bgArgb}};
+                    c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
+                });
+            };
+            const applyBorders = (rowObj) => {
+                rowObj.eachCell((c) => { 
+                    c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; 
+                    c.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true};
+                });
+            };
+
+            // 🌟 1. คอมพิวเตอร์ และ จอมอนิเตอร์ (รวมกันแบบจับคู่)
+            let rHead1 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "ยี่ห้อ จอภาพ", "รุ่น จอภาพ", "S/N จอภาพ", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+            formatHeader(rHead1, 'FF0f172a');
+            
+            let cpuArr = tableCPU.getData();
+            let monArr = tableMon.getData();
+            let maxLen = Math.max(cpuArr.length, monArr.length);
+            
+            for(let i=0; i<maxLen; i++) {
+                let c = cpuArr[i] || []; let m = monArr[i] || [];
+                if (c.join('').trim() !== '' || m.join('').trim() !== '') {
+                    let user = c[1] || m[1] || '';
+                    let status = c[5] || m[5] || '';
+                    let conn = c[6] || '';
+                    let remark = c[7] || m[6] || ''; // remark ของจออยู่ index 6
+                    let row = ws.addRow([i+1, user, c[2]||'', c[3]||'', c[4]||'', m[2]||'', m[3]||'', m[4]||'', conn, status, remark]);
+                    applyBorders(row);
+                }
+            }
+            ws.addRow([]);
+
+            // 🌟 2. โน๊ตบุ๊ค
+            ws.addRow(["โน๊ตบุ๊ค"]);
+            let rHead2 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+            formatHeader(rHead2, 'FF334155');
+            tableNB.getData().forEach((c, i) => {
+                if (c.join('').trim() !== '') {
+                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']);
+                    applyBorders(row);
+                }
+            });
+            ws.addRow([]);
+
+            // 🌟 3. เครื่องพิมพ์
+            ws.addRow(["เครื่องพิมพ์"]);
+            let rHead3 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+            formatHeader(rHead3, 'FF475569');
+            tablePrn.getData().forEach((c, i) => {
+                if (c.join('').trim() !== '') {
+                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']);
+                    applyBorders(row);
+                }
+            });
+            ws.addRow([]);
+
+            // 🌟 4. SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ
+            ws.addRow(["SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ"]);
+            let rHead4 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
+            formatHeader(rHead4, 'FF64748B');
+            tableSpc.getData().forEach((c, i) => {
+                if (c.join('').trim() !== '') {
+                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']);
+                    applyBorders(row);
+                }
+            });
+
+            ws.columns = [ {width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 12}, {width: 25} ];
             const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
         }
 
@@ -1459,20 +1645,52 @@
             showToast("สร้างไฟล์รวม..."); document.getElementById('loadingText').innerText = 'รวมไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const wb = new ExcelJS.Workbook();
-                const formatWs = (ws) => { ws.columns = [{width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 12}, {width: 15}, {width: 25}]; ws.eachRow((r, rn) => { r.eachCell((c, cn) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left'}; if (cn === 1 || cn === 6) c.alignment.horizontal = 'center'; if (rn === 1) { c.font = {bold: true}; c.alignment.horizontal = 'center'; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: 'FFE0E0E0'}}; } }); }); };
-                
-                for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
-                    // 🌟 บล็อกไม่ให้ส่งออกข้อมูลคลังส่วนกลางเด็ดขาด 🌟
-                    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+                const formatHeader = (rowObj, bgArgb) => { rowObj.eachCell((c) => { c.font = {bold: true, color: {argb: 'FFFFFFFF'}}; c.alignment = {vertical: 'middle', horizontal: 'center'}; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: bgArgb}}; c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; }); };
+                const applyBorders = (rowObj) => { rowObj.eachCell((c) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true}; }); };
 
-                    const parts = dbKey.split('_'); if (parts.length < 3) continue; const station = parts[2]; const dbData = JSON.parse(jsonValue); const safeSheetName = station.substring(0, 31); const ws = wb.addWorksheet(safeSheetName);
-                    ws.addRow(["หมวดหมู่: คอมพิวเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.cpu) dbData.cpu.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: โน๊ตบุ๊ค"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.nb) dbData.nb.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: จอมอนิเตอร์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.mon) dbData.mon.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: เครื่องพิมพ์"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "ระบบเชื่อมต่อ", "หมายเหตุ"]); if(dbData.prn) dbData.prn.forEach(row => ws.addRow(row)); ws.addRow([]);
-                    ws.addRow(["หมวดหมู่: เครื่องมือพิเศษ"]); ws.addRow(["ลำดับ", "USER", "ยี่ห้อ", "รุ่น", "S/N", "สถานะ", "หมายเหตุ"]); if(dbData.spc) dbData.spc.forEach(row => ws.addRow(row));
-                    formatWs(ws); ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && firstCell.includes("หมวดหมู่:")) { ws.mergeCells(`A${rowNumber}:H${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; cell.alignment = { horizontal: 'left' }; } });
+                for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
+                    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+                    const parts = dbKey.split('_'); if (parts.length < 3) continue; 
+                    const station = parts[2]; const dbData = JSON.parse(jsonValue); 
+                    const safeSheetName = station.substring(0, 31); 
+                    const ws = wb.addWorksheet(safeSheetName);
+                    
+                    ws.addRow(["คอมพิวเตอร์และจอมอนิเตอร์"]);
+                    let rHead1 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "ยี่ห้อ จอภาพ", "รุ่น จอภาพ", "S/N จอภาพ", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead1, 'FF0f172a');
+                    let cLen = dbData.cpu ? dbData.cpu.length : 0; let mLen = dbData.mon ? dbData.mon.length : 0; let maxLen = Math.max(cLen, mLen);
+                    for(let i=0; i<maxLen; i++) {
+                        let c = dbData.cpu && dbData.cpu[i] ? dbData.cpu[i] : []; let m = dbData.mon && dbData.mon[i] ? dbData.mon[i] : [];
+                        if (c.join('').trim() !== '' || m.join('').trim() !== '') {
+                            let user = c[1] || m[1] || ''; let status = c[5] || m[5] || ''; let conn = c[6] || ''; let remark = c[7] || m[6] || '';
+                            let row = ws.addRow([i+1, user, c[2]||'', c[3]||'', c[4]||'', m[2]||'', m[3]||'', m[4]||'', conn, status, remark]);
+                            applyBorders(row);
+                        }
+                    }
+                    ws.addRow([]);
+
+                    ws.addRow(["โน๊ตบุ๊ค"]);
+                    let rHead2 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead2, 'FF334155');
+                    if(dbData.nb) dbData.nb.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']); applyBorders(row); }});
+                    ws.addRow([]);
+
+                    ws.addRow(["เครื่องพิมพ์"]);
+                    let rHead3 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead3, 'FF475569');
+                    if(dbData.prn) dbData.prn.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']); applyBorders(row); }});
+                    ws.addRow([]);
+
+                    ws.addRow(["SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ"]);
+                    let rHead4 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead4, 'FF64748B');
+                    if(dbData.spc) dbData.spc.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']); applyBorders(row); }});
+
+                    ws.columns = [ {width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 12}, {width: 25} ];
+                    
+                    ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && (firstCell === "คอมพิวเตอร์และจอมอนิเตอร์" || firstCell === "โน๊ตบุ๊ค" || firstCell === "เครื่องพิมพ์" || firstCell === "SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ")) { ws.mergeCells(`A${rowNumber}:K${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; cell.alignment = { horizontal: 'left' }; } });
                 }
+                
                 if(wb.worksheets.length === 0) wb.addWorksheet("Empty");
                 const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
             } catch (error) { console.error(error); showToast("ข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
