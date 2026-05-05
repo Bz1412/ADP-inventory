@@ -359,9 +359,9 @@
                 <button onclick="document.getElementById('importAllExcelInput').click()" data-tooltip="นำเข้าไฟล์ Excel ที่มีหลาย Sheet (อัปเดตทุกสถานีในไฟล์เดียว)" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center">
                     <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้าหลายสถานี
                 </button>
-                <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center">
-                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
-                </button>
+                <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
+    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
+</button>
             </div>
         </div>
 
@@ -1923,7 +1923,6 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี (จากหน้าแรก)
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -1937,16 +1936,13 @@
                 
                 const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 
-                let savePromises = [];
-                let importedCount = 0;
+                let saveQueue = [];
 
-                // วนลูปอ่านทุก Sheet ในไฟล์
                 wb.eachSheet((ws) => {
                     let sName = ws.name.trim();
                     let fullStationName = abbrMap[sName] || sName;
                     let groupName = null;
 
-                    // ค้นหาว่าตรงกับสถานีไหนในระบบ
                     for (let g in inventoryGroups) {
                         let found = inventoryGroups[g].find(s => s === fullStationName || s.includes(fullStationName) || fullStationName.includes(s));
                         if (found) {
@@ -1956,7 +1952,7 @@
                         }
                     }
 
-                    if (!groupName) return; // ถ้าหาไม่เจอให้ข้าม Sheet นี้ไปเลย
+                    if (!groupName) return;
 
                     let cpumonData = [], nbData = [], prnData = [], spcData = [];
                     let currentMode = 'CPUMON'; 
@@ -2065,14 +2061,12 @@
                         }
                     });
 
-                    // แยกร่าง CPU และ MON กลับคืนเพื่อส่งให้ฐานข้อมูล (แบบเดียวกันกับที่หน้าตารางทำ)
                     let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
                     let newMon = cpumonData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
 
                     let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null };
                     let cacheKey = `ADP_${groupName}_${fullStationName}`;
-                    
-                    // ดึงค่าการรายงานเดือนล่าสุดเดิมมาใส่ด้วย (จะได้ไม่ถูกรีเซ็ตการกดส่งรายงาน)
+
                     if (globalAllDataCache && globalAllDataCache[cacheKey]) {
                         try {
                             let oldData = JSON.parse(globalAllDataCache[cacheKey]);
@@ -2081,20 +2075,36 @@
                     }
 
                     let logs = [{ action: 'นำเข้าไฟล์รวม', detail: `อัปเดตข้อมูล ${fullStationName} อัตโนมัติด้วยไฟล์รวม` }];
-                    
-                    // จับใส่คิวบันทึกฐานข้อมูล
-                    savePromises.push(
-                        fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: cacheKey, value: JSON.stringify(newPayload), logs: logs }) })
-                    );
-                    
-                    importedCount++;
+
+                    saveQueue.push({
+                        name: fullStationName,
+                        key: cacheKey,
+                        payload: newPayload,
+                        logs: logs
+                    });
                 });
 
-                if (savePromises.length > 0) {
-                    document.getElementById('loadingText').innerText = `กำลังบันทึกข้อมูล ${importedCount} สถานี...`;
-                    await Promise.all(savePromises);
-                    showToast(`✅ นำเข้าและบันทึกครบ ${importedCount} สถานีเรียบร้อยแล้ว!`);
-                    loadDashboardStats(); // รีเฟรชยอดทั้งหมด
+                if (saveQueue.length > 0) {
+                    for (let i = 0; i < saveQueue.length; i++) {
+                        let q = saveQueue[i];
+                        document.getElementById('loadingText').innerText = `กำลังบันทึก ${q.name} (${i + 1}/${saveQueue.length})...`;
+                        
+                        try {
+                            await fetch(API_URL, { 
+                                method: 'POST', 
+                                body: JSON.stringify({ 
+                                    key: q.key, 
+                                    value: JSON.stringify(q.payload), 
+                                    logs: q.logs 
+                                }) 
+                            });
+                        } catch (err) {
+                            console.error(`เกิดข้อผิดพลาดในการบันทึกสถานี ${q.name}:`, err);
+                        }
+                    }
+                    
+                    showToast(`✅ นำเข้าและบันทึกครบ ${saveQueue.length} สถานีเรียบร้อยแล้ว!`);
+                    loadDashboardStats();
                 } else {
                     showToast("ไม่พบข้อมูลสถานีที่ตรงกันเลย", "error");
                 }
