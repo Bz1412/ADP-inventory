@@ -691,15 +691,30 @@
 
                         const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
                         
-                        // ฟังก์ชันนับจำนวน
-                        const countItems = (arr) => { if(!arr) return 0; let c = 0; arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c; };
+                        // ฟังก์ชันนับจำนวนที่แม่นยำขึ้น (ไม่นับแถวที่มีแค่ชื่อผู้ใช้)
+                        const countItems = (arr, isPrn=false, isSpc=false) => { 
+                            if(!arr) return 0; let c = 0; 
+                            arr.forEach(r => { 
+                                let hasData = false;
+                                if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                                else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                                
+                                if(hasData) { 
+                                    c++; 
+                                    let statusIdx = isPrn ? 7 : 5;
+                                    let st = r[statusIdx]; 
+                                    if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; 
+                                } 
+                            }); 
+                            return c; 
+                        };
                         
                         // นับแยกแต่ละประเภทของสถานีนี้
                         let stCpu = countItems(dbData.cpu);
                         let stNb = countItems(dbData.nb);
                         let stMon = countItems(dbData.mon);
-                        let stPrn = countItems(dbData.prn);
-                        let stSpc = countItems(dbData.spc);
+                        let stPrn = countItems(dbData.prn, true, false);
+                        let stSpc = countItems(dbData.spc, false, true);
 
                         // บวกเข้ายอดรวมประเทศ
                         totalCPU += stCpu; totalNB += stNb; totalMon += stMon; totalPrn += stPrn; totalSpc += stSpc;
@@ -779,8 +794,12 @@
                 const addRows = (dataArr, itemType, isPrn = false, isSpc = false) => {
                     if(!dataArr) return;
                     dataArr.forEach(r => {
-                        if (r[1] || r[2] || r[3] || r[4]) {
-                            // 🌟 เล็งคอลัมน์ให้ถูกช่อง (เพราะเครื่องพิมพ์กับอุปกรณ์พิเศษคอลัมน์ไม่เหมือนชาวบ้าน)
+                        let hasData = false;
+                        if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                        else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+
+                        if (hasData) {
+                            // 🌟 เล็งคอลัมน์ให้ถูกช่อง
                             let user = isSpc ? r[2] : r[1];
                             let brandModel = isSpc ? r[3] : `${r[2]||''} ${r[3]||''}`;
                             let sn = r[4];
@@ -1438,7 +1457,11 @@
             const genSum = (name, data, icon, isPrn=false, isSpc=false) => {
                 let t = 0, n = 0, b = 0, s = 0; let bL = [];
                 data.forEach(r => { 
-                    if (r[1]||r[2]||r[3]||r[4]) { 
+                    let hasData = false;
+                    if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                    else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                    
+                    if (hasData) { 
                         t++; 
                         let statusIdx = isPrn ? 7 : 5;
                         let st = r[statusIdx] || 'ปกติ'; 
@@ -1539,15 +1562,37 @@
         function generateAllQRCodes() {
             if (!tableCPUMON) return;
             const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
-            let hasData = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
-            const appendQRs = (type, dataArray) => { dataArray.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) { hasData = true; let labelElement = createQRLabelElement(type, r[2]||'-', r[3]||'-', r[4]||'-', r[1]||'-', dateStr); previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); } }); };
+            
+            // 🌟 จุดที่แก้: ใช้ hasValidItems แทน hasData ของเดิม
+            let hasValidItems = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+            const appendQRs = (type, dataArray) => { 
+                dataArray.forEach(r => { 
+                    let isSpc = type === 'เครื่องมือพิเศษ/Server/อื่นๆ' || type === 'เครื่องมือพิเศษ';
+                    let hasData = false;
+                    if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                    else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                    
+                    if (hasData) { 
+                        hasValidItems = true; 
+                        let labelElement = createQRLabelElement(type, r[2]||'-', r[3]||'-', r[4]||'-', r[1]||'-', dateStr); 
+                        previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); 
+                    } 
+                }); 
+            };
             
             let combinedData = tableCPUMON.getData();
             let cpuPayload = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
             let monPayload = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
             
-            appendQRs('คอมพิวเตอร์', cpuPayload); appendQRs('โน๊ตบุ๊ค', tableNB.getData()); appendQRs('จอมอนิเตอร์', monPayload); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
-            if (!hasData) { showToast("ไม่พบข้อมูล", "error"); return; }
+            appendQRs('คอมพิวเตอร์', cpuPayload); 
+            appendQRs('โน๊ตบุ๊ค', tableNB.getData()); 
+            appendQRs('จอมอนิเตอร์', monPayload); 
+            appendQRs('เครื่องพิมพ์', tablePrn.getData()); 
+            appendQRs('เครื่องมือพิเศษ/Server/อื่นๆ', tableSpc.getData());
+            
+            // 🌟 จุดที่เปลี่ยนจาก if (!hasData) เป็นอันนี้ครับ
+            if (!hasValidItems) { showToast("ไม่พบข้อมูล", "error"); return; } 
+            
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
 
