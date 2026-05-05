@@ -102,7 +102,6 @@
         <div class="relative w-full max-w-4xl flex flex-col items-center animate-pop-in">
             <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white hover:text-red-400 text-4xl transition-colors">&times;</button>
             <div class="bg-slate-800 p-2 rounded-2xl shadow-2xl border border-slate-700 w-full flex justify-center min-h-[200px] items-center">
-                <!-- เพิ่มข้อความกำลังโหลดเผื่อเน็ตช้า -->
                 <span id="imageLoadingText" class="absolute text-slate-400 font-medium">กำลังโหลดรูปภาพ...</span>
                 <img id="viewerImageSrc" src="" class="max-h-[70vh] object-contain rounded-xl relative z-10" onload="document.getElementById('imageLoadingText').style.display='none'" onerror="document.getElementById('imageLoadingText').innerText='❌ ไม่สามารถโหลดรูปภาพได้'">
             </div>
@@ -243,7 +242,7 @@
                 <input type="text" id="modalSnInput" placeholder="พิมพ์ S/N เพื่อค้นหา..." class="w-full px-5 py-4 text-base bg-slate-50 dark:bg-slate-900 border-2 border-indigo-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition-all font-mono font-bold shadow-inner" autocomplete="off">
             </div>
 
-            <div id="modalSnList" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px]">
+            <div id="modalSnList" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]">
                 <!-- รายการค้นหาจะมาโผล่ตรงนี้ -->
             </div>
 
@@ -330,34 +329,6 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal ค้นหา S/N จากคลัง (Search & Add New) 🌟 -->
-    <div id="snSearchModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in max-h-[90vh]">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
-                <div>
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🔍 ค้นหา / เพิ่ม S/N</h3>
-                    <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">ดึงจากคลังส่วนกลาง หรือ เพิ่มอุปกรณ์ใหม่</p>
-                </div>
-                <button onclick="closeSnSearchModal()" class="text-slate-400 hover:text-red-500 transition-all transform hover:rotate-90 bg-white dark:bg-slate-700 rounded-full w-10 h-10 flex items-center justify-center font-medium shadow-sm">&times;</button>
-            </div>
-            
-            <div class="p-6 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <input type="text" id="modalSnInput" placeholder="พิมพ์ S/N เพื่อค้นหา..." class="w-full px-5 py-4 text-base bg-slate-50 dark:bg-slate-900 border-2 border-indigo-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-indigo-500 dark:focus:border-indigo-400 transition-all font-mono font-bold shadow-inner" autocomplete="off">
-            </div>
-
-            <div id="modalSnList" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]">
-                <!-- รายการค้นหาจะมาโผล่ตรงนี้ -->
-            </div>
-
-            <div class="p-5 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-3 flex-wrap">
-                <button onclick="closeSnSearchModal()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-600 transition-colors">ยกเลิก</button>
-                <button onclick="applyManualSn()" class="w-full sm:w-auto px-6 py-3 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition-transform active:scale-95 shadow-md flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ใช้ S/N นี้ (เพิ่มใหม่)
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- 🌌 Clean Navbar 🌌 -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
@@ -404,7 +375,6 @@
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ภาพรวมระบบ</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">คลิกที่การ์ดเพื่อดูรายชื่ออุปกรณ์ทั้งหมดในหมวดหมู่นั้นๆ</p>
             </div>
-            <!-- Tooltip ตรงปุ่ม Export -->
             <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 w-full md:w-auto justify-center">
                 <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
             </button>
@@ -412,7 +382,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-5 gap-4 animate-slide-up delay-100">
-                <div onclick="openAggregateView('ALL')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg active:scale-[0.98] col-span-2 md:col-span-4 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden transition-all duration-300">
+                <div onclick="openAggregateView('ALL')" class="group cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg active:scale-[0.98] col-span-2 md:col-span-5 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden transition-all duration-300">
                     <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-900/40 transition-colors"></div>
                     <div class="relative z-10">
                         <p class="text-slate-500 dark:text-slate-400 font-medium mb-1 text-sm uppercase tracking-wider">อุปกรณ์ทั้งหมด</p>
@@ -557,56 +527,48 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
-            <!-- 🌟 เพิ่มคำอธิบายการลบที่ตาราง 🌟 -->
+            <!-- 🌟 1. คอมพิวเตอร์และจอมอนิเตอร์ 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
-                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์</h3>
-                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์และจอมอนิเตอร์</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 จับคู่ CPU และจอภาพ ให้อยู่แถวเดียวกัน | ดับเบิลคลิกเพื่อพิมพ์ข้อความ</p>
                     </div>
-                    <button onclick="addNewRow('spreadsheet-cpu')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
+                    <button onclick="addNewRow('spreadsheet-cpumon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
-                <div id="spreadsheet-cpu" class="w-full text-black min-w-full"></div>
+                <div id="spreadsheet-cpumon" class="w-full text-black min-w-full"></div>
             </div>
 
+            <!-- 🌟 2. โน๊ตบุ๊ค 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
-                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-500"></span> 5. โน๊ตบุ๊ค</h3>
-                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-sky-500"></span> 2. โน๊ตบุ๊ค</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ | กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</p>
                     </div>
                     <button onclick="addNewRow('spreadsheet-nb')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
                 <div id="spreadsheet-nb" class="w-full text-black min-w-full"></div>
             </div>
             
+            <!-- 🌟 3. เครื่องพิมพ์ 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-300">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
-                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 2. จอมอนิเตอร์</h3>
-                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
-                    </div>
-                    <button onclick="addNewRow('spreadsheet-mon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
-                </div>
-                <div id="spreadsheet-mon" class="w-full text-black min-w-full"></div>
-            </div>
-            
-            <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                    <div>
                         <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span> 3. เครื่องพิมพ์</h3>
-                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ | กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</p>
                     </div>
                     <button onclick="addNewRow('spreadsheet-prn')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
                 <div id="spreadsheet-prn" class="w-full text-black min-w-full"></div>
             </div>
             
+            <!-- 🌟 4. เครื่องมือพิเศษ 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
-                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 4. เครื่องมือพิเศษ</h3>
-                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ <span class="hidden sm:inline">| กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</span></p>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 4. SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ</h3>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ดับเบิลคลิกที่ช่องว่างเพื่อพิมพ์ข้อความ | กดปุ่มถังขยะท้ายตารางเพื่อนำอุปกรณ์ออก</p>
                     </div>
                     <button onclick="addNewRow('spreadsheet-spc')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
                 </div>
@@ -631,7 +593,8 @@
         };
         
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; const connectionOptions = ['LAN กอง 6', 'อินเตอร์เน็ต', 'Standalone'];
-        let currentGroup = '', currentStation = ''; let tableCPU = null, tableMon = null, tablePrn = null, tableSpc = null, tableNB = null;; 
+        let currentGroup = '', currentStation = ''; 
+        let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null; 
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], nb: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null; let isEditingConfirmedReport = false; let hasUnsavedDeletions = false;
@@ -721,26 +684,23 @@
                 if (result.value) {
                     globalAllDataCache = result.value;
                     if (result.value['ADP_WAREHOUSE_CENTRAL']) {
-            let whData = JSON.parse(result.value['ADP_WAREHOUSE_CENTRAL']);
-            warehouseStock = []; // เคลียร์ของเก่า
-            const extractWh = (arr) => {
-                if(!arr) return;
-                arr.forEach(r => {
-                    // ดึงเฉพาะของที่สถานะ "ว่าง (พร้อมจ่าย)"
-                    if (r[5] === 'ว่าง (พร้อมจ่าย)') {
-                        // r[2] = ยี่ห้อ, r[3] = รุ่น/สเปค, r[4] = S/N
-                        warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); 
+                        let whData = JSON.parse(result.value['ADP_WAREHOUSE_CENTRAL']);
+                        warehouseStock = []; 
+                        const extractWh = (arr) => {
+                            if(!arr) return;
+                            arr.forEach(r => {
+                                if (r[5] === 'ว่าง (พร้อมจ่าย)') {
+                                    warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); 
+                                }
+                            });
+                        };
+                        extractWh(whData.main);
+                        extractWh(whData.parts);
                     }
-                });
-            };
-            extractWh(whData.main);
-            extractWh(whData.parts);
-        }
                     for (const [dbKey, jsonValue] of Object.entries(result.value)) {
-    // 🌟 บล็อกไม่ให้คลังส่วนกลาง (CENTRAL) ถูกนับรวมในการส่งรายงาน 🌟
-    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+                        if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
 
-    const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
+                        const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
                         if(parts.length >= 3) { 
                             const stName = parts[2];
                             processedStations.add(stName);
@@ -799,10 +759,9 @@
             
             let html = '';
             for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
-    // 🌟 บล็อกคลังส่วนกลาง ไม่ให้มาโผล่ในตารางรวมของสถานี 🌟
-    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+                if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
 
-    const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
+                const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                 
                 const addRows = (dataArr, itemType) => {
                     if(!dataArr) return;
@@ -845,10 +804,9 @@
                 let allResults = [];
                 if (globalAllDataCache) {
                     for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
-    // 🌟 บล็อกคลังส่วนกลาง ไม่ให้ค้นหาซ้ำซ้อนกับของในสถานี 🌟
-    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
+                        if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
 
-    const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
+                        const parts = dbKey.split('_'); if (parts.length < 3) continue; const group = parts[1], station = parts[2], dbData = JSON.parse(jsonValue);
                         if (dbData.cpu) dbData.cpu.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'คอมพิวเตอร์', row)); });
                         if (dbData.nb) dbData.nb.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'โน๊ตบุ๊ค', row)); });
                         if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอมอนิเตอร์', row)); });
@@ -885,21 +843,18 @@
             document.getElementById('loadingText').innerText = 'กำลังโหลดข้อมูล...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
-                // 1. ดึงข้อมูลสถานี
                 const response = await fetch(`${API_URL}?key=ADP_${groupName}_${stationName}`); 
                 const result = await response.json();
                 
-                // 🌟 2. ส่วนที่เพิ่ม: แอบดึงข้อมูลคลัง (Warehouse) มาอัปเดตสต็อกล่าสุดแบบ Real-time 🌟
                 try {
                     const whRes = await fetch(`${API_URL}?key=ADP_WAREHOUSE_CENTRAL`);
                     const whResult = await whRes.json();
                     if (whResult.value) {
                         let whData = JSON.parse(whResult.value);
-                        warehouseStock = []; // เคลียร์สต็อกเก่า
+                        warehouseStock = [];
                         const extractWh = (arr) => {
                             if(!arr) return;
                             arr.forEach(r => {
-                                // เก็บเฉพาะของที่ "ว่าง (พร้อมจ่าย)"
                                 if (r[5] === 'ว่าง (พร้อมจ่าย)') warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); 
                             });
                         };
@@ -908,9 +863,8 @@
                     }
                 } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ', e); }
 
-                // 3. นำข้อมูลไปสร้างตาราง
                 let dbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
-                if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; } 
+                if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; if(!dbData.nb) dbData.nb = [[]]; } 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -926,7 +880,7 @@
             } catch (error) { 
                 console.error(error); 
                 showToast("ดึงข้อมูลพลาด กรุณารีเฟรชหน้าเว็บ", "error"); 
-                initSpreadsheets({ cpu: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
+                initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
             } 
             finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
@@ -946,17 +900,15 @@
             loadDashboardStats();
         }
 
-        // 🌟 อัปเดตตารางให้รันลำดับออโต้ และเรียกเปิด Popup ดูรูป 🌟
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
             let table = document.getElementById(instance.id).jexcel;
             let tCols = table.options.columns.length; 
             let colTitle = table.options.columns[col].title;
 
-            // 🌟 รันเลขลำดับอัตโนมัติในช่องแรก 🌟
             if (col == 0) {
-                cell.innerText = parseInt(row) + 1; // รันเลขแถว
+                cell.innerText = parseInt(row) + 1; 
                 cell.style.textAlign = 'center';
-                cell.style.color = '#64748b'; // ใส่สีเทาให้ดูรู้ว่าเป็นช่องออโต้
+                cell.style.color = '#64748b';
                 cell.style.backgroundColor = '#f1f5f9'; 
                 cell.style.fontWeight = 'bold';
             }
@@ -977,22 +929,15 @@
             }
         };
 
-        // 🌟 ฟังก์ชันจัดการ Popup รูปภาพ 🌟
         let currentViewingImage = null;
         function openImageModal(url, rowIdx, tableId) {
             currentViewingImage = { url, rowIdx, tableId };
-            
-            // แปลง URL ให้เป็นแบบ Thumbnail
             let displayUrl = url;
             let match = url.match(/id=([a-zA-Z0-9_-]+)/);
-            if (match && match[1]) {
-                displayUrl = 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1200';
-            }
-
+            if (match && match[1]) { displayUrl = 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w1200'; }
             document.getElementById('imageLoadingText').style.display = 'block';
             document.getElementById('imageLoadingText').innerText = 'กำลังโหลดรูปภาพ...';
             document.getElementById('viewerImageSrc').src = displayUrl;
-            
             document.getElementById('imageViewerModal').classList.remove('hidden');
             document.getElementById('imageViewerModal').classList.add('flex');
         }
@@ -1006,20 +951,15 @@
 
         function deleteImageFromViewer() {
             if(!currentViewingImage) return;
-            
             let url = currentViewingImage.url;
             let rowIdx = currentViewingImage.rowIdx;
             let tableId = currentViewingImage.tableId;
-            
             let match = url.match(/id=([a-zA-Z0-9_-]+)/);
-            if (match && match[1]) {
-                fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
-            }
+            if (match && match[1]) { fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e)); }
             
             const table = document.getElementById(tableId).jexcel;
             let remarkColIndex = table.options.columns.length - 2; 
             let currentRemark = table.getValueFromCoords(remarkColIndex, rowIdx);
-            
             let textToRemove = `[ดูรูป: ${url}]`;
             let newRemark = currentRemark.replace(textToRemove, '').trim();
             table.setValueFromCoords(remarkColIndex, rowIdx, newRemark);
@@ -1073,7 +1013,6 @@
                 
                 if (result.details) {
                     let stBadge = result.details.status === 'ปกติ' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800' : (result.details.status === 'ชำรุด' ? 'bg-red-50 text-red-500 border border-red-100 dark:bg-red-900/20 dark:border-red-800' : 'bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800');
-                    
                     let linkNote = result.details.note.replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
                         return `<a href="${url}" target="_blank" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</a>`;
                     });
@@ -1101,16 +1040,13 @@
                         if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-0.5 bg-red-50 text-red-500 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
                         
                         let timeStr = log.time;
-                        try {
-                           let d = new Date(log.time);
-                           if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                        } catch(e) {}
+                        try { let d = new Date(log.time); if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); } catch(e) {}
 
                         let detailText = log.detail;
                         let statusBadge = "-";
-                        if(detailText.includes("สถานะ: ปกติ")) statusBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">ปกติ</span>`;
-                        if(detailText.includes("สถานะ: ชำรุด")) statusBadge = `<span class="text-red-500 dark:text-red-400 font-semibold">ชำรุด</span>`;
-                        if(detailText.includes("สถานะ: สำรอง")) statusBadge = `<span class="text-amber-500 dark:text-amber-400 font-semibold">สำรอง</span>`;
+                        if(detailText.includes("สถานะ: ปกติ") || detailText.includes("เป็น: ปกติ")) statusBadge = `<span class="text-emerald-600 dark:text-emerald-400 font-semibold">ปกติ</span>`;
+                        if(detailText.includes("สถานะ: ชำรุด") || detailText.includes("เป็น: ชำรุด")) statusBadge = `<span class="text-red-500 dark:text-red-400 font-semibold">ชำรุด</span>`;
+                        if(detailText.includes("สถานะ: สำรอง") || detailText.includes("เป็น: สำรอง")) statusBadge = `<span class="text-amber-500 dark:text-amber-400 font-semibold">สำรอง</span>`;
 
                         html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                             <td class="p-3 md:p-4 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td>
@@ -1126,26 +1062,24 @@
                 
                 document.getElementById('snHistoryModal').classList.remove('hidden');
                 document.getElementById('snHistoryModal').classList.add('flex');
-            } catch (err) {
-                console.error(err);
-                showToast("โหลดข้อมูลล้มเหลว", "error");
-            } finally {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('flex');
+            } catch (err) { console.error(err); showToast("โหลดข้อมูลล้มเหลว", "error"); } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex');
             }
         }
 
         function closeSnHistory() {
-            document.getElementById('snHistoryModal').classList.add('hidden');
-            document.getElementById('snHistoryModal').classList.remove('flex');
+            document.getElementById('snHistoryModal').classList.add('hidden'); document.getElementById('snHistoryModal').classList.remove('flex');
             window.history.pushState({}, document.title, window.location.pathname);
         }
 
         function promptDeleteRow(id, row) {
             const rData = document.getElementById(id).jexcel.getRowData(row);
-            let n = id==='spreadsheet-cpu'?"คอมพิวเตอร์":id==='spreadsheet-mon'?"จอมอนิเตอร์":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
+            let n = id==='spreadsheet-cpumon'?"คอมพิวเตอร์และจอ":id==='spreadsheet-nb'?"โน๊ตบุ๊ค":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
             let str = `ผู้ใช้: ${rData[1]||'-'} | ${rData[2]||''} ${rData[3]||''} (S/N: ${rData[4]||'-'})`;
-            if(!rData[1]&&!rData[2]&&!rData[3]&&!rData[4]) str = "แถวว่าง";
+            if(id === 'spreadsheet-cpumon') {
+                str = `ผู้ใช้: ${rData[1]||'-'} | CPU: ${rData[2]||''} (S/N: ${rData[4]||'-'}) | จอ: ${rData[5]||''} (S/N: ${rData[7]||'-'})`;
+            }
+            if(!rData[1]&&!rData[2]&&!rData[3]&&!rData[4]&&!rData[5]&&!rData[7]) str = "แถวว่าง";
             document.getElementById('deleteDetailText').innerText = `[${n}] ${str}`; rowToDelete = { id, row };
             document.getElementById('deleteConfirmModal').classList.remove('hidden'); document.getElementById('deleteConfirmModal').classList.add('flex');
         }
@@ -1159,9 +1093,7 @@
                 let remarkText = table.getValueFromCoords(remarkColIndex, rowToDelete.row);
                 if (remarkText) {
                     let match = remarkText.match(/id=([a-zA-Z0-9_-]+)/);
-                    if (match && match[1]) {
-                        fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
-                    }
+                    if (match && match[1]) fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'DELETE_IMAGE', fileId: match[1] }) }).catch(e => console.error(e));
                 }
                 table.deleteRow(rowToDelete.row); 
                 showToast("ลบข้อมูลสำเร็จ"); 
@@ -1172,27 +1104,60 @@
 
         function addNewRow(id) { document.getElementById(id).jexcel.insertRow(); showToast("เพิ่มแถวเรียบร้อย"); }
 
-        // 🌟 1. ฟังก์ชันเมื่อดับเบิลคลิกช่องในตาราง 🌟
         const handleSNEdit = function(instance, cell, x, y) {
             let table = document.getElementById(instance.id).jexcel;
-            if (table.options.columns[x].title === 'S/N') {
+            let colTitle = table.options.columns[x].title;
+            if (colTitle === 'S/N' || colTitle === 'S/N CPU' || colTitle === 'S/N จอภาพ') {
                 let val = table.getValueFromCoords(x, y);
-                // สั่งปิดกล่องพิมพ์ปกติของตาราง แล้วเปิด Modal หน้าต่างค้นหาขึ้นมาแทน!
-                setTimeout(() => {
-                    table.closeEditor(cell, false);
-                    openSnSearchModal(instance.id, x, y, val);
-                }, 10);
+                setTimeout(() => { table.closeEditor(cell, false); openSnSearchModal(instance.id, x, y, val); }, 10);
             }
         };
 
-        // 🌟 2. อัปเดตตารางให้เรียกใช้ oneditionstart
         function initSpreadsheets(data) {
-            document.getElementById('spreadsheet-cpu').innerHTML=''; document.getElementById('spreadsheet-nb').innerHTML=''; document.getElementById('spreadsheet-mon').innerHTML=''; document.getElementById('spreadsheet-prn').innerHTML=''; document.getElementById('spreadsheet-spc').innerHTML='';
-            tableCPU = jspreadsheet(document.getElementById('spreadsheet-cpu'), { data: data.cpu, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { data: data.nb, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tableMon = jspreadsheet(document.getElementById('spreadsheet-mon'), { data: data.mon, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc, columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'USER / ผู้ใช้', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            document.getElementById('spreadsheet-cpumon').innerHTML=''; 
+            document.getElementById('spreadsheet-nb').innerHTML=''; 
+            document.getElementById('spreadsheet-prn').innerHTML=''; 
+            document.getElementById('spreadsheet-spc').innerHTML='';
+            
+            let cpumonData = [];
+            let cLen = data.cpu ? data.cpu.length : 0;
+            let mLen = data.mon ? data.mon.length : 0;
+            let maxLen = Math.max(cLen, mLen);
+            for(let i=0; i<maxLen; i++) {
+                let c = (data.cpu && data.cpu[i]) ? data.cpu[i] : ["", "", "", "", "", "", "", ""];
+                let m = (data.mon && data.mon[i]) ? data.mon[i] : ["", "", "", "", "", "", ""];
+                let user = c[1] || m[1] || "";
+                let status = c[5] || m[5] || "ปกติ";
+                let conn = c[6] || "";
+                let remark = c[7] || m[6] || "";
+                if (c.join('').trim() !== '' || m.join('').trim() !== '') {
+                    cpumonData.push(["", user, c[2]||"", c[3]||"", c[4]||"", m[2]||"", m[3]||"", m[4]||"", status, conn, remark]);
+                }
+            }
+            if (cpumonData.length === 0) cpumonData = [[]];
+
+            tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
+                data: cpumonData, 
+                columns: [
+                    { type: 'numeric', title: 'ลำดับ', width: 40, readOnly: true }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 120 }, 
+                    { type: 'text', title: 'ยี่ห้อ CPU', width: 90 }, 
+                    { type: 'text', title: 'รุ่น CPU', width: 100 }, 
+                    { type: 'text', title: 'S/N CPU', width: 120 }, 
+                    { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 90 }, 
+                    { type: 'text', title: 'รุ่น จอภาพ', width: 100 }, 
+                    { type: 'text', title: 'S/N จอภาพ', width: 120 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 70, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 100, source: connectionOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 120 }, 
+                    { type: 'html', title: 'จัดการ', width: 80, readOnly: true }
+                ], 
+                minDimensions: [12, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable 
+            });
+
+            tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { data: data.nb||[[]], columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { data: data.prn||[[]], columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [9, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { data: data.spc||[[]], columns: [{ type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 100 }, { type: 'text', title: 'รุ่น', width: 120 }, { type: 'text', title: 'S/N', width: 140 }, { type: 'dropdown', title: 'สถานะ', width: 80, source: statusOptions }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 100, readOnly: true }], minDimensions: [8, 3], allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable });
         }
 
         async function openAuditLog() {
@@ -1220,24 +1185,23 @@
         }
 
         function closeAuditLog() { document.getElementById('auditLogModal').classList.add('hidden'); document.getElementById('auditLogModal').classList.remove('flex'); }
-        function extractValid(arr, type) { if (!arr) return []; let items = []; arr.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) items.push(`[${type}] ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'})`); }); return items; }
         
         function calculateDiff() {
-            // ดึงข้อมูลเก่า (Original) แยกตามหมวด
             let oldCpu = originalDbData.cpu || []; let oldNb = originalDbData.nb || [];
             let oldMon = originalDbData.mon || []; let oldPrn = originalDbData.prn || []; 
             let oldSpc = originalDbData.spc || [];
             
-            // ดึงข้อมูลใหม่จากหน้าจอ (Current) แยกตามหมวด
-            let newCpu = tableCPU ? tableCPU.getData() : []; let newNb = tableNB ? tableNB.getData() : [];
-            let newMon = tableMon ? tableMon.getData() : []; let newPrn = tablePrn ? tablePrn.getData() : [];
+            let combinedData = tableCPUMON ? tableCPUMON.getData() : [];
+            let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+            let newMon = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+            
+            let newNb = tableNB ? tableNB.getData() : [];
+            let newPrn = tablePrn ? tablePrn.getData() : [];
             let newSpc = tableSpc ? tableSpc.getData() : [];
 
             let added = []; let removed = []; let updated = [];
 
-            // Helper: เปรียบเทียบข้อมูล 2 ชุด (ใช้ S/N เป็น Key หลัก)
             const compareArrays = (oldArr, newArr, type) => {
-                // สร้าง Map ของเก่า { "SN": "ทั้งแถว" } (ถ้าไม่มี S/N ใช้ ยี่ห้อ+รุ่น เป็น Key รอง)
                 let oldMap = new Map();
                 oldArr.forEach(r => {
                     if (r[1] || r[2] || r[3] || r[4]) {
@@ -1252,29 +1216,22 @@
                         let key = r[4] ? r[4].toString().trim() : (r[2] + '_' + r[3]).trim();
                         if(key) newMap.set(key, r);
                         
-                        // 1. เช็คว่ามีของใหม่มา หรือมีการอัปเดต?
                         if (oldMap.has(key)) {
                             let oldRow = oldMap.get(key);
                             let oldStatus = oldRow[5] || 'ปกติ';
                             let newStatus = r[5] || 'ปกติ';
-                            
-                            // ถ้าสถานะเปลี่ยนไปจากเดิม ให้อยู่หมวด "อัปเดต"
                             if (oldStatus !== newStatus) {
                                 let label = `[${type}] ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'}) เปลี่ยนสถานะเป็น: ${newStatus}`;
                                 updated.push({ label: label, status: newStatus });
                             }
                         } else {
-                            // ถ้าไม่มีในของเก่าเลย แปลว่าเพิ่งเพิ่มเข้ามา
                             added.push(`[${type}] ${r[1]||'-'} | ${r[2]||'-'} ${r[3]||'-'} (S/N: ${r[4]||'-'})`);
                         }
                     }
                 });
 
-                // 2. หาของที่ถูกลบ (มีในของเก่า แต่ไม่มีในของใหม่)
                 for (let [key, oldRow] of oldMap.entries()) {
-                    if (!newMap.has(key)) {
-                        removed.push(`[${type}] ${oldRow[1]||'-'} | ${oldRow[2]||'-'} ${oldRow[3]||'-'} (S/N: ${oldRow[4]||'-'})`);
-                    }
+                    if (!newMap.has(key)) removed.push(`[${type}] ${oldRow[1]||'-'} | ${oldRow[2]||'-'} ${oldRow[3]||'-'} (S/N: ${oldRow[4]||'-'})`);
                 }
             };
 
@@ -1288,7 +1245,7 @@
         }
 
         function prepareSave() {
-            if (!tableCPU) return; 
+            if (!tableCPUMON) return; 
             let diff = calculateDiff(); 
             let h = ''; 
             pendingLogs = [];
@@ -1296,40 +1253,25 @@
             if (diff.added.length === 0 && diff.removed.length === 0 && diff.updated.length === 0) { 
                 h = `<div class="p-8 text-center text-slate-400 font-medium">ไม่พบการเปลี่ยนแปลง</div>`; 
             } else {
-                // ส่วนของข้อมูลที่ถูกอัปเดตสถานะ (เน้นโชว์ชำรุด)
                 if (diff.updated.length > 0) { 
                     h += `<div class="mb-4 bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/30">
                             <p class="font-bold text-amber-700 dark:text-amber-400 mb-2 text-sm">การเปลี่ยนสถานะ:</p>
                             <ul class="list-disc pl-5 text-amber-600 dark:text-amber-300 text-xs space-y-1">`; 
-                    diff.updated.forEach(i => { 
-                        h += `<li>${i.label}</li>`; 
-                        let actionWord = (i.status === 'ชำรุด') ? 'แจ้งชำรุด' : 'อัปเดตสถานะ'; // ถ้าเป็นชำรุด ให้ใช้คำว่า "แจ้งชำรุด" แจ้งเตือนบอท
-                        pendingLogs.push({ action: actionWord, detail: i.label }); 
-                    }); 
+                    diff.updated.forEach(i => { h += `<li>${i.label}</li>`; let actionWord = (i.status === 'ชำรุด') ? 'แจ้งชำรุด' : 'อัปเดตสถานะ'; pendingLogs.push({ action: actionWord, detail: i.label }); }); 
                     h += `</ul></div>`; 
                 }
-
-                // ส่วนของข้อมูลเพิ่มใหม่
                 if (diff.added.length > 0) { 
                     h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
                             <p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเบิก/เพิ่มใหม่:</p>
                             <ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; 
-                    diff.added.forEach(i => { 
-                        h += `<li>${i}</li>`; 
-                        pendingLogs.push({ action: 'เพิ่มอุปกรณ์', detail: i }); 
-                    }); 
+                    diff.added.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'เพิ่มอุปกรณ์', detail: i }); }); 
                     h += `</ul></div>`; 
                 }
-
-                // ส่วนของข้อมูลลบทิ้ง
                 if (diff.removed.length > 0) { 
                     h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30">
                             <p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง (ส่งคืน):</p>
                             <ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; 
-                    diff.removed.forEach(i => { 
-                        h += `<li>${i}</li>`; 
-                        pendingLogs.push({ action: 'ลบอุปกรณ์', detail: i }); 
-                    }); 
+                    diff.removed.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'ลบอุปกรณ์', detail: i }); }); 
                     h += `</ul></div>`; 
                 }
             }
@@ -1342,7 +1284,7 @@
         function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
 
         function confirmMonthlyStatus() {
-            if (!tableCPU) return;
+            if (!tableCPUMON) return;
             if (hasUnsavedDeletions) { document.getElementById('saveFirstModal').classList.remove('hidden'); document.getElementById('saveFirstModal').classList.add('flex'); return; }
 
             const mTitle = document.getElementById('monthlyModalTitle'), mSub = document.getElementById('monthlyModalSubtitle'), mBtn = document.getElementById('monthlyConfirmBtn');
@@ -1362,7 +1304,12 @@
                 let h = `<div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"><h4 class="font-semibold mb-3 flex items-center gap-2 text-sm text-slate-800 dark:text-slate-200">${icon} ${name} <span class="text-slate-400 text-xs font-normal">(${t} รายการ)</span></h4><div class="grid grid-cols-3 gap-2 text-xs text-center mb-1"><div class="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-lg py-1.5 font-medium">ปกติ ${n}</div><div class="bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-lg py-1.5 font-medium">ชำรุด ${b}</div><div class="bg-amber-50 dark:bg-amber-900/20 text-amber-500 dark:text-amber-400 rounded-lg py-1.5 font-medium">สำรอง ${s}</div></div>`;
                 if (bL.length > 0) h += `<div class="text-[10px] text-red-500 mt-2 px-1"><strong>⚠️ ชำรุด:</strong> ${bL.join(', ')}</div>`; return h + `</div>`;
             };
-            summaryHtml += genSum('คอมพิวเตอร์', tableCPU.getData(), '💻') + genSum('โน๊ตบุ๊ค', tableNB.getData(), '💻') + genSum('จอมอนิเตอร์', tableMon.getData(), '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️') + genSum('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️');
+            
+            let combinedData = tableCPUMON.getData();
+            let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+            let newMon = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+            
+            summaryHtml += genSum('คอมพิวเตอร์', newCpu, '💻') + genSum('โน๊ตบุ๊ค', tableNB.getData(), '💻') + genSum('จอมอนิเตอร์', newMon, '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️') + genSum('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️');
             if (summaryHtml === '<div class="space-y-4">') summaryHtml = '<div class="text-center text-slate-400 py-6 font-medium">ไม่พบอุปกรณ์ในระบบ</div>'; else summaryHtml += '</div>';
             document.getElementById('monthlySummaryContent').innerHTML = summaryHtml; document.getElementById('monthlyConfirmModal').classList.remove('hidden'); document.getElementById('monthlyConfirmModal').classList.add('flex');
         }
@@ -1374,7 +1321,11 @@
             pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
             document.getElementById('loadingText').innerText = 'บันทึกรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), nb: tableNB.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
+                let combinedData = tableCPUMON.getData();
+                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+                let newMon = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+                
+                const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
                 isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
@@ -1385,7 +1336,11 @@
         async function executeSaveData() {
             closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const newPayload = { cpu: tableCPU.getData().map(r => r.slice(0, -1)), nb: tableNB.getData().map(r => r.slice(0, -1)), mon: tableMon.getData().map(r => r.slice(0, -1)), prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
+                let combinedData = tableCPUMON.getData();
+                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+                let newMon = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+                
+                const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) });
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); hasUnsavedDeletions = false; showToast(`บันทึกข้อมูลเรียบร้อย`);
             } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
@@ -1405,21 +1360,38 @@
 
         function showSingleQR(instanceId, rowIdx) {
             const table = document.getElementById(instanceId).jexcel; const rData = table.getRowData(rowIdx);
-            if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR สำหรับแถวว่าง", "error"); return; }
-            let type = instanceId==='spreadsheet-cpu'?"คอมพิวเตอร์":instanceId==='spreadsheet-mon'?"จอมอนิเตอร์":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
             let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
             const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
-            let labelElement = createQRLabelElement(type, rData[2]||'-', rData[3]||'-', rData[4]||'-', rData[1]||'-', dateStr);
-            previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true));
+            
+            if (instanceId === 'spreadsheet-cpumon') {
+                if (rData[2] || rData[4]) {
+                    let lbl = createQRLabelElement("คอมพิวเตอร์", rData[2]||'-', rData[3]||'-', rData[4]||'-', rData[1]||'-', dateStr);
+                    previewArea.appendChild(lbl); printArea.appendChild(lbl.cloneNode(true));
+                }
+                if (rData[5] || rData[7]) {
+                    let lbl = createQRLabelElement("จอมอนิเตอร์", rData[5]||'-', rData[6]||'-', rData[7]||'-', rData[1]||'-', dateStr);
+                    previewArea.appendChild(lbl); printArea.appendChild(lbl.cloneNode(true));
+                }
+            } else {
+                if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR สำหรับแถวว่าง", "error"); return; }
+                let type = instanceId==='spreadsheet-nb'?"โน๊ตบุ๊ค":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
+                let lbl = createQRLabelElement(type, rData[2]||'-', rData[3]||'-', rData[4]||'-', rData[1]||'-', dateStr);
+                previewArea.appendChild(lbl); printArea.appendChild(lbl.cloneNode(true));
+            }
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
 
         function generateAllQRCodes() {
-            if (!tableCPU) return;
+            if (!tableCPUMON) return;
             const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
             let hasData = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
             const appendQRs = (type, dataArray) => { dataArray.forEach(r => { if (r[1]||r[2]||r[3]||r[4]) { hasData = true; let labelElement = createQRLabelElement(type, r[2]||'-', r[3]||'-', r[4]||'-', r[1]||'-', dateStr); previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); } }); };
-            appendQRs('คอมพิวเตอร์', tableCPU.getData()); appendQRs('โน๊ตบุ๊ค', tableNB.getData()); appendQRs('จอมอนิเตอร์', tableMon.getData()); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
+            
+            let combinedData = tableCPUMON.getData();
+            let cpuPayload = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+            let monPayload = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+            
+            appendQRs('คอมพิวเตอร์', cpuPayload); appendQRs('โน๊ตบุ๊ค', tableNB.getData()); appendQRs('จอมอนิเตอร์', monPayload); appendQRs('เครื่องพิมพ์', tablePrn.getData()); appendQRs('เครื่องมือพิเศษ', tableSpc.getData());
             if (!hasData) { showToast("ไม่พบข้อมูล", "error"); return; }
             document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
         }
@@ -1434,7 +1406,7 @@
             try {
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
                 
-                // 🌟 1. ค้นหา Sheet ที่ตรงกับสถานีปัจจุบัน (รองรับตัวย่อ)
+                // 🌟 ระบบสแกนหา Sheet ย่อยแบบฉลาด
                 const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 let targetSheet = null;
                 wb.eachSheet((ws) => {
@@ -1443,16 +1415,15 @@
                         targetSheet = ws;
                     }
                 });
-                if (!targetSheet) targetSheet = wb.worksheets[0]; // ถ้าหาไม่เจอ ให้ดึงจากหน้าแรก
+                if (!targetSheet) targetSheet = wb.worksheets[0];
                 
-                let cpuData = [], nbData = [], monData = [], prnData = [], spcData = [];
-                let currentMode = 'CPU'; // โหมดเริ่มต้น (CPU & Monitor คู่กัน)
+                let cpumonData = [], nbData = [], prnData = [], spcData = [];
+                let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
-                // 🌟 Helper แปลงสถานะการเชื่อมต่อ
                 const mapConn = (c) => {
-                    let l = String(c).toLowerCase();
-                    if(!l) return '';
+                    let l = String(c).toLowerCase().trim();
+                    if(!l || l === '-') return '';
                     if(l.includes('lan') || l.includes('6') || l.includes('ภายใน')) return 'LAN กอง 6';
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
@@ -1473,18 +1444,10 @@
                     });
                     let rowStr = rowVals.join(' ').toLowerCase();
                     
-                    // 🌟 2. ตรวจจับการเปลี่ยน Section (หมวดหมู่อุปกรณ์)
-                    if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) {
-                        currentMode = 'SPC'; colMap = {}; return;
-                    }
-                    if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) {
-                        currentMode = 'NB'; colMap = {}; return;
-                    }
-                    if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) {
-                        currentMode = 'PRN'; colMap = {}; return;
-                    }
+                    if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
+                    if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
+                    if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) { currentMode = 'PRN'; colMap = {}; return; }
 
-                    // 🌟 3. ตรวจจับหัวตาราง (Mapping Columns อัตโนมัติ)
                     if (rowStr.includes('ผู้ใช้') || rowStr.includes('s/n') || rowStr.includes('ยี่ห้อ')) {
                         colMap = {}; 
                         rowVals.forEach((val, idx) => {
@@ -1497,63 +1460,44 @@
 
                             if (h.includes('ยี่ห้อ') || h.includes('brand')) {
                                 if (h.includes('จอ') || h.includes('mon')) colMap.monBrand = idx;
-                                else if (h.includes('พิมพ์') || h.includes('print')) colMap.prnBrand = idx;
-                                else if (colMap.cpuBrand === undefined) colMap.cpuBrand = idx;
+                                else if (currentMode === 'CPUMON') { if (colMap.cpuBrand === undefined) colMap.cpuBrand = idx; else colMap.monBrand = idx; }
+                                else colMap.cpuBrand = idx;
                             }
                             if (h.includes('รุ่น') || h.includes('model') || h.includes('สเปค')) {
                                 if (h.includes('จอ') || h.includes('mon')) colMap.monModel = idx;
-                                else if (h.includes('พิมพ์') || h.includes('print')) colMap.prnModel = idx;
-                                else if (colMap.cpuModel === undefined) colMap.cpuModel = idx;
+                                else if (currentMode === 'CPUMON') { if (colMap.cpuModel === undefined) colMap.cpuModel = idx; else colMap.monModel = idx; }
+                                else colMap.cpuModel = idx;
                             }
                             if (h.includes('s/n') || h.includes('serial')) {
                                 if (h.includes('จอ') || h.includes('mon')) colMap.monSN = idx;
-                                else if (h.includes('พิมพ์') || h.includes('print')) colMap.prnSN = idx;
-                                else if (h.includes('server') || h.includes('ups') || h.includes('พิเศษ')) colMap.spcSN = idx;
-                                else if (colMap.cpuSN === undefined) colMap.cpuSN = idx;
+                                else if (currentMode === 'CPUMON') { if (colMap.cpuSN === undefined) colMap.cpuSN = idx; else colMap.monSN = idx; }
+                                else colMap.cpuSN = idx;
                             }
                         });
                         return; 
                     }
 
-                    // 🌟 4. ดึงข้อมูลจากแถว
                     if (Object.keys(colMap).length > 0) {
-                        const getVal = (idx) => idx ? (rowVals[idx] || '') : '';
+                        const getVal = (idx) => { let v = idx ? (rowVals[idx] || '') : ''; return v === '-' ? '' : v; };
                         
                         let user = getVal(colMap.user);
-                        let cpuBrand = getVal(colMap.cpuBrand);
-                        let cpuModel = getVal(colMap.cpuModel);
-                        let cpuSN = getVal(colMap.cpuSN);
+                        let cpuBrand = getVal(colMap.cpuBrand); let cpuModel = getVal(colMap.cpuModel); let cpuSN = getVal(colMap.cpuSN);
+                        let monBrand = getVal(colMap.monBrand); let monModel = getVal(colMap.monModel); let monSN = getVal(colMap.monSN);
                         
-                        let monBrand = getVal(colMap.monBrand);
-                        let monModel = getVal(colMap.monModel);
-                        let monSN = getVal(colMap.monSN);
-                        
-                        let conn = mapConn(getVal(colMap.conn));
-                        let status = mapStatus(getVal(colMap.status));
-                        let remark = getVal(colMap.remark);
+                        let conn = mapConn(getVal(colMap.conn)); let status = mapStatus(getVal(colMap.status)); let remark = getVal(colMap.remark);
 
-                        // ข้ามแถวที่ว่างเปล่าจริงๆ
-                        if (!user && !cpuBrand && !cpuSN && !monSN && !getVal(colMap.prnSN) && !getVal(colMap.spcSN)) return;
+                        if (!user && !cpuBrand && !cpuSN && !monSN && !cpuModel && !monModel) return;
+                        if (rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
 
-                        if (currentMode === 'CPU') {
-                            // นำเข้า CPU
-                            if (user || cpuBrand || cpuSN) cpuData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]);
-                            // นำเข้า Monitor (จับคู่อัตโนมัติจากบรรทัดเดียวกัน)
-                            if (monBrand || monSN) monData.push(["", user, monBrand, monModel, monSN, status, remark]);
-                        } else if (currentMode === 'NB') {
-                            nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]);
-                        } else if (currentMode === 'PRN') {
-                            prnData.push(["", user, getVal(colMap.cpuBrand)||getVal(colMap.prnBrand), getVal(colMap.cpuModel)||getVal(colMap.prnModel), cpuSN||getVal(colMap.prnSN), status, conn, remark]);
-                        } else if (currentMode === 'SPC') {
-                            spcData.push(["", user, getVal(colMap.cpuBrand), getVal(colMap.cpuModel), cpuSN||getVal(colMap.spcSN), status, remark]);
-                        }
+                        if (currentMode === 'CPUMON') { cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, monBrand, monModel, monSN, status, conn, remark]); } 
+                        else if (currentMode === 'NB') { nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); } 
+                        else if (currentMode === 'PRN') { prnData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); } 
+                        else if (currentMode === 'SPC') { spcData.push(["", user, cpuBrand, cpuModel, cpuSN, status, remark]); }
                     }
                 });
 
-                // ยัดข้อมูลลงตารางหน้าเว็บ
-                if(cpuData.length > 0) tableCPU.setData(cpuData);
+                if(cpumonData.length > 0) tableCPUMON.setData(cpumonData);
                 if(nbData.length > 0) tableNB.setData(nbData);
-                if(monData.length > 0) tableMon.setData(monData);
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
                 
@@ -1562,81 +1506,42 @@
         }
 
         async function exportStationExcel() {
-            if (!tableCPU) return; showToast("สร้างไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
+            if (!tableCPUMON) return; showToast("สร้างไฟล์ Excel..."); const wb = new ExcelJS.Workbook();
             const ws = wb.addWorksheet(currentStation);
             
-            const formatHeader = (rowObj, bgArgb) => {
-                rowObj.eachCell((c) => { 
-                    c.font = {bold: true, color: {argb: 'FFFFFFFF'}}; 
-                    c.alignment = {vertical: 'middle', horizontal: 'center'}; 
-                    c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: bgArgb}};
-                    c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}};
-                });
-            };
-            const applyBorders = (rowObj) => {
-                rowObj.eachCell((c) => { 
-                    c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; 
-                    c.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true};
-                });
-            };
+            const formatHeader = (rowObj, bgArgb) => { rowObj.eachCell((c) => { c.font = {bold: true, color: {argb: 'FFFFFFFF'}}; c.alignment = {vertical: 'middle', horizontal: 'center'}; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: bgArgb}}; c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; }); };
+            const applyBorders = (rowObj) => { rowObj.eachCell((c) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true}; }); };
 
-            // 🌟 1. คอมพิวเตอร์ และ จอมอนิเตอร์ (รวมกันแบบจับคู่)
+            ws.addRow(["คอมพิวเตอร์และจอมอนิเตอร์"]);
             let rHead1 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "ยี่ห้อ จอภาพ", "รุ่น จอภาพ", "S/N จอภาพ", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
             formatHeader(rHead1, 'FF0f172a');
-            
-            let cpuArr = tableCPU.getData();
-            let monArr = tableMon.getData();
-            let maxLen = Math.max(cpuArr.length, monArr.length);
-            
-            for(let i=0; i<maxLen; i++) {
-                let c = cpuArr[i] || []; let m = monArr[i] || [];
-                if (c.join('').trim() !== '' || m.join('').trim() !== '') {
-                    let user = c[1] || m[1] || '';
-                    let status = c[5] || m[5] || '';
-                    let conn = c[6] || '';
-                    let remark = c[7] || m[6] || ''; // remark ของจออยู่ index 6
-                    let row = ws.addRow([i+1, user, c[2]||'', c[3]||'', c[4]||'', m[2]||'', m[3]||'', m[4]||'', conn, status, remark]);
-                    applyBorders(row);
+            tableCPUMON.getData().forEach((c, i) => {
+                if (c.join('').trim() !== '') {
+                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', c[5]||'', c[6]||'', c[7]||'', c[9]||'', c[8]||'', c[10]||'']); applyBorders(row);
                 }
-            }
+            });
             ws.addRow([]);
 
-            // 🌟 2. โน๊ตบุ๊ค
             ws.addRow(["โน๊ตบุ๊ค"]);
             let rHead2 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
             formatHeader(rHead2, 'FF334155');
-            tableNB.getData().forEach((c, i) => {
-                if (c.join('').trim() !== '') {
-                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']);
-                    applyBorders(row);
-                }
-            });
+            tableNB.getData().forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']); applyBorders(row); } });
             ws.addRow([]);
 
-            // 🌟 3. เครื่องพิมพ์
             ws.addRow(["เครื่องพิมพ์"]);
             let rHead3 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
             formatHeader(rHead3, 'FF475569');
-            tablePrn.getData().forEach((c, i) => {
-                if (c.join('').trim() !== '') {
-                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']);
-                    applyBorders(row);
-                }
-            });
+            tablePrn.getData().forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']); applyBorders(row); } });
             ws.addRow([]);
 
-            // 🌟 4. SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ
             ws.addRow(["SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ"]);
             let rHead4 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
             formatHeader(rHead4, 'FF64748B');
-            tableSpc.getData().forEach((c, i) => {
-                if (c.join('').trim() !== '') {
-                    let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']);
-                    applyBorders(row);
-                }
-            });
+            tableSpc.getData().forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']); applyBorders(row); } });
 
             ws.columns = [ {width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 12}, {width: 25} ];
+            ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && (firstCell === "คอมพิวเตอร์และจอมอนิเตอร์" || firstCell === "โน๊ตบุ๊ค" || firstCell === "เครื่องพิมพ์" || firstCell === "SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ")) { ws.mergeCells(`A${rowNumber}:K${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; cell.alignment = { horizontal: 'left' }; } });
+            
             const b = await wb.xlsx.writeBuffer(); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_${currentGroup}_${currentStation}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
         }
 
@@ -1687,7 +1592,6 @@
                     if(dbData.spc) dbData.spc.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']); applyBorders(row); }});
 
                     ws.columns = [ {width: 8}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 12}, {width: 25} ];
-                    
                     ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && (firstCell === "คอมพิวเตอร์และจอมอนิเตอร์" || firstCell === "โน๊ตบุ๊ค" || firstCell === "เครื่องพิมพ์" || firstCell === "SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ")) { ws.mergeCells(`A${rowNumber}:K${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; cell.alignment = { horizontal: 'left' }; } });
                 }
                 
@@ -1737,20 +1641,13 @@
             }
         }
 
-        // =======================================================
-        // 🌟 ระบบค้นหา S/N แบบ Modal เต็มจอ 🌟
-        // =======================================================
         let currentSnTarget = null;
-
         function openSnSearchModal(tableId, x, y, currentValue) {
             currentSnTarget = { tableId, x, y };
             document.getElementById('snSearchModal').classList.remove('hidden');
             document.getElementById('snSearchModal').classList.add('flex');
-            
             let inputEl = document.getElementById('modalSnInput');
             inputEl.value = currentValue ? currentValue.toString().trim() : "";
-            
-            // โฟกัสช่องค้นหาทันที
             setTimeout(() => inputEl.focus(), 100);
             renderModalSnList(inputEl.value);
         }
@@ -1764,20 +1661,13 @@
         function renderModalSnList(query) {
             query = query.toString().toLowerCase().trim();
             let listEl = document.getElementById('modalSnList');
-            
             if (!warehouseStock || warehouseStock.length === 0) {
-                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-400 text-center"><div class="text-4xl mb-3 opacity-30">📦</div><p class="font-medium">ไม่มีอุปกรณ์สถานะ "ว่าง" ในคลัง</p><p class="text-xs mt-1 text-slate-500">พิมพ์ S/N ใหม่ด้านบน แล้วกด "ใช้ S/N นี้ (เพิ่มใหม่)"</p></div>`;
-                return;
+                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-400 text-center"><div class="text-4xl mb-3 opacity-30">📦</div><p class="font-medium">ไม่มีอุปกรณ์สถานะ "ว่าง" ในคลัง</p><p class="text-xs mt-1 text-slate-500">พิมพ์ S/N ใหม่ด้านบน แล้วกด "ใช้ S/N นี้ (เพิ่มใหม่)"</p></div>`; return;
             }
-
             let matches = warehouseStock;
-            if (query.length > 0) {
-                matches = warehouseStock.filter(item => item.sn && item.sn.toString().toLowerCase().includes(query));
-            }
-            
+            if (query.length > 0) matches = warehouseStock.filter(item => item.sn && item.sn.toString().toLowerCase().includes(query));
             if (matches.length === 0) {
-                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-500 text-center"><div class="text-4xl mb-3 opacity-30">🔎</div><p class="font-bold text-lg text-slate-600 dark:text-slate-300">ไม่พบ S/N นี้ในคลัง</p><p class="text-xs mt-1">หากเป็นอุปกรณ์ใหม่ กรุณากดปุ่ม <b>"ใช้ S/N นี้"</b> ด้านล่างเพื่อเพิ่มเข้าระบบ</p></div>`;
-                return;
+                listEl.innerHTML = `<div class="p-10 flex flex-col items-center justify-center text-slate-500 text-center"><div class="text-4xl mb-3 opacity-30">🔎</div><p class="font-bold text-lg text-slate-600 dark:text-slate-300">ไม่พบ S/N นี้ในคลัง</p><p class="text-xs mt-1">หากเป็นอุปกรณ์ใหม่ กรุณากดปุ่ม <b>"ใช้ S/N นี้"</b> ด้านล่างเพื่อเพิ่มเข้าระบบ</p></div>`; return;
             }
 
             let html = '';
@@ -1785,7 +1675,6 @@
                 let safeSN = String(item.sn).replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 let safeBrand = String(item.brand || "").replace(/'/g, "\\'");
                 let safeModel = String(item.model || "").replace(/'/g, "\\'");
-                
                 html += `
                 <div onclick="selectModalSn('${safeSN}', '${safeBrand}', '${safeModel}')" class="p-4 hover:bg-indigo-50 dark:hover:bg-slate-700/50 cursor-pointer border-b border-slate-100 dark:border-slate-700 transition-colors flex justify-between items-center group">
                     <div>
@@ -1798,22 +1687,25 @@
             listEl.innerHTML = html;
         }
 
-        // จับการพิมพ์ในช่องของหน้าต่าง Modal
-        document.getElementById('modalSnInput').addEventListener('input', function(e) {
-            renderModalSnList(e.target.value);
-        });
+        document.getElementById('modalSnInput').addEventListener('input', function(e) { renderModalSnList(e.target.value); });
 
-        // 3. กรณีกดเลือก S/N จากในคลัง (ยัด ยี่ห้อ/รุ่น/สถานะ ให้ออโต้)
         window.selectModalSn = function(sn, brand, model) {
             if(!currentSnTarget) return;
             let table = document.getElementById(currentSnTarget.tableId).jexcel;
+            let colTitle = table.options.columns[currentSnTarget.x].title;
+            let brandCol = -1, modelCol = -1, statusCol = -1;
             let tCols = table.options.columns;
             
-            let brandCol = -1, modelCol = -1, statusCol = -1;
-            for(let i=0; i<tCols.length; i++) {
-                if(tCols[i].title === 'ยี่ห้อ') brandCol = i;
-                if(tCols[i].title === 'รุ่น') modelCol = i;
-                if(tCols[i].title === 'สถานะ') statusCol = i;
+            if (currentSnTarget.tableId === 'spreadsheet-cpumon') {
+                if (colTitle === 'S/N CPU') { brandCol = 2; modelCol = 3; }
+                if (colTitle === 'S/N จอภาพ') { brandCol = 5; modelCol = 6; }
+                statusCol = 8;
+            } else {
+                for(let i=0; i<tCols.length; i++) {
+                    if(tCols[i].title === 'ยี่ห้อ') brandCol = i;
+                    if(tCols[i].title === 'รุ่น') modelCol = i;
+                    if(tCols[i].title === 'สถานะ') statusCol = i;
+                }
             }
 
             table.setValueFromCoords(currentSnTarget.x, currentSnTarget.y, sn);
@@ -1821,24 +1713,17 @@
             if(modelCol !== -1 && model) table.setValueFromCoords(modelCol, currentSnTarget.y, model);
             if(statusCol !== -1) table.setValueFromCoords(statusCol, currentSnTarget.y, 'ปกติ');
 
-            hasUnsavedDeletions = true;
-            showToast(`✨ ดึงอุปกรณ์ ${brand} จากคลังสำเร็จ!`);
-            closeSnSearchModal();
+            hasUnsavedDeletions = true; showToast(`✨ ดึงอุปกรณ์ ${brand} จากคลังสำเร็จ!`); closeSnSearchModal();
         }
 
-        // 4. กรณีกดปุ่ม "ใช้ S/N นี้ (เพิ่มใหม่)" 
         window.applyManualSn = function() {
             if(!currentSnTarget) return;
             let inputEl = document.getElementById('modalSnInput');
             let val = inputEl.value.trim();
-            
             let table = document.getElementById(currentSnTarget.tableId).jexcel;
             table.setValueFromCoords(currentSnTarget.x, currentSnTarget.y, val);
-            
-            hasUnsavedDeletions = true;
-            closeSnSearchModal();
+            hasUnsavedDeletions = true; closeSnSearchModal();
         }
-        
     </script>
 </body>
 </html>
