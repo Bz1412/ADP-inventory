@@ -11,12 +11,10 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
     <link id="pwa-manifest" rel="manifest">
     
-    <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Favicon โลโก้ ADP มินิมอล -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -97,7 +95,6 @@
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
-    <!-- 🌟 Modal ดูรูปภาพแบบ Popup 🌟 -->
     <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 z-[400] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="relative w-full max-w-4xl flex flex-col items-center animate-pop-in">
             <button onclick="closeImageModal()" class="absolute -top-12 right-0 text-white hover:text-red-400 text-4xl transition-colors">&times;</button>
@@ -118,7 +115,6 @@
         </div>
     </div>
 
-    <!-- Modal ดูประวัติรายเครื่อง -->
     <div id="snHistoryModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[170] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
@@ -146,7 +142,6 @@
         </div>
     </div>
 
-    <!-- Modal Audit Log -->
     <div id="auditLogModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800">
@@ -166,7 +161,6 @@
         </div>
     </div>
 
-    <!-- Modal คู่มือการใช้งาน -->
     <div id="helpModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[150] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
@@ -178,7 +172,7 @@
             </div>
             
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full space-y-6">
-                <!-- ส่วนที่ 1: การจัดการข้อมูล -->
+
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การกรอกและแก้ไขข้อมูล (สำคัญ)</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -189,7 +183,6 @@
                     </ul>
                 </div>
 
-                <!-- ส่วนที่ 2: ระบบแจ้งชำรุดและรูปภาพ -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> ระบบแจ้งชำรุดและอัปโหลดรูปภาพ</h4>
                     <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">เมื่อมีอุปกรณ์เสีย แอดมินสามารถแนบรูปถ่ายความเสียหายเข้าระบบได้ทันที เพื่อให้ช่างประเมินอาการ:</p>
@@ -202,7 +195,6 @@
                     </ol>
                 </div>
 
-                <!-- ส่วนที่ 3: ระบบ QR Code -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> ระบบ QR Code ประจำเครื่อง</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -211,7 +203,6 @@
                     </ul>
                 </div>
 
-                <!-- ส่วนที่ 4: การส่งรายงานประจำเดือน -->
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-300">
                     <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-amber-500">4.</span> การส่งรายงานประจำเดือน</h4>
                     <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
@@ -227,7 +218,6 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal ค้นหา S/N จากคลัง (Search & Add New) 🌟 -->
     <div id="snSearchModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in max-h-[90vh]">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 sticky top-0 z-10">
@@ -243,7 +233,6 @@
             </div>
 
             <div id="modalSnList" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]">
-                <!-- รายการค้นหาจะมาโผล่ตรงนี้ -->
             </div>
 
             <div class="p-5 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-3 flex-wrap">
@@ -255,7 +244,6 @@
         </div>
     </div>
 
-    <!-- Modal เซฟก่อนแก้ไข -->
     <div id="saveFirstModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[140] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
@@ -267,7 +255,6 @@
         </div>
     </div>
 
-    <!-- Modal ลบ -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[120] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] max-w-sm w-full p-8 text-center border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
@@ -283,7 +270,6 @@
         </div>
     </div>
 
-    <!-- Modal บันทึก -->
     <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
@@ -297,7 +283,6 @@
         </div>
     </div>
 
-    <!-- Modal ยืนยันรายงานประจำเดือน -->
     <div id="monthlyConfirmModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[110] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700">
@@ -312,7 +297,6 @@
         </div>
     </div>
 
-    <!-- Modal พรีวิว QR Code -->
     <div id="qrPreviewModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[130] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
@@ -329,7 +313,6 @@
         </div>
     </div>
 
-    <!-- 🌌 Clean Navbar 🌌 -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 transition-colors no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -337,20 +320,17 @@
                 <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer" onclick="goHome()">ADP<span class="font-normal text-slate-500 dark:text-slate-400">Inventory</span></h1>
             </div>
             
-            <!-- ⏰ นาฬิกาแบบ Real-time -->
             <div class="hidden md:flex items-center text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 px-4 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm ml-auto mr-4">
                 <span id="realtimeClock">กำลังโหลดเวลา...</span>
             </div>
 
             <div class="flex items-center gap-1 md:gap-2">
 
-                <!-- 🌟 ปุ่ม PWA Install (จะโผล่มาเมื่อรองรับ) 🌟 -->
                 <button id="btnInstallApp" onclick="installApp()" class="hidden relative group text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors text-sm border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
                     <span class="hidden lg:inline">ติดตั้งแอป</span>
                 </button>
-                
-                <!-- 🌟 ปุ่มคู่มือ (ปรับ Tooltip ให้เด้งลงล่าง) 🌟 -->
+
                 <button onclick="openHelpModal()" class="relative group text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg> 
                     <span class="hidden lg:inline">คู่มือ</span>
@@ -367,7 +347,6 @@
         </div>
     </nav>
 
-    <!-- 🏠 หน้าแรก (Dashboard) 🏠 -->
     <div id="homePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 no-print animate-fade-in">
         
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 animate-slide-up">
@@ -418,7 +397,6 @@
             </div>
         </div>
 
-        <!-- 📋 การ์ดสรุปสถานะการส่งรายงาน 📋 -->
         <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-200">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
@@ -473,7 +451,6 @@
         <div id="indexPage"></div>
     </div>
 
-    <!-- 📊 หน้าดูรายการรวม (Aggregate View) 📊 -->
     <div id="aggregatePage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
             <div>
@@ -493,7 +470,6 @@
         </div>
     </div>
 
-    <!-- 📝 หน้าจัดการสถานี (Editor) 📝 -->
     <div id="editorPage" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 hidden bg-transparent no-print overflow-x-hidden animate-fade-in">
         
         <div class="bg-white dark:bg-slate-800 p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5 w-full animate-slide-up">
@@ -527,7 +503,7 @@
         </div>
 
         <div class="grid grid-cols-1 gap-6 w-full pb-20">
-            <!-- 🌟 1. คอมพิวเตอร์และจอมอนิเตอร์ 🌟 -->
+
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
@@ -539,7 +515,6 @@
                 <div id="spreadsheet-cpumon" class="w-full text-black min-w-full"></div>
             </div>
 
-            <!-- 🌟 2. โน๊ตบุ๊ค 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
@@ -551,7 +526,6 @@
                 <div id="spreadsheet-nb" class="w-full text-black min-w-full"></div>
             </div>
             
-            <!-- 🌟 3. เครื่องพิมพ์ 🌟 -->
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-300">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
@@ -562,8 +536,7 @@
                 </div>
                 <div id="spreadsheet-prn" class="w-full text-black min-w-full"></div>
             </div>
-            
-            <!-- 🌟 4. เครื่องมือพิเศษ 🌟 -->
+
             <div class="bg-white dark:bg-slate-800 p-4 md:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full relative animate-slide-up delay-400">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
@@ -577,7 +550,6 @@
         </div>
     </div>
 
-    <!-- Core Logic Script -->
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbw47nSolokBljZwKKEnVqOSFqKExPKRmBmmrl5zLTlqZQldI1SZgze57ddw79FMsEAp/exec';
         const groupOrder = ["เหนือตอนบน", "เหนือตอนล่าง", "อีสานตอนบน", "อีสานตอนล่าง", "ใต้-ตะวันตก", "ตะวันออก", "ในที่ตั้ง"];
@@ -602,7 +574,6 @@
         let uploadTarget = null;
         let warehouseStock = [];
 
-        // 🌟 ฟังก์ชันนาฬิกา Real-time 🌟
         function updateClock() {
             const now = new Date();
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -625,17 +596,12 @@
         }
 
         window.onload = function() {
-            // 🌟 ปลดล็อกกรอบหน้าจอ ให้กาง 100% เต็มจอ (แก้ปัญหาตารางโดนบีบ)
+
             document.querySelectorAll('.max-w-7xl').forEach(el => {
                 el.classList.remove('max-w-7xl');
-                el.classList.add('w-full', 'px-2', '2xl:px-8'); // กางเต็มจอ
+                el.classList.add('w-full', 'px-2', '2xl:px-8');
             });
-            // 🌟 ปลดล็อกกรอบซ่อนทับ ทำให้ Dropdown กดเลือกได้
-            document.querySelectorAll('.overflow-x-auto').forEach(el => {
-                el.classList.remove('overflow-x-auto');
-                el.classList.add('overflow-visible');
-            });
-
+            
             updateClock();
             loadDashboardStats();
             const urlParams = new URLSearchParams(window.location.search);
@@ -876,7 +842,22 @@
                 } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ', e); }
 
                 let dbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
-                if (result.value) { dbData = JSON.parse(result.value); if(!dbData.spc) dbData.spc = [[]]; if(!dbData.nb) dbData.nb = [[]]; } 
+                if (result.value) { 
+                    dbData = JSON.parse(result.value); 
+                    if(!dbData.spc) dbData.spc = [[]]; 
+                    if(!dbData.nb) dbData.nb = [[]]; 
+                    
+                    let migratedSpc = [];
+                    dbData.spc.forEach(s => {
+                        if (s.length >= 8) {
+                            let brandModel = (`${s[3]||''} ${s[4]||''}`).trim();
+                            migratedSpc.push(["", s[1]||'', s[2]||'', brandModel, s[5]||'', s[6]||'ปกติ', s[7]||'']);
+                        } else if (s.length > 0 && s.join('').trim() !== '') {
+                            migratedSpc.push(s);
+                        }
+                    });
+                    dbData.spc = migratedSpc.length > 0 ? migratedSpc : [[]];
+                } 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -1090,6 +1071,8 @@
             let str = `ผู้ใช้: ${rData[1]||'-'} | ${rData[2]||''} ${rData[3]||''} (S/N: ${rData[4]||'-'})`;
             if(id === 'spreadsheet-cpumon') {
                 str = `ผู้ใช้: ${rData[1]||'-'} | CPU: ${rData[2]||''} (S/N: ${rData[4]||'-'}) | จอ: ${rData[5]||''} (S/N: ${rData[7]||'-'})`;
+            } else if (id === 'spreadsheet-spc') { 
+                str = `ผู้ใช้: ${rData[2]||'-'} | ${rData[3]||''} (S/N: ${rData[4]||'-'})`;
             }
             if(!rData[1]&&!rData[2]&&!rData[3]&&!rData[4]&&!rData[5]&&!rData[7]) str = "แถวว่าง";
             document.getElementById('deleteDetailText').innerText = `[${n}] ${str}`; rowToDelete = { id, row };
@@ -1125,13 +1108,19 @@
             }
         };
 
-        // 🌟 อัปเดตตารางให้เรียกใช้ oneditionstart
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
             document.getElementById('spreadsheet-prn').innerHTML=''; 
             document.getElementById('spreadsheet-spc').innerHTML='';
             
+            ['spreadsheet-cpumon', 'spreadsheet-nb', 'spreadsheet-prn', 'spreadsheet-spc'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el && el.parentElement) {
+                    el.parentElement.classList.add('pb-40', 'min-h-[300px]'); 
+                }
+            });
+
             let cpumonData = [];
             let cLen = data.cpu ? data.cpu.length : 0;
             let mLen = data.mon ? data.mon.length : 0;
@@ -1149,9 +1138,7 @@
             }
             if (cpumonData.length === 0) cpumonData = [[]];
 
-            // 🌟 ตั้งค่าให้กาง 100% และ ไม่มี Scroll เลื่อนขึ้นลงข้างในตารางแล้ว!
             const tableConfig = {
-                tableWidth: "100%", 
                 allowInsertRow: true, 
                 allowManualInsertRow: true, 
                 allowInsertColumn: false, 
@@ -1165,17 +1152,17 @@
                 data: cpumonData, 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 140 }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, 
                     { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, 
                     { type: 'text', title: 'รุ่น CPU', width: 130 }, 
                     { type: 'text', title: 'S/N CPU', width: 150 }, 
                     { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, 
                     { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, 
                     { type: 'text', title: 'S/N จอภาพ', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
                     { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
-                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true } // 👈 ขยายให้กว้างๆ
+                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
                 minDimensions: [12, 3]
             });
@@ -1190,8 +1177,8 @@
                     { type: 'text', title: 'รุ่น', width: 150 }, 
                     { type: 'text', title: 'S/N', width: 170 }, 
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 130, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 200 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
                 minDimensions: [9, 3]
@@ -1205,12 +1192,12 @@
                     { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
                     { type: 'text', title: 'ยี่ห้อ', width: 110 }, 
                     { type: 'text', title: 'รุ่น', width: 150 }, 
-                    { type: 'text', title: 'S/N', width: 160 }, 
+                    { type: 'text', title: 'S/N', width: 170 }, 
                     { type: 'text', title: 'ลักษณะสี', width: 100 }, 
                     { type: 'text', title: 'Scanner', width: 100 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
                     { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
                 minDimensions: [11, 3]
@@ -1223,14 +1210,13 @@
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
                     { type: 'text', title: 'ประเภท', width: 140 }, 
                     { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
-                    { type: 'text', title: 'รุ่น', width: 150 }, 
-                    { type: 'text', title: 'S/N', width: 170 }, 
+                    { type: 'text', title: 'ยี่ห้อ/รุ่น', width: 220 }, 
+                    { type: 'text', title: 'S/N', width: 180 }, 
                     { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 200 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
-                minDimensions: [9, 3]
+                minDimensions: [8, 3]
             });
         }
 
@@ -1494,21 +1480,14 @@
                 let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
-                // 🌟 แก้ไขระบบกรองการเชื่อมต่อ ให้ฉลาดและครอบคลุมขึ้น
                 const mapConn = (c) => {
                     let l = String(c).toLowerCase().trim();
                     if(!l || l === '-') return '';
-                    
-                    // ดัก DIV 5 / กอง 5 / LAN 5
-                    if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5';
-                    // ดัก LAN ปกติ / กอง 6 / ภายใน
+                    if(l.includes('lan') && (l.includes('5') || l.includes('div 5') || l.includes('div5'))) return 'LAN กอง 5';
                     if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6';
-                    // ดัก อินเตอร์เน็ต / WIFI
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
-                    // ดัก Standalone
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
-                    
-                    return c; // ถ้าไม่เข้าเงื่อนไขเลย ให้คืนค่าเป็นคำเดิม
+                    return c;
                 };
 
                 const mapStatus = (s) => {
@@ -1521,14 +1500,18 @@
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = [];
                     row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-                        rowVals[colNumber] = cell.value ? String(cell.result !== undefined ? cell.result : cell.value).trim() : '';
+                        // ดึงค่า value แบบปลอดภัย ป้องกัน [object Object]
+                        let cellVal = cell.value;
+                        if (cellVal !== null && typeof cellVal === 'object') {
+                            // กรณี ExcelCell แบบ Rich Text หรือ Result
+                            cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal));
+                        }
+                        rowVals[colNumber] = cellVal ? String(cellVal).trim() : '';
                     });
                     let rowStr = rowVals.join(' ').toLowerCase();
 
-                    // กรองข้อความขยะ/คำอธิบายออกจากไฟล์ Excel
-                    if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) {
-                        return; // ข้ามบรรทัดนี้
-                    }
+                    // กรองข้อความขยะ
+                    if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
                     
                     if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
                     if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
@@ -1538,7 +1521,7 @@
                         colMap = {}; 
                         rowVals.forEach((val, idx) => {
                             if (!val) return;
-                            let h = val.toLowerCase();
+                            let h = String(val).toLowerCase();
                             if (h.includes('ผู้ใช้') || h.includes('user') || h.includes('สถานที่')) colMap.user = idx;
                             if (h.includes('สถานะ') || h.includes('status')) colMap.status = idx;
                             if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network')) colMap.conn = idx;
@@ -1577,7 +1560,12 @@
                         
                         let conn = mapConn(getVal(colMap.conn)); let status = mapStatus(getVal(colMap.status)); let remark = getVal(colMap.remark);
 
-                        if (!cpuBrand && !cpuSN && !monSN && !cpuModel && !monModel && (!remark || currentMode !== 'SPC')) return;
+                        // 🌟 แก้ไขเงื่อนไขการดึงแถว ป้องกันแถวว่างเปล่าเข้ามา
+                        // ถ้าไม่มีข้อมูลพวก ยี่ห้อ, รุ่น, หรือ S/N เลย ให้ข้ามแถวนี้ไปเลย
+                        if (!cpuBrand && !cpuSN && !cpuModel && !monBrand && !monSN && !monModel) {
+                           // อนุญาตให้เข้าได้แค่กรณี โหมดเครื่องมือพิเศษ (SPC) และต้องมีหมายเหตุระบุประเภทชัดเจนเท่านั้น
+                           if (currentMode !== 'SPC' || !remark) return; 
+                        }
 
                         if (currentMode === 'CPUMON') { 
                             cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, monBrand, monModel, monSN, status, conn, remark]); 
@@ -1598,7 +1586,8 @@
                             else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) spcType = 'RCF';
                             else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
 
-                            spcData.push(["", spcType, user, cpuBrand, cpuModel, cpuSN, status, remark]); 
+                            let brandModel = `${String(cpuBrand)} ${String(cpuModel)}`.trim();
+                            spcData.push(["", String(spcType), String(user), brandModel, String(cpuSN), String(status), String(remark)]); 
                         }
                     }
                 });
@@ -1642,9 +1631,13 @@
             ws.addRow([]);
 
             ws.addRow(["SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ"]);
-            let rHead4 = ws.addRow(["ลำดับ", "ประเภท", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
+            let rHead4 = ws.addRow(["ลำดับ", "ประเภท", "ผู้ใช้งาน", "ยี่ห้อ/รุ่น", "S/N", "-", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
             formatHeader(rHead4, 'FF64748B');
-            tableSpc.getData().forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[6]||'', c[7]||'']); applyBorders(row); } });
+            tableSpc.getData().forEach((c, i) => { 
+                if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']); 
+                    applyBorders(row); 
+                } 
+            });
 
             ws.columns = [ {width: 8}, {width: 20}, {width: 20}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 15}, {width: 15}, {width: 12}, {width: 25} ];
             ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && (firstCell === "คอมพิวเตอร์และจอมอนิเตอร์" || firstCell === "โน๊ตบุ๊ค" || firstCell === "เครื่องพิมพ์" || firstCell === "SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ")) { ws.mergeCells(`A${rowNumber}:K${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; cell.alignment = { horizontal: 'left' }; } });
@@ -1694,9 +1687,14 @@
                     ws.addRow([]);
 
                     ws.addRow(["SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ"]);
-                    let rHead4 = ws.addRow(["ลำดับ", "ประเภท", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
+                    let rHead4 = ws.addRow(["ลำดับ", "ประเภท", "ผู้ใช้งาน", "ยี่ห้อ/รุ่น", "S/N", "-", "-", "-", "-", "สถานะ", "หมายเหตุ"]);
                     formatHeader(rHead4, 'FF64748B');
-                    if(dbData.spc) dbData.spc.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[6]||'', c[7]||'']); applyBorders(row); }});
+                    if(dbData.spc) dbData.spc.forEach((c, i) => { 
+                        if (c.join('').trim() !== '') { 
+                            let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', '', c[5]||'', c[6]||'']); 
+                            applyBorders(row); 
+                        }
+                    });
 
                     ws.columns = [ {width: 8}, {width: 20}, {width: 20}, {width: 15}, {width: 20}, {width: 25}, {width: 15}, {width: 15}, {width: 15}, {width: 12}, {width: 25} ];
                     
@@ -1708,7 +1706,6 @@
             } catch (error) { console.error(error); showToast("ข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 PWA Setup 🌟
         const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='#ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>`);
         const manifest = {
             "name": "ADP Inventory",
