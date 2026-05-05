@@ -720,7 +720,7 @@
                                     <span title="คอมฯและโน๊ตบุ๊ค" class="flex items-center gap-0.5 ${(stCpu+stNb)>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">💻 ${(stCpu+stNb)}</span>
                                     <span title="จอมอนิเตอร์" class="flex items-center gap-0.5 ${stMon>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🖥️ ${stMon}</span>
                                     <span title="เครื่องพิมพ์" class="flex items-center gap-0.5 ${stPrn>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🖨️ ${stPrn}</span>
-                                    <span title="เครื่องมือพิเศษ" class="flex items-center gap-0.5 ${stSpc>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🛠️ ${stSpc}</span>
+                                    <span title="เครื่องมือพิเศษ/Server/อื่นๆ" class="flex items-center gap-0.5 ${stSpc>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🛠️ ${stSpc}</span>
                                 `;
                             }
                         }
@@ -767,7 +767,7 @@
             if(type === 'NB') title = "โน๊ตบุ๊ค";
             if(type === 'MON') title = "จอมอนิเตอร์";
             if(type === 'PRN') title = "เครื่องพิมพ์";
-            if(type === 'SPC') title = "เครื่องมือพิเศษ";
+            if(type === 'SPC') title = "เครื่องมือพิเศษ/Server/อื่นๆ";
             document.getElementById('aggregateTitle').innerText = title;
             
             let html = '';
@@ -810,7 +810,7 @@
                 if (type === 'ALL' || type === 'NB') addRows(dbData.nb, 'โน๊ตบุ๊ค');
                 if (type === 'ALL' || type === 'MON') addRows(dbData.mon, 'จอมอนิเตอร์');
                 if (type === 'ALL' || type === 'PRN') addRows(dbData.prn, 'เครื่องพิมพ์', true, false);
-                if (type === 'ALL' || type === 'SPC') addRows(dbData.spc, 'เครื่องมือพิเศษ', false, true);
+                if (type === 'ALL' || type === 'SPC') addRows(dbData.spc, 'เครื่องมือพิเศษ/Server/อื่นๆ', false, true);
             }
             
             if(html === '') html = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">ไม่พบข้อมูล</td></tr>`;
@@ -833,7 +833,7 @@
                         if (dbData.nb) dbData.nb.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'โน๊ตบุ๊ค', row)); });
                         if (dbData.mon) dbData.mon.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'จอมอนิเตอร์', row)); });
                         if (dbData.prn) dbData.prn.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องพิมพ์', row, true, false)); });
-                        if (dbData.spc) dbData.spc.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องมือพิเศษ', row, false, true)); });
+                        if (dbData.spc) dbData.spc.forEach(row => { if (row.join(' ').toLowerCase().includes(query)) allResults.push(createSearchRowHtml(group, station, 'เครื่องมือพิเศษ/Server/อื่นๆ', row, false, true)); });
                     }
                 }
                 const tbody = document.getElementById('searchTableBody');
@@ -910,7 +910,7 @@
                             migratedSpc.push(s);
                         } else if (s.join('').trim() !== '') {
                             // โครงสร้างเดิม: 1=ผู้ใช้งาน, 2=ยี่ห้อ, 3=รุ่น, 4=S/N, 5=สถานะ, 6=หมายเหตุ
-                            let spcType = 'เครื่องมือพิเศษ';
+                            let spcType = 'เครื่องมือพิเศษ/Server/อื่นๆ';
                             let rmkLower = (s[6]||'').toLowerCase();
                             if (rmkLower.includes('ups') || rmkLower.includes('สำรองไฟ')) spcType = 'UPS';
                             else if (rmkLower.includes('server')) spcType = 'Server';
@@ -1132,7 +1132,7 @@
 
         function promptDeleteRow(id, row) {
             const rData = document.getElementById(id).jexcel.getRowData(row);
-            let n = id==='spreadsheet-cpumon'?"คอมพิวเตอร์และจอ":id==='spreadsheet-nb'?"โน๊ตบุ๊ค":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
+            let n = id==='spreadsheet-cpumon'?"คอมพิวเตอร์และจอ":id==='spreadsheet-nb'?"โน๊ตบุ๊ค":id==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ/Server/อื่นๆ";
             let str = `ผู้ใช้: ${rData[1]||'-'} | ${rData[2]||''} ${rData[3]||''} (S/N: ${rData[4]||'-'})`;
             if(id === 'spreadsheet-cpumon') {
                 str = `ผู้ใช้: ${rData[1]||'-'} | CPU: ${rData[2]||''} (S/N: ${rData[4]||'-'}) | จอ: ${rData[5]||''} (S/N: ${rData[7]||'-'})`;
@@ -1377,7 +1377,7 @@
             compareArrays(oldNb, newNb, 'โน๊ตบุ๊ค');
             compareArrays(oldMon, newMon, 'จอมอนิเตอร์');
             compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์', true, false);
-            compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ', false, true);
+            compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ/Server/อื่นๆ', false, true);
 
             return { added, removed, updated };
         }
@@ -1464,7 +1464,7 @@
             let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
             let newMon = combinedData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
             
-            summaryHtml += genSum('คอมพิวเตอร์', newCpu, '💻') + genSum('โน๊ตบุ๊ค', tableNB.getData(), '💻') + genSum('จอมอนิเตอร์', newMon, '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️', true, false) + genSum('เครื่องมือพิเศษ', tableSpc.getData(), '🛠️', false, true);
+            summaryHtml += genSum('คอมพิวเตอร์', newCpu, '💻') + genSum('โน๊ตบุ๊ค', tableNB.getData(), '💻') + genSum('จอมอนิเตอร์', newMon, '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️', true, false) + genSum('เครื่องมือพิเศษ/Server/อื่นๆ', tableSpc.getData(), '🛠️', false, true);
             if (summaryHtml === '<div class="space-y-4">') summaryHtml = '<div class="text-center text-slate-400 py-6 font-medium">ไม่พบอุปกรณ์ในระบบ</div>'; else summaryHtml += '</div>';
             document.getElementById('monthlySummaryContent').innerHTML = summaryHtml; document.getElementById('monthlyConfirmModal').classList.remove('hidden'); document.getElementById('monthlyConfirmModal').classList.add('flex');
         }
@@ -1529,7 +1529,7 @@
                 }
             } else {
                 if(!rData[1] && !rData[2] && !rData[3] && !rData[4]) { showToast("ไม่สามารถสร้าง QR สำหรับแถวว่าง", "error"); return; }
-                let type = instanceId==='spreadsheet-nb'?"โน๊ตบุ๊ค":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ";
+                let type = instanceId==='spreadsheet-nb'?"โน๊ตบุ๊ค":instanceId==='spreadsheet-prn'?"เครื่องพิมพ์":"เครื่องมือพิเศษ/Server/อื่นๆ";
                 let lbl = createQRLabelElement(type, rData[2]||'-', rData[3]||'-', rData[4]||'-', rData[1]||'-', dateStr);
                 previewArea.appendChild(lbl); printArea.appendChild(lbl.cloneNode(true));
             }
@@ -1673,7 +1673,7 @@
                             prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
                         } 
                         else if (currentMode === 'SPC') { 
-                            let spcType = 'เครื่องมือพิเศษ';
+                            let spcType = 'เครื่องมือพิเศษ/Server/อื่นๆ';
                             let rmkLower = remark.toLowerCase();
                             if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS';
                             else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server';
@@ -2050,7 +2050,7 @@
                                 prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
                             } 
                             else if (currentMode === 'SPC') { 
-                                let spcType = 'เครื่องมือพิเศษ'; let rmkLower = remark.toLowerCase();
+                                let spcType = 'เครื่องมือพิเศษ/Server/อื่นๆ'; let rmkLower = remark.toLowerCase();
                                 if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS';
                                 else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server';
                                 else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) spcType = 'RCF';
