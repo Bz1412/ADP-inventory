@@ -625,6 +625,17 @@
         }
 
         window.onload = function() {
+            // 🌟 ปลดล็อกกรอบหน้าจอ ให้กาง 100% เต็มจอ (แก้ปัญหาตารางโดนบีบ)
+            document.querySelectorAll('.max-w-7xl').forEach(el => {
+                el.classList.remove('max-w-7xl');
+                el.classList.add('w-full', 'px-2', '2xl:px-8'); // กางเต็มจอ
+            });
+            // 🌟 ปลดล็อกกรอบซ่อนทับ ทำให้ Dropdown กดเลือกได้
+            document.querySelectorAll('.overflow-x-auto').forEach(el => {
+                el.classList.remove('overflow-x-auto');
+                el.classList.add('overflow-visible');
+            });
+
             updateClock();
             loadDashboardStats();
             const urlParams = new URLSearchParams(window.location.search);
@@ -1114,7 +1125,7 @@
             }
         };
 
-        // 🌟 2. อัปเดตตารางให้เรียกใช้ oneditionstart
+        // 🌟 อัปเดตตารางให้เรียกใช้ oneditionstart
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
@@ -1138,10 +1149,9 @@
             }
             if (cpumonData.length === 0) cpumonData = [[]];
 
-            // 🌟 ตั้งค่าตารางให้ขยายเต็มและ Scroll ได้สะดวก
+            // 🌟 ตั้งค่าให้กาง 100% และ ไม่มี Scroll เลื่อนขึ้นลงข้างในตารางแล้ว!
             const tableConfig = {
-                tableOverflow: true,
-                tableWidth: "100%",
+                tableWidth: "100%", 
                 allowInsertRow: true, 
                 allowManualInsertRow: true, 
                 allowInsertColumn: false, 
@@ -1157,15 +1167,15 @@
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
                     { type: 'text', title: 'ผู้ใช้งาน', width: 140 }, 
                     { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, 
-                    { type: 'text', title: 'รุ่น CPU', width: 120 }, 
-                    { type: 'text', title: 'S/N CPU', width: 130 }, 
+                    { type: 'text', title: 'รุ่น CPU', width: 130 }, 
+                    { type: 'text', title: 'S/N CPU', width: 150 }, 
                     { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น จอภาพ', width: 120 }, 
-                    { type: 'text', title: 'S/N จอภาพ', width: 130 }, 
+                    { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, 
+                    { type: 'text', title: 'S/N จอภาพ', width: 150 }, 
                     { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
                     { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
-                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
+                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
+                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true } // 👈 ขยายให้กว้างๆ
                 ], 
                 minDimensions: [12, 3]
             });
@@ -1175,14 +1185,14 @@
                 data: data.nb||[[]], 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น', width: 130 }, 
-                    { type: 'text', title: 'S/N', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
-                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
+                    { type: 'text', title: 'รุ่น', width: 150 }, 
+                    { type: 'text', title: 'S/N', width: 170 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 130, source: connectionOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
                 minDimensions: [9, 3]
             });
@@ -1192,16 +1202,16 @@
                 data: data.prn||[[]], 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น', width: 120 }, 
-                    { type: 'text', title: 'S/N', width: 140 }, 
-                    { type: 'text', title: 'ลักษณะสี', width: 90 }, 
-                    { type: 'text', title: 'Scanner', width: 90 }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 110 }, 
+                    { type: 'text', title: 'รุ่น', width: 150 }, 
+                    { type: 'text', title: 'S/N', width: 160 }, 
+                    { type: 'text', title: 'ลักษณะสี', width: 100 }, 
+                    { type: 'text', title: 'Scanner', width: 100 }, 
                     { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
                     { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
-                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
+                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
+                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
                 minDimensions: [11, 3]
             });
@@ -1211,14 +1221,14 @@
                 data: data.spc||[[]], 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ประเภท', width: 120 }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น', width: 130 }, 
-                    { type: 'text', title: 'S/N', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 90, source: statusOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 160 }, 
-                    { type: 'html', title: 'จัดการ', width: 110, readOnly: true }
+                    { type: 'text', title: 'ประเภท', width: 140 }, 
+                    { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
+                    { type: 'text', title: 'รุ่น', width: 150 }, 
+                    { type: 'text', title: 'S/N', width: 170 }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
                 minDimensions: [9, 3]
             });
@@ -1484,14 +1494,21 @@
                 let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
+                // 🌟 แก้ไขระบบกรองการเชื่อมต่อ ให้ฉลาดและครอบคลุมขึ้น
                 const mapConn = (c) => {
                     let l = String(c).toLowerCase().trim();
                     if(!l || l === '-') return '';
-                    if(l.includes('lan') && (l.includes('5') || l.includes('div 5') || l.includes('div5'))) return 'LAN กอง 5';
-                    if(l.includes('lan') || l.includes('6') || l.includes('ภายใน')) return 'LAN กอง 6';
+                    
+                    // ดัก DIV 5 / กอง 5 / LAN 5
+                    if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5';
+                    // ดัก LAN ปกติ / กอง 6 / ภายใน
+                    if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6';
+                    // ดัก อินเตอร์เน็ต / WIFI
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
+                    // ดัก Standalone
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
-                    return c;
+                    
+                    return c; // ถ้าไม่เข้าเงื่อนไขเลย ให้คืนค่าเป็นคำเดิม
                 };
 
                 const mapStatus = (s) => {
@@ -1508,9 +1525,9 @@
                     });
                     let rowStr = rowVals.join(' ').toLowerCase();
 
-                    // 🌟 กรองข้อความขยะ/คำอธิบายออกจากไฟล์ Excel 🌟
+                    // กรองข้อความขยะ/คำอธิบายออกจากไฟล์ Excel
                     if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) {
-                        return; // ข้ามบรรทัดนี้ไปเลย
+                        return; // ข้ามบรรทัดนี้
                     }
                     
                     if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
