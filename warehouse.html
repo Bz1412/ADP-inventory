@@ -687,11 +687,7 @@
                             const extractDeployed = (arr, cat, isSpc = false, isPrn = false) => {
                                 if(!arr) return;
                                 arr.forEach(r => {
-                                    let hasData = false;
-                                    if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
-                                    else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
-
-                                    if (hasData) {
+                                    if (r[4] && String(r[4]).trim() !== '-' && String(r[4]).trim() !== '') {
                                         totalDeployed++;
                                         let user = isSpc ? r[2] : r[1];
                                         let specs = isSpc ? r[3] : `${r[2]||''} ${r[3]||''}`;
@@ -728,8 +724,7 @@
                 const processWhArray = (arr) => {
                     if(!arr) return;
                     arr.forEach(r => { 
-                        let hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
-                        if(hasData) {
+                        if (r[4] && String(r[4]).trim() !== '-' && String(r[4]).trim() !== '') {
                             whMainCount++; 
                             let cat = r[1];
                             let itemObj = { group: 'คลังส่วนกลาง', station: 'โกดังหลัก', category: cat, user: 'Stock', specs: `${r[2]||''} ${r[3]||''}`, sn: r[4]||'-', status: r[5]||'-' };
