@@ -58,18 +58,12 @@
         
         .hover-card { transition: all 0.2s ease; cursor: pointer; }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
-
-        /* 🌟 แก้ปัญหาปฏิทินโดนบัง 🌟 */
-        .jexcel_container { min-height: 380px !important; }
-        .jsuites-calendar { z-index: 99999 !important; }
-        .jexcel_content { overflow-y: visible !important; }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
 
     <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md animate-fade-in">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังประมวลผลฐานข้อมูล...</p>
@@ -103,7 +97,7 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง (กดจากตาราง) 🌟 -->
+    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง 🌟 -->
     <div id="withdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
@@ -169,8 +163,7 @@
 
     <!-- Navbar -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-            
+        <div class="w-full px-4 sm:px-6 h-16 flex justify-between items-center lg:px-8">
             <div class="flex items-center gap-3">
                 <div onclick="switchTab('dashboard')" class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30 cursor-pointer transition-transform hover:scale-110">W</div>
                 <h1 onclick="switchTab('dashboard')" class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer">ADP<span class="font-normal text-slate-500">Warehouse</span></h1>
@@ -190,7 +183,7 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8 mt-6">
         
         <!-- Tab Navigation -->
         <div class="flex flex-wrap gap-2 mb-8 animate-slide-up bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 w-max">
@@ -202,7 +195,6 @@
         <!-- 📊 Tab 1: Dashboard -->
         <div id="view-dashboard" class="animate-fade-in">
             
-            <!-- 🌟 ปุ่มเบิกจ่ายด่วนหน้าแรก 🌟 -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
@@ -232,7 +224,6 @@
                 </div>
             </div>
 
-            <!-- สรุปยอดอุปกรณ์ทุกชนิด -->
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-100 mb-8 w-full">
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">📈 สถิติแยกตามประเภทอุปกรณ์ (ทุกชนิด)</h2>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="detailedStatsGrid">
@@ -240,7 +231,7 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-200">
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-200 mb-20">
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">🔥 รายการวัสดุสิ้นเปลืองใกล้หมด (ในคลัง)</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left border-collapse min-w-[500px]">
@@ -274,7 +265,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-8 w-full pb-20">
+            <div class="grid grid-cols-1 gap-8 w-full pb-32">
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">💻</span> คอมพิวเตอร์ & โน๊ตบุ๊ค (มี S/N)</h3>
@@ -320,7 +311,7 @@
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto pb-4">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto pb-4 mb-20">
                 <table class="w-full text-sm text-left min-w-[900px]">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase tracking-wider text-xs">
                         <tr>
@@ -431,7 +422,7 @@
             }
 
             if ((instance.id === 'wh-parts' || instance.id === 'wh-consumables') && col == tCols - 2) {
-                cell.innerHTML = `<button onclick="openWithdrawModal('${instance.id}', ${row})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold text-xs w-full shadow-sm">📤 เบิก</button>`;
+                cell.innerHTML = `<button onclick="openWithdrawModal('${instance.id}', ${row})" class="text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors font-bold text-xs w-full shadow-sm whitespace-nowrap">📤 เบิก</button>`;
                 cell.style.textAlign = 'center';
             }
 
@@ -693,16 +684,21 @@
                         const parts = dbKey.split('_');
                         if(parts.length >= 3 && parts[1] !== 'WAREHOUSE') { 
                             const group = parts[1]; const station = parts[2];
-                            const extractDeployed = (arr, cat) => {
+                            const extractDeployed = (arr, cat, isSpc = false) => {
                                 if(!arr) return;
                                 arr.forEach(r => {
                                     if (r[1] || r[2] || r[3] || r[4]) {
                                         totalDeployed++;
-                                        let itemObj = { group, station, category: cat, user: r[1]||'-', specs: `${r[2]||''} ${r[3]||''}`, sn: r[4]||'-', status: r[5]||'-' };
+                                        let user = isSpc ? r[2] : r[1];
+                                        let specs = isSpc ? r[3] : `${r[2]||''} ${r[3]||''}`;
+                                        let sn = r[4];
+                                        let status = r[5] || '-';
+
+                                        let itemObj = { group, station, category: cat, user: user||'-', specs: specs.trim(), sn: sn||'-', status: status };
                                         globalDeployedData.push(itemObj);
                                         cardData.DEPLOYED.push(itemObj);
                                         
-                                        if(r[5] === 'ชำรุด') {
+                                        if(status === 'ชำรุด') {
                                             brokenDeployed++;
                                             cardData.BROKEN.push(itemObj);
                                             addStat(cat, 'broken', 1, itemObj);
@@ -716,7 +712,7 @@
                             extractDeployed(dbData.nb, 'โน๊ตบุ๊ค');
                             extractDeployed(dbData.mon, 'จอมอนิเตอร์');
                             extractDeployed(dbData.prn, 'เครื่องพิมพ์');
-                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ');
+                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ', true);
                         }
                     }
                 }
@@ -768,7 +764,6 @@
                     });
                 }
 
-                // 🌟 แทรกประวัติการเบิกอะไหล่/สิ้นเปลืองลงในหน้า Deployed Assets 🌟
                 if (whWithdrawals && whWithdrawals.length > 0) {
                     whWithdrawals.forEach(w => {
                         let itemObj = { 
@@ -792,17 +787,14 @@
                 document.getElementById('dashDeployedCount').innerText = totalDeployed;
                 document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
-                // 🌟 อัปเดต HTML กล่องสถิติ (แยกของมี S/N กับ ของนับจำนวน) 🌟
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
-                    
-                    // เช็คว่าเป็นอุปกรณ์หลัก (คอม, จอ, ปริ้นเตอร์ ฯลฯ) ที่มีข้อมูล S/N เก็บไว้หรือไม่
+
                     let isMainAsset = ['PC / Notebook', 'Monitor (จอ)', 'Printer', 'UPS', 'เครื่องมือพิเศษ'].includes(catName) || 
                                       (categoryDetailedItems[catName] && categoryDetailedItems[catName].wh && categoryDetailedItems[catName].wh.some(i => !String(i.sn).includes('(คงเหลือ'))) || 
                                       (categoryDetailedItems[catName] && categoryDetailedItems[catName].deployed && categoryDetailedItems[catName].deployed.length > 0);
 
                     if (isMainAsset) {
-                        // อุปกรณ์หลัก (มี S/N) -> แสดง 2 ปุ่ม ในคลัง/เบิกแล้ว
                         statsHtml += `
                         <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                             <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mb-2">${catName}</p>
@@ -812,7 +804,7 @@
                             </div>
                         </div>`;
                     } else {
-                        // 🌟 อะไหล่/สิ้นเปลือง -> โชว์แค่จำนวนเหลือ และคลิกทั้งการ์ดเพื่อดูรายการได้เลย 🌟
+
                         statsHtml += `
                         <div onclick="openCategoryModal('${catName}', 'wh')" class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between border-l-4 border-l-amber-500 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors" data-tooltip="คลิกดูรายการทั้งหมด">
                             <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mb-2">${catName}</p>
@@ -860,10 +852,16 @@
             }
         }
 
-        // 🌟 ล็อกคอลัมน์แรกให้อ่านได้อย่างเดียว และแก้วันที่รับเข้าออโต้ 🌟
         function initWarehouseSpreadsheets(data) {
             document.getElementById('wh-main').innerHTML=''; document.getElementById('wh-parts').innerHTML=''; document.getElementById('wh-consumables').innerHTML='';
-            
+
+            ['wh-main', 'wh-parts', 'wh-consumables'].forEach(id => {
+                let el = document.getElementById(id);
+                if(el && el.parentElement) {
+                    el.parentElement.classList.add('pb-40', 'min-h-[400px]'); 
+                }
+            });
+
             const autoFillDate = function(instance, cell, col, row, val) {
                 hasUnsavedWhChanges = true;
                 if (col !== 6 && col !== 8 && val) {
@@ -879,57 +877,67 @@
                 }
             };
 
+            const tableConfig = {
+                tableWidth: "100%", 
+                allowInsertRow: true, 
+                allowInsertColumn: false, 
+                wordWrap: true, 
+                onchange: autoFillDate, 
+                updateTable: customWhRender 
+            };
+
             whMainTable = jspreadsheet(document.getElementById('wh-main'), { 
+                ...tableConfig,
                 data: data.main || [[]], 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'dropdown', title: 'ประเภท', width: 120, source: whMainTypes }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น', width: 120 }, 
-                    { type: 'text', title: 'S/N', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะในคลัง', width: 120, source: whStatusOptions }, 
-                    { type: 'calendar', title: 'วันที่รับเข้า', width: 100, options: { format:'DD/MM/YYYY' }, readOnly: true }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
-                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
+                    { type: 'dropdown', title: 'ประเภท', width: 140, source: whMainTypes }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
+                    { type: 'text', title: 'รุ่น', width: 150 }, 
+                    { type: 'text', title: 'S/N', width: 180 }, 
+                    { type: 'dropdown', title: 'สถานะในคลัง', width: 140, source: whStatusOptions }, 
+                    { type: 'calendar', title: 'วันที่รับเข้า', width: 120, options: { format:'DD/MM/YYYY' }, readOnly: true }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 200 }, 
+                    { type: 'html', title: 'ลบ', width: 80, readOnly: true }
                 ], 
-                minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
-                onchange: autoFillDate, 
-                updateTable: customWhRender 
+                minDimensions: [9, 5]
             });
 
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { 
+                ...tableConfig,
                 data: data.parts || [[]], 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'dropdown', title: 'ประเภท', width: 120, source: whPartsTypes }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 100 }, 
-                    { type: 'text', title: 'สเปค/รายละเอียด', width: 180 }, 
-                    { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, 
-                    { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, 
-                    { type: 'text', title: 'ชั้นวาง/จุดเก็บ', width: 120 }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
-                    { type: 'html', title: 'เบิกจ่าย', width: 80, readOnly: true }, 
-                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
+                    { type: 'dropdown', title: 'ประเภท', width: 140, source: whPartsTypes }, 
+                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
+                    { type: 'text', title: 'สเปค/รายละเอียด', width: 200 }, 
+                    { type: 'numeric', title: 'จำนวนคงเหลือ', width: 120 }, 
+                    { type: 'dropdown', title: 'หน่วยนับ', width: 100, source: whConsumableUnits }, 
+                    { type: 'text', title: 'ชั้นวาง/จุดเก็บ', width: 140 }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'html', title: 'เบิกจ่าย', width: 100, readOnly: true }, 
+                    { type: 'html', title: 'ลบ', width: 80, readOnly: true }
                 ], 
-                minDimensions: [9, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
-                onchange: () => hasUnsavedWhChanges = true, updateTable: customWhRender 
+                minDimensions: [9, 5],
+                onchange: () => hasUnsavedWhChanges = true 
             });
 
             whConsumablesTable = jspreadsheet(document.getElementById('wh-consumables'), { 
+                ...tableConfig,
                 data: data.consumables || [[]], 
                 columns: [
                     { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ประเภท (เช่น หมึก, เมาส์)', width: 150 }, 
-                    { type: 'text', title: 'ยี่ห้อ/รุ่น/รายละเอียด', width: 220 }, 
-                    { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, 
-                    { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whConsumableUnits }, 
-                    { type: 'text', title: 'จุดเก็บ/ชั้นวาง', width: 100 }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 150 }, 
-                    { type: 'html', title: 'เบิกจ่าย', width: 80, readOnly: true }, 
-                    { type: 'html', title: 'ลบ', width: 60, readOnly: true }
+                    { type: 'text', title: 'ประเภท (เช่น หมึก, เมาส์)', width: 180 }, 
+                    { type: 'text', title: 'ยี่ห้อ/รุ่น/รายละเอียด', width: 250 }, 
+                    { type: 'numeric', title: 'จำนวนคงเหลือ', width: 120 }, 
+                    { type: 'dropdown', title: 'หน่วยนับ', width: 100, source: whConsumableUnits }, 
+                    { type: 'text', title: 'จุดเก็บ/ชั้นวาง', width: 140 }, 
+                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
+                    { type: 'html', title: 'เบิกจ่าย', width: 100, readOnly: true }, 
+                    { type: 'html', title: 'ลบ', width: 80, readOnly: true }
                 ], 
-                minDimensions: [8, 5], allowInsertRow: true, allowInsertColumn: false, wordWrap: true, 
-                onchange: () => hasUnsavedWhChanges = true, updateTable: customWhRender 
+                minDimensions: [8, 5],
+                onchange: () => hasUnsavedWhChanges = true 
             });
         }
 
@@ -1045,7 +1053,7 @@
                     main: whMainTable.getData().map(r => r.slice(0, -1)), 
                     parts: whPartsTable.getData().map(r => r.slice(0, -2)), 
                     consumables: whConsumablesTable.getData().map(r => r.slice(0, -2)),
-                    withdrawals: whWithdrawals // 🌟 เซฟประวัติการเบิกลงฐานข้อมูล
+                    withdrawals: whWithdrawals
                 };
                 
                 let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
