@@ -1580,9 +1580,11 @@
                 let whMainData = [];
                 let existingSNs = new Set();
                 let newlyAddedToWarehouse = 0;
+                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
+                
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try {
-                        let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                        whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
                         whMainData = whDb.main || [];
                         whMainData.forEach(r => {
                             let sn = String(r[4]).trim().toLowerCase();
@@ -1724,20 +1726,38 @@
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
                 
-                // 🌟 เซฟเข้าคลังจริงจัง 🌟
-                if (newlyAddedToWarehouse > 0 && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
-                    let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
-                    whDb.main = whMainData; 
-                    
-                    fetch(API_URL, { 
-                        method: 'POST', 
-                        body: JSON.stringify({ 
-                            action: 'SYNC_ASSETS',
-                            updates: [{ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }],
-                            logs: [{ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่ ${newlyAddedToWarehouse} รายการ จากการนำเข้าสถานี ${currentStation}` }] 
-                        }) 
-                    });
+                // 🌟 เตรียมชุดข้อมูล (Payload) ที่จะอัปเดตลงฐานข้อมูล
+                let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+                let newMon = cpumonData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+
+                let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null };
+                
+                if (globalAllDataCache && globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]) {
+                    try {
+                        let oldData = JSON.parse(globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]);
+                        newPayload.lastConfirmed = oldData.lastConfirmed;
+                    } catch(e) {}
                 }
+
+                // 🌟 สร้างคำสั่งเซฟ 2 เด้ง: เด้ง 1 เซฟลงสถานี / เด้ง 2 เซฟเข้าคลังส่วนกลาง
+                let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
+                let logs = [{ station: currentStation, action: 'นำเข้าไฟล์รวม', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
+                
+                if (newlyAddedToWarehouse > 0) {
+                    whDb.main = whMainData; 
+                    currentUpdates.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) });
+                    logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่ ${newlyAddedToWarehouse} รายการ จากการนำเข้าสถานี ${currentStation}` });
+                }
+
+                // 🌟 ยิงคำสั่งเซฟ
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'SYNC_ASSETS',
+                        updates: currentUpdates,
+                        logs: logs 
+                    }) 
+                });
                 
                 let msg = "ดึงข้อมูลและจัดเรียงสำเร็จ";
                 if (newlyAddedToWarehouse > 0) msg += `\n📦 ส่งลงทะเบียน S/N เข้าคลังใหม่ ${newlyAddedToWarehouse} เครื่อง`;
@@ -1995,9 +2015,11 @@
                 // 🌟 ดึงข้อมูลคลังส่วนกลาง (Warehouse) มาเช็คก่อน ป้องกันการแอด S/N ซ้ำ
                 let whMainData = [];
                 let existingSNs = new Set();
+                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; // ป้องกันบัคถ้าคลังว่างเปล่า
+
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try {
-                        let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
+                        whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
                         whMainData = whDb.main || [];
                         whMainData.forEach(r => {
                             let sn = String(r[4]).trim().toLowerCase();
@@ -2168,15 +2190,14 @@
                     saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: logs });
                 });
 
-                // 🌟 ทยอยส่งทีละสถานีป้องกัน Server ล่ม 🌟
+                // 🌟 ทยอยส่งทีละสถานี 🌟
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
                     
-                    // 🌟 ถ้าเจอ S/N ใหม่ ให้เตรียมอัปเดตคลัง (Central Warehouse) ด้วย!
+                    // 🌟 ถ้าเจอ S/N ใหม่ ให้ยัดข้อมูลคลังเข้าไปด้วย
                     if (newlyAddedToWarehouse > 0) {
                         try {
-                            let whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
-                            whDb.main = whMainData; // ยัดข้อมูลใหม่ที่ถูกเพิ่มเข้าไป
+                            whDb.main = whMainData; 
                             updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) });
                         } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); }
                     }
