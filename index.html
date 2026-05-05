@@ -354,9 +354,15 @@
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ภาพรวมระบบ</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">คลิกที่การ์ดเพื่อดูรายชื่ออุปกรณ์ทั้งหมดในหมวดหมู่นั้นๆ</p>
             </div>
-            <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 w-full md:w-auto justify-center">
-                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
-            </button>
+            <div class="flex gap-2 w-full md:w-auto flex-col sm:flex-row">
+                <input type="file" id="importAllExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportAllExcel(event)">
+                <button onclick="document.getElementById('importAllExcelInput').click()" data-tooltip="นำเข้าไฟล์ Excel ที่มีหลาย Sheet (อัปเดตทุกสถานีในไฟล์เดียว)" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้าหลายสถานี
+                </button>
+                <button onclick="exportAllDataToExcel()" data-tooltip="รวบรวมข้อมูลทุกสถานีโหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center">
+                    <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> โหลด Excel รวม
+                </button>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -633,8 +639,13 @@
             groupSection.innerHTML = `<h2 class="text-sm font-semibold mb-3 text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">${groupName}</h2>`;
             const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
             inventoryGroups[groupName].forEach(station => {
-                const btn = document.createElement('div'); btn.className = "bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-2 min-h-[80px]";
-                btn.innerHTML = `<span class="text-sm font-medium text-slate-800 dark:text-slate-200">${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse w-12 h-3 rounded bg-slate-100 dark:bg-slate-700"></div>`; 
+                const btn = document.createElement('div'); 
+                btn.className = "bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-1 min-h-[90px]";
+                btn.innerHTML = `
+                    <span class="text-sm font-bold text-slate-800 dark:text-slate-200">${station}</span>
+                    <div id="badge_${groupName}_${station}" class="animate-pulse w-12 h-3 rounded bg-slate-100 dark:bg-slate-700 my-1"></div>
+                    <div id="counts_${groupName}_${station}" class="flex flex-wrap justify-center gap-1.5 text-[10px] mt-1 hidden"></div>
+                `; 
                 btn.onclick = () => openStation(groupName, station); gridDiv.appendChild(btn);
             });
             groupSection.appendChild(gridDiv); indexPage.appendChild(groupSection);
@@ -679,14 +690,42 @@
                         if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey.includes('WAREHOUSE')) continue;
 
                         const dbData = JSON.parse(jsonValue); const parts = dbKey.split('_');
+                        
+                        // ฟังก์ชันนับจำนวน
+                        const countItems = (arr) => { if(!arr) return 0; let c = 0; arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c; };
+                        
+                        // นับแยกแต่ละประเภทของสถานีนี้
+                        let stCpu = countItems(dbData.cpu);
+                        let stNb = countItems(dbData.nb);
+                        let stMon = countItems(dbData.mon);
+                        let stPrn = countItems(dbData.prn);
+                        let stSpc = countItems(dbData.spc);
+
+                        // บวกเข้ายอดรวมประเทศ
+                        totalCPU += stCpu; totalNB += stNb; totalMon += stMon; totalPrn += stPrn; totalSpc += stSpc;
+
                         if(parts.length >= 3) { 
+                            const stGroup = parts[1];
                             const stName = parts[2];
                             processedStations.add(stName);
                             if (dbData.lastConfirmed === currentMonthStr) { reportedStations.push(stName); } 
                             else { pendingStations.push(stName); }
-                            const badge = document.getElementById(`badge_${parts[1]}_${parts[2]}`); 
-                            if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${parts[1]}_${parts[2]}"`); 
+                            const badge = document.getElementById(`badge_${stGroup}_${stName}`); 
+                            if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${stGroup}_${stName}"`); 
+                            
+                            // 🌟 แทรกรหัสยอดจำนวนอุปกรณ์ลงไปในการ์ด
+                            const countDiv = document.getElementById(`counts_${stGroup}_${stName}`);
+                            if(countDiv) {
+                                countDiv.classList.remove('hidden');
+                                countDiv.innerHTML = `
+                                    <span title="คอมฯและโน๊ตบุ๊ค" class="flex items-center gap-0.5 ${(stCpu+stNb)>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">💻 ${(stCpu+stNb)}</span>
+                                    <span title="จอมอนิเตอร์" class="flex items-center gap-0.5 ${stMon>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🖥️ ${stMon}</span>
+                                    <span title="เครื่องพิมพ์" class="flex items-center gap-0.5 ${stPrn>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🖨️ ${stPrn}</span>
+                                    <span title="เครื่องมือพิเศษ" class="flex items-center gap-0.5 ${stSpc>0 ? 'text-slate-600 dark:text-slate-300 font-semibold' : 'text-slate-300 dark:text-slate-600 opacity-50'}">🛠️ ${stSpc}</span>
+                                `;
+                            }
                         }
+                    }
                         const countItems = (arr) => { if(!arr) return 0; let c = 0; arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c; };
                         totalCPU += countItems(dbData.cpu); totalNB += countItems(dbData.nb); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
                     }
@@ -1892,6 +1931,186 @@
             table.setValueFromCoords(currentSnTarget.x, currentSnTarget.y, val);
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
+
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี (จากหน้าแรก)
+        async function handleImportAllExcel(event) {
+            const file = event.target.files[0]; if (!file) return;
+            document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); 
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
+            try {
+                const wb = new ExcelJS.Workbook(); 
+                const buffer = await file.arrayBuffer(); 
+                await wb.xlsx.load(buffer);
+                
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                
+                let savePromises = [];
+                let importedCount = 0;
+
+                // วนลูปอ่านทุก Sheet ในไฟล์
+                wb.eachSheet((ws) => {
+                    let sName = ws.name.trim();
+                    let fullStationName = abbrMap[sName] || sName;
+                    let groupName = null;
+
+                    // ค้นหาว่าตรงกับสถานีไหนในระบบ
+                    for (let g in inventoryGroups) {
+                        let found = inventoryGroups[g].find(s => s === fullStationName || s.includes(fullStationName) || fullStationName.includes(s));
+                        if (found) {
+                            fullStationName = found;
+                            groupName = g;
+                            break;
+                        }
+                    }
+
+                    if (!groupName) return; // ถ้าหาไม่เจอให้ข้าม Sheet นี้ไปเลย
+
+                    let cpumonData = [], nbData = [], prnData = [], spcData = [];
+                    let currentMode = 'CPUMON'; 
+                    let colMap = {};
+                    
+                    const mapConn = (c) => {
+                        let l = String(c).toLowerCase().trim();
+                        if(!l || l === '-') return '';
+                        if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5';
+                        if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6';
+                        if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
+                        if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
+                        return c;
+                    };
+
+                    const mapStatus = (s) => {
+                        let l = String(s).toLowerCase();
+                        if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด';
+                        if(l.includes('สำรอง')) return 'สำรอง';
+                        return 'ปกติ'; 
+                    };
+
+                    ws.eachRow((row, rowNumber) => {
+                        let rowVals = [];
+                        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                            let cellVal = cell.value;
+                            if (cellVal !== null && typeof cellVal === 'object') {
+                                cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal));
+                            }
+                            rowVals[colNumber] = cellVal ? String(cellVal).trim() : '';
+                        });
+                        let rowStr = rowVals.join(' ').toLowerCase();
+
+                        if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
+                        
+                        if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
+                        if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
+                        if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) { currentMode = 'PRN'; colMap = {}; return; }
+
+                        if (rowStr.includes('ผู้ใช้') || rowStr.includes('s/n') || rowStr.includes('ยี่ห้อ')) {
+                            colMap = {}; 
+                            rowVals.forEach((val, idx) => {
+                                if (!val) return;
+                                let h = String(val).toLowerCase();
+                                if (h.includes('ผู้ใช้') || h.includes('user') || h.includes('สถานที่')) colMap.user = idx;
+                                if (h.includes('สถานะ') || h.includes('status')) colMap.status = idx;
+                                if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network')) colMap.conn = idx;
+                                if (h.includes('หมายเหตุ') || h.includes('remark')) colMap.remark = idx;
+
+                                if (h.includes('ยี่ห้อ') || h.includes('brand')) {
+                                    if (h.includes('จอ') || h.includes('mon')) colMap.monBrand = idx;
+                                    else if (currentMode === 'CPUMON') { if (colMap.cpuBrand === undefined) colMap.cpuBrand = idx; else colMap.monBrand = idx; }
+                                    else colMap.cpuBrand = idx;
+                                }
+                                if (h.includes('รุ่น') || h.includes('model') || h.includes('สเปค')) {
+                                    if (h.includes('จอ') || h.includes('mon')) colMap.monModel = idx;
+                                    else if (currentMode === 'CPUMON') { if (colMap.cpuModel === undefined) colMap.cpuModel = idx; else colMap.monModel = idx; }
+                                    else colMap.cpuModel = idx;
+                                }
+                                if (h.includes('s/n') || h.includes('serial')) {
+                                    if (h.includes('จอ') || h.includes('mon')) colMap.monSN = idx;
+                                    else if (currentMode === 'CPUMON') { if (colMap.cpuSN === undefined) colMap.cpuSN = idx; else colMap.monSN = idx; }
+                                    else colMap.cpuSN = idx;
+                                }
+                                
+                                if (h.includes('สี') || h.includes('color')) colMap.colorType = idx;
+                                if (h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
+                            });
+                            return; 
+                        }
+
+                        if (Object.keys(colMap).length > 0) {
+                            const getVal = (idx) => { let v = idx ? (rowVals[idx] || '') : ''; return v === '-' ? '' : v; };
+                            
+                            let user = getVal(colMap.user);
+                            if (!user || user.trim() === '') user = fullStationName; 
+                            
+                            let cpuBrand = getVal(colMap.cpuBrand); let cpuModel = getVal(colMap.cpuModel); let cpuSN = getVal(colMap.cpuSN);
+                            let monBrand = getVal(colMap.monBrand); let monModel = getVal(colMap.monModel); let monSN = getVal(colMap.monSN);
+                            
+                            let conn = mapConn(getVal(colMap.conn)); let status = mapStatus(getVal(colMap.status)); let remark = getVal(colMap.remark);
+
+                            if (!cpuBrand && !cpuSN && !cpuModel && !monBrand && !monSN && !monModel) {
+                               if (currentMode !== 'SPC' || !remark) return; 
+                            }
+
+                            if (currentMode === 'CPUMON') { 
+                                cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, monBrand, monModel, monSN, status, conn, remark]); 
+                            } 
+                            else if (currentMode === 'NB') { 
+                                nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); 
+                            } 
+                            else if (currentMode === 'PRN') { 
+                                let colorType = getVal(colMap.colorType); let scanner = getVal(colMap.scanner);
+                                prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
+                            } 
+                            else if (currentMode === 'SPC') { 
+                                let spcType = 'เครื่องมือพิเศษ'; let rmkLower = remark.toLowerCase();
+                                if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS';
+                                else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server';
+                                else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) spcType = 'RCF';
+                                else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
+
+                                spcData.push(["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(status), String(remark)]); 
+                            }
+                        }
+                    });
+
+                    // แยกร่าง CPU และ MON กลับคืนเพื่อส่งให้ฐานข้อมูล (แบบเดียวกันกับที่หน้าตารางทำ)
+                    let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
+                    let newMon = cpumonData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
+
+                    let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null };
+                    let cacheKey = `ADP_${groupName}_${fullStationName}`;
+                    
+                    // ดึงค่าการรายงานเดือนล่าสุดเดิมมาใส่ด้วย (จะได้ไม่ถูกรีเซ็ตการกดส่งรายงาน)
+                    if (globalAllDataCache && globalAllDataCache[cacheKey]) {
+                        try {
+                            let oldData = JSON.parse(globalAllDataCache[cacheKey]);
+                            newPayload.lastConfirmed = oldData.lastConfirmed;
+                        } catch(e) {}
+                    }
+
+                    let logs = [{ action: 'นำเข้าไฟล์รวม', detail: `อัปเดตข้อมูล ${fullStationName} อัตโนมัติด้วยไฟล์รวม` }];
+                    
+                    // จับใส่คิวบันทึกฐานข้อมูล
+                    savePromises.push(
+                        fetch(API_URL, { method: 'POST', body: JSON.stringify({ key: cacheKey, value: JSON.stringify(newPayload), logs: logs }) })
+                    );
+                    
+                    importedCount++;
+                });
+
+                if (savePromises.length > 0) {
+                    document.getElementById('loadingText').innerText = `กำลังบันทึกข้อมูล ${importedCount} สถานี...`;
+                    await Promise.all(savePromises);
+                    showToast(`✅ นำเข้าและบันทึกครบ ${importedCount} สถานีเรียบร้อยแล้ว!`);
+                    loadDashboardStats(); // รีเฟรชยอดทั้งหมด
+                } else {
+                    showToast("ไม่พบข้อมูลสถานีที่ตรงกันเลย", "error");
+                }
+                
+            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
+        
     </script>
 </body>
 </html>
