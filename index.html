@@ -712,8 +712,7 @@
                             else { pendingStations.push(stName); }
                             const badge = document.getElementById(`badge_${stGroup}_${stName}`); 
                             if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${stGroup}_${stName}"`); 
-                            
-                            // 🌟 แทรกรหัสยอดจำนวนอุปกรณ์ลงไปในการ์ด
+ 
                             const countDiv = document.getElementById(`counts_${stGroup}_${stName}`);
                             if(countDiv) {
                                 countDiv.classList.remove('hidden');
@@ -725,9 +724,6 @@
                                 `;
                             }
                         }
-                    }
-                        const countItems = (arr) => { if(!arr) return 0; let c = 0; arr.forEach(r => { if(r[1]||r[2]||r[3]||r[4]) { c++; let st = r[5]; if(['ปกติ','ชำรุด','สำรอง'].includes(st)) statCounts[st]++; else statCounts['ปกติ']++; } }); return c; };
-                        totalCPU += countItems(dbData.cpu); totalNB += countItems(dbData.nb); totalMon += countItems(dbData.mon); totalPrn += countItems(dbData.prn); totalSpc += countItems(dbData.spc);
                     }
                 }
                 
@@ -1579,21 +1575,16 @@
                 let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
-                // 🌟 แก้ไขเงื่อนไขการกรอง LAN กอง 5 ใหม่ให้เจอคำเดียวก็แปลงเลย
                 const mapConn = (c) => {
                     let l = String(c).toLowerCase().trim();
                     if(!l || l === '-') return '';
                     
-                    // ดัก DIV 5 / กอง 5 / LAN 5 / DIV5 แบบไม่ต้องมีคำว่า LAN นำหน้า
                     if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5';
                     
-                    // ดัก LAN ปกติ / กอง 6 / ภายใน
                     if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6';
                     
-                    // ดัก อินเตอร์เน็ต / WIFI
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต';
                     
-                    // ดัก Standalone
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone';
                     
                     return c;
