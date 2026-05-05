@@ -1724,7 +1724,7 @@
         function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
 
-        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดียว (ฉบับล็อกตาราง 100%)
+        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดียว (ฉบับแก้บัคหัวตาราง 2 บรรทัด & การเชื่อมต่อหาย)
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -1735,8 +1735,7 @@
                 if (!targetSheet) targetSheet = wb.worksheets[0];
                 
                 let cpumonData = [], nbData = [], prnData = [], spcData = []; 
-                let currentMode = null; // 🌟 เริ่มด้วยค่าว่าง เพื่อรอเจอหัวตารางก่อน
-                let colMap = {};
+                let currentMode = null; let colMap = {};
                 
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; let whMainData = []; let existingItems = new Set(); let newlyAddedToWarehouse = 0;
                 
@@ -1751,14 +1750,20 @@
                     
                     if (!existingItems.has(uniqueKey)) {
                         let whType = type;
-                        if (type === 'คอมพิวเตอร์' || type === 'CPU') whType = 'PC'; else if (type === 'โน๊ตบุ๊ค') whType = 'Notebook'; else if (type === 'จอมอนิเตอร์') whType = 'Monitor'; else if (type === 'เครื่องพิมพ์') whType = 'Printer';
                         let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
                         whMainData.push(["", whType, cleanBrand, cleanModel, cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
                         existingItems.add(uniqueKey); newlyAddedToWarehouse++;
                     }
                 };
                 
-                const mapConn = (c) => { let l = String(c).toLowerCase().trim(); if(!l || l === '-') return ''; if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5'; if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone'; return c; };
+                const mapConn = (c) => { 
+                    let l = String(c).toLowerCase().trim(); 
+                    if(!l || l === '-' || l === 'ไม่มี') return ''; 
+                    if(l.includes('5')) return 'LAN กอง 5'; 
+                    if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
+                    if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
+                    return 'LAN กอง 6'; 
+                };
                 const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; return 'ปกติ';  };
 
                 targetSheet.eachRow((row, rowNumber) => {
@@ -1769,7 +1774,6 @@
                     let textCells = rowVals.filter(v => String(v).trim() !== '');
                     let combinedText = textCells.join(' ').toLowerCase();
                     
-                    // 🌟 ถอดรหัสโหมดจากบรรทัดที่มีคำว่า 'ลำดับ'
                     let newMode = null;
                     if (combinedText.includes('ลำดับ')) {
                         if (combinedText.includes('cpu') || combinedText.includes('คอมพิวเตอร์')) newMode = 'CPUMON';
@@ -1778,25 +1782,21 @@
                         else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) newMode = 'SPC';
                     }
 
-                    // 🌟 หากพบว่าขึ้นตารางใหม่ ให้เปลี่ยนโหมดและรีเซ็ตการจำคอลัมน์
-                    if (newMode && newMode !== currentMode) {
-                        currentMode = newMode;
-                        colMap = {}; 
-                    }
+                    if (newMode) { currentMode = newMode; colMap = {}; }
 
-                    let isHeaderRow = combinedText.includes('ผู้ใช้') || combinedText.includes('user') || combinedText.includes('s/n') || combinedText.includes('ยี่ห้อ') || combinedText.includes('รุ่น') || combinedText.includes('สถานะ') || combinedText.includes('หมายเหตุ');
+                    let isHeaderRow = combinedText.includes('ผู้ใช้') || combinedText.includes('user') || combinedText.includes('s/n') || combinedText.includes('ยี่ห้อ') || combinedText.includes('รุ่น') || combinedText.includes('สถานะ') || combinedText.includes('หมายเหตุ') || combinedText.includes('เชื่อมต่อ') || combinedText.includes('ปกติ');
 
                     if (isHeaderRow) {
                         rowVals.forEach((val, idx) => {
                             if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
                             if (h.includes('ผู้ใช้') || h.includes('สถานที่') || h.includes('user')) colMap.user = idx; 
                             if (h.includes('ประเภท')) colMap.spcType = idx; 
-                            if (h.includes('สถานะ') || h.includes('status')) {
+                            if (h.includes('สถานะ') || h.includes('status') || h.includes('ปกติ')) {
                                 if (h.includes('จอ') || h.includes('mon')) colMap.statusMon = idx;
                                 else if (h.includes('cpu') || h.includes('คอม')) colMap.statusCpu = idx;
                                 else colMap.status = idx;
                             }
-                            if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network')) colMap.conn = idx; 
+                            if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network') || h.includes('เน็ต')) colMap.conn = idx; 
                             if (h.includes('หมายเหตุ') || h.includes('remark')) colMap.remark = idx;
                             
                             if (h.includes('ยี่ห้อ') || h.includes('brand')) { 
@@ -1819,7 +1819,7 @@
                         }); return; 
                     }
 
-                    if (!currentMode || Object.keys(colMap).length === 0) return; // ถ้ายังไม่เจอโครงตารางที่สมบูรณ์ ให้ข้ามบรรทัดนี้ไปเลย
+                    if (!currentMode || Object.keys(colMap).length === 0) return;
 
                     if (Object.keys(colMap).length > 0) {
                         const getVal = (idx) => { let v = idx ? (rowVals[idx] || '') : ''; return v === '-' ? '' : v; };
@@ -1851,13 +1851,13 @@
                             if (hasCpuData) autoRegisterToWarehouse('Printer', cpuBrand, cpuModel, cpuSN, currentStation);
                         } 
                         else if (currentMode === 'SPC') { 
-                            let spcType = rowVals[colMap.spcType] ? String(rowVals[colMap.spcType]).trim() : 'เครื่องมือพิเศษ';
+                            let spcType = getVal(colMap.spcType) || 'เครื่องมือพิเศษ';
                             if (!spcType || spcType === '-') {
                                 let rmkLower = remark.toLowerCase(); 
-                                if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS'; 
-                                else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server'; 
+                                if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups')) spcType = 'UPS'; 
+                                else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์')) spcType = 'Server'; 
                                 else if (rmkLower.includes('rcf') || rmkLower.includes('rcf')) spcType = 'RCF'; 
-                                else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
+                                else if (rmkLower.includes('switch') || rmkLower.includes('switch')) spcType = 'Switch';
                             }
                             let r = ["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(statusCpu), String(remark)]; spcData.push(r); 
                             let hasSpcData = (cpuBrand && cpuBrand !== '-') || (cpuModel && cpuModel !== '-') || (cpuSN && cpuSN !== '-');
@@ -1882,7 +1882,7 @@
                 
                 if (newlyAddedToWarehouse > 0) {
                     whDb.main = whMainData; currentUpdates.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) });
-                    logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่(รวมของที่ไม่มี SN) เข้าคลัง ${newlyAddedToWarehouse} รายการ` });
+                    logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่เข้าคลัง ${newlyAddedToWarehouse} รายการ` });
                 }
 
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: logs }) });
@@ -2120,6 +2120,7 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
+        // 🌟 1. ฟังก์ชัน นำเข้าไฟล์รวม (ฉบับแก้บัคหัวตาราง 2 บรรทัด & การเชื่อมต่อหาย)
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -2155,7 +2156,6 @@
                     
                     if (!existingItems.has(uniqueKey)) {
                         let whType = type; 
-                        if (type === 'คอมพิวเตอร์' || type === 'CPU') whType = 'PC'; else if (type === 'โน๊ตบุ๊ค') whType = 'Notebook'; else if (type === 'จอมอนิเตอร์') whType = 'Monitor'; else if (type === 'เครื่องพิมพ์') whType = 'Printer';
                         let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
                         whMainData.push(["", whType, cleanBrand, cleanModel, cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
                         existingItems.add(uniqueKey); newlyAddedToWarehouse++;
@@ -2168,10 +2168,17 @@
                     if (!groupName) return; 
 
                     let cpumonData = [], nbData = [], prnData = [], spcData = []; 
-                    let currentMode = null; // 🌟 เริ่มด้วยค่าว่าง เพื่อบังคับให้รอเจอหัวตารางก่อน
-                    let colMap = {};
+                    let currentMode = null; let colMap = {};
 
-                    const mapConn = (c) => { let l = String(c).toLowerCase().trim(); if(!l || l === '-') return ''; if(l.includes('div 5') || l.includes('div5') || l.includes('กอง 5') || l.includes('lan 5')) return 'LAN กอง 5'; if(l.includes('lan') || l.includes('6') || l.includes('ภายใน') || l.includes('กอง 6')) return 'LAN กอง 6'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว')) return 'Standalone'; return c; };
+                    // 🌟 ปรับปรุงการ Map การเชื่อมต่อ ให้จับคำได้ครอบคลุมขึ้น
+                    const mapConn = (c) => { 
+                        let l = String(c).toLowerCase().trim(); 
+                        if(!l || l === '-' || l === 'ไม่มี') return ''; 
+                        if(l.includes('5')) return 'LAN กอง 5'; 
+                        if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
+                        if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
+                        return 'LAN กอง 6'; // Default 
+                    };
                     const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; return 'ปกติ'; };
 
                     ws.eachRow((row, rowNumber) => {
@@ -2182,7 +2189,7 @@
                         let textCells = rowVals.filter(v => String(v).trim() !== '');
                         let combinedText = textCells.join(' ').toLowerCase();
                         
-                        // 🌟 ถอดรหัสโหมดจากบรรทัดที่มีคำว่า 'ลำดับ'
+                        // 🌟 จับโหมดตารางจากบรรทัดที่มีคำว่า 'ลำดับ'
                         let newMode = null;
                         if (combinedText.includes('ลำดับ')) {
                             if (combinedText.includes('cpu') || combinedText.includes('คอมพิวเตอร์')) newMode = 'CPUMON';
@@ -2191,25 +2198,23 @@
                             else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) newMode = 'SPC';
                         }
 
-                        // 🌟 หากพบว่าขึ้นตารางใหม่ ให้เปลี่ยนโหมดและรีเซ็ตการจำคอลัมน์
-                        if (newMode && newMode !== currentMode) {
-                            currentMode = newMode;
-                            colMap = {}; 
-                        }
+                        // 🌟 ถ้ารู้ว่าขึ้นตารางใหม่ ให้ล้างความจำคอลัมน์ทิ้ง
+                        if (newMode) { currentMode = newMode; colMap = {}; }
 
-                        let isHeaderRow = combinedText.includes('ผู้ใช้') || combinedText.includes('user') || combinedText.includes('s/n') || combinedText.includes('ยี่ห้อ') || combinedText.includes('รุ่น') || combinedText.includes('สถานะ') || combinedText.includes('หมายเหตุ');
+                        let isHeaderRow = combinedText.includes('ผู้ใช้') || combinedText.includes('user') || combinedText.includes('s/n') || combinedText.includes('ยี่ห้อ') || combinedText.includes('รุ่น') || combinedText.includes('สถานะ') || combinedText.includes('หมายเหตุ') || combinedText.includes('เชื่อมต่อ') || combinedText.includes('ปกติ');
 
+                        // 🌟 ให้จดจำคอลัมน์สะสมไปเรื่อยๆ (แก้บัคหัวตารางมี 2 บรรทัด)
                         if (isHeaderRow) {
                             rowVals.forEach((val, idx) => {
                                 if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
                                 if (h.includes('ผู้ใช้') || h.includes('สถานที่') || h.includes('user')) colMap.user = idx; 
                                 if (h.includes('ประเภท')) colMap.spcType = idx; 
-                                if (h.includes('สถานะ') || h.includes('status')) {
+                                if (h.includes('สถานะ') || h.includes('status') || h.includes('ปกติ')) {
                                     if (h.includes('จอ') || h.includes('mon')) colMap.statusMon = idx;
                                     else if (h.includes('cpu') || h.includes('คอม')) colMap.statusCpu = idx;
                                     else colMap.status = idx;
                                 }
-                                if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network')) colMap.conn = idx; 
+                                if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('network') || h.includes('เน็ต')) colMap.conn = idx; 
                                 if (h.includes('หมายเหตุ') || h.includes('remark')) colMap.remark = idx;
                                 
                                 if (h.includes('ยี่ห้อ') || h.includes('brand')) { 
@@ -2229,10 +2234,10 @@
                                 }
                                 if (h.includes('สี') || h.includes('color')) colMap.colorType = idx; 
                                 if (h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
-                            }); return; // เป็นแถวหัวข้อ ให้ข้ามไม่ต้องเก็บข้อมูล
+                            }); return; 
                         }
 
-                        if (!currentMode || Object.keys(colMap).length === 0) return; // ถ้ายังไม่เจอโครงตารางที่สมบูรณ์ ให้ข้ามบรรทัดนี้ไปเลย
+                        if (!currentMode || Object.keys(colMap).length === 0) return; 
 
                         if (Object.keys(colMap).length > 0) {
                             const getVal = (idx) => { let v = idx ? (rowVals[idx] || '') : ''; return v === '-' ? '' : v; };
@@ -2241,11 +2246,12 @@
                             let monBrand = getVal(colMap.monBrand); let monModel = getVal(colMap.monModel); let monSN = getVal(colMap.monSN);
                             let conn = mapConn(getVal(colMap.conn)); let remark = getVal(colMap.remark);
 
-                            let statusCpu = mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status));
-                            let statusMon = mapStatus(getVal(colMap.statusMon) || getVal(colMap.status));
-
                             let hasCpuData = (cpuBrand && cpuBrand !== '-') || (cpuModel && cpuModel !== '-') || (cpuSN && cpuSN !== '-');
                             let hasMonData = (monBrand && monBrand !== '-') || (monModel && monModel !== '-') || (monSN && monSN !== '-');
+
+                            // 🌟 ป้องกันไม่ให้ลงสถานะ "ปกติ" ในช่องที่ไม่มีของ (ตารางว่าง)
+                            let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : '';
+                            let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : '';
 
                             if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return;
 
@@ -2270,7 +2276,7 @@
                                     if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) spcType = 'UPS'; 
                                     else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) spcType = 'Server'; 
                                     else if (rmkLower.includes('rcf') || rmkLower.includes('rcf')) spcType = 'RCF'; 
-                                    else if (rmkLower.includes('switch') || rmkLower.includes('switch')) spcType = 'Switch';
+                                    else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
                                 }
 
                                 let r = ["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(statusCpu), String(remark)]; spcData.push(r); 
