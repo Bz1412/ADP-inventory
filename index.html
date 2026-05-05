@@ -1555,7 +1555,7 @@
         function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + สร้าง S/N ชั่วคราวให้คลัง
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + อัปเดตคลังอัตโนมัติ (แก้ไขบัคหมวดเพี้ยน + S/N ปลอมเกิน)
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -1580,7 +1580,7 @@
                 let whMainData = [];
                 let existingSNs = new Set();
                 let newlyAddedToWarehouse = 0;
-                let tempSnCounter = 1; // ตัวนับเลขรัน S/N จำลอง
+                let tempSnCounter = 1; 
                 
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try {
@@ -1601,6 +1601,14 @@
                 // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง & จำลอง S/N
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim();
+                    let cleanBrand = String(brand).trim();
+                    let cleanModel = String(model).trim();
+                    
+                    // ป้องกันการสร้างของล่องหน
+                    if ((!cleanBrand || cleanBrand === '-') && (!cleanModel || cleanModel === '-') && (!cleanSN || cleanSN === '-' || cleanSN.toLowerCase() === 'ไม่มี' || cleanSN.toLowerCase() === 'n/a' || cleanSN === '')) {
+                        return;
+                    }
+
                     let whType = type;
                     let typeAbbr = 'SPC';
                     
@@ -1668,9 +1676,14 @@
 
                     if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
                     
-                    if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
-                    if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
-                    if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) { currentMode = 'PRN'; colMap = {}; return; }
+                    // 🌟 ล็อกการเปลี่ยนหมวดหมู่
+                    let nonEmptyCount = rowVals.filter(v => String(v).trim() !== '').length;
+                    if (nonEmptyCount > 0 && nonEmptyCount <= 2) {
+                        if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
+                        if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
+                        if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) { currentMode = 'PRN'; colMap = {}; return; }
+                        if (rowStr.includes('คอมพิวเตอร์') || rowStr.includes('จอ')) { currentMode = 'CPUMON'; colMap = {}; return; }
+                    }
 
                     if (rowStr.includes('ผู้ใช้') || rowStr.includes('s/n') || rowStr.includes('ยี่ห้อ')) {
                         colMap = {}; 
@@ -2017,7 +2030,7 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี + สร้าง S/N ชั่วคราวให้คลัง
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี + อัปเดตคลังอัตโนมัติ (แก้ไขบัคหมวดเพี้ยน + S/N ปลอมเกิน)
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -2033,7 +2046,7 @@
                 
                 let saveQueue = []; 
                 let newlyAddedToWarehouse = 0;
-                let tempSnCounter = 1; // ตัวนับเลขรัน S/N จำลอง
+                let tempSnCounter = 1; 
 
                 // ดึงข้อมูลคลังส่วนกลางมาเตรียมไว้
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
@@ -2056,9 +2069,17 @@
                     } catch(e) {}
                 }
 
-                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง & จำลอง S/N
+                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง & จำลอง S/N อย่างฉลาด
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim();
+                    let cleanBrand = String(brand).trim();
+                    let cleanModel = String(model).trim();
+                    
+                    // 🌟 ป้องกันการสร้างของล่องหน: ถ้าช่องว่างหมดเลย (ไม่มียี่ห้อ/รุ่น/SN) ไม่ต้องสร้าง
+                    if ((!cleanBrand || cleanBrand === '-') && (!cleanModel || cleanModel === '-') && (!cleanSN || cleanSN === '-' || cleanSN.toLowerCase() === 'ไม่มี' || cleanSN.toLowerCase() === 'n/a' || cleanSN === '')) {
+                        return;
+                    }
+
                     let whType = type;
                     let typeAbbr = 'SPC';
                     
@@ -2076,13 +2097,12 @@
                     let todayYMD = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
                     let todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
                     
-                    // 🌟 ถ้ายกเว้นไม่มี S/N ให้สร้างใหม่
+                    // สร้าง S/N ชั่วคราวให้ของที่มีตัวตนแต่ไม่มี S/N
                     if (!cleanSN || cleanSN === '-' || cleanSN === '' || cleanSN.toLowerCase() === 'ไม่มี' || cleanSN.toLowerCase() === 'n/a') {
                         let tempSnBase = `${typeAbbr}-${todayYMD}`;
                         let paddedCounter = String(tempSnCounter).padStart(3, '0');
                         cleanSN = `${tempSnBase}-${paddedCounter} (S/N ชั่วคราว)`;
                         
-                        // ป้องกันเลขรันซ้ำกับของเก่าที่มีในฐานข้อมูล
                         while (existingSNs.has(cleanSN.toLowerCase())) {
                             tempSnCounter++;
                             paddedCounter = String(tempSnCounter).padStart(3, '0');
@@ -2144,9 +2164,14 @@
 
                         if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
                         
-                        if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
-                        if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
-                        if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) { currentMode = 'PRN'; colMap = {}; return; }
+                        // 🌟 ล็อกการเปลี่ยนหมวดหมู่ จะสลับหมวดได้เฉพาะตอนเป็นหัวข้อ (ไม่มีข้อมูลยาวๆ)
+                        let nonEmptyCount = rowVals.filter(v => String(v).trim() !== '').length;
+                        if (nonEmptyCount > 0 && nonEmptyCount <= 2) {
+                            if (rowStr.includes('server') || rowStr.includes('เครื่องมือพิเศษ') || rowStr.includes('rcf') || rowStr.includes('อื่นๆ')) { currentMode = 'SPC'; colMap = {}; return; }
+                            if (rowStr.includes('โน๊ตบุ๊ค') || rowStr.includes('notebook')) { currentMode = 'NB'; colMap = {}; return; }
+                            if (rowStr.includes('เครื่องพิมพ์') || rowStr.includes('printer')) { currentMode = 'PRN'; colMap = {}; return; }
+                            if (rowStr.includes('คอมพิวเตอร์') || rowStr.includes('จอ')) { currentMode = 'CPUMON'; colMap = {}; return; }
+                        }
 
                         if (rowStr.includes('ผู้ใช้') || rowStr.includes('s/n') || rowStr.includes('ยี่ห้อ')) {
                             colMap = {}; 
