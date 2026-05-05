@@ -1555,7 +1555,7 @@
         function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + อัปเดตคลังอัตโนมัติ (แก้ไขให้บันทึกทะลุทะลวง)
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบ 1 สถานี + สร้าง S/N ชั่วคราวให้คลัง
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -1576,11 +1576,11 @@
                 let currentMode = 'CPUMON'; 
                 let colMap = {};
                 
-                // 🌟 1. ดึงข้อมูลคลังมาเตรียมพร้อม (ถ้าว่างก็สร้างใหม่)
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
                 let whMainData = [];
                 let existingSNs = new Set();
                 let newlyAddedToWarehouse = 0;
+                let tempSnCounter = 1; // ตัวนับเลขรัน S/N จำลอง
                 
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try {
@@ -1598,20 +1598,40 @@
                     } catch(e) {}
                 }
 
-                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง
+                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง & จำลอง S/N
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim();
-                    if (!cleanSN || cleanSN === '-' || cleanSN === '') return;
+                    let whType = type;
+                    let typeAbbr = 'SPC';
+                    
+                    if (type === 'คอมพิวเตอร์' || type === 'CPU') { whType = 'PC'; typeAbbr = 'PC'; }
+                    else if (type === 'โน๊ตบุ๊ค') { whType = 'Notebook'; typeAbbr = 'NB'; }
+                    else if (type === 'จอมอนิเตอร์') { whType = 'Monitor'; typeAbbr = 'MON'; }
+                    else if (type === 'เครื่องพิมพ์') { whType = 'Printer'; typeAbbr = 'PRN'; }
+                    else if (type === 'UPS') { whType = 'UPS'; typeAbbr = 'UPS'; }
+                    else if (type === 'Server') { whType = 'Server'; typeAbbr = 'SRV'; }
+                    else if (type === 'RCF') { whType = 'RCF'; typeAbbr = 'RCF'; }
+                    else if (type === 'Switch') { whType = 'Switch'; typeAbbr = 'SW'; }
+                    else { whType = 'เครื่องมือพิเศษ'; typeAbbr = 'SPC'; }
+                    
+                    let d = new Date();
+                    let todayYMD = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+                    let todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    
+                    if (!cleanSN || cleanSN === '-' || cleanSN === '' || cleanSN.toLowerCase() === 'ไม่มี' || cleanSN.toLowerCase() === 'n/a') {
+                        let tempSnBase = `${typeAbbr}-${todayYMD}`;
+                        let paddedCounter = String(tempSnCounter).padStart(3, '0');
+                        cleanSN = `${tempSnBase}-${paddedCounter} (S/N ชั่วคราว)`;
+                        
+                        while (existingSNs.has(cleanSN.toLowerCase())) {
+                            tempSnCounter++;
+                            paddedCounter = String(tempSnCounter).padStart(3, '0');
+                            cleanSN = `${tempSnBase}-${paddedCounter} (S/N ชั่วคราว)`;
+                        }
+                        tempSnCounter++;
+                    }
                     
                     if (!existingSNs.has(cleanSN.toLowerCase())) {
-                        let whType = type;
-                        if (type === 'คอมพิวเตอร์' || type === 'CPU') whType = 'PC';
-                        else if (type === 'โน๊ตบุ๊ค') whType = 'Notebook';
-                        else if (type === 'จอมอนิเตอร์') whType = 'Monitor';
-                        else if (type === 'เครื่องพิมพ์') whType = 'Printer';
-                        
-                        let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                        
                         whMainData.push(["", whType, brand || '', model || '', cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
                         existingSNs.add(cleanSN.toLowerCase());
                         newlyAddedToWarehouse++;
@@ -1731,7 +1751,6 @@
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
                 
-                // 🌟 เตรียมชุดข้อมูล (Payload) ที่จะอัปเดตลงฐานข้อมูล
                 let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], r[8], r[9], r[10]]);
                 let newMon = cpumonData.map(r => ["", r[1], r[5], r[6], r[7], r[8], r[10]]);
 
@@ -1744,18 +1763,15 @@
                     } catch(e) {}
                 }
 
-                // 🌟 สร้างคำสั่งเซฟ 2 เด้ง: เด้ง 1 เซฟลงสถานี / เด้ง 2 เซฟเข้าคลังส่วนกลาง
                 let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
                 let logs = [{ station: currentStation, action: 'นำเข้าไฟล์', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
                 
-                // 🌟 บังคับเซฟลงคลัง ถ้ามี S/N ใหม่ (ตัดเงื่อนไข if ซ้ำซ้อนออก)
                 if (newlyAddedToWarehouse > 0) {
                     whDb.main = whMainData; 
                     currentUpdates.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) });
-                    logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่ ${newlyAddedToWarehouse} รายการ จากการนำเข้าสถานี ${currentStation}` });
+                    logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่(รวมถึง S/N จำลอง) เข้าคลัง ${newlyAddedToWarehouse} รายการ` });
                 }
 
-                // 🌟 ยิงคำสั่งเซฟ
                 await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ 
@@ -2001,7 +2017,7 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
-        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี (อัปเกรด: เพิ่มเข้าคลังส่วนกลางอัตโนมัติแบบทะลุทะลวง)
+        // 🌟 ฟังก์ชัน นำเข้า Excel แบบหลายสถานี + สร้าง S/N ชั่วคราวให้คลัง
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -2016,9 +2032,10 @@
                 const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 
                 let saveQueue = []; 
-                let newlyAddedToWarehouse = 0; 
+                let newlyAddedToWarehouse = 0;
+                let tempSnCounter = 1; // ตัวนับเลขรัน S/N จำลอง
 
-                // 🌟 1. ดึงข้อมูลคลังส่วนกลาง (Warehouse) มาเตรียมไว้ (ถ้าคลังว่างก็สร้างโครงเปล่ารอเลย)
+                // ดึงข้อมูลคลังส่วนกลางมาเตรียมไว้
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
                 let whMainData = [];
                 let existingSNs = new Set();
@@ -2039,28 +2056,48 @@
                     } catch(e) {}
                 }
 
-                // 🌟 ฟังก์ชันย่อยสำหรับ แอด S/N ใหม่เข้าคลังหลัก
+                // 🌟 ฟังก์ชันช่วย แอดของใหม่เข้าคลัง & จำลอง S/N
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim();
-                    if (!cleanSN || cleanSN === '-' || cleanSN === '') return;
+                    let whType = type;
+                    let typeAbbr = 'SPC';
+                    
+                    if (type === 'คอมพิวเตอร์' || type === 'CPU') { whType = 'PC'; typeAbbr = 'PC'; }
+                    else if (type === 'โน๊ตบุ๊ค') { whType = 'Notebook'; typeAbbr = 'NB'; }
+                    else if (type === 'จอมอนิเตอร์') { whType = 'Monitor'; typeAbbr = 'MON'; }
+                    else if (type === 'เครื่องพิมพ์') { whType = 'Printer'; typeAbbr = 'PRN'; }
+                    else if (type === 'UPS') { whType = 'UPS'; typeAbbr = 'UPS'; }
+                    else if (type === 'Server') { whType = 'Server'; typeAbbr = 'SRV'; }
+                    else if (type === 'RCF') { whType = 'RCF'; typeAbbr = 'RCF'; }
+                    else if (type === 'Switch') { whType = 'Switch'; typeAbbr = 'SW'; }
+                    else { whType = 'เครื่องมือพิเศษ'; typeAbbr = 'SPC'; }
+                    
+                    let d = new Date();
+                    let todayYMD = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+                    let todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    
+                    // 🌟 ถ้ายกเว้นไม่มี S/N ให้สร้างใหม่
+                    if (!cleanSN || cleanSN === '-' || cleanSN === '' || cleanSN.toLowerCase() === 'ไม่มี' || cleanSN.toLowerCase() === 'n/a') {
+                        let tempSnBase = `${typeAbbr}-${todayYMD}`;
+                        let paddedCounter = String(tempSnCounter).padStart(3, '0');
+                        cleanSN = `${tempSnBase}-${paddedCounter} (S/N ชั่วคราว)`;
+                        
+                        // ป้องกันเลขรันซ้ำกับของเก่าที่มีในฐานข้อมูล
+                        while (existingSNs.has(cleanSN.toLowerCase())) {
+                            tempSnCounter++;
+                            paddedCounter = String(tempSnCounter).padStart(3, '0');
+                            cleanSN = `${tempSnBase}-${paddedCounter} (S/N ชั่วคราว)`;
+                        }
+                        tempSnCounter++;
+                    }
                     
                     if (!existingSNs.has(cleanSN.toLowerCase())) {
-                        let whType = type;
-                        if (type === 'คอมพิวเตอร์' || type === 'CPU') whType = 'PC';
-                        else if (type === 'โน๊ตบุ๊ค') whType = 'Notebook';
-                        else if (type === 'จอมอนิเตอร์') whType = 'Monitor';
-                        else if (type === 'เครื่องพิมพ์') whType = 'Printer';
-                        
-                        let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                        
-                        // ยัดข้อมูลลง Array ของคลังหลัก: ["ลำดับ", "ประเภท", "ยี่ห้อ", "รุ่น", "S/N", "สถานะในคลัง", "วันที่รับเข้า", "หมายเหตุ", "ลบ"]
                         whMainData.push(["", whType, brand || '', model || '', cleanSN, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์สถานี ${stationName}`]);
                         existingSNs.add(cleanSN.toLowerCase());
                         newlyAddedToWarehouse++;
                     }
                 };
 
-                // วนลูปอ่านทุก Sheet ในไฟล์
                 wb.eachSheet((ws) => {
                     let sName = ws.name.trim();
                     let fullStationName = abbrMap[sName] || sName;
@@ -2202,11 +2239,9 @@
                     saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: logs });
                 });
 
-                // 🌟 ทยอยส่งข้อมูลทีละสถานี 🌟
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
                     
-                    // 🌟 ถ้าเจอ S/N ใหม่ ให้ยัดข้อมูลคลังเข้าไปด้วย (ตัดเงื่อนไขเช็คคลังออก เพื่อบังคับสร้างถ้าไม่มี)
                     if (newlyAddedToWarehouse > 0) {
                         try {
                             whDb.main = whMainData; 
@@ -2220,10 +2255,9 @@
                         
                         let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
                         
-                        // ถ้ารอบสุดท้าย ให้พ่วงการเซฟ Master Data ของคลังไปด้วย
                         if (i === saveQueue.length - 1 && updatesPayload.length > 0) {
                             currentUpdates.push(updatesPayload[0]);
-                            q.logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่ ${newlyAddedToWarehouse} รายการ จากการนำเข้าไฟล์` });
+                            q.logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่(รวมถึง S/N จำลอง) เข้าคลัง ${newlyAddedToWarehouse} รายการ` });
                         }
 
                         try {
@@ -2241,10 +2275,10 @@
                     }
                     
                     let msg = `✅ นำเข้าสำเร็จ ${saveQueue.length} สถานี`;
-                    if (newlyAddedToWarehouse > 0) msg += `\n📦 และลงทะเบียนของใหม่เข้าคลัง ${newlyAddedToWarehouse} รายการ!`;
+                    if (newlyAddedToWarehouse > 0) msg += `\n📦 สร้างและลงทะเบียนของใหม่เข้าคลัง ${newlyAddedToWarehouse} เครื่อง`;
                     
                     showToast(msg);
-                    loadDashboardStats(); // รีเฟรชยอดใหม่
+                    loadDashboardStats(); 
                 } else {
                     showToast("ไม่พบข้อมูลสถานีที่ตรงกันเลย", "error");
                 }
