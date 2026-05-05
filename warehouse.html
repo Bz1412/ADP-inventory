@@ -684,15 +684,20 @@
                         const parts = dbKey.split('_');
                         if(parts.length >= 3 && parts[1] !== 'WAREHOUSE') { 
                             const group = parts[1]; const station = parts[2];
-                            const extractDeployed = (arr, cat, isSpc = false) => {
+                            const extractDeployed = (arr, cat, isSpc = false, isPrn = false) => {
                                 if(!arr) return;
                                 arr.forEach(r => {
-                                    if (r[1] || r[2] || r[3] || r[4]) {
+                                    let hasData = false;
+                                    if(isSpc) hasData = (r[1] && String(r[1]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                                    else hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+
+                                    if (hasData) {
                                         totalDeployed++;
                                         let user = isSpc ? r[2] : r[1];
                                         let specs = isSpc ? r[3] : `${r[2]||''} ${r[3]||''}`;
                                         let sn = r[4];
-                                        let status = r[5] || '-';
+                                        let statusIdx = isPrn ? 7 : 5;
+                                        let status = r[statusIdx] || '-';
 
                                         let itemObj = { group, station, category: cat, user: user||'-', specs: specs.trim(), sn: sn||'-', status: status };
                                         globalDeployedData.push(itemObj);
@@ -711,8 +716,8 @@
                             extractDeployed(dbData.cpu, 'คอมพิวเตอร์');
                             extractDeployed(dbData.nb, 'โน๊ตบุ๊ค');
                             extractDeployed(dbData.mon, 'จอมอนิเตอร์');
-                            extractDeployed(dbData.prn, 'เครื่องพิมพ์');
-                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ', true);
+                            extractDeployed(dbData.prn, 'เครื่องพิมพ์', false, true);
+                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ/Server/อื่นๆ', true, false);
                         }
                     }
                 }
@@ -723,7 +728,8 @@
                 const processWhArray = (arr) => {
                     if(!arr) return;
                     arr.forEach(r => { 
-                        if(r[1]||r[2]||r[3]||r[4]) {
+                        let hasData = (r[2] && String(r[2]).trim() !== '-') || (r[3] && String(r[3]).trim() !== '-') || (r[4] && String(r[4]).trim() !== '-');
+                        if(hasData) {
                             whMainCount++; 
                             let cat = r[1];
                             let itemObj = { group: 'คลังส่วนกลาง', station: 'โกดังหลัก', category: cat, user: 'Stock', specs: `${r[2]||''} ${r[3]||''}`, sn: r[4]||'-', status: r[5]||'-' };
