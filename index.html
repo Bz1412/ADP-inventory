@@ -570,8 +570,8 @@
             "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
         
-        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี']; 
-        const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone'];
+        let statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี']; 
+        let connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; 
         let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null; 
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], nb: [], lastConfirmed: null };
@@ -1219,6 +1219,30 @@
         };
 
         function initSpreadsheets(data) {
+            // 🌟 1. ดึงค่าแบบ Dynamic จากฐานข้อมูล (ถ้ามีคำใหม่ เอามาเติมใน Dropdown อัตโนมัติ)
+            let stSet = new Set(['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี']);
+            let cnSet = new Set(['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone']);
+            
+            const scanDynamic = (arr, sIdx, cIdx) => {
+                if(!arr) return;
+                arr.forEach(r => {
+                    if (sIdx !== -1 && r[sIdx] && String(r[sIdx]).trim() !== '') stSet.add(String(r[sIdx]).trim());
+                    if (cIdx !== -1 && r[cIdx] && String(r[cIdx]).trim() !== '') cnSet.add(String(r[cIdx]).trim());
+                });
+            };
+
+            if(data.cpu) data.cpu.forEach(r => {
+                if(r[5] && String(r[5]).trim() !== '') stSet.add(String(r[5]).trim());
+                if(r[9] && String(r[9]).trim() !== '') stSet.add(String(r[9]).trim());
+                if(r[10] && String(r[10]).trim() !== '') cnSet.add(String(r[10]).trim());
+            });
+            scanDynamic(data.nb, 5, 6);
+            scanDynamic(data.prn, 7, 8);
+            scanDynamic(data.spc, 5, -1);
+
+            statusOptions = Array.from(stSet);
+            connectionOptions = Array.from(cnSet);
+
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
             document.getElementById('spreadsheet-prn').innerHTML=''; 
@@ -1253,6 +1277,7 @@
 
             const tableConfig = { allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable };
 
+            // 🌟 เพิ่มคุณสมบัติ autocomplete: true ในทุก Dropdown
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
                 ...tableConfig,
                 data: cpumonData, 
@@ -1262,12 +1287,12 @@
                     { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, 
                     { type: 'text', title: 'รุ่น CPU', width: 130 }, 
                     { type: 'text', title: 'S/N CPU', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions }, 
+                    { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true }, 
                     { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, 
                     { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, 
                     { type: 'text', title: 'S/N จอภาพ', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true }, 
                     { type: 'text', title: 'หมายเหตุ', width: 180 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1283,8 +1308,8 @@
                     { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
                     { type: 'text', title: 'รุ่น', width: 150 }, 
                     { type: 'text', title: 'S/N', width: 170 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true }, 
                     { type: 'text', title: 'หมายเหตุ', width: 200 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1302,8 +1327,8 @@
                     { type: 'text', title: 'S/N', width: 170 }, 
                     { type: 'text', title: 'ลักษณะสี', width: 100 }, 
                     { type: 'text', title: 'Scanner', width: 100 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true }, 
                     { type: 'text', title: 'หมายเหตุ', width: 180 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1319,7 +1344,7 @@
                     { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
                     { type: 'text', title: 'ยี่ห้อ/รุ่น', width: 220 }, 
                     { type: 'text', title: 'S/N', width: 180 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true }, 
                     { type: 'text', title: 'หมายเหตุ', width: 200 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1702,16 +1727,25 @@
                 };
                 
                 const mapConn = (c) => { 
-                    let l = String(c).toLowerCase().trim(); 
-                    if(!l || l === '-' || l === 'ไม่มี') return ''; 
-                    if(l.includes('5')) return 'LAN กอง 5'; 
-                    if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
-                    if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
-                    if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
-                    return ''; 
-                };
-                const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; return 'ปกติ';  };
-
+                        let original = String(c).trim();
+                        let l = original.toLowerCase(); 
+                        if(!l || l === '-' || l === 'ไม่มี') return ''; 
+                        if(l.includes('5')) return 'LAN กอง 5'; 
+                        if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
+                        if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
+                        if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
+                        return original; 
+                    };
+                    const mapStatus = (s) => { 
+                        let original = String(s).trim();
+                        let l = original.toLowerCase(); 
+                        if(!l) return 'ปกติ'; 
+                        if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
+                        if(l.includes('สำรอง')) return 'สำรอง'; 
+                        if(l.includes('ไม่มี')) return 'ไม่มี'; 
+                        if(l.includes('ปกติ')) return 'ปกติ'; 
+                        return original; 
+                    };
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
 
@@ -2082,16 +2116,25 @@
                     let currentMode = null; let colMap = {};
 
                     const mapConn = (c) => { 
-                        let l = String(c).toLowerCase().trim(); 
+                        let original = String(c).trim();
+                        let l = original.toLowerCase(); 
                         if(!l || l === '-' || l === 'ไม่มี') return ''; 
                         if(l.includes('5')) return 'LAN กอง 5'; 
                         if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
                         if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
                         if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
-                        return ''; 
+                        return original; 
                     };
-                    const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; return 'ปกติ'; };
-
+                    const mapStatus = (s) => { 
+                        let original = String(s).trim();
+                        let l = original.toLowerCase(); 
+                        if(!l) return 'ปกติ'; 
+                        if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
+                        if(l.includes('สำรอง')) return 'สำรอง'; 
+                        if(l.includes('ไม่มี')) return 'ไม่มี'; 
+                        if(l.includes('ปกติ')) return 'ปกติ'; 
+                        return original; 
+                    };
                     ws.eachRow((row, rowNumber) => {
                         let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
 
