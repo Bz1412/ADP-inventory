@@ -1889,7 +1889,7 @@
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: logs }) });
                 
                 showToast(`ดึงข้อมูลและจัดเรียงสำเร็จ\n📦 ส่งลงทะเบียนใหม่เข้าคลัง ${newlyAddedToWarehouse} เครื่อง`); hasUnsavedDeletions = true; 
-            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally {document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
         async function exportStationExcel() {
