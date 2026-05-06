@@ -570,7 +570,7 @@
             "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
         
-        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง']; 
+        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี']; 
         const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone'];
         let currentGroup = '', currentStation = ''; 
         let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null; 
@@ -1234,11 +1234,15 @@
             let mLen = data.mon ? data.mon.length : 0;
             let maxLen = Math.max(cLen, mLen);
             for(let i=0; i<maxLen; i++) {
-                let c = (data.cpu && data.cpu[i]) ? data.cpu[i] : ["", "", "", "", "", "ปกติ", "", ""];
-                let m = (data.mon && data.mon[i]) ? data.mon[i] : ["", "", "", "", "", "ปกติ", ""];
+                let c = (data.cpu && data.cpu[i]) ? data.cpu[i] : ["", "", "", "", "", "ไม่มี", "", ""];
+                let m = (data.mon && data.mon[i]) ? data.mon[i] : ["", "", "", "", "", "ไม่มี", ""];
                 let user = c[1] || m[1] || "";
-                let statusCpu = c[5] || "ปกติ";
-                let statusMon = m[5] || "ปกติ";
+                
+                let hasC = (c[2] || c[3] || c[4]) && (c[2]!=='-' || c[3]!=='-' || c[4]!=='-');
+                let hasM = (m[2] || m[3] || m[4]) && (m[2]!=='-' || m[3]!=='-' || m[4]!=='-');
+                
+                let statusCpu = hasC ? (c[5] || "ปกติ") : "ไม่มี";
+                let statusMon = hasM ? (m[5] || "ปกติ") : "ไม่มี";
                 let conn = c[6] || "";
                 let remark = c[7] || m[6] || "";
                 if (c.join('').trim() !== '' || m.join('').trim() !== '') {
@@ -1357,8 +1361,8 @@
             let oldSpc = originalDbData.spc || [];
             
             let combinedData = tableCPUMON ? tableCPUMON.getData() : [];
-            let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]);
-            let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
+            let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], (r[2]||r[3]||r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+            let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], (r[6]||r[7]||r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
             
             let newNb = tableNB ? tableNB.getData() : [];
             let newPrn = tablePrn ? tablePrn.getData() : [];
@@ -1475,65 +1479,6 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
-        function fillMissingSNs() {
-            let d = new Date(); let todayYMD = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); let tempSnCounter = 1;
-            let existingSNs = new Set();
-            if (globalAllDataCache) { for (const [key, val] of Object.entries(globalAllDataCache)) { if (key === 'ADP_WAREHOUSE_CENTRAL') { try { let wh = JSON.parse(val); if(wh.main) wh.main.forEach(r => existingSNs.add(String(r[4]).trim().toLowerCase())); } catch(e) {} } } }
-
-            const generateSN = (typeAbbr) => {
-                let newSN = "";
-                while (true) { let paddedCounter = String(tempSnCounter).padStart(3, '0'); newSN = `${typeAbbr}-${todayYMD}-${paddedCounter} (ชั่วคราว)`; if (!existingSNs.has(newSN.toLowerCase())) break; tempSnCounter++; }
-                existingSNs.add(newSN.toLowerCase()); tempSnCounter++; return newSN;
-            };
-
-            const fillTable = (tableObj, snCol, typeAbbr, brandCol, modelCol) => {
-                if(!tableObj) return; let data = tableObj.getData();
-                for(let i=0; i<data.length; i++) {
-                    let brand = String(data[i][brandCol]||'').trim(); let model = String(data[i][modelCol]||'').trim(); let sn = String(data[i][snCol]||'').trim();
-                    if ((brand && brand !== '-') || (model && model !== '-')) {
-                        if (!sn || sn === '-' || sn.toLowerCase() === 'ไม่มี' || sn.toLowerCase() === 'n/a') {
-                            let newSN = generateSN(typeAbbr); tableObj.setValueFromCoords(snCol, i, newSN, true);
-                        }
-                    }
-                }
-            };
-
-            if(tableCPUMON) { fillTable(tableCPUMON, 4, 'PC', 2, 3); fillTable(tableCPUMON, 8, 'MON', 6, 7); }
-            if(tableNB) fillTable(tableNB, 4, 'NB', 2, 3);
-            if(tablePrn) fillTable(tablePrn, 4, 'PRN', 2, 3);
-            if(tableSpc) fillTable(tableSpc, 4, 'SPC', 3, 3);
-        }
-
-        window.selectModalSn = function(sn, brand, model) {
-            if(!currentSnTarget) return;
-            let table = document.getElementById(currentSnTarget.tableId).jexcel;
-            let colTitle = table.options.columns[currentSnTarget.x].title;
-            let brandCol = -1, modelCol = -1, statusCol = -1; let tCols = table.options.columns;
-            
-            if (currentSnTarget.tableId === 'spreadsheet-cpumon') {
-                if (colTitle === 'S/N CPU') { brandCol = 2; modelCol = 3; statusCol = 5; }
-                if (colTitle === 'S/N จอภาพ') { brandCol = 6; modelCol = 7; statusCol = 9; }
-            } else {
-                for(let i=0; i<tCols.length; i++) { if(tCols[i].title === 'ยี่ห้อ') brandCol = i; if(tCols[i].title === 'รุ่น') modelCol = i; if(tCols[i].title === 'สถานะ') statusCol = i; }
-            }
-
-            table.setValueFromCoords(currentSnTarget.x, currentSnTarget.y, sn);
-            if(brandCol !== -1 && brand) table.setValueFromCoords(brandCol, currentSnTarget.y, brand);
-            if(modelCol !== -1 && model) table.setValueFromCoords(modelCol, currentSnTarget.y, model);
-            if(statusCol !== -1) table.setValueFromCoords(statusCol, currentSnTarget.y, 'ปกติ');
-
-            hasUnsavedDeletions = true; showToast(`✨ ดึงอุปกรณ์ ${brand} จากคลังสำเร็จ!`); closeSnSearchModal();
-        }
-
-        window.applyManualSn = function() {
-            if(!currentSnTarget) return;
-            let inputEl = document.getElementById('modalSnInput');
-            let val = inputEl.value.trim();
-            let table = document.getElementById(currentSnTarget.tableId).jexcel;
-            table.setValueFromCoords(currentSnTarget.x, currentSnTarget.y, val);
-            hasUnsavedDeletions = true; closeSnSearchModal();
-        }
-
         function prepareSave() {
             if (!tableCPUMON) return; 
             fillMissingSNs(); 
@@ -1541,9 +1486,9 @@
             pendingWarehouseItems = diff.rawNewItems || []; 
 
             if (diff.added.length === 0 && diff.removed.length === 0 && diff.updated.length === 0) { h = `<div class="p-8 text-center text-slate-400 font-medium">ไม่พบการเปลี่ยนแปลง</div>`; } else {
-                if (diff.updated.length > 0) { h += `<div class="mb-4 bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/30"><p class="font-bold text-amber-700 dark:text-amber-400 mb-2 text-sm">การเปลี่ยนสถานะ:</p><ul class="list-disc pl-5 text-amber-600 dark:text-amber-300 text-xs space-y-1">`; diff.updated.forEach(i => { h += `<li>${i.label}</li>`; let actionWord = (i.status === 'ชำรุด') ? 'แจ้งชำรุด' : 'อัปเดตสถานะ'; pendingLogs.push({ action: actionWord, detail: i.label }); }); h += `</ul></div>`; }
-                if (diff.added.length > 0) { h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30"><p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเบิก/เพิ่มใหม่:</p><ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; diff.added.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'เพิ่มอุปกรณ์', detail: i }); }); h += `</ul></div>`; }
-                if (diff.removed.length > 0) { h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30"><p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง (ส่งคืน):</p><ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; diff.removed.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ action: 'ลบอุปกรณ์', detail: i }); }); h += `</ul></div>`; }
+                if (diff.updated.length > 0) { h += `<div class="mb-4 bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-100 dark:border-amber-800/30"><p class="font-bold text-amber-700 dark:text-amber-400 mb-2 text-sm">การเปลี่ยนสถานะ:</p><ul class="list-disc pl-5 text-amber-600 dark:text-amber-300 text-xs space-y-1">`; diff.updated.forEach(i => { h += `<li>${i.label}</li>`; let actionWord = (i.status === 'ชำรุด') ? 'แจ้งชำรุด' : 'อัปเดตสถานะ'; pendingLogs.push({ station: currentStation, action: actionWord, detail: i.label }); }); h += `</ul></div>`; }
+                if (diff.added.length > 0) { h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30"><p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเบิก/เพิ่มใหม่:</p><ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; diff.added.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ station: currentStation, action: 'เพิ่มอุปกรณ์', detail: i }); }); h += `</ul></div>`; }
+                if (diff.removed.length > 0) { h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30"><p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง (ส่งคืน):</p><ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; diff.removed.forEach(i => { h += `<li>${i}</li>`; pendingLogs.push({ station: currentStation, action: 'ลบอุปกรณ์', detail: i }); }); h += `</ul></div>`; }
             }
             document.getElementById('diffContent').innerHTML = h; document.getElementById('confirmModal').classList.remove('hidden'); document.getElementById('confirmModal').classList.add('flex');
         }
@@ -1578,8 +1523,8 @@
             };
             
             let combinedData = tableCPUMON.getData();
-            let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]);
-            let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
+            let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], (r[2]||r[3]||r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+            let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], (r[6]||r[7]||r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
             
             summaryHtml += genSum('คอมพิวเตอร์', newCpu, '💻') + genSum('โน๊ตบุ๊ค', tableNB.getData(), '💻') + genSum('จอมอนิเตอร์', newMon, '🖥️') + genSum('เครื่องพิมพ์', tablePrn.getData(), '🖨️', true, false) + genSum('เครื่องมือพิเศษ/Server/อื่นๆ', tableSpc.getData(), '🛠️', false, true);
             if (summaryHtml === '<div class="space-y-4">') summaryHtml = '<div class="text-center text-slate-400 py-6 font-medium">ไม่พบอุปกรณ์ในระบบ</div>'; else summaryHtml += '</div>';
@@ -1590,12 +1535,12 @@
 
         async function executeConfirmMonth() {
             closeMonthlyModal(); const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-            pendingLogs = isEditingConfirmedReport ? [{ action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
+            pendingLogs = isEditingConfirmedReport ? [{ station: currentStation, action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ station: currentStation, action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
             document.getElementById('loadingText').innerText = 'บันทึกรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 let combinedData = tableCPUMON.getData();
-                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]);
-                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
+                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], (r[2]||r[3]||r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], (r[6]||r[7]||r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
                 
                 const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) });
@@ -1609,8 +1554,8 @@
             closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 let combinedData = tableCPUMON.getData();
-                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]);
-                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
+                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], (r[2]||r[3]||r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], (r[6]||r[7]||r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
                 
                 const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 
@@ -1729,13 +1674,12 @@
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
-                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ช.ร.": "เชียงราย", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 let targetSheet = null; wb.eachSheet((ws) => { let sName = ws.name.trim(); if (sName === currentStation || abbrMap[sName] === currentStation || currentStation.includes(sName) || sName.includes(currentStation)) { targetSheet = ws; } });
                 if (!targetSheet) targetSheet = wb.worksheets[0];
                 
                 let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                 let currentMode = null; let colMap = {};
-                let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
                 
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; let whMainData = []; let existingItems = new Set(); let newlyAddedToWarehouse = 0;
                 
@@ -1766,7 +1710,7 @@
                     if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
                     return ''; 
                 };
-                const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; return 'ปกติ';  };
+                const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; return 'ปกติ';  };
 
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
@@ -1786,12 +1730,11 @@
                         else if (combinedText.includes('โน๊ตบุ๊ค') || combinedText.includes('notebook')) currentMode = 'NB';
                         else if (combinedText.includes('printer') || combinedText.includes('เครื่องพิมพ์') || combinedText.includes('ปริ้น')) currentMode = 'PRN';
                         else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) currentMode = 'SPC';
-                        else currentMode = 'NB'; 
+                        else if (!currentMode) currentMode = 'NB'; 
                         
-                        colMap = {}; brandCount = 0; modelCount = 0; snCount = 0; statusCount = 0;
+                        colMap = {}; 
                     }
 
-                    // 🌟 ตรวจสอบว่าเป็นบรรทัดหัวคอลัมน์หรือไม่ ด้วยคีย์เวิร์ด
                     let headerKeywords = ['ยี่ห้อ', 'brand', 'รุ่น', 'model', 's/n', 'serial', 'ผู้ใช้', 'user', 'สถานะ', 'status', 'เชื่อมต่อ', 'หมายเหตุ', 'ประเภท', 'ลักษณะสี', 'สแกน', 'scanner', 'ลำดับ', 'cpu', 'จอภาพ', 'printer'];
                     let kwCount = 0;
                     rowVals.forEach(v => {
@@ -1804,6 +1747,7 @@
                     let isHeaderRow = kwCount >= 2 || isTableStart;
 
                     if (isHeaderRow) {
+                        let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
                         rowVals.forEach((val, idx) => {
                             if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
                             if (h === 'ผู้ใช้' || h.includes('user') || h.includes('สถานที่')) colMap.user = idx; 
@@ -1843,11 +1787,11 @@
                         let hasCpuData = (cpuBrand && cpuBrand !== '-') || (cpuModel && cpuModel !== '-') || (cpuSN && cpuSN !== '-');
                         let hasMonData = (monBrand && monBrand !== '-') || (monModel && monModel !== '-') || (monSN && monSN !== '-');
 
-                        if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; // ✅ ข้ามบรรทัดว่าง 100%
+                        if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; // ✅ ข้ามบรรทัดว่าง 
                         if (!hasCpuData && currentMode === 'SPC') return;
 
-                        let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : '';
-                        let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : '';
+                        let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : 'ไม่มี';
+                        let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : 'ไม่มี';
 
                         if (currentMode === 'CPUMON') { 
                             cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, statusCpu, monBrand, monModel, monSN, statusMon, conn, remark]); 
@@ -1855,13 +1799,13 @@
                             if (hasMonData) autoRegisterToWarehouse('Monitor', monBrand, monModel, monSN, currentStation);
                         } 
                         else if (currentMode === 'NB') { 
-                            let status = mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu));
+                            let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                             nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); 
                             if (hasCpuData) autoRegisterToWarehouse('Notebook', cpuBrand, cpuModel, cpuSN, currentStation);
                         } 
                         else if (currentMode === 'PRN') { 
                             let colorType = getVal(colMap.colorType); let scanner = getVal(colMap.scanner);
-                            let status = mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu));
+                            let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                             prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
                             if (hasCpuData) autoRegisterToWarehouse('Printer', cpuBrand, cpuModel, cpuSN, currentStation);
                         } 
@@ -1873,7 +1817,7 @@
                             else if (rmkLower.includes('rcf') || rmkLower.includes('rcf')) spcType = 'RCF'; 
                             else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
 
-                            let status = mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu));
+                            let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                             spcData.push(["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(status), String(remark)]); 
                             if (hasCpuData) autoRegisterToWarehouse(spcType, cpuBrand, cpuModel, cpuSN, currentStation);
                         }
@@ -2097,7 +2041,7 @@
             
             try {
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
-                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ช.ร.": "เชียงราย", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 let saveQueue = []; let newlyAddedToWarehouse = 0;
 
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
@@ -2136,7 +2080,6 @@
 
                     let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                     let currentMode = null; let colMap = {};
-                    let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
 
                     const mapConn = (c) => { 
                         let l = String(c).toLowerCase().trim(); 
@@ -2147,7 +2090,7 @@
                         if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
                         return ''; 
                     };
-                    const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; return 'ปกติ'; };
+                    const mapStatus = (s) => { let l = String(s).toLowerCase(); if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; return 'ปกติ'; };
 
                     ws.eachRow((row, rowNumber) => {
                         let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
@@ -2155,11 +2098,9 @@
                         if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
                         
                         let textCells = rowVals.filter(v => String(v).trim() !== '');
-                        if (textCells.length === 0) return; // ข้ามแถวว่างล้วน
+                        if (textCells.length === 0) return;
 
                         let combinedText = textCells.join(' ').toLowerCase();
-                        
-                        // 🌟 จับการเริ่มต้นตารางใหม่จากคำว่า 'ลำดับ'
                         let isTableStart = false;
                         rowVals.forEach(v => { if (String(v).replace(/\s+/g,'').toLowerCase() === 'ลำดับ') isTableStart = true; });
 
@@ -2170,10 +2111,9 @@
                             else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) currentMode = 'SPC';
                             else if (!currentMode) currentMode = 'NB'; 
                             
-                            colMap = {}; brandCount = 0; modelCount = 0; snCount = 0; statusCount = 0;
+                            colMap = {}; 
                         }
 
-                        // 🌟 ตรวจสอบว่าเป็นบรรทัดหัวคอลัมน์ (Header) หรือไม่ โดยใช้การนับคีย์เวิร์ด
                         let headerKeywords = ['ยี่ห้อ', 'brand', 'รุ่น', 'model', 's/n', 'serial', 'ผู้ใช้', 'user', 'สถานะ', 'status', 'เชื่อมต่อ', 'หมายเหตุ', 'ประเภท', 'ลักษณะสี', 'สแกน', 'scanner', 'ลำดับ', 'cpu', 'จอภาพ', 'printer'];
                         let kwCount = 0;
                         rowVals.forEach(v => {
@@ -2183,10 +2123,9 @@
                             }
                         });
 
-                        // ต้องเจอคีย์เวิร์ด 2 คอลัมน์ขึ้นไป ถึงจะถือว่าเป็นหัวตาราง (กันข้อมูลทั่วไปหลอก)
                         let isHeaderRow = kwCount >= 2 || isTableStart;
-
                         if (isHeaderRow) {
+                            let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
                             rowVals.forEach((val, idx) => {
                                 if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
                                 if (h === 'ผู้ใช้' || h.includes('user') || h.includes('สถานที่')) colMap.user = idx; 
@@ -2224,15 +2163,14 @@
                             let monBrand = getVal(colMap.monBrand); let monModel = getVal(colMap.monModel); let monSN = getVal(colMap.monSN);
                             let conn = mapConn(getVal(colMap.conn)); let remark = getVal(colMap.remark);
 
-                            // 🌟 ตรวจสอบว่าฝั่งไหนมีของอยู่จริงบ้าง
                             let hasCpuData = (cpuBrand && cpuBrand !== '-') || (cpuModel && cpuModel !== '-') || (cpuSN && cpuSN !== '-');
                             let hasMonData = (monBrand && monBrand !== '-') || (monModel && monModel !== '-') || (monSN && monSN !== '-');
 
-                            if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; // ✅ ข้ามบรรทัดว่าง 100%
+                            if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; 
                             if (!hasCpuData && currentMode === 'SPC') return;
 
-                            let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : '';
-                            let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : '';
+                            let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : 'ไม่มี';
+                            let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : 'ไม่มี';
 
                             if (currentMode === 'CPUMON') { 
                                 cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, statusCpu, monBrand, monModel, monSN, statusMon, conn, remark]); 
@@ -2240,13 +2178,13 @@
                                 if (hasMonData) autoRegisterToWarehouse('Monitor', monBrand, monModel, monSN, fullStationName);
                             } 
                             else if (currentMode === 'NB') { 
-                                let status = mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu));
+                                let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                                 nbData.push(["", user, cpuBrand, cpuModel, cpuSN, status, conn, remark]); 
                                 if (hasCpuData) autoRegisterToWarehouse('Notebook', cpuBrand, cpuModel, cpuSN, fullStationName);
                             } 
                             else if (currentMode === 'PRN') { 
                                 let colorType = getVal(colMap.colorType); let scanner = getVal(colMap.scanner);
-                                let status = mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu));
+                                let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                                 prnData.push(["", user, cpuBrand, cpuModel, cpuSN, colorType, scanner, status, conn, remark]); 
                                 if (hasCpuData) autoRegisterToWarehouse('Printer', cpuBrand, cpuModel, cpuSN, fullStationName);
                             } 
@@ -2258,7 +2196,7 @@
                                 else if (rmkLower.includes('rcf') || rmkLower.includes('rcf')) spcType = 'RCF'; 
                                 else if (rmkLower.includes('switch') || rowStr.includes('switch')) spcType = 'Switch';
 
-                                let status = mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu));
+                                let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                                 spcData.push(["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(status), String(remark)]); 
                                 if (hasCpuData) autoRegisterToWarehouse(spcType, cpuBrand, cpuModel, cpuSN, fullStationName);
                             }
