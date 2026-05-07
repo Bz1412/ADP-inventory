@@ -85,7 +85,7 @@
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
 
-    <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
+    <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
     <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[999] hidden flex-col justify-center items-center backdrop-blur-md no-print animate-fade-in">
         <div class="loader mb-4"></div>
@@ -1094,14 +1094,12 @@
                 let dbData = JSON.parse(JSON.stringify(defaultDbData));
                 let cacheKey = `ADP_${groupName}_${stationName}`;
                 
-                // 🌟 ดึงข้อมูลจาก Cache ที่โหลดรอไว้แล้ว (ไวปานสายฟ้า)
                 if (globalAllDataCache && globalAllDataCache[cacheKey]) {
                     try { 
                         let parsed = JSON.parse(globalAllDataCache[cacheKey]); 
-                        if(parsed) dbData = { ...dbData, ...parsed }; // ผสานข้อมูลป้องกันค่า null
+                        if(parsed) dbData = { ...dbData, ...parsed };
                     } catch(e) { console.warn("Cache parse error"); }
                 } else {
-                    // เผื่อกรณีหลุดจาก Cache จริงๆ ให้ดึงตรงจาก API (เข้ารหัสภาษาไทยกันบัค)
                     const response = await fetch(`${API_URL}?key=${encodeURIComponent(cacheKey)}`); 
                     const result = await response.json();
                     if (result.value) {
@@ -1114,14 +1112,12 @@
                     }
                 }
                 
-                // 🌟 ระบบกันพัง (Crash-Proof) ป้องกันตารางไหนว่างแล้วเกิด Array Null
                 if (!dbData.cpu || !Array.isArray(dbData.cpu) || dbData.cpu.length === 0) dbData.cpu = [[]];
                 if (!dbData.nb || !Array.isArray(dbData.nb) || dbData.nb.length === 0) dbData.nb = [[]];
                 if (!dbData.mon || !Array.isArray(dbData.mon) || dbData.mon.length === 0) dbData.mon = [[]];
                 if (!dbData.prn || !Array.isArray(dbData.prn) || dbData.prn.length === 0) dbData.prn = [[]];
                 if (!dbData.spc || !Array.isArray(dbData.spc) || dbData.spc.length === 0) dbData.spc = [[]];
 
-                // โหลดสต็อกคลังเพื่อค้นหา S/N
                 if (!warehouseStock || warehouseStock.length === 0) {
                     try {
                         let whDataStr = (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) ? globalAllDataCache['ADP_WAREHOUSE_CENTRAL'] : null;
@@ -1142,9 +1138,9 @@
                     } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ'); }
                 }
 
-                // แปลงตาราง SPC รูปแบบเก่าเป็นแบบใหม่ (ให้ลง 10 ช่องเป๊ะ)
                 let migratedSpc = [];
                 dbData.spc.forEach(s => {
+                    if (!s || !Array.isArray(s)) return; // 🌟 กันพัง
                     let isNewFormat = s.length >= 9;
                     if (isNewFormat) {
                         migratedSpc.push(s);
@@ -1184,13 +1180,14 @@
                 
                 initSpreadsheets(dbData);
                 
-                // 🌟 ประมวลผลยอดสรุปและวาดกราฟสำหรับหน้าสถานี
                 let stTotalCPU = 0, stTotalMon = 0, stTotalPrn = 0, stTotalSpc = 0, stTotalNB = 0;
                 let stStatCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
 
                 const countStItems = (arr, isPrn=false, isSpc=false) => { 
-                    if(!arr) return 0; let c = 0; 
+                    if(!arr || !Array.isArray(arr)) return 0; // 🌟 กันพัง
+                    let c = 0; 
                     arr.forEach(r => { 
+                        if (!r || !Array.isArray(r)) return; // 🌟 กันพัง
                         let isNewSpc = isSpc && r.length >= 9;
                         let b = isSpc ? (isNewSpc ? r[3] : '') : r[2]; let m = isSpc ? (isNewSpc ? r[4] : r[3]) : r[3]; let s = isSpc && isNewSpc ? r[5] : r[4];
                         let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim();
@@ -1514,6 +1511,11 @@
             for(let i=0; i<maxLen; i++) {
                 let c = (data.cpu && data.cpu[i]) ? data.cpu[i] : ["", "", "", "", "", "ไม่มี", "", ""];
                 let m = (data.mon && data.mon[i]) ? data.mon[i] : ["", "", "", "", "", "ไม่มี", ""];
+                
+                // 🌟 ป้องกันกรณีข้อมูลมาเป็นค่า Null แล้วโค้ดพัง
+                if (!c || !Array.isArray(c)) c = ["", "", "", "", "", "ไม่มี", "", ""];
+                if (!m || !Array.isArray(m)) m = ["", "", "", "", "", "ไม่มี", ""];
+
                 let user = c[1] || m[1] || "";
                 let hasC = (c[2] || c[3] || c[4]) && (c[2]!=='-' || c[3]!=='-' || c[4]!=='-');
                 let hasM = (m[2] || m[3] || m[4]) && (m[2]!=='-' || m[3]!=='-' || m[4]!=='-');
@@ -1522,9 +1524,10 @@
             }
             if (cpumonData.length === 0) cpumonData = [[]];
 
-            // 🌟 แปลงโครงสร้าง SPC จาก 8 คอลัมน์เดิม ให้เป็น 10 คอลัมน์
+            // 🌟 แปลงโครงสร้าง SPC จาก 8 คอลัมน์เดิม ให้เป็น 10 คอลัมน์ พร้อมเกราะป้องกัน Null
             let migratedSpc = [];
             (data.spc || [[]]).forEach(r => {
+                if (!r || !Array.isArray(r)) return; // 🌟 กันพัง
                 if (r.length < 9 && r.join('').trim() !== '') {
                     migratedSpc.push(["", r[1]||'', r[2]||'', r[3]||'', '', r[4]||'', r[5]||'ปกติ', '', r[6]||'']);
                 } else migratedSpc.push(r);
@@ -1534,6 +1537,7 @@
             if (originalDbData && originalDbData.spc) {
                 let migratedOriginalSpc = [];
                 originalDbData.spc.forEach(r => {
+                    if (!r || !Array.isArray(r)) return; // 🌟 กันพัง
                     if (r.length < 9 && r.join('').trim() !== '') migratedOriginalSpc.push(["", r[1]||'', r[2]||'', r[3]||'', '', r[4]||'', r[5]||'ปกติ', '', r[6]||'']);
                     else migratedOriginalSpc.push(r);
                 });
@@ -1546,7 +1550,6 @@
             tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { ...tableConfig, data: data.nb||[[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 200 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [9, 3] });
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { ...tableConfig, data: data.prn||[[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 110 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'text', title: 'ลักษณะสี', width: 100 }, { type: 'text', title: 'Scanner', width: 100 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [11, 3] });
             
-            // 🌟 ตาราง SPC ใหม่ โครงสร้าง 10 คอลัมน์ (มีช่อง ยี่ห้อ, รุ่น, การเชื่อมต่อ แบบแยกอิสระ)
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { ...tableConfig, data: migratedSpc, columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ประเภท', width: 140 }, { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [10, 3] });
         }
 
