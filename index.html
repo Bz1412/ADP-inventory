@@ -145,7 +145,7 @@
     <div id="auditLogModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[160] hidden flex-col justify-center items-center backdrop-blur-sm p-3 sm:p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800">
-                <div><h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🕒 ประวัติการทำรายการ</h3><p class="text-xs font-medium text-slate-500 mt-1">50 รายการล่าสุดของสถานีนี้</p></div>
+                <div><h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">🕒 ประวัติการทำรายการ</h3><p class="text-xs font-medium text-slate-500 mt-1">ประวัติการเปลี่ยนแปลงทั้งหมดของสถานีนี้</p></div>
                 <button onclick="closeAuditLog()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm">
@@ -1221,12 +1221,15 @@
         }
 
         async function openAuditLog() {
-            document.getElementById('loadingText').innerText = 'โหลดประวัติ...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            document.getElementById('loadingText').innerText = 'โหลดประวัติทั้งหมด...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const targetStation = `ADP_${currentGroup}_${currentStation}`;
-                const response = await fetch(`${API_URL}?action=GET_LOGS&station=${targetStation}`);
+                // 🌟 ใส่ parameter &limit=all ลงไปในลิงก์ API ด้วย
+                const response = await fetch(`${API_URL}?action=GET_LOGS&station=${targetStation}&limit=all`);
                 const result = await response.json();
                 const tbody = document.getElementById('auditLogTableBody');
+                
                 if (result.logs && result.logs.length > 0) {
                     let html = '';
                     result.logs.forEach(log => {
@@ -1234,14 +1237,27 @@
                         if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
                         if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-0.5 bg-red-50 text-red-500 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
                         if(log.action.includes("รายงาน")) actionBadge = `<span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
+                        
                         let timeStr = log.time;
                         try { let d = new Date(log.time); if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); } catch(e) {}
-                        html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="p-3 md:p-4 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td><td class="p-3 md:p-4 text-center">${actionBadge}</td><td class="p-3 md:p-4 text-slate-700 dark:text-slate-300 text-xs md:text-sm min-w-[200px] leading-relaxed">${log.detail}</td></tr>`;
+                        
+                        html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                    <td class="p-3 md:p-4 text-slate-500 text-xs whitespace-nowrap">${timeStr}</td>
+                                    <td class="p-3 md:p-4 text-center">${actionBadge}</td>
+                                    <td class="p-3 md:p-4 text-slate-700 dark:text-slate-300 text-xs md:text-sm min-w-[200px] leading-relaxed">${log.detail}</td>
+                                 </tr>`;
                     });
                     tbody.innerHTML = html;
-                } else tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-400 font-medium">ยังไม่มีประวัติการทำรายการ</td></tr>`;
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-400 font-medium">ยังไม่มีประวัติการทำรายการ</td></tr>`;
+                }
+                
                 document.getElementById('auditLogModal').classList.remove('hidden'); document.getElementById('auditLogModal').classList.add('flex');
-            } catch (err) { console.error(err); showToast("โหลดไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (err) { 
+                console.error(err); showToast("โหลดประวัติไม่สำเร็จ", "error"); 
+            } finally { 
+                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
         function closeAuditLog() { document.getElementById('auditLogModal').classList.add('hidden'); document.getElementById('auditLogModal').classList.remove('flex'); }
@@ -1266,73 +1282,69 @@
             let added = []; let removed = []; let updated = [];
             let rawNewItems = [];
 
-            const compareArrays = (oldArr, newArr, type, isPrn=false, isSpc=false) => {
+            const compareArrays = (oldArr, newArr, type, mode) => {
                 let oldMap = new Map();
                 oldArr.forEach((r, i) => {
-                    let sn = String(r[4] || '').trim().toLowerCase();
-                    let b = isSpc ? '' : r[2]; let m = isSpc ? r[3] : r[3];
-                    let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(sn||'').trim();
-                    
-                    if ((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) {
-                        let key = (sn && sn !== '-') ? sn : `NO_SN_${i}`; 
-                        oldMap.set(key, r);
-                    }
+                    let snIdx = mode === 'SPC' ? 5 : 4;
+                    let sn = String(r[snIdx] || '').trim().toLowerCase();
+                    let key = (sn && sn !== '-') ? sn : `NO_SN_${i}`; 
+                    oldMap.set(key, r);
                 });
 
                 let newMap = new Map();
                 newArr.forEach((r, i) => {
-                    let sn = String(r[4] || '').trim().toLowerCase();
-                    let b = isSpc ? '' : r[2]; let m = isSpc ? r[3] : r[3];
+                    let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
+                    let sn = String(r[snIdx] || '').trim().toLowerCase(); let b = r[brandIdx]; let m = r[modelIdx];
                     let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(sn||'').trim();
                     
                     if ((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) {
-                        let key = (sn && sn !== '-') ? sn : `NO_SN_${i}`;
+                        let key = (ss && ss !== '-') ? ss : `NO_SN_${i}`;
                         newMap.set(key, r);
 
-                        let userIdx = isSpc ? 2 : 1;
-                        let statusIdx = isPrn ? 7 : 5;
-                        let connIdx = isPrn ? 8 : (isSpc ? -1 : 6); 
-                        let remarkIdx = isPrn ? 9 : (isSpc ? 6 : 7);
+                        let userIdx = mode === 'SPC' ? 2 : 1;
+                        let statusIdx = mode === 'PRN' ? 7 : (mode === 'SPC' ? 6 : 5);
+                        let connIdx = mode === 'PRN' ? 8 : (mode === 'SPC' ? 7 : (mode === 'MON' ? -1 : 6)); 
+                        let remarkIdx = mode === 'PRN' ? 9 : (mode === 'SPC' ? 8 : (mode === 'MON' ? 6 : 7));
                         
                         let user = String(r[userIdx] || '').trim();
-                        let brandModel = String(isSpc ? r[3] : `${r[2]||''} ${r[3]||''}`).trim();
-                        let actualType = String(isSpc ? r[1] : type).trim();
+                        let brandModel = String(mode === 'SPC' ? `${r[3]||''} ${r[4]||''}` : `${r[2]||''} ${r[3]||''}`).trim();
+                        let actualType = String(mode === 'SPC' ? r[1] : type).trim();
                         let status = String(r[statusIdx] || 'ปกติ').trim();
                         let conn = connIdx !== -1 ? String(r[connIdx] || '').trim() : '';
-                        let remark = String(r[remarkIdx] || '').trim();
+                        let remark = remarkIdx !== -1 ? String(r[remarkIdx] || '').trim() : '';
 
                         if (oldMap.has(key)) {
                             let oldRow = oldMap.get(key);
                             let oldStatus = String(oldRow[statusIdx] || 'ปกติ').trim();
                             let oldUser = String(oldRow[userIdx] || '').trim();
-                            let oldBrandModel = String(isSpc ? oldRow[3] : `${oldRow[2]||''} ${oldRow[3]||''}`).trim();
-                            let oldActualType = String(isSpc ? oldRow[1] : type).trim();
+                            let oldBrandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim();
+                            let oldActualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
                             let oldConn = connIdx !== -1 ? String(oldRow[connIdx] || '').trim() : '';
-                            let oldRemark = String(oldRow[remarkIdx] || '').trim();
+                            let oldRemark = remarkIdx !== -1 ? String(oldRow[remarkIdx] || '').trim() : '';
 
                             let changes = [];
-                            if (oldActualType !== actualType && isSpc) changes.push(`ประเภทเป็น '${actualType || '-'}'`);
-                            // 🌟 แก้ไขบัคเช็คตัวแปรซ้ำตรงนี้ครับ
+                            if (oldActualType !== actualType && mode === 'SPC') changes.push(`ประเภทเป็น '${actualType || '-'}'`);
                             if (oldUser !== user && user !== '') changes.push(`ผู้ใช้เป็น '${user || '-'}'`);
                             if (oldBrandModel !== brandModel) changes.push(`รุ่นเป็น '${brandModel || '-'}'`);
                             if (oldStatus !== status && status !== 'ไม่มี') changes.push(`สถานะเป็น '${status}'`);
+                            // 🌟 แก้ไขบัคเทียบตัวแปรผิดแล้วครับ
                             if (oldConn !== conn && connIdx !== -1) changes.push(`การเชื่อมต่อเป็น '${conn || '-'}'`);
                             if (oldRemark !== remark) changes.push(`แก้ไขหมายเหตุ`);
 
                             if (changes.length > 0) {
-                                let label = `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${r[4]||'-'}) -> ${changes.join(', ')}`;
+                                let label = `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${r[snIdx]||'-'}) -> ${changes.join(', ')}`;
                                 updated.push({ label: label, status: status, isStatusChange: oldStatus !== status });
                             }
                         } else {
-                            added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${r[4]||'-'})`);
+                            added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${r[snIdx]||'-'})`);
                             let whType = actualType;
                             if (actualType === 'คอมพิวเตอร์' || actualType === 'CPU') whType = 'PC'; 
                             else if (actualType === 'โน๊ตบุ๊ค') whType = 'Notebook'; 
                             else if (actualType === 'จอมอนิเตอร์') whType = 'Monitor'; 
                             else if (actualType === 'เครื่องพิมพ์') whType = 'Printer';
                             
-                            let cleanBrand = isSpc ? '' : String(r[2]||'').trim(); 
-                            let cleanModel = isSpc ? String(r[3]||'').trim() : String(r[3]||'').trim();
+                            let cleanBrand = mode === 'SPC' ? '' : String(r[2]||'').trim(); 
+                            let cleanModel = mode === 'SPC' ? String(r[3]||'').trim() : String(r[3]||'').trim();
                             rawNewItems.push({ type: whType, brand: cleanBrand, model: cleanModel, sn: ss });
                         }
                     }
@@ -1340,20 +1352,19 @@
 
                 for (let [key, oldRow] of oldMap.entries()) {
                     if (!newMap.has(key)) {
-                        let userIdx = isSpc ? 2 : 1;
-                        let actualType = String(isSpc ? oldRow[1] : type).trim();
-                        let brandModel = String(isSpc ? oldRow[3] : `${oldRow[2]||''} ${oldRow[3]||''}`).trim();
-                        let sn = String(oldRow[4] || '').trim();
+                        let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3; let userIdx = mode === 'SPC' ? 2 : 1;
+                        let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim();
+                        let sn = String(oldRow[snIdx] || '').trim(); let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
                         removed.push(`[${actualType}] ${oldRow[userIdx]||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
                     }
                 }
             };
 
-            compareArrays(oldCpu, newCpu, 'คอมพิวเตอร์', false, false); 
-            compareArrays(oldNb, newNb, 'โน๊ตบุ๊ค', false, false); 
-            compareArrays(oldMon, newMon, 'จอมอนิเตอร์', false, false); 
-            compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์', true, false); 
-            compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ/Server/อื่นๆ', false, true);
+            compareArrays(oldCpu, newCpu, 'คอมพิวเตอร์', 'CPU'); 
+            compareArrays(oldNb, newNb, 'โน๊ตบุ๊ค', 'NB'); 
+            compareArrays(oldMon, newMon, 'จอมอนิเตอร์', 'MON'); 
+            compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์', 'PRN'); 
+            compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ/Server/อื่นๆ', 'SPC');
             
             return { added, removed, updated, rawNewItems };
         }
@@ -1517,6 +1528,10 @@
                 
                 const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) });
+                
+                // 🌟 อัปเดต Cache หน้าเว็บ ให้จำการส่งรายงานทันที
+                if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
+                
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
                 isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 hasUnsavedDeletions = false; 
@@ -1532,7 +1547,6 @@
                 
                 const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
                 
-                // 🌟 ยิง API เซฟข้อมูลสถานีและแจ้ง Telegram
                 await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ 
@@ -1542,7 +1556,6 @@
                     }) 
                 });
                 
-                // 🌟 อัปเดตคลังแยกอีก Request 
                 if (pendingWarehouseItems && pendingWarehouseItems.length > 0) {
                     let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
                     if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
@@ -1565,6 +1578,11 @@
                         let whLogs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่เข้าคลัง ${addedCount} รายการ (จากการคีย์เพิ่มของสถานี ${currentStation})` }];
                         await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }], logs: whLogs }) });
                     }
+                }
+
+                // 🌟 อัปเดต Cache หน้าเว็บทันที! ค้นหาปุ๊บเจอปั๊บ ประวัติขึ้นเลยไม่ต้อง F5
+                if(globalAllDataCache) {
+                    globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
                 }
 
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); hasUnsavedDeletions = false; pendingWarehouseItems = []; 
