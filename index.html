@@ -790,6 +790,13 @@
 
         function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginModal').classList.remove('flex'); }
 
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         async function submitLogin() {
             if (!loginTarget) return;
             let pass = document.getElementById('loginPassword').value.trim();
@@ -797,27 +804,33 @@
             
             if (!pass) return showToast("กรุณากรอกรหัสผ่าน", "error");
 
+            let hashedPass = await hashPassword(pass);
+
             if (!authDb[authKey]) {
                 let confirmPass = document.getElementById('loginConfirmPassword').value.trim();
                 if (pass !== confirmPass) return showToast("รหัสผ่านไม่ตรงกัน", "error");
-                authDb[authKey] = pass; 
-                document.getElementById('loadingText').innerText = 'กำลังบันทึกรหัสผ่าน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+                
+                authDb[authKey] = hashedPass;
+                
+                document.getElementById('loadingText').innerText = 'กำลังบันทึกรหัสผ่าน (เข้ารหัส)...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
                 try {
                     await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: 'ADP_AUTH_DB', value: JSON.stringify(authDb) }], logs: [{station: 'System', action: 'ตั้งรหัสผ่าน', detail: `ตั้งรหัสผ่านสำหรับ ${authKey} สำเร็จ`}] }) });
-                    showToast("ตั้งรหัสผ่านสำเร็จ!");
+                    showToast("ตั้งรหัสผ่านและเข้ารหัสสำเร็จ!");
                 } catch(e) { console.error(e); showToast("บันทึกรหัสผ่านล้มเหลว", "error"); document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); return; }
                 document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex');
             } else {
-                if (authDb[authKey] !== pass) return showToast("รหัสผ่านไม่ถูกต้อง", "error");
+
+                if (authDb[authKey] !== hashedPass) return showToast("รหัสผ่านไม่ถูกต้อง", "error");
                 showToast("เข้าสู่ระบบสำเร็จ");
             }
 
-            // เปิดสิทธิ์ใช้งาน ปิดหน้าต่าง Landing
             closeLoginModal();
             document.getElementById('landingPage').classList.add('hidden');
-            
+
             document.getElementById('btnAdminLogin').classList.add('hidden');
             document.getElementById('btnLogout').classList.remove('hidden');
+            document.getElementById('btnHelp').classList.remove('hidden');
+            document.getElementById('navDivider').classList.remove('hidden');
 
             currentUserRole = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
 
