@@ -92,6 +92,49 @@
         <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังซิงค์ข้อมูล...</p>
     </div>
 
+    <div id="landingPage" class="fixed inset-0 bg-[#f8fafc] dark:bg-[#0f172a] z-[50] overflow-y-auto custom-scrollbar flex flex-col items-center py-12 px-4 sm:px-6 animate-fade-in transition-colors duration-300">
+        <div class="text-center mb-10 w-full max-w-4xl animate-slide-up">
+            <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl">A</div>
+            <h1 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">ADP<span class="font-light text-slate-500">Inventory</span></h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">กรุณาเลือกระดับการเข้าใช้งาน หรือ สถานี/ชุด ของท่าน</p>
+        </div>
+        
+        <div class="w-full max-w-5xl animate-slide-up delay-100">
+            <div onclick="openLoginModal('Admin', null, null)" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white p-6 sm:p-8 rounded-3xl cursor-pointer transition-transform active:scale-95 shadow-xl mb-10 text-center border border-indigo-500/30 group">
+                <h2 class="text-2xl sm:text-3xl font-bold flex items-center justify-center gap-3"><span class="group-hover:scale-125 transition-transform duration-300">👑</span> System Administrator</h2>
+                <p class="text-indigo-100 text-sm sm:text-base mt-2 font-medium">เข้าถึงภาพรวมระบบ แก้ไขและนำเข้าข้อมูลได้ทุกสถานีทั่วประเทศ</p>
+            </div>
+            <div id="landingGrid" class="w-full pb-20"></div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-md p-4 animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
+            <div class="px-6 py-6 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-start">
+                <div>
+                    <h3 id="loginTitle" class="text-xl font-bold text-slate-800 dark:text-white mb-1">เข้าสู่ระบบ</h3>
+                    <p id="loginSubtitle" class="text-sm font-medium text-slate-500 dark:text-slate-400">User: <span id="loginUsernameDisplay" class="text-indigo-600 dark:text-indigo-400 font-bold">Admin ...</span></p>
+                </div>
+                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-red-500 transition-colors bg-white dark:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-sm">&times;</button>
+            </div>
+            <div class="p-6 md:p-8 space-y-5 bg-white dark:bg-slate-800">
+                <div id="firstTimeNotice" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-2">
+                    <p class="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> เข้าใช้งานครั้งแรก!</p>
+                    <p class="text-[11px] text-amber-600 dark:text-amber-500 mt-1">กรุณาตั้งรหัสผ่านใหม่สำหรับสถานีของคุณ รหัสนี้จะถูกใช้ในครั้งถัดไป</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">รหัสผ่าน (Password)</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono">
+                </div>
+                <div id="confirmPasswordGroup" class="hidden">
+                    <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">ยืนยันรหัสผ่านอีกครั้ง</label>
+                    <input type="password" id="loginConfirmPassword" placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-mono">
+                </div>
+                <button onclick="submitLogin()" class="w-full bg-slate-900 hover:bg-black text-white dark:bg-indigo-600 dark:hover:bg-indigo-700 py-3.5 rounded-xl font-bold shadow-md transition-transform active:scale-95 mt-2">ยืนยันการเข้าใช้งาน</button>
+            </div>
+        </div>
+    </div>
+
     <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
     <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
 
@@ -495,19 +538,22 @@
                 <button onclick="openAuditLog()" data-tooltip="ดูประวัติการเพิ่ม/ลบ/แก้ไข ของสถานีนี้" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ประวัติ
                 </button>
+                
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
                 <input type="file" id="importExcelNewInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcelNew(event)">
                 
-                <button onclick="document.getElementById('importExcelInput').click()" data-tooltip="อัปโหลดไฟล์ Excel เพื่อเพิ่มข้อมูลลงตาราง (ไฟล์โครงสร้างเก่า)" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap">
+                <button id="btnImportOld" onclick="document.getElementById('importExcelInput').click()" data-tooltip="อัปโหลดไฟล์ Excel เพื่อเพิ่มข้อมูลลงตาราง (ไฟล์โครงสร้างเก่า)" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า (เก่า)
                 </button>
                 
                 <button onclick="document.getElementById('importExcelNewInput').click()" data-tooltip="นำเข้าไฟล์ Excel ที่เพิ่ง Export ออกไป (รองรับตารางโครงสร้างใหม่ 100%)" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-3 py-2.5 rounded-xl border border-transparent hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap">
                     <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า (ใหม่)
                 </button>
+                
                 <button onclick="exportStationExcel()" data-tooltip="ดาวน์โหลดข้อมูลเป็น Excel (ใช้เป็น Template นำเข้าได้)" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
                 </button>
+                
                 <button onclick="generateAllQRCodes()" data-tooltip="สั่งพิมพ์ QR Code ของอุปกรณ์ทุกชิ้นในสถานีนี้" class="has-tooltip col-span-2 sm:col-span-1 w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> พิมพ์ QR
                 </button>
@@ -515,9 +561,47 @@
                 <div class="col-span-2 w-full sm:w-px sm:h-8 bg-slate-200 dark:bg-slate-700 mx-1 hidden sm:block"></div>
                 
                 <button id="btnConfirmMonth" onclick="confirmMonthlyStatus()" data-tooltip="สรุปยอดแจ้งไปส่วนกลางเพื่อรายงานประจำเดือน" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium hidden flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"><span id="btnConfirmText">ส่งรายงาน</span></button>
+                
                 <button onclick="prepareSave()" data-tooltip="เซฟการเปลี่ยนแปลงลงฐานข้อมูลหลัก" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-md">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึก
                 </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-slide-up delay-100">
+            <div class="lg:col-span-2 grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="col-span-2 md:col-span-5 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl"></div>
+                    <div class="relative z-10">
+                        <p class="text-slate-500 dark:text-slate-400 font-medium mb-1 text-sm uppercase tracking-wider">อุปกรณ์ทั้งหมดของสถานี</p>
+                        <h3 class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight" id="stStatTotal">-</h3>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-slate-700 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl relative z-10">📦</div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-[11px] sm:text-xs">คอมพิวเตอร์</p></div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100" id="stStatCPU">-</h3>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-sky-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-[11px] sm:text-xs">โน๊ตบุ๊ค</p></div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100" id="stStatNB">-</h3>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-[11px] sm:text-xs">จอมอนิเตอร์</p></div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100" id="stStatMon">-</h3>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-purple-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-[11px] sm:text-xs">เครื่องพิมพ์</p></div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100" id="stStatPrn">-</h3>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-orange-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-[11px] sm:text-xs">เครื่องมือ/อื่นๆ</p></div>
+                    <h3 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100" id="stStatSpc">-</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full">
+                <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left flex items-center gap-2">สัดส่วนสถานะสถานี <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></h3>
+                <div class="relative w-full h-48 sm:h-56"><canvas id="stStatusChart"></canvas></div>
             </div>
         </div>
 
@@ -593,6 +677,10 @@
         let uploadTarget = null;
         let warehouseStock = [];
 
+        let authDb = {}; 
+        let currentUserRole = null; 
+        let loginTarget = null;
+
         function updateClock() {
             const now = new Date();
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -614,19 +702,133 @@
             document.getElementById('darkModeIcon').innerText = '☀️';
         }
 
-        window.onload = function() {
-
-            document.querySelectorAll('.max-w-7xl').forEach(el => {
-                el.classList.remove('max-w-7xl');
-                el.classList.add('w-full', 'px-2', '2xl:px-8');
-            });
-            
+        window.onload = async function() {
+            document.querySelectorAll('.max-w-7xl').forEach(el => { el.classList.remove('max-w-7xl'); el.classList.add('w-full', 'px-2', '2xl:px-8'); });
             updateClock();
-            loadDashboardStats();
-            const urlParams = new URLSearchParams(window.location.search);
-            const snParam = urlParams.get('sn');
-            if(snParam) openSnHistory(snParam);
+            
+            // ซ่อนแถบนำทางและหน้าแอป
+            document.querySelector('nav').classList.add('hidden');
+            document.getElementById('homePage').classList.add('hidden');
+            document.getElementById('editorPage').classList.add('hidden');
+            document.getElementById('aggregatePage').classList.add('hidden');
+            
+            renderLandingGrid();
+            
+            // แอบโหลดข้อมูลเบื้องหลัง รอไว้เลย
+            try {
+                const response = await fetch(`${API_URL}?key=ALL_DATA`); 
+                const result = await response.json();
+                if (result.value) {
+                    globalAllDataCache = result.value;
+                    if (globalAllDataCache['ADP_AUTH_DB']) {
+                        authDb = JSON.parse(globalAllDataCache['ADP_AUTH_DB']);
+                    }
+                }
+            } catch(e) { console.error("Load Initial Data Error", e); }
         };
+
+        // 🌟 2. วาดปุ่มสถานีลงในหน้า Landing Page
+        function renderLandingGrid() {
+            const container = document.getElementById('landingGrid');
+            let html = '';
+            groupOrder.forEach((groupName, idx) => {
+                html += `<div class="mb-8 w-full animate-slide-up" style="animation-delay: ${idx * 100}ms">`;
+                html += `<h2 class="text-sm font-bold mb-4 text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-indigo-500">${groupName}</h2>`;
+                html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
+                inventoryGroups[groupName].forEach(station => {
+                    html += `<div onclick="openLoginModal('Station', '${station}', '${groupName}')" class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center min-h-[90px] group">
+                                <span class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">${station}</span>
+                             </div>`;
+                });
+                html += `</div></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // 🌟 3. ระบบเปิด/ปิด หน้าต่าง Login
+        function openLoginModal(role, stationName, groupName) {
+            loginTarget = { role, stationName, groupName };
+            let displayUser = role === 'Admin' ? 'System Admin' : `Admin ${stationName}`;
+            let authKey = role === 'Admin' ? 'Admin' : stationName;
+            
+            document.getElementById('loginUsernameDisplay').innerText = displayUser;
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginConfirmPassword').value = '';
+            
+            // เช็คว่าเคยตั้งรหัสผ่านหรือยัง?
+            if (authDb[authKey]) {
+                document.getElementById('firstTimeNotice').classList.add('hidden');
+                document.getElementById('confirmPasswordGroup').classList.add('hidden');
+                document.getElementById('loginTitle').innerText = "เข้าสู่ระบบ";
+            } else {
+                document.getElementById('firstTimeNotice').classList.remove('hidden');
+                document.getElementById('confirmPasswordGroup').classList.remove('hidden');
+                document.getElementById('loginTitle').innerText = "ตั้งรหัสผ่านใหม่";
+            }
+            
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginModal').classList.add('flex');
+            setTimeout(() => document.getElementById('loginPassword').focus(), 100);
+        }
+
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('flex');
+            loginTarget = null;
+        }
+
+        // 🌟 4. ระบบยืนยันการ Login และบันทึกรหัสผ่านใหม่
+        async function submitLogin() {
+            if (!loginTarget) return;
+            let pass = document.getElementById('loginPassword').value.trim();
+            let authKey = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
+            
+            if (!pass) return showToast("กรุณากรอกรหัสผ่าน", "error");
+
+            if (!authDb[authKey]) {
+                // กรณีเข้าครั้งแรก ตั้งรหัสผ่าน
+                let confirmPass = document.getElementById('loginConfirmPassword').value.trim();
+                if (pass !== confirmPass) return showToast("รหัสผ่านไม่ตรงกัน กรุณาพิมพ์ใหม่", "error");
+                
+                authDb[authKey] = pass; // เซฟลงหน่วยความจำ
+                document.getElementById('loadingText').innerText = 'กำลังบันทึกรหัสผ่าน...'; 
+                document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+                
+                try {
+                    await fetch(API_URL, { 
+                        method: 'POST', 
+                        body: JSON.stringify({ 
+                            action: 'SYNC_ASSETS', 
+                            updates: [{ key: 'ADP_AUTH_DB', value: JSON.stringify(authDb) }], 
+                            logs: [{station: 'System', action: 'ตั้งรหัสผ่าน', detail: `ตั้งรหัสผ่านสำหรับ ${authKey} สำเร็จ`}] 
+                        }) 
+                    });
+                    showToast("ตั้งรหัสผ่านสำเร็จ!");
+                } catch(e) { console.error(e); showToast("บันทึกรหัสผ่านล้มเหลว", "error"); return; }
+                finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } else {
+                // กรณีล็อคอินปกติ ตรวจสอบรหัสผ่าน
+                if (authDb[authKey] !== pass) return showToast("รหัสผ่านไม่ถูกต้อง", "error");
+                showToast("เข้าสู่ระบบสำเร็จ");
+            }
+
+            // เมื่อ Login ผ่าน ให้เปิดหน้าแอปตามสิทธิ์
+            closeLoginModal();
+            document.getElementById('landingPage').classList.add('hidden');
+            document.querySelector('nav').classList.remove('hidden');
+            currentUserRole = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
+
+            if (currentUserRole === 'Admin') {
+                loadDashboardStats(); // แอดมินดูภาพรวม
+                document.getElementById('homePage').classList.remove('hidden');
+            } else {
+                // ซ่อนปุ่มที่ไม่เกี่ยวข้องสำหรับสถานี
+                document.getElementById('btnHome').classList.add('hidden');
+                document.getElementById('btnImportOld').classList.add('hidden');
+                // เปิดหน้าของสถานีตัวเองทันที
+                openStation(loginTarget.groupName, loginTarget.stationName);
+            }
+        }
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
@@ -897,6 +1099,40 @@
                     isEditingConfirmedReport = false; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
                 }
                 initSpreadsheets(dbData);
+                
+                // 🌟 ประมวลผลยอดสรุปและวาดกราฟสำหรับหน้าสถานี (คล้ายของ Dashboard แต่คำนวณแค่สถานีเดียว)
+                let stTotalCPU = 0, stTotalMon = 0, stTotalPrn = 0, stTotalSpc = 0, stTotalNB = 0;
+                let stStatCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
+
+                const countStItems = (arr, isPrn=false, isSpc=false) => { 
+                    if(!arr) return 0; let c = 0; 
+                    arr.forEach(r => { 
+                        let isNewSpc = isSpc && r.length >= 9;
+                        let b = isSpc ? (isNewSpc ? r[3] : '') : r[2]; let m = isSpc ? (isNewSpc ? r[4] : r[3]) : r[3]; let s = isSpc && isNewSpc ? r[5] : r[4];
+                        let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim();
+                        if((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) { 
+                            c++; let statusIdx = isPrn ? 7 : (isSpc ? (isNewSpc ? 6 : 5) : 5); let st = r[statusIdx]; 
+                            if(['ปกติ','ชำรุด','สำรอง','RCF'].includes(st)) stStatCounts[st]++; else stStatCounts['ปกติ']++; 
+                        } 
+                    }); return c; 
+                };
+
+                stTotalCPU = countStItems(dbData.cpu); stTotalNB = countStItems(dbData.nb);
+                stTotalMon = countStItems(dbData.mon); stTotalPrn = countStItems(dbData.prn, true, false);
+                stTotalSpc = countStItems(dbData.spc, false, true);
+
+                document.getElementById('stStatTotal').innerText = stTotalCPU + stTotalNB + stTotalMon + stTotalPrn + stTotalSpc;
+                document.getElementById('stStatCPU').innerText = stTotalCPU; document.getElementById('stStatNB').innerText = stTotalNB;
+                document.getElementById('stStatMon').innerText = stTotalMon; document.getElementById('stStatPrn').innerText = stTotalPrn;
+                document.getElementById('stStatSpc').innerText = stTotalSpc;
+
+                const ctxSt = document.getElementById('stStatusChart').getContext('2d'); 
+                if(stChart) stChart.destroy();
+                stChart = new Chart(ctxSt, { 
+                    type: 'doughnut', 
+                    data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง', 'RCF'], datasets: [{ data: [stStatCounts['ปกติ'], stStatCounts['ชำรุด'], stStatCounts['สำรอง'], stStatCounts['RCF']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }] }, 
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } 
+                });
                 
             } catch (error) { 
                 console.error(error); 
