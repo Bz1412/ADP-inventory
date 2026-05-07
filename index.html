@@ -1862,7 +1862,7 @@
             hasUnsavedDeletions = true; closeSnSearchModal();
         }
 
-        // 🌟 1. ฟังก์ชัน นำเข้าไฟล์รวม (อิงโครงสร้างเดิมที่เสถียร + เพิ่ม RCF/Glaive/Sentinel + สุ่ม S/N)
+        // 🌟 1. ฟังก์ชัน นำเข้าไฟล์รวม (อิงโครงสร้างที่เสถียรที่สุด + RCF/Glaive/Sentinel + สุ่ม S/N)
         async function handleImportAllExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
@@ -1926,24 +1926,26 @@
                     let currentMode = null; let colMap = {};
 
                     const mapConn = (c) => { 
-                        let l = String(c).toLowerCase().trim(); 
+                        let original = String(c).trim(); let l = original.toLowerCase(); 
                         if(!l || l === '-' || l === 'ไม่มี') return ''; 
                         if(l.includes('5')) return 'LAN กอง 5'; 
                         if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
                         if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
-                        if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
+                        if(l.includes('6') || l.includes('lan') || l.includes('ภายใน')) return 'LAN กอง 6';
                         if(l.includes('glaive')) return 'Glaive';
                         if(l.includes('sentinel')) return 'Sentinel';
                         if(l.includes('rcf')) return 'RCF';
-                        return ''; 
+                        return original; 
                     };
                     const mapStatus = (s) => { 
-                        let l = String(s).toLowerCase(); 
+                        let original = String(s).trim(); let l = original.toLowerCase(); 
+                        if(!l) return 'ปกติ'; 
                         if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
                         if(l.includes('สำรอง')) return 'สำรอง'; 
                         if(l.includes('ไม่มี')) return 'ไม่มี'; 
                         if(l.includes('rcf')) return 'RCF';
-                        return 'ปกติ'; 
+                        if(l.includes('ปกติ')) return 'ปกติ'; 
+                        return original; 
                     };
 
                     ws.eachRow((row, rowNumber) => {
@@ -2023,7 +2025,7 @@
                             if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; 
                             if (!hasCpuData && currentMode === 'SPC') return;
 
-                            // 🌟 ตรวจสอบและสมมติ S/N อัตโนมัติ
+                            // 🌟 สมมติ S/N ถ้ามีของแต่ S/N ว่าง
                             if (hasCpuData && (!cpuSN || cpuSN === '-')) {
                                 let abbr = currentMode === 'CPUMON' ? 'PC' : currentMode === 'NB' ? 'NB' : currentMode === 'PRN' ? 'PRN' : 'SPC';
                                 cpuSN = generateTempSN(abbr);
@@ -2086,7 +2088,7 @@
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดียว (อิงโครงสร้างเดิมที่เสถียร + เพิ่ม RCF/Glaive/Sentinel + สุ่ม S/N)
+        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดียว (อิงโครงสร้างที่เสถียรที่สุด + RCF/Glaive/Sentinel + สุ่ม S/N)
         async function handleImportExcel(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -2135,24 +2137,26 @@
                 };
                 
                 const mapConn = (c) => { 
-                    let l = String(c).toLowerCase().trim(); 
+                    let original = String(c).trim(); let l = original.toLowerCase(); 
                     if(!l || l === '-' || l === 'ไม่มี') return ''; 
                     if(l.includes('5')) return 'LAN กอง 5'; 
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
-                    if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
+                    if(l.includes('6') || l.includes('lan') || l.includes('ภายใน')) return 'LAN กอง 6';
                     if(l.includes('glaive')) return 'Glaive';
                     if(l.includes('sentinel')) return 'Sentinel';
                     if(l.includes('rcf')) return 'RCF';
-                    return ''; 
+                    return original; 
                 };
                 const mapStatus = (s) => { 
-                    let l = String(s).toLowerCase(); 
+                    let original = String(s).trim(); let l = original.toLowerCase(); 
+                    if(!l) return 'ปกติ'; 
                     if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
                     if(l.includes('สำรอง')) return 'สำรอง'; 
                     if(l.includes('ไม่มี')) return 'ไม่มี'; 
                     if(l.includes('rcf')) return 'RCF';
-                    return 'ปกติ'; 
+                    if(l.includes('ปกติ')) return 'ปกติ'; 
+                    return original; 
                 };
 
                 targetSheet.eachRow((row, rowNumber) => {
@@ -2193,7 +2197,7 @@
                             if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
                             if (h === 'ผู้ใช้' || h.includes('user') || h.includes('สถานที่')) colMap.user = idx; 
                             else if (h.includes('ประเภท')) colMap.spcType = idx; 
-                            else if (h.includes('สถานะ') || h.includes('status')) {
+                            else if (h.includes('สถานะ') || h.includes('status') || h.includes('ปกติ')) {
                                 if (currentMode === 'CPUMON' && (h.includes('จอ') || statusCount === 1)) colMap.statusMon = idx;
                                 else { colMap.statusCpu = idx; colMap.status = idx; statusCount++; }
                             }
@@ -2232,7 +2236,7 @@
                         if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; 
                         if (!hasCpuData && currentMode === 'SPC') return;
 
-                        // 🌟 ตรวจสอบและสมมติ S/N อัตโนมัติ
+                        // 🌟 สมมติ S/N ถ้ามีของแต่ S/N ว่าง
                         if (hasCpuData && (!cpuSN || cpuSN === '-')) {
                             let abbr = currentMode === 'CPUMON' ? 'PC' : currentMode === 'NB' ? 'NB' : currentMode === 'PRN' ? 'PRN' : 'SPC';
                             cpuSN = generateTempSN(abbr);
@@ -2286,7 +2290,7 @@
                 
                 if (globalAllDataCache && globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]) { try { let oldData = JSON.parse(globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]); newPayload.lastConfirmed = oldData.lastConfirmed; } catch(e) {} }
 
-                initSpreadsheets(newPayload); 
+                initSpreadsheets(newPayload); // 🌟 โหลดค่าตัวเลือกใหม่เข้า UI ทันที
 
                 let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
                 let logs = [{ station: currentStation, action: 'นำเข้าไฟล์', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
