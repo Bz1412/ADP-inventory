@@ -1719,6 +1719,7 @@
                 let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                 let currentMode = null; let colMap = {};
                 let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
+                let expectingSubHeader = false;
                 
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; let whMainData = []; let existingItems = new Set(); let newlyAddedToWarehouse = 0;
                 
@@ -1746,7 +1747,7 @@
                     if(l.includes('5')) return 'LAN กอง 5'; 
                     if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
                     if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
-                    if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
+                    if(l.includes('6') || l.includes('lan') || l.includes('ภายใน')) return 'LAN กอง 6';
                     return original; 
                 };
                 const mapStatus = (s) => { 
@@ -1759,20 +1760,49 @@
                     return original; 
                 };
 
+                const mapHeader = (vals) => {
+                    vals.forEach((val, idx) => {
+                        if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
+                        if (h === 'ผู้ใช้' || h === 'user' || h === 'user/ผู้ใช้' || h.includes('ผู้ใช้') || h.includes('สถานที่')) colMap.user = idx; 
+                        else if (h === 'ประเภท' || h.includes('ประเภท')) colMap.spcType = idx; 
+                        else if (h === 'สถานะ' || h.includes('status') || h.includes('ปกติ/สำรอง')) {
+                            if (currentMode === 'CPUMON' && (h.includes('จอ') || statusCount === 1)) colMap.statusMon = idx;
+                            else { colMap.statusCpu = idx; colMap.status = idx; statusCount++; }
+                        }
+                        else if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('เน็ต') || h.includes('network') || h.includes('ระบบการเชื่อม')) colMap.conn = idx; 
+                        else if (h === 'หมายเหตุ' || h.includes('remark')) colMap.remark = idx;
+                        else if (h === 'ยี่ห้อ' || h.includes('brand') || h.includes('ยี่ห้อcpu') || h.includes('ยี่ห้อจอ')) { 
+                            if (currentMode === 'CPUMON' && (h.includes('จอ') || brandCount === 1)) colMap.monBrand = idx; 
+                            else { colMap.cpuBrand = idx; brandCount++; } 
+                        }
+                        else if (h === 'รุ่น' || h.includes('model') || h.includes('สเปค') || h.includes('รุ่นcpu') || h.includes('รุ่นจอ')) { 
+                            if (currentMode === 'CPUMON' && (h.includes('จอ') || modelCount === 1)) colMap.monModel = idx; 
+                            else { colMap.cpuModel = idx; modelCount++; } 
+                        }
+                        else if (h === 's/n' || h.includes('serial') || h.includes('s/ncpu') || h.includes('s/nจอ')) { 
+                            if (currentMode === 'CPUMON' && (h.includes('จอ') || snCount === 1)) colMap.monSN = idx; 
+                            else { colMap.cpuSN = idx; snCount++; } 
+                        }
+                        else if (h === 'สี' || h.includes('color') || h.includes('ลักษณะสี')) colMap.colorType = idx; 
+                        else if (h === 'scanner' || h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
+                    });
+                };
+
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
 
-                    if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
+                    if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม') || rowStr.includes('***')) return;
                     
                     let textCells = rowVals.filter(v => String(v).trim() !== '');
-                    if (textCells.length === 0) return; // ข้ามแถวว่าง
+                    if (textCells.length === 0) return; 
 
                     let combinedText = textCells.join(' ').toLowerCase();
                     
-                    let isTableStart = false;
-                    rowVals.forEach(v => { if (String(v).replace(/\s+/g,'').toLowerCase() === 'ลำดับ') isTableStart = true; });
+                    let cell0 = String(rowVals[0] || '').replace(/\s+/g,'').toLowerCase();
+                    let cell1 = String(rowVals[1] || '').replace(/\s+/g,'').toLowerCase();
+                    let isTableStart = (cell0 === 'ลำดับ' || cell1 === 'ลำดับ');
 
-                    if (isTableStart || combinedText.includes('คอมพิวเตอร์และจอมอนิเตอร์') || combinedText.includes('โน๊ตบุ๊ค') || combinedText.includes('เครื่องพิมพ์')) {
+                    if (isTableStart) {
                         if (combinedText.includes('cpu') || combinedText.includes('คอมพิวเตอร์') || combinedText.includes('จอ')) currentMode = 'CPUMON';
                         else if (combinedText.includes('โน๊ตบุ๊ค') || combinedText.includes('notebook')) currentMode = 'NB';
                         else if (combinedText.includes('printer') || combinedText.includes('เครื่องพิมพ์') || combinedText.includes('ปริ้น')) currentMode = 'PRN';
@@ -1780,46 +1810,19 @@
                         else currentMode = 'NB'; 
                         
                         colMap = {}; brandCount = 0; modelCount = 0; snCount = 0; statusCount = 0;
+                        mapHeader(rowVals);
+                        expectingSubHeader = true;
+                        return; 
                     }
 
-                    // 🌟 ตรวจสอบว่าเป็นบรรทัดหัวคอลัมน์หรือไม่ ด้วยคีย์เวิร์ด
-                    let headerKeywords = ['ยี่ห้อ', 'brand', 'รุ่น', 'model', 's/n', 'serial', 'ผู้ใช้', 'user', 'สถานะ', 'status', 'เชื่อมต่อ', 'หมายเหตุ', 'ประเภท', 'ลักษณะสี', 'สแกน', 'scanner', 'ลำดับ', 'cpu', 'จอภาพ', 'printer'];
-                    let kwCount = 0;
-                    rowVals.forEach(v => {
-                        let cellStr = String(v).trim().toLowerCase().replace(/\s+/g,'');
-                        if (cellStr.length > 0 && cellStr.length < 30) {
-                            if (headerKeywords.some(kw => cellStr.includes(kw))) kwCount++;
+                    if (expectingSubHeader) {
+                        let isSub = combinedText.includes('ยี่ห้อ') || combinedText.includes('รุ่น') || combinedText.includes('s/n') || combinedText.includes('สี') || combinedText.includes('scan');
+                        if (isSub) {
+                            mapHeader(rowVals);
+                            expectingSubHeader = false;
+                            return;
                         }
-                    });
-
-                    let isHeaderRow = kwCount >= 2 || isTableStart;
-
-                    if (isHeaderRow) {
-                        rowVals.forEach((val, idx) => {
-                            if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
-                            if (h === 'ผู้ใช้' || h.includes('user') || h.includes('สถานที่')) colMap.user = idx; 
-                            else if (h.includes('ประเภท')) colMap.spcType = idx; 
-                            else if (h.includes('สถานะ') || h.includes('status')) {
-                                if (currentMode === 'CPUMON' && (h.includes('จอ') || statusCount === 1)) colMap.statusMon = idx;
-                                else { colMap.statusCpu = idx; colMap.status = idx; statusCount++; }
-                            }
-                            else if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('เน็ต') || h.includes('network')) colMap.conn = idx; 
-                            else if (h.includes('หมายเหตุ') || h.includes('remark')) colMap.remark = idx;
-                            else if (h === 'ยี่ห้อ' || h.includes('brand') || h.includes('ยี่ห้อcpu') || h.includes('ยี่ห้อจอ')) { 
-                                if (currentMode === 'CPUMON' && (h.includes('จอ') || brandCount === 1)) colMap.monBrand = idx; 
-                                else { colMap.cpuBrand = idx; brandCount++; } 
-                            }
-                            else if (h === 'รุ่น' || h.includes('model') || h.includes('สเปค') || h.includes('รุ่นcpu') || h.includes('รุ่นจอ')) { 
-                                if (currentMode === 'CPUMON' && (h.includes('จอ') || modelCount === 1)) colMap.monModel = idx; 
-                                else { colMap.cpuModel = idx; modelCount++; } 
-                            }
-                            else if (h === 's/n' || h.includes('serial') || h.includes('s/ncpu') || h.includes('s/nจอ')) { 
-                                if (currentMode === 'CPUMON' && (h.includes('จอ') || snCount === 1)) colMap.monSN = idx; 
-                                else { colMap.cpuSN = idx; snCount++; } 
-                            }
-                            else if (h.includes('สี') || h.includes('color') || h.includes('ลักษณะสี')) colMap.colorType = idx; 
-                            else if (h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
-                        }); return; 
+                        expectingSubHeader = false;
                     }
 
                     if (!currentMode || Object.keys(colMap).length < 2) return;
@@ -1834,7 +1837,7 @@
                         let hasCpuData = (cpuBrand && cpuBrand !== '-') || (cpuModel && cpuModel !== '-') || (cpuSN && cpuSN !== '-');
                         let hasMonData = (monBrand && monBrand !== '-') || (monModel && monModel !== '-') || (monSN && monSN !== '-');
 
-                        if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; // ✅ ข้ามบรรทัดว่าง 
+                        if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; 
                         if (!hasCpuData && currentMode === 'SPC') return;
 
                         let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : 'ไม่มี';
@@ -1882,7 +1885,7 @@
                 
                 if (globalAllDataCache && globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]) { try { let oldData = JSON.parse(globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]); newPayload.lastConfirmed = oldData.lastConfirmed; } catch(e) {} }
 
-                initSpreadsheets(newPayload); // 🌟 รีเรนเดอร์ตารางเพื่อให้ตัวเลือกใหม่ติดเข้าไปใน UI ທันที
+                initSpreadsheets(newPayload); // 🌟 โหลดค่าตัวเลือกใหม่เข้า UI ทันที
 
                 let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
                 let logs = [{ station: currentStation, action: 'นำเข้าไฟล์', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
@@ -1896,7 +1899,6 @@
                 
                 showToast(`ดึงข้อมูลและจัดเรียงสำเร็จ\n📦 ส่งลงทะเบียนใหม่เข้าคลัง ${newlyAddedToWarehouse} เครื่อง`); hasUnsavedDeletions = true; 
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
-        }
         
         async function exportAllDataToExcel() {
             if (!globalAllDataCache) { showToast("กำลังโหลดข้อมูล", "error"); return; }
@@ -2126,16 +2128,17 @@
 
                     let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                     let currentMode = null; let colMap = {};
+                    let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
+                    let expectingSubHeader = false;
 
-                    // 🌟 เคารพคำแปลกใหม่ ไม่แปลงเป็น ปกติ/LAN มั่วซั่ว
                     const mapConn = (c) => { 
                         let original = String(c).trim(); let l = original.toLowerCase(); 
                         if(!l || l === '-' || l === 'ไม่มี') return ''; 
                         if(l.includes('5')) return 'LAN กอง 5'; 
                         if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
                         if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
-                        if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
-                        return original; // ✅ คืนค่าดั้งเดิมกลับไปเลย
+                        if(l.includes('6') || l.includes('lan') || l.includes('ภายใน')) return 'LAN กอง 6';
+                        return original; 
                     };
                     const mapStatus = (s) => { 
                         let original = String(s).trim(); let l = original.toLowerCase(); 
@@ -2144,72 +2147,77 @@
                         if(l.includes('สำรอง')) return 'สำรอง'; 
                         if(l.includes('ไม่มี')) return 'ไม่มี'; 
                         if(l.includes('ปกติ')) return 'ปกติ'; 
-                        return original; // ✅ คืนค่าดั้งเดิมกลับไปเลย
+                        return original; 
+                    };
+
+                    const mapHeader = (vals) => {
+                        vals.forEach((val, idx) => {
+                            if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
+                            if (h === 'ผู้ใช้' || h === 'user' || h === 'user/ผู้ใช้' || h.includes('ผู้ใช้') || h.includes('สถานที่')) colMap.user = idx; 
+                            else if (h === 'ประเภท' || h.includes('ประเภท')) colMap.spcType = idx; 
+                            else if (h === 'สถานะ' || h.includes('status') || h.includes('ปกติ/สำรอง')) {
+                                if (currentMode === 'CPUMON' && (h.includes('จอ') || statusCount === 1)) colMap.statusMon = idx;
+                                else { colMap.statusCpu = idx; colMap.status = idx; statusCount++; }
+                            }
+                            else if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('เน็ต') || h.includes('network') || h.includes('ระบบการเชื่อม')) colMap.conn = idx; 
+                            else if (h === 'หมายเหตุ' || h.includes('remark')) colMap.remark = idx;
+                            else if (h === 'ยี่ห้อ' || h.includes('brand') || h.includes('ยี่ห้อcpu') || h.includes('ยี่ห้อจอ')) { 
+                                if (currentMode === 'CPUMON' && (h.includes('จอ') || brandCount === 1)) colMap.monBrand = idx; 
+                                else { colMap.cpuBrand = idx; brandCount++; } 
+                            }
+                            else if (h === 'รุ่น' || h.includes('model') || h.includes('สเปค') || h.includes('รุ่นcpu') || h.includes('รุ่นจอ')) { 
+                                if (currentMode === 'CPUMON' && (h.includes('จอ') || modelCount === 1)) colMap.monModel = idx; 
+                                else { colMap.cpuModel = idx; modelCount++; } 
+                            }
+                            else if (h === 's/n' || h.includes('serial') || h.includes('s/ncpu') || h.includes('s/nจอ')) { 
+                                if (currentMode === 'CPUMON' && (h.includes('จอ') || snCount === 1)) colMap.monSN = idx; 
+                                else { colMap.cpuSN = idx; snCount++; } 
+                            }
+                            else if (h === 'สี' || h.includes('color') || h.includes('ลักษณะสี')) colMap.colorType = idx; 
+                            else if (h === 'scanner' || h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
+                        });
                     };
 
                     ws.eachRow((row, rowNumber) => {
                         let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
 
-                        if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
+                        if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม') || rowStr.includes('***')) return;
                         
                         let textCells = rowVals.filter(v => String(v).trim() !== '');
                         if (textCells.length === 0) return; 
 
                         let combinedText = textCells.join(' ').toLowerCase();
-                        let isTableStart = false;
-                        rowVals.forEach(v => { if (String(v).replace(/\s+/g,'').toLowerCase() === 'ลำดับ') isTableStart = true; });
+                        
+                        let cell0 = String(rowVals[0] || '').replace(/\s+/g,'').toLowerCase();
+                        let cell1 = String(rowVals[1] || '').replace(/\s+/g,'').toLowerCase();
+                        let isTableStart = (cell0 === 'ลำดับ' || cell1 === 'ลำดับ');
 
-                        if (isTableStart || combinedText.includes('คอมพิวเตอร์และจอมอนิเตอร์') || combinedText.includes('โน๊ตบุ๊ค') || combinedText.includes('เครื่องพิมพ์')) {
+                        if (isTableStart) {
                             if (combinedText.includes('cpu') || combinedText.includes('คอมพิวเตอร์') || combinedText.includes('จอ')) currentMode = 'CPUMON';
                             else if (combinedText.includes('โน๊ตบุ๊ค') || combinedText.includes('notebook')) currentMode = 'NB';
                             else if (combinedText.includes('printer') || combinedText.includes('เครื่องพิมพ์') || combinedText.includes('ปริ้น')) currentMode = 'PRN';
                             else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) currentMode = 'SPC';
-                            else if (!currentMode) currentMode = 'NB'; 
-                            colMap = {}; 
+                            else currentMode = 'NB'; 
+                            
+                            colMap = {}; brandCount = 0; modelCount = 0; snCount = 0; statusCount = 0;
+                            mapHeader(rowVals);
+                            expectingSubHeader = true; // เตรียมรับหัวตารางบรรทัดที่ 2
+                            return; 
                         }
 
-                        let headerKeywords = ['ยี่ห้อ', 'brand', 'รุ่น', 'model', 's/n', 'serial', 'ผู้ใช้', 'user', 'สถานะ', 'status', 'เชื่อมต่อ', 'หมายเหตุ', 'ประเภท', 'ลักษณะสี', 'สแกน', 'scanner', 'ลำดับ', 'cpu', 'จอภาพ', 'printer'];
-                        let kwCount = 0;
-                        rowVals.forEach(v => {
-                            let cellStr = String(v).trim().toLowerCase().replace(/\s+/g,'');
-                            if (cellStr.length > 0 && cellStr.length < 30) {
-                                if (headerKeywords.some(kw => cellStr.includes(kw))) kwCount++;
+                        if (expectingSubHeader) {
+                            let isSub = combinedText.includes('ยี่ห้อ') || combinedText.includes('รุ่น') || combinedText.includes('s/n') || combinedText.includes('สี') || combinedText.includes('scan');
+                            if (isSub) {
+                                mapHeader(rowVals);
+                                expectingSubHeader = false; // ปิดโหมดรับหัวตาราง
+                                return;
                             }
-                        });
-
-                        let isHeaderRow = kwCount >= 2 || isTableStart;
-                        if (isHeaderRow) {
-                            let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
-                            rowVals.forEach((val, idx) => {
-                                if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
-                                if (h === 'ผู้ใช้' || h.includes('user') || h.includes('สถานที่')) colMap.user = idx; 
-                                else if (h.includes('ประเภท')) colMap.spcType = idx; 
-                                else if (h.includes('สถานะ') || h.includes('status')) {
-                                    if (currentMode === 'CPUMON' && (h.includes('จอ') || statusCount === 1)) colMap.statusMon = idx;
-                                    else { colMap.statusCpu = idx; colMap.status = idx; statusCount++; }
-                                }
-                                else if (h.includes('เชื่อมต่อ') || h.includes('lan') || h.includes('เน็ต') || h.includes('network')) colMap.conn = idx; 
-                                else if (h.includes('หมายเหตุ') || h.includes('remark')) colMap.remark = idx;
-                                else if (h === 'ยี่ห้อ' || h.includes('brand') || h.includes('ยี่ห้อcpu') || h.includes('ยี่ห้อจอ')) { 
-                                    if (currentMode === 'CPUMON' && (h.includes('จอ') || brandCount === 1)) colMap.monBrand = idx; 
-                                    else { colMap.cpuBrand = idx; brandCount++; } 
-                                }
-                                else if (h === 'รุ่น' || h.includes('model') || h.includes('สเปค') || h.includes('รุ่นcpu') || h.includes('รุ่นจอ')) { 
-                                    if (currentMode === 'CPUMON' && (h.includes('จอ') || modelCount === 1)) colMap.monModel = idx; 
-                                    else { colMap.cpuModel = idx; modelCount++; } 
-                                }
-                                else if (h === 's/n' || h.includes('serial') || h.includes('s/ncpu') || h.includes('s/nจอ')) { 
-                                    if (currentMode === 'CPUMON' && (h.includes('จอ') || snCount === 1)) colMap.monSN = idx; 
-                                    else { colMap.cpuSN = idx; snCount++; } 
-                                }
-                                else if (h.includes('สี') || h.includes('color') || h.includes('ลักษณะสี')) colMap.colorType = idx; 
-                                else if (h.includes('scan') || h.includes('สแกน')) colMap.scanner = idx;
-                            });
-                            return; 
+                            expectingSubHeader = false; 
                         }
 
                         if (!currentMode || Object.keys(colMap).length < 2) return; 
 
+                        // 🌟 ดึงข้อมูล Data ล้วนๆ ไม่โดนกวนแล้ว
                         if (Object.keys(colMap).length >= 3) {
                             const getVal = (idx) => { let v = idx !== undefined ? (rowVals[idx] || '') : ''; return v === '-' ? '' : v; };
                             let user = getVal(colMap.user); if (!user || user.trim() === '') user = fullStationName; 
