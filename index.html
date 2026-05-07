@@ -1224,12 +1224,12 @@
             document.getElementById('loadingText').innerText = 'โหลดประวัติทั้งหมด...'; 
             document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
-                const targetStation = `ADP_${currentGroup}_${currentStation}`;
-                // 🌟 ใส่ parameter &limit=all ลงไปในลิงก์ API ด้วย
+                // 🌟 แก้ไข: ส่งแค่ชื่อสถานีตรงๆ (เช่น 'นเรศวร') ให้ตรงกับที่บันทึกไว้ใน Sheets
+                const targetStation = encodeURIComponent(currentStation);
                 const response = await fetch(`${API_URL}?action=GET_LOGS&station=${targetStation}&limit=all`);
                 const result = await response.json();
-                const tbody = document.getElementById('auditLogTableBody');
                 
+                const tbody = document.getElementById('auditLogTableBody');
                 if (result.logs && result.logs.length > 0) {
                     let html = '';
                     result.logs.forEach(log => {
@@ -1237,6 +1237,7 @@
                         if(log.action.includes("เพิ่ม") || log.action.includes("อัปเดต")) actionBadge = `<span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
                         if(log.action.includes("ลบ")) actionBadge = `<span class="px-2 py-0.5 bg-red-50 text-red-500 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
                         if(log.action.includes("รายงาน")) actionBadge = `<span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
+                        if(log.action.includes("ชำรุด")) actionBadge = `<span class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded font-medium text-[10px] inline-block w-max">${log.action}</span>`;
                         
                         let timeStr = log.time;
                         try { let d = new Date(log.time); if(!isNaN(d.getTime())) timeStr = d.toLocaleDateString('th-TH', { year:'2-digit', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); } catch(e) {}
