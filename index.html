@@ -1094,30 +1094,33 @@
                 let dbData = JSON.parse(JSON.stringify(defaultDbData));
                 let cacheKey = `ADP_${groupName}_${stationName}`;
                 
+                // 🌟 1. ดึงข้อมูลแบบปลอดภัย
                 if (globalAllDataCache && globalAllDataCache[cacheKey]) {
                     try { 
                         let parsed = JSON.parse(globalAllDataCache[cacheKey]); 
                         if(parsed) dbData = { ...dbData, ...parsed };
                     } catch(e) { console.warn("Cache parse error"); }
                 } else {
-                    const response = await fetch(`${API_URL}?key=${encodeURIComponent(cacheKey)}`); 
-                    const result = await response.json();
-                    if (result.value) {
-                        try {
+                    try {
+                        const response = await fetch(`${API_URL}?key=${encodeURIComponent(cacheKey)}`); 
+                        const result = await response.json();
+                        if (result.value) {
                             let parsed = JSON.parse(result.value);
                             if(parsed) dbData = { ...dbData, ...parsed };
                             if (!globalAllDataCache) globalAllDataCache = {};
                             globalAllDataCache[cacheKey] = result.value;
-                        } catch(e) { console.warn("Fetch Parse Error"); }
-                    }
+                        }
+                    } catch(e) { console.warn("Fetch Parse Error", e); }
                 }
                 
+                // 🌟 2. กันพัง กรณีข้อมูลแหว่ง
                 if (!dbData.cpu || !Array.isArray(dbData.cpu) || dbData.cpu.length === 0) dbData.cpu = [[]];
                 if (!dbData.nb || !Array.isArray(dbData.nb) || dbData.nb.length === 0) dbData.nb = [[]];
                 if (!dbData.mon || !Array.isArray(dbData.mon) || dbData.mon.length === 0) dbData.mon = [[]];
                 if (!dbData.prn || !Array.isArray(dbData.prn) || dbData.prn.length === 0) dbData.prn = [[]];
                 if (!dbData.spc || !Array.isArray(dbData.spc) || dbData.spc.length === 0) dbData.spc = [[]];
 
+                // 🌟 3. โหลดคลังเก็บไว้ (ถ้ายังไม่มี)
                 if (!warehouseStock || warehouseStock.length === 0) {
                     try {
                         let whDataStr = (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) ? globalAllDataCache['ADP_WAREHOUSE_CENTRAL'] : null;
@@ -1138,9 +1141,10 @@
                     } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ'); }
                 }
 
+                // 🌟 4. แปลงตาราง SPC รูปแบบเก่าเป็นแบบใหม่
                 let migratedSpc = [];
                 dbData.spc.forEach(s => {
-                    if (!s || !Array.isArray(s)) return; // 🌟 กันพัง
+                    if (!s || !Array.isArray(s)) return;
                     let isNewFormat = s.length >= 9;
                     if (isNewFormat) {
                         migratedSpc.push(s);
@@ -1160,6 +1164,7 @@
                 
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
+                // 🌟 5. จัดการปุ่ม ส่งรายงาน
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
                 const btnConfirm = document.getElementById('btnConfirmMonth'); 
                 if (btnConfirm) btnConfirm.classList.remove('hidden'); 
@@ -1178,52 +1183,62 @@
                     }
                 }
                 
-                initSpreadsheets(dbData);
-                
-                let stTotalCPU = 0, stTotalMon = 0, stTotalPrn = 0, stTotalSpc = 0, stTotalNB = 0;
-                let stStatCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
-
-                const countStItems = (arr, isPrn=false, isSpc=false) => { 
-                    if(!arr || !Array.isArray(arr)) return 0; // 🌟 กันพัง
-                    let c = 0; 
-                    arr.forEach(r => { 
-                        if (!r || !Array.isArray(r)) return; // 🌟 กันพัง
-                        let isNewSpc = isSpc && r.length >= 9;
-                        let b = isSpc ? (isNewSpc ? r[3] : '') : r[2]; let m = isSpc ? (isNewSpc ? r[4] : r[3]) : r[3]; let s = isSpc && isNewSpc ? r[5] : r[4];
-                        let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim();
-                        if((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) { 
-                            c++; let statusIdx = isPrn ? 7 : (isSpc ? (isNewSpc ? 6 : 5) : 5); let st = r[statusIdx]; 
-                            if(['ปกติ','ชำรุด','สำรอง','RCF'].includes(st)) stStatCounts[st]++; else stStatCounts['ปกติ']++; 
-                        } 
-                    }); return c; 
-                };
-
-                stTotalCPU = countStItems(dbData.cpu); stTotalNB = countStItems(dbData.nb);
-                stTotalMon = countStItems(dbData.mon); stTotalPrn = countStItems(dbData.prn, true, false);
-                stTotalSpc = countStItems(dbData.spc, false, true);
-
-                let elTotal = document.getElementById('stStatTotal'); if(elTotal) elTotal.innerText = stTotalCPU + stTotalNB + stTotalMon + stTotalPrn + stTotalSpc;
-                let elCpu = document.getElementById('stStatCPU'); if(elCpu) elCpu.innerText = stTotalCPU; 
-                let elNb = document.getElementById('stStatNB'); if(elNb) elNb.innerText = stTotalNB;
-                let elMon = document.getElementById('stStatMon'); if(elMon) elMon.innerText = stTotalMon; 
-                let elPrn = document.getElementById('stStatPrn'); if(elPrn) elPrn.innerText = stTotalPrn;
-                let elSpc = document.getElementById('stStatSpc'); if(elSpc) elSpc.innerText = stTotalSpc;
-
-                const ctxStEl = document.getElementById('stStatusChart');
-                if (ctxStEl) {
-                    const ctxSt = ctxStEl.getContext('2d'); 
-                    if(stChart) stChart.destroy();
-                    stChart = new Chart(ctxSt, { 
-                        type: 'doughnut', 
-                        data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง', 'RCF'], datasets: [{ data: [stStatCounts['ปกติ'], stStatCounts['ชำรุด'], stStatCounts['สำรอง'], stStatCounts['RCF']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }] }, 
-                        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } 
-                    });
+                // 🌟 6. วาดตาราง
+                try {
+                    initSpreadsheets(dbData);
+                } catch(e) {
+                    console.error("เกิดข้อผิดพลาดตอนวาดตาราง:", e);
+                    throw new Error("Table Init Failed");
                 }
+                
+                // 🌟 7. ประมวลผลยอดสรุปและวาดกราฟสำหรับหน้าสถานี
+                try {
+                    let stTotalCPU = 0, stTotalMon = 0, stTotalPrn = 0, stTotalSpc = 0, stTotalNB = 0;
+                    let stStatCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
+
+                    const countStItems = (arr, isPrn=false, isSpc=false) => { 
+                        if(!arr || !Array.isArray(arr)) return 0; 
+                        let c = 0; 
+                        arr.forEach(r => { 
+                            if (!r || !Array.isArray(r)) return;
+                            let isNewSpc = isSpc && r.length >= 9;
+                            let b = isSpc ? (isNewSpc ? r[3] : '') : r[2]; let m = isSpc ? (isNewSpc ? r[4] : r[3]) : r[3]; let s = isSpc && isNewSpc ? r[5] : r[4];
+                            let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim();
+                            if((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) { 
+                                c++; let statusIdx = isPrn ? 7 : (isSpc ? (isNewSpc ? 6 : 5) : 5); let st = r[statusIdx]; 
+                                if(['ปกติ','ชำรุด','สำรอง','RCF'].includes(st)) stStatCounts[st]++; else stStatCounts['ปกติ']++; 
+                            } 
+                        }); return c; 
+                    };
+
+                    stTotalCPU = countStItems(dbData.cpu); stTotalNB = countStItems(dbData.nb);
+                    stTotalMon = countStItems(dbData.mon); stTotalPrn = countStItems(dbData.prn, true, false);
+                    stTotalSpc = countStItems(dbData.spc, false, true);
+
+                    let elTotal = document.getElementById('stStatTotal'); if(elTotal) elTotal.innerText = stTotalCPU + stTotalNB + stTotalMon + stTotalPrn + stTotalSpc;
+                    let elCpu = document.getElementById('stStatCPU'); if(elCpu) elCpu.innerText = stTotalCPU; 
+                    let elNb = document.getElementById('stStatNB'); if(elNb) elNb.innerText = stTotalNB;
+                    let elMon = document.getElementById('stStatMon'); if(elMon) elMon.innerText = stTotalMon; 
+                    let elPrn = document.getElementById('stStatPrn'); if(elPrn) elPrn.innerText = stTotalPrn;
+                    let elSpc = document.getElementById('stStatSpc'); if(elSpc) elSpc.innerText = stTotalSpc;
+
+                    const ctxStEl = document.getElementById('stStatusChart');
+                    if (ctxStEl) {
+                        const ctxSt = ctxStEl.getContext('2d'); 
+                        // 🌟 แก้ไขบัคตัวแปรล่องหน (ใช้ window.stChart แทน)
+                        if(window.stChart) window.stChart.destroy();
+                        window.stChart = new Chart(ctxSt, { 
+                            type: 'doughnut', 
+                            data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง', 'RCF'], datasets: [{ data: [stStatCounts['ปกติ'], stStatCounts['ชำรุด'], stStatCounts['สำรอง'], stStatCounts['RCF']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }] }, 
+                            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } 
+                        });
+                    }
+                } catch(e) { console.error("Error drawing charts:", e); }
                 
             } catch (error) { 
                 console.error(error); 
                 showToast("พบปัญหาในการเปิดหน้าตาราง", "error"); 
-                initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
+                try { initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }); } catch(e){}
             } 
             finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
