@@ -570,8 +570,8 @@
             "ในที่ตั้ง": ['สน.ผบช.', 'บก.กอง', 'ฝกง.', 'ฝกบ.', 'ฝกพ.', 'SSPAC', 'ฝงป.', 'ฝยก.', 'คลัง', 'ผฝศ.', 'ผยน.', 'ส.ลว.', 'ฝกร.', 'ศูนย์ ส.']
         };
         
-        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี']; 
-        const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone'];
+        const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี', 'RCF']; 
+        const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone', 'Glaive', 'Sentinel', 'RCF'];
         let currentGroup = '', currentStation = ''; 
         let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null; 
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], nb: [], lastConfirmed: null };
@@ -1221,6 +1221,7 @@
             }
         };
 
+        // ตัด updateDynamicOptions ทิ้งไปเลย และใช้ตัวเลือกแบบตายตัว
         function initSpreadsheets(data) {
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
@@ -1256,7 +1257,6 @@
 
             const tableConfig = { allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable };
 
-            // 🌟 เพิ่ม autocomplete: true, newOptions: true ให้พิมพ์ข้อมูลใหม่นอกเหนือจาก Dropdown ได้
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
                 ...tableConfig,
                 data: cpumonData, 
@@ -1266,12 +1266,12 @@
                     { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, 
                     { type: 'text', title: 'รุ่น CPU', width: 130 }, 
                     { type: 'text', title: 'S/N CPU', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, 
+                    { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions }, 
                     { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, 
                     { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, 
                     { type: 'text', title: 'S/N จอภาพ', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, 
+                    { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
                     { type: 'text', title: 'หมายเหตุ', width: 180 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1287,8 +1287,8 @@
                     { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
                     { type: 'text', title: 'รุ่น', width: 150 }, 
                     { type: 'text', title: 'S/N', width: 170 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
                     { type: 'text', title: 'หมายเหตุ', width: 200 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1306,8 +1306,8 @@
                     { type: 'text', title: 'S/N', width: 170 }, 
                     { type: 'text', title: 'ลักษณะสี', width: 100 }, 
                     { type: 'text', title: 'Scanner', width: 100 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
+                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
                     { type: 'text', title: 'หมายเหตุ', width: 180 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1323,7 +1323,7 @@
                     { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
                     { type: 'text', title: 'ยี่ห้อ/รุ่น', width: 220 }, 
                     { type: 'text', title: 'S/N', width: 180 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, 
+                    { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions }, 
                     { type: 'text', title: 'หมายเหตุ', width: 200 }, 
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true }
                 ], 
@@ -1886,21 +1886,6 @@
                     } catch(e) {}
                 }
 
-                // 🌟 ตัวแปรและฟังก์ชันสร้าง S/N สมมติ
-                let tempSnCounter = 1;
-                let todayYMD = new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + String(new Date().getDate()).padStart(2, '0');
-                const generateTempSN = (typeAbbr) => {
-                    let newSN = "";
-                    while (true) { 
-                        let paddedCounter = String(tempSnCounter).padStart(3, '0'); 
-                        newSN = `${typeAbbr}-${todayYMD}-${paddedCounter} (ชั่วคราว)`; 
-                        if (!existingItems.has(newSN.toLowerCase())) break; 
-                        tempSnCounter++; 
-                    }
-                    existingItems.add(newSN.toLowerCase()); tempSnCounter++; 
-                    return newSN;
-                };
-
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim(); let cleanBrand = String(brand).trim(); let cleanModel = String(model).trim();
                     if ((!cleanBrand || cleanBrand === '-') && (!cleanModel || cleanModel === '-') && (!cleanSN || cleanSN === '-')) return;
@@ -1942,7 +1927,7 @@
                         if(l.includes('ไม่มี')) return 'ไม่มี'; 
                         if(l.includes('rcf')) return 'RCF';
                         if(l.includes('ปกติ')) return 'ปกติ'; 
-                        return 'ปกติ'; 
+                        return original; 
                     };
 
                     const processHeaderRow = (vals) => {
@@ -2028,15 +2013,6 @@
                             if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; 
                             if (!hasCpuData && currentMode === 'SPC') return;
 
-                            // 🌟 สมมติ S/N ถ้ามีของแต่ S/N ว่าง
-                            if (hasCpuData && (!cpuSN || cpuSN === '-')) {
-                                let abbr = currentMode === 'CPUMON' ? 'PC' : currentMode === 'NB' ? 'NB' : currentMode === 'PRN' ? 'PRN' : 'SPC';
-                                cpuSN = generateTempSN(abbr);
-                            }
-                            if (hasMonData && (!monSN || monSN === '-')) {
-                                monSN = generateTempSN('MON');
-                            }
-
                             let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : 'ไม่มี';
                             let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : 'ไม่มี';
 
@@ -2110,21 +2086,6 @@
                     try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); whDb.main = parsedWh.main || []; whDb.parts = parsedWh.parts || []; whDb.consumables = parsedWh.consumables || []; whDb.withdrawals = parsedWh.withdrawals || []; whMainData = whDb.main; whMainData.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
                 }
 
-                // 🌟 ตัวแปรและฟังก์ชันสร้าง S/N สมมติ
-                let tempSnCounter = 1;
-                let todayYMD = new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + String(new Date().getDate()).padStart(2, '0');
-                const generateTempSN = (typeAbbr) => {
-                    let newSN = "";
-                    while (true) { 
-                        let paddedCounter = String(tempSnCounter).padStart(3, '0'); 
-                        newSN = `${typeAbbr}-${todayYMD}-${paddedCounter} (ชั่วคราว)`; 
-                        if (!existingItems.has(newSN.toLowerCase())) break; 
-                        tempSnCounter++; 
-                    }
-                    existingItems.add(newSN.toLowerCase()); tempSnCounter++; 
-                    return newSN;
-                };
-
                 const autoRegisterToWarehouse = (type, brand, model, sn, stationName) => {
                     let cleanSN = String(sn).trim(); let cleanBrand = String(brand).trim(); let cleanModel = String(model).trim();
                     if ((!cleanBrand || cleanBrand === '-') && (!cleanModel || cleanModel === '-') && (!cleanSN || cleanSN === '-')) return;
@@ -2159,7 +2120,7 @@
                     if(l.includes('ไม่มี')) return 'ไม่มี'; 
                     if(l.includes('rcf')) return 'RCF';
                     if(l.includes('ปกติ')) return 'ปกติ'; 
-                    return 'ปกติ'; 
+                    return original; 
                 };
 
                 const processHeaderRow = (vals) => {
@@ -2245,15 +2206,6 @@
                         if (!hasCpuData && !hasMonData && currentMode !== 'SPC') return; 
                         if (!hasCpuData && currentMode === 'SPC') return;
 
-                        // 🌟 สมมติ S/N ถ้ามีของแต่ S/N ว่าง
-                        if (hasCpuData && (!cpuSN || cpuSN === '-')) {
-                            let abbr = currentMode === 'CPUMON' ? 'PC' : currentMode === 'NB' ? 'NB' : currentMode === 'PRN' ? 'PRN' : 'SPC';
-                            cpuSN = generateTempSN(abbr);
-                        }
-                        if (hasMonData && (!monSN || monSN === '-')) {
-                            monSN = generateTempSN('MON');
-                        }
-
                         let statusCpu = hasCpuData ? mapStatus(getVal(colMap.statusCpu) || getVal(colMap.status)) : 'ไม่มี';
                         let statusMon = hasMonData ? mapStatus(getVal(colMap.statusMon) || getVal(colMap.status)) : 'ไม่มี';
 
@@ -2283,7 +2235,7 @@
 
                             let status = hasCpuData ? mapStatus(getVal(colMap.status) || getVal(colMap.statusCpu)) : 'ไม่มี';
                             spcData.push(["", String(spcType), String(user), `${String(cpuBrand)} ${String(cpuModel)}`.trim(), String(cpuSN), String(status), String(remark)]); 
-                            if (hasCpuData) autoRegisterToWarehouse(spcType, cpuBrand, cpuModel, cpuSN, currentStation);
+                            if (hasCpuData) autoRegisterToWarehouse(spcType, cpuBrand, cpuModel, cpuSN, fullStationName);
                         }
                     }
                 });
@@ -2299,7 +2251,7 @@
                 
                 if (globalAllDataCache && globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]) { try { let oldData = JSON.parse(globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]); newPayload.lastConfirmed = oldData.lastConfirmed; } catch(e) {} }
 
-                initSpreadsheets(newPayload);
+                initSpreadsheets(newPayload); // 🌟 รีเรนเดอร์ตารางเพื่อให้ค่าตัวเลือกใหม่ติดเข้าไปใน UI ทันที
 
                 let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
                 let logs = [{ station: currentStation, action: 'นำเข้าไฟล์', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
