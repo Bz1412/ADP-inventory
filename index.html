@@ -496,8 +496,14 @@
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ประวัติ
                 </button>
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
-                <button onclick="document.getElementById('importExcelInput').click()" data-tooltip="อัปโหลดไฟล์ Excel เพื่อเพิ่มข้อมูลลงตาราง" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า
+                <input type="file" id="importExcelNewInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcelNew(event)">
+                
+                <button onclick="document.getElementById('importExcelInput').click()" data-tooltip="อัปโหลดไฟล์ Excel เพื่อเพิ่มข้อมูลลงตาราง (ไฟล์โครงสร้างเก่า)" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า (เก่า)
+                </button>
+                
+                <button onclick="document.getElementById('importExcelNewInput').click()" data-tooltip="นำเข้าไฟล์ Excel ที่เพิ่ง Export ออกไป (รองรับตารางโครงสร้างใหม่ 100%)" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-3 py-2.5 rounded-xl border border-transparent hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้า (ใหม่)
                 </button>
                 <button onclick="exportStationExcel()" data-tooltip="ดาวน์โหลดข้อมูลเป็น Excel (ใช้เป็น Template นำเข้าได้)" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export
@@ -2642,6 +2648,116 @@
                 hasUnsavedDeletions = true; 
                 showToast("โหลดข้อมูลลงตารางสำเร็จ! โปรดตรวจสอบและกด 'บันทึก' เพื่อยืนยันข้อมูล");
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
+
+        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดียว (NEW) - สำหรับดึงไฟล์ Export เข้ามาใส่ในตารางเพื่อรอเซฟ
+        async function handleImportExcelNew(event) {
+            const file = event.target.files[0]; if (!file) return;
+            document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            try {
+                const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ช.ร.": "เชียงราย", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                let targetSheet = null; wb.eachSheet((ws) => { let sName = ws.name.trim(); if (sName === currentStation || abbrMap[sName] === currentStation || currentStation.includes(sName) || sName.includes(currentStation)) { targetSheet = ws; } });
+                if (!targetSheet) targetSheet = wb.worksheets[0];
+                
+                let cpumonData = [], nbData = [], prnData = [], spcData = []; 
+                let currentMode = null;
+                
+                let existingItems = new Set();
+                if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
+                    try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); if(parsedWh.main) parsedWh.main.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
+                }
+
+                let tempSnCounter = 1;
+                let todayYMD = new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + String(new Date().getDate()).padStart(2, '0');
+                const generateTempSN = (typeAbbr) => {
+                    let newSN = "";
+                    while (true) { let paddedCounter = String(tempSnCounter).padStart(3, '0'); newSN = `${typeAbbr}-${todayYMD}-${paddedCounter} (ชั่วคราว)`; if (!existingItems.has(newSN.toLowerCase())) break; tempSnCounter++; }
+                    existingItems.add(newSN.toLowerCase()); tempSnCounter++; return newSN;
+                };
+
+                const mapConn = (c) => { let original = String(c).trim(); let l = original.toLowerCase(); if(!l || l === '-' || l === 'ไม่มี') return ''; if(l.includes('5')) return 'LAN กอง 5'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6'; if(l.includes('glaive')) return 'Glaive'; if(l.includes('sentinel')) return 'Sentinel'; if(l.includes('rcf')) return 'RCF'; return original; };
+                const mapStatus = (s) => { let original = String(s).trim(); let l = original.toLowerCase(); if(!l) return 'ปกติ'; if(l === 'ปกติ') return 'ปกติ'; if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; if(l.includes('rcf')) return 'RCF'; return original; };
+
+                targetSheet.eachRow((row, rowNumber) => {
+                    let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber - 1] = cellVal ? String(cellVal).trim() : ''; }); 
+                    while(rowVals.length < 12) rowVals.push(''); // เติมช่องว่างให้ครบตาม Export
+                    
+                    let firstCell = rowVals[0].toLowerCase().replace(/\s+/g, '');
+                    if (firstCell.includes('คอมพิวเตอร์และจอมอนิเตอร์')) { currentMode = 'CPUMON'; return; }
+                    if (firstCell.includes('โน๊ตบุ๊ค') || firstCell.includes('notebook')) { currentMode = 'NB'; return; }
+                    if (firstCell.includes('เครื่องพิมพ์') || firstCell.includes('printer')) { currentMode = 'PRN'; return; }
+                    if (firstCell.includes('server') || firstCell.includes('เครื่องมือพิเศษ') || firstCell.includes('อื่นๆ')) { currentMode = 'SPC'; return; }
+
+                    if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return; // ข้ามหัวตาราง
+
+                    let seqNum = parseInt(rowVals[0]);
+                    if (isNaN(seqNum) || seqNum <= 0) return; // ต้องเป็นบรรทัดที่มีเลขลำดับ
+
+                    if (!currentMode) return; 
+
+                    const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
+
+                    if (currentMode === 'CPUMON') {
+                        let user = getVal(1) || currentStation;
+                        let cpuBrand = getVal(2), cpuModel = getVal(3), cpuSN = getVal(4);
+                        let statusCpu = mapStatus(getVal(5));
+                        let monBrand = getVal(6), monModel = getVal(7), monSN = getVal(8);
+                        let statusMon = mapStatus(getVal(9));
+                        let conn = mapConn(getVal(10));
+                        let remark = getVal(11);
+
+                        let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
+                        if (!hasCpu && !hasMon) return;
+                        if (hasCpu && (!cpuSN || cpuSN === '')) cpuSN = generateTempSN('PC'); 
+                        if (hasMon && (!monSN || monSN === '')) monSN = generateTempSN('MON');
+                        cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
+                    }
+                    else if (currentMode === 'NB') {
+                        let user = getVal(1) || currentStation;
+                        let brand = getVal(2), model = getVal(3), sn = getVal(4);
+                        let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
+                        
+                        if (!brand && !model && !sn) return;
+                        if (!sn || sn === '') sn = generateTempSN('NB');
+                        nbData.push(["", user, brand, model, sn, status, conn, remark]);
+                    }
+                    else if (currentMode === 'PRN') {
+                        let user = getVal(1) || currentStation;
+                        let brand = getVal(2), model = getVal(3), sn = getVal(4);
+                        let color = getVal(5); let scanner = getVal(6); let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
+                        
+                        if (!brand && !model && !sn) return;
+                        if (!sn || sn === '') sn = generateTempSN('PRN');
+                        prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
+                    }
+                    else if (currentMode === 'SPC') {
+                        let type = getVal(1) || 'เครื่องมือพิเศษ';
+                        let user = getVal(2) || currentStation;
+                        let brand = getVal(3), model = getVal(4), sn = getVal(5);
+                        let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
+
+                        if (!brand && !model && !sn) return;
+                        if (!sn || sn === '') sn = generateTempSN('SPC');
+
+                        let rmkLower = remark.toLowerCase();
+                        if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups')) type = 'UPS';
+                        else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์')) type = 'Server';
+                        else if (rmkLower.includes('rcf')) type = 'RCF';
+                        else if (rmkLower.includes('switch')) type = 'Switch';
+
+                        spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
+                    }
+                });
+
+                if(cpumonData.length > 0) tableCPUMON.setData(cpumonData);
+                if(nbData.length > 0) tableNB.setData(nbData);
+                if(prnData.length > 0) tablePrn.setData(prnData);
+                if(spcData.length > 0) tableSpc.setData(spcData);
+                
+                hasUnsavedDeletions = true; 
+                showToast("โหลดข้อมูลลงตารางสำเร็จ! โปรดตรวจสอบและกด 'บันทึก' เพื่อยืนยันข้อมูล");
+            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
         
     </script>
