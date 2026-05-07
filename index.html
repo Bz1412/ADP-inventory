@@ -1218,30 +1218,44 @@
             }
         };
 
-        function initSpreadsheets(data) {
-            // 🌟 1. ดึงค่าแบบ Dynamic จากฐานข้อมูล (ถ้ามีคำใหม่ เอามาเติมใน Dropdown อัตโนมัติ)
+        function updateDynamicOptions(currentStationData = null) {
             let stSet = new Set(['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี']);
             let cnSet = new Set(['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone']);
-            
-            const scanDynamic = (arr, sIdx, cIdx) => {
-                if(!arr) return;
-                arr.forEach(r => {
-                    if (sIdx !== -1 && r[sIdx] && String(r[sIdx]).trim() !== '') stSet.add(String(r[sIdx]).trim());
-                    if (cIdx !== -1 && r[cIdx] && String(r[cIdx]).trim() !== '') cnSet.add(String(r[cIdx]).trim());
+
+            const scanPayload = (parsed) => {
+                if(!parsed) return;
+                if(parsed.cpu) parsed.cpu.forEach(r => {
+                    if(r[5] && String(r[5]).trim() !== '') stSet.add(String(r[5]).trim());
+                    if(r[9] && String(r[9]).trim() !== '') stSet.add(String(r[9]).trim());
+                    if(r[10] && String(r[10]).trim() !== '') cnSet.add(String(r[10]).trim());
+                });
+                if(parsed.nb) parsed.nb.forEach(r => {
+                    if(r[5] && String(r[5]).trim() !== '') stSet.add(String(r[5]).trim());
+                    if(r[6] && String(r[6]).trim() !== '') cnSet.add(String(r[6]).trim());
+                });
+                if(parsed.prn) parsed.prn.forEach(r => {
+                    if(r[7] && String(r[7]).trim() !== '') stSet.add(String(r[7]).trim());
+                    if(r[8] && String(r[8]).trim() !== '') cnSet.add(String(r[8]).trim());
+                });
+                if(parsed.spc) parsed.spc.forEach(r => {
+                    if(r[5] && String(r[5]).trim() !== '') stSet.add(String(r[5]).trim());
                 });
             };
 
-            if(data.cpu) data.cpu.forEach(r => {
-                if(r[5] && String(r[5]).trim() !== '') stSet.add(String(r[5]).trim());
-                if(r[9] && String(r[9]).trim() !== '') stSet.add(String(r[9]).trim());
-                if(r[10] && String(r[10]).trim() !== '') cnSet.add(String(r[10]).trim());
-            });
-            scanDynamic(data.nb, 5, 6);
-            scanDynamic(data.prn, 7, 8);
-            scanDynamic(data.spc, 5, -1);
+            if (globalAllDataCache) {
+                for (const [key, val] of Object.entries(globalAllDataCache)) {
+                    if (key.includes('WAREHOUSE') || key === 'ALL_DATA') continue;
+                    try { scanPayload(JSON.parse(val)); } catch(e) {}
+                }
+            }
+            if (currentStationData) scanPayload(currentStationData);
 
             statusOptions = Array.from(stSet);
             connectionOptions = Array.from(cnSet);
+        }
+
+        function initSpreadsheets(data) {
+            updateDynamicOptions(data);
 
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
@@ -1277,7 +1291,6 @@
 
             const tableConfig = { allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable };
 
-            // 🌟 เพิ่มคุณสมบัติ autocomplete: true ในทุก Dropdown
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
                 ...tableConfig,
                 data: cpumonData, 
@@ -1699,12 +1712,13 @@
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             try {
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
-                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ช.ร.": "เชียงราย", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 let targetSheet = null; wb.eachSheet((ws) => { let sName = ws.name.trim(); if (sName === currentStation || abbrMap[sName] === currentStation || currentStation.includes(sName) || sName.includes(currentStation)) { targetSheet = ws; } });
                 if (!targetSheet) targetSheet = wb.worksheets[0];
                 
                 let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                 let currentMode = null; let colMap = {};
+                let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
                 
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; let whMainData = []; let existingItems = new Set(); let newlyAddedToWarehouse = 0;
                 
@@ -1727,25 +1741,24 @@
                 };
                 
                 const mapConn = (c) => { 
-                        let original = String(c).trim();
-                        let l = original.toLowerCase(); 
-                        if(!l || l === '-' || l === 'ไม่มี') return ''; 
-                        if(l.includes('5')) return 'LAN กอง 5'; 
-                        if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
-                        if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
-                        if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
-                        return original; 
-                    };
-                    const mapStatus = (s) => { 
-                        let original = String(s).trim();
-                        let l = original.toLowerCase(); 
-                        if(!l) return 'ปกติ'; 
-                        if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
-                        if(l.includes('สำรอง')) return 'สำรอง'; 
-                        if(l.includes('ไม่มี')) return 'ไม่มี'; 
-                        if(l.includes('ปกติ')) return 'ปกติ'; 
-                        return original; 
-                    };
+                    let original = String(c).trim(); let l = original.toLowerCase(); 
+                    if(!l || l === '-' || l === 'ไม่มี') return ''; 
+                    if(l.includes('5')) return 'LAN กอง 5'; 
+                    if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
+                    if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
+                    if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
+                    return original; 
+                };
+                const mapStatus = (s) => { 
+                    let original = String(s).trim(); let l = original.toLowerCase(); 
+                    if(!l) return 'ปกติ'; 
+                    if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
+                    if(l.includes('สำรอง')) return 'สำรอง'; 
+                    if(l.includes('ไม่มี')) return 'ไม่มี'; 
+                    if(l.includes('ปกติ')) return 'ปกติ'; 
+                    return original; 
+                };
+
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
 
@@ -1764,11 +1777,12 @@
                         else if (combinedText.includes('โน๊ตบุ๊ค') || combinedText.includes('notebook')) currentMode = 'NB';
                         else if (combinedText.includes('printer') || combinedText.includes('เครื่องพิมพ์') || combinedText.includes('ปริ้น')) currentMode = 'PRN';
                         else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) currentMode = 'SPC';
-                        else if (!currentMode) currentMode = 'NB'; 
+                        else currentMode = 'NB'; 
                         
-                        colMap = {}; 
+                        colMap = {}; brandCount = 0; modelCount = 0; snCount = 0; statusCount = 0;
                     }
 
+                    // 🌟 ตรวจสอบว่าเป็นบรรทัดหัวคอลัมน์หรือไม่ ด้วยคีย์เวิร์ด
                     let headerKeywords = ['ยี่ห้อ', 'brand', 'รุ่น', 'model', 's/n', 'serial', 'ผู้ใช้', 'user', 'สถานะ', 'status', 'เชื่อมต่อ', 'หมายเหตุ', 'ประเภท', 'ลักษณะสี', 'สแกน', 'scanner', 'ลำดับ', 'cpu', 'จอภาพ', 'printer'];
                     let kwCount = 0;
                     rowVals.forEach(v => {
@@ -1781,12 +1795,11 @@
                     let isHeaderRow = kwCount >= 2 || isTableStart;
 
                     if (isHeaderRow) {
-                        let brandCount = 0, modelCount = 0, snCount = 0, statusCount = 0;
                         rowVals.forEach((val, idx) => {
                             if (!val) return; let h = String(val).toLowerCase().replace(/\s+/g, '');
                             if (h === 'ผู้ใช้' || h.includes('user') || h.includes('สถานที่')) colMap.user = idx; 
                             else if (h.includes('ประเภท')) colMap.spcType = idx; 
-                            else if (h.includes('สถานะ') || h.includes('status') || h.includes('ปกติ')) {
+                            else if (h.includes('สถานะ') || h.includes('status')) {
                                 if (currentMode === 'CPUMON' && (h.includes('จอ') || statusCount === 1)) colMap.statusMon = idx;
                                 else { colMap.statusCpu = idx; colMap.status = idx; statusCount++; }
                             }
@@ -1868,6 +1881,8 @@
                 let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null };
                 
                 if (globalAllDataCache && globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]) { try { let oldData = JSON.parse(globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]); newPayload.lastConfirmed = oldData.lastConfirmed; } catch(e) {} }
+
+                initSpreadsheets(newPayload); // 🌟 รีเรนเดอร์ตารางเพื่อให้ตัวเลือกใหม่ติดเข้าไปใน UI ທันที
 
                 let currentUpdates = [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }];
                 let logs = [{ station: currentStation, action: 'นำเข้าไฟล์', detail: `อัปเดตข้อมูล ${currentStation} ด้วยไฟล์ Excel` }];
@@ -2075,7 +2090,7 @@
             
             try {
                 const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
-                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ช.ร.": "เชียงราย", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "น.พ.": "นครพนม", "ม.ส.": "แม่สอด", "ช.ร.": "เชียงราย", "ป.ต.": "ปัตตานี", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
                 let saveQueue = []; let newlyAddedToWarehouse = 0;
 
                 let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
@@ -2086,11 +2101,8 @@
                         let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']);
                         whDb.main = parsedWh.main || []; whDb.parts = parsedWh.parts || []; whDb.consumables = parsedWh.consumables || []; whDb.withdrawals = parsedWh.withdrawals || []; whMainData = whDb.main;
                         whMainData.forEach(r => { 
-                            let sn = String(r[4]).trim().toLowerCase(); 
-                            let brand = String(r[2]).trim().toLowerCase();
-                            let model = String(r[3]).trim().toLowerCase();
-                            if (sn && sn !== '-' && sn !== '') existingItems.add(sn);
-                            else if (brand || model) existingItems.add(`${brand}_${model}`); 
+                            let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase();
+                            if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); 
                         });
                     } catch(e) {}
                 }
@@ -2115,33 +2127,33 @@
                     let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                     let currentMode = null; let colMap = {};
 
+                    // 🌟 เคารพคำแปลกใหม่ ไม่แปลงเป็น ปกติ/LAN มั่วซั่ว
                     const mapConn = (c) => { 
-                        let original = String(c).trim();
-                        let l = original.toLowerCase(); 
+                        let original = String(c).trim(); let l = original.toLowerCase(); 
                         if(!l || l === '-' || l === 'ไม่มี') return ''; 
                         if(l.includes('5')) return 'LAN กอง 5'; 
                         if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; 
                         if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; 
                         if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6';
-                        return original; 
+                        return original; // ✅ คืนค่าดั้งเดิมกลับไปเลย
                     };
                     const mapStatus = (s) => { 
-                        let original = String(s).trim();
-                        let l = original.toLowerCase(); 
+                        let original = String(s).trim(); let l = original.toLowerCase(); 
                         if(!l) return 'ปกติ'; 
                         if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; 
                         if(l.includes('สำรอง')) return 'สำรอง'; 
                         if(l.includes('ไม่มี')) return 'ไม่มี'; 
                         if(l.includes('ปกติ')) return 'ปกติ'; 
-                        return original; 
+                        return original; // ✅ คืนค่าดั้งเดิมกลับไปเลย
                     };
+
                     ws.eachRow((row, rowNumber) => {
                         let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber] = cellVal ? String(cellVal).trim() : ''; }); let rowStr = rowVals.join(' ').toLowerCase();
 
                         if (rowStr.includes('รบกวนจับคู่') || rowStr.includes('บันทึกเมื่อ') || rowStr.includes('รวมทั้งหมด') || rowStr.includes('ยอดรวม')) return;
                         
                         let textCells = rowVals.filter(v => String(v).trim() !== '');
-                        if (textCells.length === 0) return;
+                        if (textCells.length === 0) return; 
 
                         let combinedText = textCells.join(' ').toLowerCase();
                         let isTableStart = false;
@@ -2153,7 +2165,6 @@
                             else if (combinedText.includes('printer') || combinedText.includes('เครื่องพิมพ์') || combinedText.includes('ปริ้น')) currentMode = 'PRN';
                             else if (combinedText.includes('server') || combinedText.includes('เครื่องมือพิเศษ') || combinedText.includes('rcf') || combinedText.includes('อื่นๆ')) currentMode = 'SPC';
                             else if (!currentMode) currentMode = 'NB'; 
-                            
                             colMap = {}; 
                         }
 
