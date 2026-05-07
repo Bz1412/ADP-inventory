@@ -826,11 +826,9 @@
 
             closeLoginModal();
             document.getElementById('landingPage').classList.add('hidden');
-
+            
             document.getElementById('btnAdminLogin').classList.add('hidden');
             document.getElementById('btnLogout').classList.remove('hidden');
-            document.getElementById('btnHelp').classList.remove('hidden');
-            document.getElementById('navDivider').classList.remove('hidden');
 
             currentUserRole = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
 
