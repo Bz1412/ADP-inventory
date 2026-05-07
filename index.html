@@ -1077,20 +1077,30 @@
                 let dbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
                 let cacheKey = `ADP_${groupName}_${stationName}`;
                 
-                // 🌟 ระบบโหลดอัจฉริยะ: ถ้าเป็น Admin ดึงจาก Cache ทันที / ถ้าเป็นสถานี ให้ดึงจาก API
+                // 🌟 ระบบโหลดอัจฉริยะแบบกันเหนียว (Crash-Proof)
                 if (globalAllDataCache && globalAllDataCache[cacheKey]) {
-                    dbData = JSON.parse(globalAllDataCache[cacheKey]);
+                    try { dbData = JSON.parse(globalAllDataCache[cacheKey]); } catch(e) {}
                 } else {
-                    const response = await fetch(`${API_URL}?key=${cacheKey}`); 
+                    // 🌟 เข้ารหัสภาษาไทยใน URL ป้องกันเว็บหาลิงก์ไม่เจอ
+                    const response = await fetch(`${API_URL}?key=${encodeURIComponent(cacheKey)}`); 
                     const result = await response.json();
                     if (result.value) {
-                        dbData = JSON.parse(result.value);
-                        if (!globalAllDataCache) globalAllDataCache = {};
-                        globalAllDataCache[cacheKey] = result.value; // เซฟลง Cache ให้ด้วย
+                        try {
+                            dbData = JSON.parse(result.value);
+                            if (!globalAllDataCache) globalAllDataCache = {};
+                            globalAllDataCache[cacheKey] = result.value;
+                        } catch(e) { console.warn("ข้อมูลของสถานีนี้ยังว่างเปล่า หรือรูปแบบผิดปกติ"); }
                     }
                 }
                 
-                // 🌟 โหลดคลังเก็บไว้เผื่อค้นหา S/N (ไม่โหลดซ้ำถ้ามีแล้ว)
+                // 🌟 เช็คให้ชัวร์ว่าตารางทุกอันต้องมี Array เปล่าๆ ไม่เป็นค่า Null
+                if (!dbData.cpu) dbData.cpu = [[]];
+                if (!dbData.nb) dbData.nb = [[]];
+                if (!dbData.mon) dbData.mon = [[]];
+                if (!dbData.prn) dbData.prn = [[]];
+                if (!dbData.spc) dbData.spc = [[]];
+
+                // โหลดสต็อกคลัง
                 if (!warehouseStock || warehouseStock.length === 0) {
                     try {
                         let whDataStr = null;
@@ -1108,14 +1118,12 @@
                                 if(!arr) return;
                                 arr.forEach(r => { if (r[5] === 'ว่าง (พร้อมจ่าย)') warehouseStock.push({ brand: r[2], model: r[3] || r[2], sn: r[4] }); });
                             };
-                            extractWh(whData.main); extractWh(whData.parts);
+                            if (whData.main) extractWh(whData.main); 
+                            if (whData.parts) extractWh(whData.parts);
                         }
-                    } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ', e); }
+                    } catch(e) { console.log('ไม่มีข้อมูลคลัง หรือโหลดคลังไม่สำเร็จ'); }
                 }
 
-                if(!dbData.spc) dbData.spc = [[]]; 
-                if(!dbData.nb) dbData.nb = [[]]; 
-                
                 // แปลงตาราง SPC รูปแบบเก่าเป็นแบบใหม่
                 let migratedSpc = [];
                 dbData.spc.forEach(s => {
@@ -1139,12 +1147,21 @@
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
                 const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-                const btnConfirm = document.getElementById('btnConfirmMonth'); btnConfirm.classList.remove('hidden'); 
+                const btnConfirm = document.getElementById('btnConfirmMonth'); 
+                if (btnConfirm) btnConfirm.classList.remove('hidden'); 
                 
                 if (dbData.lastConfirmed === currentMonthStr) { 
-                    isEditingConfirmedReport = true; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                    isEditingConfirmedReport = true; 
+                    if (btnConfirm) {
+                        btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
+                        document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                    }
                 } else { 
-                    isEditingConfirmedReport = false; btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
+                    isEditingConfirmedReport = false; 
+                    if (btnConfirm) {
+                        btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-4 py-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
+                        document.getElementById('btnConfirmText').innerText = "ส่งรายงาน";
+                    }
                 }
                 
                 initSpreadsheets(dbData);
@@ -1170,18 +1187,23 @@
                 stTotalMon = countStItems(dbData.mon); stTotalPrn = countStItems(dbData.prn, true, false);
                 stTotalSpc = countStItems(dbData.spc, false, true);
 
-                document.getElementById('stStatTotal').innerText = stTotalCPU + stTotalNB + stTotalMon + stTotalPrn + stTotalSpc;
-                document.getElementById('stStatCPU').innerText = stTotalCPU; document.getElementById('stStatNB').innerText = stTotalNB;
-                document.getElementById('stStatMon').innerText = stTotalMon; document.getElementById('stStatPrn').innerText = stTotalPrn;
-                document.getElementById('stStatSpc').innerText = stTotalSpc;
+                let elTotal = document.getElementById('stStatTotal'); if(elTotal) elTotal.innerText = stTotalCPU + stTotalNB + stTotalMon + stTotalPrn + stTotalSpc;
+                let elCpu = document.getElementById('stStatCPU'); if(elCpu) elCpu.innerText = stTotalCPU; 
+                let elNb = document.getElementById('stStatNB'); if(elNb) elNb.innerText = stTotalNB;
+                let elMon = document.getElementById('stStatMon'); if(elMon) elMon.innerText = stTotalMon; 
+                let elPrn = document.getElementById('stStatPrn'); if(elPrn) elPrn.innerText = stTotalPrn;
+                let elSpc = document.getElementById('stStatSpc'); if(elSpc) elSpc.innerText = stTotalSpc;
 
-                const ctxSt = document.getElementById('stStatusChart').getContext('2d'); 
-                if(stChart) stChart.destroy();
-                stChart = new Chart(ctxSt, { 
-                    type: 'doughnut', 
-                    data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง', 'RCF'], datasets: [{ data: [stStatCounts['ปกติ'], stStatCounts['ชำรุด'], stStatCounts['สำรอง'], stStatCounts['RCF']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }] }, 
-                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } 
-                });
+                const ctxStEl = document.getElementById('stStatusChart');
+                if (ctxStEl) {
+                    const ctxSt = ctxStEl.getContext('2d'); 
+                    if(stChart) stChart.destroy();
+                    stChart = new Chart(ctxSt, { 
+                        type: 'doughnut', 
+                        data: { labels: ['ปกติ', 'ชำรุด', 'สำรอง', 'RCF'], datasets: [{ data: [stStatCounts['ปกติ'], stStatCounts['ชำรุด'], stStatCounts['สำรอง'], stStatCounts['RCF']], backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'], borderWidth: 0, hoverOffset: 4 }] }, 
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', animation: { animateScale: true, animateRotate: true }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } } 
+                    });
+                }
                 
             } catch (error) { 
                 console.error(error); 
