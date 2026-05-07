@@ -87,7 +87,7 @@
 
     <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
-    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md no-print animate-fade-in">
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[999] hidden flex-col justify-center items-center backdrop-blur-md no-print animate-fade-in">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังซิงค์ข้อมูล...</p>
     </div>
@@ -717,7 +717,8 @@
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('aggregatePage').classList.add('hidden');
             
-            renderLandingGrid();
+            renderLandingGrid(); // วาดปุ่มสำหรับหน้า Login
+            renderIndexPage();   // 🌟 วาดปุ่มการ์ดรอไว้สำหรับหน้า Admin
             
             // แอบโหลดข้อมูลเบื้องหลัง รอไว้เลย
             try {
@@ -732,12 +733,12 @@
             } catch(e) { console.error("Load Initial Data Error", e); }
         };
 
-        // 🌟 2. วาดปุ่มสถานีลงในหน้า Landing Page
         function renderLandingGrid() {
             const container = document.getElementById('landingGrid');
+            if(!container) return;
             let html = '';
             groupOrder.forEach((groupName, idx) => {
-                html += `<div class="mb-8 w-full animate-slide-up" style="animation-delay: ${idx * 100}ms">`;
+                html += `<div class="mb-8 w-full animate-slide-up" style="animation-delay: ${idx * 50}ms">`;
                 html += `<h2 class="text-sm font-bold mb-4 text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-indigo-500">${groupName}</h2>`;
                 html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
                 inventoryGroups[groupName].forEach(station => {
@@ -750,7 +751,33 @@
             container.innerHTML = html;
         }
 
-        // 🌟 3. ระบบเปิด/ปิด หน้าต่าง Login
+        // 🌟 3. วาดปุ่มสถานีลงในหน้า Admin Dashboard (ให้ Admin ใช้กดเพื่อแก้ไขตาราง)
+        function renderIndexPage() {
+            const indexPage = document.getElementById('indexPage');
+            if(!indexPage) return;
+            indexPage.innerHTML = '';
+            groupOrder.forEach((groupName, idx) => {
+                const groupSection = document.createElement('div'); 
+                groupSection.className = `mb-8 w-full animate-slide-up`;
+                groupSection.style.animationDelay = `${(idx+1) * 50}ms`; 
+                groupSection.innerHTML = `<h2 class="text-sm font-semibold mb-3 text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">${groupName}</h2>`;
+                const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
+                inventoryGroups[groupName].forEach(station => {
+                    const btn = document.createElement('div'); 
+                    btn.className = "bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-1 min-h-[90px]";
+                    btn.innerHTML = `
+                        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">${station}</span>
+                        <div id="badge_${groupName}_${station}" class="animate-pulse w-12 h-3 rounded bg-slate-100 dark:bg-slate-700 my-1"></div>
+                        <div id="counts_${groupName}_${station}" class="flex flex-wrap justify-center gap-1.5 text-[10px] mt-1 hidden"></div>
+                    `; 
+                    btn.onclick = () => openStation(groupName, station); 
+                    gridDiv.appendChild(btn);
+                });
+                groupSection.appendChild(gridDiv); indexPage.appendChild(groupSection);
+            });
+        }
+
+        // 🌟 4. ระบบเปิด/ปิด หน้าต่าง Login
         function openLoginModal(role, stationName, groupName) {
             loginTarget = { role, stationName, groupName };
             let displayUser = role === 'Admin' ? 'System Admin' : `Admin ${stationName}`;
@@ -779,10 +806,9 @@
         function closeLoginModal() {
             document.getElementById('loginModal').classList.add('hidden');
             document.getElementById('loginModal').classList.remove('flex');
-            loginTarget = null;
         }
 
-        // 🌟 4. ระบบยืนยันการ Login และบันทึกรหัสผ่านใหม่
+        // 🌟 5. ระบบยืนยันการ Login และบันทึกรหัสผ่านใหม่ (อัปเกรดให้เสถียร ไม่ค้าง)
         async function submitLogin() {
             if (!loginTarget) return;
             let pass = document.getElementById('loginPassword').value.trim();
@@ -791,11 +817,11 @@
             if (!pass) return showToast("กรุณากรอกรหัสผ่าน", "error");
 
             if (!authDb[authKey]) {
-                // กรณีเข้าครั้งแรก ตั้งรหัสผ่าน
+                // 🛑 กรณีตั้งรหัสผ่านครั้งแรก
                 let confirmPass = document.getElementById('loginConfirmPassword').value.trim();
                 if (pass !== confirmPass) return showToast("รหัสผ่านไม่ตรงกัน กรุณาพิมพ์ใหม่", "error");
                 
-                authDb[authKey] = pass; // เซฟลงหน่วยความจำ
+                authDb[authKey] = pass; 
                 document.getElementById('loadingText').innerText = 'กำลังบันทึกรหัสผ่าน...'; 
                 document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
                 
@@ -809,28 +835,30 @@
                         }) 
                     });
                     showToast("ตั้งรหัสผ่านสำเร็จ!");
-                } catch(e) { console.error(e); showToast("บันทึกรหัสผ่านล้มเหลว", "error"); return; }
-                finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+                } catch(e) { 
+                    console.error(e); showToast("บันทึกรหัสผ่านล้มเหลว", "error"); 
+                    document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex');
+                    return; 
+                }
+                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex');
             } else {
-                // กรณีล็อคอินปกติ ตรวจสอบรหัสผ่าน
+                // 🛑 กรณีล็อคอินปกติ ตรวจสอบรหัสผ่าน
                 if (authDb[authKey] !== pass) return showToast("รหัสผ่านไม่ถูกต้อง", "error");
                 showToast("เข้าสู่ระบบสำเร็จ");
             }
 
-            // เมื่อ Login ผ่าน ให้เปิดหน้าแอปตามสิทธิ์
+            // 🌟 เมื่อ Login ผ่าน (ทั้ง 2 กรณี) ให้ปิดหน้าต่างและพาไปหน้าถัดไปทันที
             closeLoginModal();
             document.getElementById('landingPage').classList.add('hidden');
             document.querySelector('nav').classList.remove('hidden');
             currentUserRole = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
 
             if (currentUserRole === 'Admin') {
-                loadDashboardStats(); // แอดมินดูภาพรวม
                 document.getElementById('homePage').classList.remove('hidden');
+                loadDashboardStats(); // แอดมินดูภาพรวมและการ์ด
             } else {
-                // ซ่อนปุ่มที่ไม่เกี่ยวข้องสำหรับสถานี
                 document.getElementById('btnHome').classList.add('hidden');
                 document.getElementById('btnImportOld').classList.add('hidden');
-                // เปิดหน้าของสถานีตัวเองทันที
                 openStation(loginTarget.groupName, loginTarget.stationName);
             }
         }
