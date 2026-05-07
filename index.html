@@ -707,21 +707,25 @@
             document.getElementById('darkModeIcon').innerText = '☀️';
         }
 
+        // 🌟 1. ดักหน้าเว็บตอนโหลด ให้ซ่อนทุกอย่าง และโหลดข้อมูลมารอไว้เลย!
         window.onload = async function() {
             document.querySelectorAll('.max-w-7xl').forEach(el => { el.classList.remove('max-w-7xl'); el.classList.add('w-full', 'px-2', '2xl:px-8'); });
             updateClock();
             
-            // ซ่อนแถบนำทางและหน้าแอป
+            // 🛑 ซ่อนหน้า Login และหน้าอื่นๆ ไว้ก่อนจนกว่าโหลดข้อมูลจะเสร็จ
             document.querySelector('nav').classList.add('hidden');
             document.getElementById('homePage').classList.add('hidden');
             document.getElementById('editorPage').classList.add('hidden');
             document.getElementById('aggregatePage').classList.add('hidden');
+            document.getElementById('landingPage').classList.add('hidden');
             
-            renderLandingGrid(); // วาดปุ่มสำหรับหน้า Login
-            renderIndexPage();   // 🌟 วาดปุ่มการ์ดรอไว้สำหรับหน้า Admin
+            // 🚀 เปิดหน้าต่างโหลดข้อมูล โชว์ให้ผู้ใช้เห็นว่ากำลังเตรียมระบบ
+            document.getElementById('loadingText').innerText = 'กำลังเชื่อมต่อและโหลดข้อมูลระบบ...';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
             
-            // แอบโหลดข้อมูลเบื้องหลัง รอไว้เลย
             try {
+                // ยิง API ดึงข้อมูลทั้งหมดในประเทศมารอไว้ใน Cache รวดเดียว
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); 
                 const result = await response.json();
                 if (result.value) {
@@ -730,7 +734,18 @@
                         authDb = JSON.parse(globalAllDataCache['ADP_AUTH_DB']);
                     }
                 }
-            } catch(e) { console.error("Load Initial Data Error", e); }
+            } catch(e) { 
+                console.error("Load Initial Data Error", e); 
+                showToast("การเชื่อมต่อฐานข้อมูลล้มเหลว กรุณารีเฟรช", "error");
+            } finally {
+                // ✅ พอโหลดเสร็จ ปิดหน้าต่างโหลด แล้วโชว์หน้า Landing Page ให้ Login ได้
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('loadingOverlay').classList.remove('flex');
+                
+                renderLandingGrid(); 
+                renderIndexPage();   
+                document.getElementById('landingPage').classList.remove('hidden');
+            }
         };
 
         function renderLandingGrid() {
@@ -1071,45 +1086,48 @@
             document.getElementById('editorPage').classList.remove('hidden'); 
             document.getElementById('btnHome').classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = stationName; document.getElementById('currentGroupSubtitle').innerText = `กลุ่ม: ${groupName}`;
-            document.getElementById('loadingText').innerText = 'กำลังดึงข้อมูลตาราง...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            document.getElementById('loadingText').innerText = 'กำลังเปิดตาราง...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
-                let dbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
+                let defaultDbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
+                let dbData = JSON.parse(JSON.stringify(defaultDbData));
                 let cacheKey = `ADP_${groupName}_${stationName}`;
                 
-                // 🌟 ระบบโหลดอัจฉริยะแบบกันเหนียว (Crash-Proof)
+                // 🌟 ดึงข้อมูลจาก Cache ที่โหลดรอไว้แล้ว (ไวปานสายฟ้า)
                 if (globalAllDataCache && globalAllDataCache[cacheKey]) {
-                    try { dbData = JSON.parse(globalAllDataCache[cacheKey]); } catch(e) {}
+                    try { 
+                        let parsed = JSON.parse(globalAllDataCache[cacheKey]); 
+                        if(parsed) dbData = { ...dbData, ...parsed }; // ผสานข้อมูลป้องกันค่า null
+                    } catch(e) { console.warn("Cache parse error"); }
                 } else {
-                    // 🌟 เข้ารหัสภาษาไทยใน URL ป้องกันเว็บหาลิงก์ไม่เจอ
+                    // เผื่อกรณีหลุดจาก Cache จริงๆ ให้ดึงตรงจาก API (เข้ารหัสภาษาไทยกันบัค)
                     const response = await fetch(`${API_URL}?key=${encodeURIComponent(cacheKey)}`); 
                     const result = await response.json();
                     if (result.value) {
                         try {
-                            dbData = JSON.parse(result.value);
+                            let parsed = JSON.parse(result.value);
+                            if(parsed) dbData = { ...dbData, ...parsed };
                             if (!globalAllDataCache) globalAllDataCache = {};
                             globalAllDataCache[cacheKey] = result.value;
-                        } catch(e) { console.warn("ข้อมูลของสถานีนี้ยังว่างเปล่า หรือรูปแบบผิดปกติ"); }
+                        } catch(e) { console.warn("Fetch Parse Error"); }
                     }
                 }
                 
-                // 🌟 เช็คให้ชัวร์ว่าตารางทุกอันต้องมี Array เปล่าๆ ไม่เป็นค่า Null
-                if (!dbData.cpu) dbData.cpu = [[]];
-                if (!dbData.nb) dbData.nb = [[]];
-                if (!dbData.mon) dbData.mon = [[]];
-                if (!dbData.prn) dbData.prn = [[]];
-                if (!dbData.spc) dbData.spc = [[]];
+                // 🌟 ระบบกันพัง (Crash-Proof) ป้องกันตารางไหนว่างแล้วเกิด Array Null
+                if (!dbData.cpu || !Array.isArray(dbData.cpu) || dbData.cpu.length === 0) dbData.cpu = [[]];
+                if (!dbData.nb || !Array.isArray(dbData.nb) || dbData.nb.length === 0) dbData.nb = [[]];
+                if (!dbData.mon || !Array.isArray(dbData.mon) || dbData.mon.length === 0) dbData.mon = [[]];
+                if (!dbData.prn || !Array.isArray(dbData.prn) || dbData.prn.length === 0) dbData.prn = [[]];
+                if (!dbData.spc || !Array.isArray(dbData.spc) || dbData.spc.length === 0) dbData.spc = [[]];
 
-                // โหลดสต็อกคลัง
+                // โหลดสต็อกคลังเพื่อค้นหา S/N
                 if (!warehouseStock || warehouseStock.length === 0) {
                     try {
-                        let whDataStr = null;
-                        if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
-                            whDataStr = globalAllDataCache['ADP_WAREHOUSE_CENTRAL'];
-                        } else {
+                        let whDataStr = (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) ? globalAllDataCache['ADP_WAREHOUSE_CENTRAL'] : null;
+                        if (!whDataStr) {
                             const whRes = await fetch(`${API_URL}?key=ADP_WAREHOUSE_CENTRAL`);
-                            const whResult = await whRes.json();
-                            whDataStr = whResult.value;
+                            whDataStr = (await whRes.json()).value;
                         }
                         if (whDataStr) {
                             let whData = JSON.parse(whDataStr);
@@ -1121,10 +1139,10 @@
                             if (whData.main) extractWh(whData.main); 
                             if (whData.parts) extractWh(whData.parts);
                         }
-                    } catch(e) { console.log('ไม่มีข้อมูลคลัง หรือโหลดคลังไม่สำเร็จ'); }
+                    } catch(e) { console.log('โหลดสต็อกคลังไม่สำเร็จ'); }
                 }
 
-                // แปลงตาราง SPC รูปแบบเก่าเป็นแบบใหม่
+                // แปลงตาราง SPC รูปแบบเก่าเป็นแบบใหม่ (ให้ลง 10 ช่องเป๊ะ)
                 let migratedSpc = [];
                 dbData.spc.forEach(s => {
                     let isNewFormat = s.length >= 9;
@@ -1207,7 +1225,7 @@
                 
             } catch (error) { 
                 console.error(error); 
-                showToast("ดึงข้อมูลพลาด กรุณารีเฟรชหน้าเว็บ", "error"); 
+                showToast("พบปัญหาในการเปิดหน้าตาราง", "error"); 
                 initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }); 
             } 
             finally { 
