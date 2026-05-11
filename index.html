@@ -794,20 +794,21 @@
 
         function finalizeLogin(role, stationName, groupName) {
             closeLoginModal();
-            document.getElementById('landingPage').classList.add('hidden');
-            document.getElementById('btnAdminLogin').classList.add('hidden');
-            document.getElementById('btnLogout').classList.remove('hidden');
-            document.getElementById('btnHelp').classList.remove('hidden');
-            document.getElementById('navDivider').classList.remove('hidden');
+            
+            // 🌟 ใส่เกราะกันพัง: ตรวจสอบก่อนว่ามี Element อยู่จริงไหม ค่อยสั่งซ่อน/แสดง
+            let elLanding = document.getElementById('landingPage'); if (elLanding) elLanding.classList.add('hidden');
+            let elAdminBtn = document.getElementById('btnAdminLogin'); if (elAdminBtn) elAdminBtn.classList.add('hidden');
+            let elLogoutBtn = document.getElementById('btnLogout'); if (elLogoutBtn) elLogoutBtn.classList.remove('hidden');
+            let elHelpBtn = document.getElementById('btnHelp'); if (elHelpBtn) elHelpBtn.classList.remove('hidden');
+            let elNavDiv = document.getElementById('navDivider'); if (elNavDiv) elNavDiv.classList.remove('hidden');
 
             currentUserRole = (role === 'Admin') ? 'Admin' : stationName;
 
             if (currentUserRole === 'Admin') {
-                document.getElementById('homePage').classList.remove('hidden');
+                let elHome = document.getElementById('homePage'); if (elHome) elHome.classList.remove('hidden');
                 loadDashboardStats(); 
             } else {
-                // ถ้าเป็น "เจ้าหน้าที่สถานี" ให้ซ่อนปุ่มจัดการทั้งหมด และเปิดหน้าสถานี
-                document.getElementById('btnHome').classList.add('hidden');
+                let elBtnHome = document.getElementById('btnHome'); if (elBtnHome) elBtnHome.classList.add('hidden');
                 openStation(groupName, stationName);
             }
         }
@@ -1044,15 +1045,16 @@
             currentGroup = groupName; currentStation = stationName; hasUnsavedDeletions = false;
             
             const editPage = document.getElementById('editorPage');
-            editPage.classList.remove('animate-fade-in'); void editPage.offsetWidth; editPage.classList.add('animate-fade-in');
+            if(editPage) { editPage.classList.remove('animate-fade-in'); void editPage.offsetWidth; editPage.classList.add('animate-fade-in'); }
 
-            document.getElementById('homePage').classList.add('hidden');
-            document.getElementById('aggregatePage').classList.add('hidden'); 
-            document.getElementById('editorPage').classList.remove('hidden'); 
-            document.getElementById('btnHome').classList.remove('hidden'); 
+            let elHome = document.getElementById('homePage'); if(elHome) elHome.classList.add('hidden');
+            let elAgg = document.getElementById('aggregatePage'); if(elAgg) elAgg.classList.add('hidden'); 
+            if(editPage) editPage.classList.remove('hidden'); 
+            
+            let elBtnHome = document.getElementById('btnHome'); if(elBtnHome) elBtnHome.classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = stationName; document.getElementById('currentGroupSubtitle').innerText = `กลุ่ม: ${groupName}`;
             document.getElementById('loadingText').innerText = 'กำลังเปิดตาราง...'; 
-            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            let over = document.getElementById('loadingOverlay'); if(over) { over.classList.remove('hidden'); over.classList.add('flex'); }
             
             try {
                 let defaultDbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
@@ -1122,25 +1124,28 @@
                     }
                 }
                 
-                // 🌟 เช็คสิทธิ์และวาดตารางแบบ Read-Only
+                // 🌟 ตรวจสอบสิทธิ์: ถ้าไม่ใช่ Admin ให้เป็นโหมดอ่านอย่างเดียว
                 const isReadOnly = (currentUserRole !== 'Admin');
                 initSpreadsheets(dbData, isReadOnly);
                 
-                // 🌟 ควบคุมการซ่อนปุ่ม
-                const adminButtons = ['btnImportOld', 'btnConfirmMonth'];
-                const saveBtn = document.querySelector('button[onclick="prepareSave()"]');
-                const importNewBtn = document.querySelector('button[onclick="document.getElementById(\'importExcelNewInput\').click()"]');
+                // 🌟 ควบคุมการซ่อนปุ่มแบบปลอดภัยสุดๆ (ป้องกัน Error หาปุ่มไม่เจอ)
+                const adminBtnIds = ['btnImportOld', 'btnConfirmMonth'];
                 const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"]');
 
                 if (isReadOnly) {
-                    adminButtons.forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-                    if(saveBtn) saveBtn.classList.add('hidden');
-                    if(importNewBtn) importNewBtn.classList.add('hidden');
+                    adminBtnIds.forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+                    // ค้นหาปุ่มในหน้า editorPage ทั้งหมด และซ่อนปุ่มที่เกี่ยวกับ บันทึก/นำเข้า
+                    document.querySelectorAll('#editorPage button').forEach(btn => {
+                        let txt = btn.innerText || '';
+                        if (txt.includes('บันทึก') || txt.includes('นำเข้า')) btn.classList.add('hidden');
+                    });
                     addRowButtons.forEach(btn => btn.classList.add('hidden'));
                     showToast("🔔 โหมดดูข้อมูล (ไม่สามารถแก้ไขได้)");
                 } else {
-                    if(saveBtn) saveBtn.classList.remove('hidden');
-                    if(importNewBtn) importNewBtn.classList.remove('hidden');
+                    document.querySelectorAll('#editorPage button').forEach(btn => {
+                        let txt = btn.innerText || '';
+                        if (txt.includes('บันทึก') || txt.includes('นำเข้า')) btn.classList.remove('hidden');
+                    });
                     addRowButtons.forEach(btn => btn.classList.remove('hidden'));
                 }
                 
@@ -1189,7 +1194,8 @@
                 try { initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }, true); } catch(e){}
             } 
             finally { 
-                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
+                let over = document.getElementById('loadingOverlay');
+                if(over) { over.classList.add('hidden'); over.classList.remove('flex'); }
             }
         }
 
