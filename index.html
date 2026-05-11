@@ -1122,16 +1122,14 @@
                     }
                 }
                 
-                // 🌟 ตรวจสอบสิทธิ์: ถ้าไม่ใช่ Admin ให้เป็นโหมดอ่านอย่างเดียว
+                // 🌟 เช็คสิทธิ์และวาดตารางแบบ Read-Only
                 const isReadOnly = (currentUserRole !== 'Admin');
-                
-                // สั่งวาดตารางพร้อมส่งสถานะ Read-Only เข้าไป
                 initSpreadsheets(dbData, isReadOnly);
                 
-                // 🌟 จัดการซ่อน/แสดงปุ่มตามสิทธิ์
+                // 🌟 ควบคุมการซ่อนปุ่ม
                 const adminButtons = ['btnImportOld', 'btnConfirmMonth'];
                 const saveBtn = document.querySelector('button[onclick="prepareSave()"]');
-                const importNewBtn = document.querySelector('button[onclick="document.getElementById(\\'importExcelNewInput\\').click()"]');
+                const importNewBtn = document.querySelector('button[onclick="document.getElementById(\'importExcelNewInput\').click()"]');
                 const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"]');
 
                 if (isReadOnly) {
@@ -1229,17 +1227,15 @@
             if (col == tCols - 1) { 
                 const isReadOnly = (currentUserRole !== 'Admin');
                 
-                // ถ้าเป็น Read-Only ให้โชว์แค่ปุ่ม QR Code อย่างเดียว (หรือซ่อนทั้งหมดก็ได้)
                 if (isReadOnly) {
-                    cell.innerHTML = `<div class="flex justify-center">
-                        <button onclick="showSingleQR('${instance.id}', ${row})" class="text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button>
-                    </div>`;
+                    // โชว์แค่ปุ่ม QR Code
+                    cell.innerHTML = `<div class="flex justify-center"><button onclick="showSingleQR('${instance.id}', ${row})" title="ดูหรือพิมพ์ QR Code" class="text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button></div>`;
                 } else {
-                    // ถ้าเป็น Admin โชว์ครบ (กล้อง, QR, ถังขยะ)
+                    // แอดมิน โชว์ครบ 3 ปุ่ม
                     cell.innerHTML = `<div class="flex justify-center gap-1">
-                        <button onclick="triggerUpload('${instance.id}', ${row})" class="text-slate-400 hover:text-emerald-500 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg></button>
-                        <button onclick="showSingleQR('${instance.id}', ${row})" class="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v1m6 11h2m-6 0h-2v4"></path></svg></button>
-                        <button onclick="promptDeleteRow('${instance.id}', ${row})" class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7"></path></svg></button>
+                        <button onclick="triggerUpload('${instance.id}', ${row})" title="แนบรูปภาพ" class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
+                        <button onclick="showSingleQR('${instance.id}', ${row})" title="ดู QR Code" class="text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button>
+                        <button onclick="promptDeleteRow('${instance.id}', ${row})" title="ลบข้อมูล" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                     </div>`;
                 }
                 cell.style.textAlign = 'center'; 
@@ -1512,7 +1508,7 @@
                 allowManualInsertRow: !isReadOnly, 
                 allowInsertColumn: false, 
                 allowDeleteRow: !isReadOnly, 
-                editable: !isReadOnly,       // ปิดการพิมพ์
+                editable: !isReadOnly,       // 🔒 ปิดไม่ให้ดับเบิลคลิกพิมพ์ถ้าไม่ใช่แอดมิน
                 wordWrap: true, 
                 oneditionstart: isReadOnly ? null : handleSNEdit, 
                 updateTable: customRenderTable 
