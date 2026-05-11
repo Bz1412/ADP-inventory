@@ -767,25 +767,49 @@
         }
 
         function openLoginModal(role, stationName, groupName) {
-            loginTarget = { role, stationName, groupName };
-            let displayUser = role === 'Admin' ? 'System Admin' : `Admin ${stationName}`;
-            let authKey = role === 'Admin' ? 'Admin' : stationName;
+            if (role === 'Station') {
+                // ถ้าเป็นเจ้าหน้าที่สถานี ให้ข้ามการใส่รหัสและ Login ทันที
+                finalizeLogin('Station', stationName, groupName);
+                return;
+            }
             
-            document.getElementById('loginUsernameDisplay').innerText = displayUser;
+            // ถ้าเป็น System Admin ให้เปิด Modal ถามรหัสผ่านตามปกติ
+            loginTarget = { role, stationName, groupName };
+            document.getElementById('loginUsernameDisplay').innerText = 'System Administrator';
             document.getElementById('loginPassword').value = '';
             document.getElementById('loginConfirmPassword').value = '';
             
-            if (authDb[authKey]) {
+            if (authDb['Admin']) {
                 document.getElementById('firstTimeNotice').classList.add('hidden');
                 document.getElementById('confirmPasswordGroup').classList.add('hidden');
-                document.getElementById('loginTitle').innerText = "เข้าสู่ระบบ";
+                document.getElementById('loginTitle').innerText = "Admin Login";
             } else {
                 document.getElementById('firstTimeNotice').classList.remove('hidden');
                 document.getElementById('confirmPasswordGroup').classList.remove('hidden');
-                document.getElementById('loginTitle').innerText = "ตั้งรหัสผ่านใหม่";
+                document.getElementById('loginTitle').innerText = "ตั้งรหัสผ่าน Admin";
             }
-            document.getElementById('loginModal').classList.remove('hidden'); document.getElementById('loginModal').classList.add('flex');
-            setTimeout(() => document.getElementById('loginPassword').focus(), 100);
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginModal').classList.add('flex');
+        }
+
+        function finalizeLogin(role, stationName, groupName) {
+            closeLoginModal();
+            document.getElementById('landingPage').classList.add('hidden');
+            document.getElementById('btnAdminLogin').classList.add('hidden');
+            document.getElementById('btnLogout').classList.remove('hidden');
+            document.getElementById('btnHelp').classList.remove('hidden');
+            document.getElementById('navDivider').classList.remove('hidden');
+
+            currentUserRole = (role === 'Admin') ? 'Admin' : stationName;
+
+            if (currentUserRole === 'Admin') {
+                document.getElementById('homePage').classList.remove('hidden');
+                loadDashboardStats(); 
+            } else {
+                // ถ้าเป็น "เจ้าหน้าที่สถานี" ให้ซ่อนปุ่มจัดการทั้งหมด และเปิดหน้าสถานี
+                document.getElementById('btnHome').classList.add('hidden');
+                openStation(groupName, stationName);
+            }
         }
 
         function closeLoginModal() { document.getElementById('loginModal').classList.add('hidden'); document.getElementById('loginModal').classList.remove('flex'); }
@@ -800,46 +824,23 @@
         async function submitLogin() {
             if (!loginTarget) return;
             let pass = document.getElementById('loginPassword').value.trim();
-            let authKey = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
-            
             if (!pass) return showToast("กรุณากรอกรหัสผ่าน", "error");
 
             let hashedPass = await hashPassword(pass);
 
-            if (!authDb[authKey]) {
+            if (!authDb['Admin']) {
                 let confirmPass = document.getElementById('loginConfirmPassword').value.trim();
                 if (pass !== confirmPass) return showToast("รหัสผ่านไม่ตรงกัน", "error");
-                
-                authDb[authKey] = hashedPass;
-                
-                document.getElementById('loadingText').innerText = 'กำลังบันทึกรหัสผ่าน (เข้ารหัส)...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+                authDb['Admin'] = hashedPass;
                 try {
-                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: 'ADP_AUTH_DB', value: JSON.stringify(authDb) }], logs: [{station: 'System', action: 'ตั้งรหัสผ่าน', detail: `ตั้งรหัสผ่านสำหรับ ${authKey} สำเร็จ`}] }) });
-                    showToast("ตั้งรหัสผ่านและเข้ารหัสสำเร็จ!");
-                } catch(e) { console.error(e); showToast("บันทึกรหัสผ่านล้มเหลว", "error"); document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); return; }
-                document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex');
+                    await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: 'ADP_AUTH_DB', value: JSON.stringify(authDb) }], logs: [{station: 'System', action: 'ตั้งรหัสผ่าน', detail: `ตั้งรหัสผ่าน Admin สำเร็จ`}] }) });
+                    showToast("ตั้งรหัสผ่าน Admin สำเร็จ!");
+                } catch(e) { showToast("ล้มเหลว", "error"); return; }
             } else {
-
-                if (authDb[authKey] !== hashedPass) return showToast("รหัสผ่านไม่ถูกต้อง", "error");
-                showToast("เข้าสู่ระบบสำเร็จ");
+                if (authDb['Admin'] !== hashedPass) return showToast("รหัสผ่านไม่ถูกต้อง", "error");
             }
-
-            closeLoginModal();
-            document.getElementById('landingPage').classList.add('hidden');
             
-            document.getElementById('btnAdminLogin').classList.add('hidden');
-            document.getElementById('btnLogout').classList.remove('hidden');
-
-            currentUserRole = loginTarget.role === 'Admin' ? 'Admin' : loginTarget.stationName;
-
-            if (currentUserRole === 'Admin') {
-                document.getElementById('homePage').classList.remove('hidden');
-                loadDashboardStats(); 
-            } else {
-                document.getElementById('btnHome').classList.add('hidden');
-                document.getElementById('btnImportOld').classList.add('hidden');
-                openStation(loginTarget.groupName, loginTarget.stationName);
-            }
+            finalizeLogin('Admin', null, null);
         }
 
         function showToast(message, type = 'success') {
@@ -1121,7 +1122,29 @@
                     }
                 }
                 
-                initSpreadsheets(dbData);
+                // 🌟 ตรวจสอบสิทธิ์: ถ้าไม่ใช่ Admin ให้เป็นโหมดอ่านอย่างเดียว
+                const isReadOnly = (currentUserRole !== 'Admin');
+                
+                // สั่งวาดตารางพร้อมส่งสถานะ Read-Only เข้าไป
+                initSpreadsheets(dbData, isReadOnly);
+                
+                // 🌟 จัดการซ่อน/แสดงปุ่มตามสิทธิ์
+                const adminButtons = ['btnImportOld', 'btnConfirmMonth'];
+                const saveBtn = document.querySelector('button[onclick="prepareSave()"]');
+                const importNewBtn = document.querySelector('button[onclick="document.getElementById(\\'importExcelNewInput\\').click()"]');
+                const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"]');
+
+                if (isReadOnly) {
+                    adminButtons.forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
+                    if(saveBtn) saveBtn.classList.add('hidden');
+                    if(importNewBtn) importNewBtn.classList.add('hidden');
+                    addRowButtons.forEach(btn => btn.classList.add('hidden'));
+                    showToast("🔔 โหมดดูข้อมูล (ไม่สามารถแก้ไขได้)");
+                } else {
+                    if(saveBtn) saveBtn.classList.remove('hidden');
+                    if(importNewBtn) importNewBtn.classList.remove('hidden');
+                    addRowButtons.forEach(btn => btn.classList.remove('hidden'));
+                }
                 
                 let stTotalCPU = 0, stTotalMon = 0, stTotalPrn = 0, stTotalSpc = 0, stTotalNB = 0;
                 let stStatCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
@@ -1165,7 +1188,7 @@
             } catch (error) { 
                 console.error(error); 
                 showToast("พบปัญหาในการเปิดหน้าตาราง", "error"); 
-                try { initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }); } catch(e){}
+                try { initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }, true); } catch(e){}
             } 
             finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
@@ -1204,13 +1227,24 @@
             }
 
             if (col == tCols - 1) { 
-                cell.innerHTML = `<div class="flex justify-center gap-1">
-                    <button onclick="triggerUpload('${instance.id}', ${row})" title="แนบรูปภาพความเสียหาย (ลิงก์รูปจะถูกใส่ในช่องหมายเหตุ)" class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></button>
-                    <button onclick="showSingleQR('${instance.id}', ${row})" title="ดูหรือพิมพ์ QR Code สำหรับติดที่เครื่อง" class="text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button>
-                    <button onclick="promptDeleteRow('${instance.id}', ${row})" title="ลบอุปกรณ์ชิ้นนี้ออกจากระบบ" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors flex items-center justify-center"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
-                </div>`; 
+                const isReadOnly = (currentUserRole !== 'Admin');
+                
+                // ถ้าเป็น Read-Only ให้โชว์แค่ปุ่ม QR Code อย่างเดียว (หรือซ่อนทั้งหมดก็ได้)
+                if (isReadOnly) {
+                    cell.innerHTML = `<div class="flex justify-center">
+                        <button onclick="showSingleQR('${instance.id}', ${row})" class="text-indigo-500 hover:bg-indigo-50 p-1.5 rounded-lg transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg></button>
+                    </div>`;
+                } else {
+                    // ถ้าเป็น Admin โชว์ครบ (กล้อง, QR, ถังขยะ)
+                    cell.innerHTML = `<div class="flex justify-center gap-1">
+                        <button onclick="triggerUpload('${instance.id}', ${row})" class="text-slate-400 hover:text-emerald-500 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg></button>
+                        <button onclick="showSingleQR('${instance.id}', ${row})" class="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v1m6 11h2m-6 0h-2v4"></path></svg></button>
+                        <button onclick="promptDeleteRow('${instance.id}', ${row})" class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7"></path></svg></button>
+                    </div>`;
+                }
                 cell.style.textAlign = 'center'; 
-            } 
+            }
+            
             if (colTitle === 'หมายเหตุ' && val) {
                 let htmlVal = val.toString().replace(/\[ดูรูป:\s*(https?:\/\/[^\]]+)\]/g, function(match, url) {
                     return `<button onclick="openImageModal('${url}', ${row}, '${instance.id}'); event.stopPropagation();" class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded font-medium text-[10px] ml-1 transition-colors w-max" title="คลิกดูรูปภาพ"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> รูป</button>`;
@@ -1437,7 +1471,7 @@
             }
         };
 
-        function initSpreadsheets(data) {
+        function initSpreadsheets(data, isReadOnly = false) {
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
             document.getElementById('spreadsheet-prn').innerHTML=''; 
@@ -1473,7 +1507,16 @@
             });
             if (migratedSpc.length === 0) migratedSpc = [[]];
 
-            const tableConfig = { allowInsertRow: true, allowManualInsertRow: true, allowInsertColumn: false, wordWrap: true, oneditionstart: handleSNEdit, updateTable: customRenderTable };
+            const tableConfig = { 
+                allowInsertRow: !isReadOnly, 
+                allowManualInsertRow: !isReadOnly, 
+                allowInsertColumn: false, 
+                allowDeleteRow: !isReadOnly, 
+                editable: !isReadOnly,       // ปิดการพิมพ์
+                wordWrap: true, 
+                oneditionstart: isReadOnly ? null : handleSNEdit, 
+                updateTable: customRenderTable 
+            };
 
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { ...tableConfig, data: cpumonData, columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, { type: 'text', title: 'รุ่น CPU', width: 130 }, { type: 'text', title: 'S/N CPU', width: 150 }, { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, { type: 'text', title: 'S/N จอภาพ', width: 150 }, { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [13, 3] });
             tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { ...tableConfig, data: (data.nb && Array.isArray(data.nb) && data.nb.length > 0) ? data.nb : [[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 200 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [9, 3] });
