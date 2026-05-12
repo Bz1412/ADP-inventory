@@ -646,7 +646,6 @@
             }
         }
 
-        // 🌟 1. ยกระดับการดึงข้อมูล ให้ตรงกับ Index 100% 🌟
         async function fetchAllData(isSilent = false) {
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`);
@@ -667,47 +666,73 @@
                         }
                         
                         const parts = dbKey.split('_');
-                        // 🌟 ไม่เอา AUTH_DB มานับ
                         if(parts.length >= 3 && parts[1] !== 'WAREHOUSE' && dbKey !== 'ADP_AUTH_DB') { 
                             const group = parts[1];
                             const station = parts[2];
                             
-                            // 🌟 ระบบแยกข้อมูลที่เจาะจงแต่ละตารางโดยเฉพาะ
-                            const extractDeployed = (arr, catType, idxBrand, idxModel, idxSn, idxStatus, isSpc = false) => {
-                                if(!arr) return;
+                            // 🌟 ระบบดึงข้อมูลอัจฉริยะ รองรับทั้งโครงสร้างเก่าและใหม่
+                            const extractDeployed = (arr, catType) => {
+                                if(!arr || !Array.isArray(arr)) return;
                                 arr.forEach(r => {
-                                    let brand = String(r[idxBrand] || '').trim();
-                                    let model = String(r[idxModel] || '').trim();
-                                    let sn = String(r[idxSn] || '').trim();
-                                    
-                                    // นับว่ามีข้อมูลเมื่อมียี่ห้อ รุ่น หรือ S/N
-                                    let hasData = (sn && sn !== '-') || (brand && brand !== '-') || (model && model !== '-');
-                                    if (hasData) {
-                                        totalDeployed++;
-                                        let user = isSpc ? r[2] : r[1];
-                                        let specs = `${brand} ${model}`.trim();
-                                        let status = r[idxStatus] || 'ปกติ';
-                                        let actualCat = isSpc ? (r[1] || catType) : catType;
+                                    if (!r || !Array.isArray(r)) return;
 
-                                        let itemObj = { group, station, category: actualCat, user: user||'-', specs: specs||'-', sn: sn||'-', status: status };
-                                        globalDeployedData.push(itemObj); cardData.DEPLOYED.push(itemObj);
-                                        
-                                        if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(status)) {
-                                            brokenDeployed++;
-                                            cardData.BROKEN.push(itemObj); addStat(actualCat, 'broken', 1, itemObj);
+                                    let brand = '', model = '', sn = '', status = 'ปกติ', user = '-', actualCat = catType;
+
+                                    if (catType === 'คอมพิวเตอร์' || catType === 'จอมอนิเตอร์') {
+                                        user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; status = r[5] || 'ปกติ';
+                                    } 
+                                    else if (catType === 'โน๊ตบุ๊ค') {
+                                        user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; status = r[5] || 'ปกติ';
+                                    }
+                                    else if (catType === 'เครื่องพิมพ์') {
+                                        user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; 
+                                        // ถ้ายาว 10 ช่อง (ใหม่) สถานะอยู่ช่อง 7, ถ้าน้อยกว่านั้น (เก่า) สถานะอยู่ช่อง 5
+                                        status = (r.length >= 10) ? (r[7] || 'ปกติ') : (r[5] || 'ปกติ');
+                                    }
+                                    else if (catType === 'เครื่องมือพิเศษ') {
+                                        // ถ้ายาว 9 ช่อง (ใหม่) โครงสร้างคือ: "", ประเภท, ผู้ใช้, ยี่ห้อ, รุ่น, SN, สถานะ
+                                        if (r.length >= 9) {
+                                            actualCat = r[1] || 'เครื่องมือพิเศษ/อื่นๆ';
+                                            user = r[2] || '-'; brand = r[3] || ''; model = r[4] || ''; sn = r[5] || ''; status = r[6] || 'ปกติ';
                                         } else {
-                                            addStat(actualCat, 'deployed', 1, itemObj);
+                                            // ถ้าเป็นโครงสร้างเก่าสุดๆ โครงสร้างคือ: "", ผู้ใช้, ยี่ห้อ, รุ่น, SN, สถานะ
+                                            user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; status = r[5] || 'ปกติ';
+                                            actualCat = 'เครื่องมือพิเศษ/อื่นๆ'; 
                                         }
+                                    }
+
+                                    let bb = String(brand).trim().toLowerCase();
+                                    let mm = String(model).trim().toLowerCase();
+                                    let ss = String(sn).trim().toLowerCase();
+
+                                    // 🌟 ไม่นับแถวที่ว่างเปล่า หรือเขียนว่า "ไม่มี", "-"
+                                    if ((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a') && 
+                                        (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a') && 
+                                        (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a')) {
+                                        return; 
+                                    }
+
+                                    totalDeployed++;
+                                    let specs = `${brand} ${model}`.trim();
+                                    
+                                    let itemObj = { group, station, category: actualCat, user: user, specs: specs || '-', sn: sn || '-', status: status };
+                                    globalDeployedData.push(itemObj); 
+                                    cardData.DEPLOYED.push(itemObj);
+
+                                    if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(status)) {
+                                        brokenDeployed++;
+                                        cardData.BROKEN.push(itemObj); addStat(actualCat, 'broken', 1, itemObj);
+                                    } else {
+                                        addStat(actualCat, 'deployed', 1, itemObj);
                                     }
                                 });
                             };
 
-                            // แยกการดึงข้อมูลให้ตรงกับ Index (CPU กับ Mon อยู่แถวเดียวกัน)
-                            extractDeployed(dbData.cpu, 'คอมพิวเตอร์', 2, 3, 4, 5);       // CPU (Brand=2, Model=3, SN=4, Status=5)
-                            extractDeployed(dbData.mon, 'จอมอนิเตอร์', 2, 3, 4, 5);      // MON (Brand=2, Model=3, SN=4, Status=5)
-                            extractDeployed(dbData.nb, 'โน๊ตบุ๊ค', 2, 3, 4, 5);         // NB
-                            extractDeployed(dbData.prn, 'เครื่องพิมพ์', 2, 3, 4, 7);      // PRN
-                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ/Server/อื่นๆ', 3, 4, 5, 6, true); // SPC รูปแบบใหม่ (Type=1, Brand=3, Model=4, SN=5, Status=6)
+                            extractDeployed(dbData.cpu, 'คอมพิวเตอร์');
+                            extractDeployed(dbData.mon, 'จอมอนิเตอร์');
+                            extractDeployed(dbData.nb, 'โน๊ตบุ๊ค');
+                            extractDeployed(dbData.prn, 'เครื่องพิมพ์');
+                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ');
                         }
                     }
                 }
@@ -719,7 +744,13 @@
                     if(!arr) return;
                     arr.forEach(r => { 
                         let brand = String(r[2]||'').trim(); let model = String(r[3]||'').trim(); let sn = String(r[4]||'').trim();
-                        let hasData = (sn && sn !== '-') || (brand && brand !== '-') || (model && model !== '-');
+                        let bb = brand.toLowerCase(); let mm = model.toLowerCase(); let ss = sn.toLowerCase();
+                        
+                        // 🌟 ระบบคัดกรองความว่างเปล่า แบบเดียวกับ Index
+                        let hasData = !((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a') && 
+                                        (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a') && 
+                                        (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a'));
+                                        
                         if (hasData) {
                             whMainCount++; 
                             let cat = r[1];
@@ -746,7 +777,9 @@
                     });
                 }
 
-                document.getElementById('dashWHAvailable').innerText = whAvailableCount; document.getElementById('dashDeployedCount').innerText = totalDeployed; document.getElementById('dashBrokenCount').innerText = brokenDeployed;
+                document.getElementById('dashWHAvailable').innerText = whAvailableCount; 
+                document.getElementById('dashDeployedCount').innerText = totalDeployed; 
+                document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
