@@ -670,42 +670,29 @@
                             const group = parts[1];
                             const station = parts[2];
                             
-                            // 🌟 ระบบดึงข้อมูลอัจฉริยะ รองรับทั้งโครงสร้างเก่าและใหม่
-                            const extractDeployed = (arr, catType) => {
+                            // 🌟 ตัวดึงข้อมูลอัจฉริยะ (อ่านจาก Index ของ Array ตรงๆ)
+                            const extractDeployed = (arr, catType, idxBrand, idxModel, idxSn, idxStatus) => {
                                 if(!arr || !Array.isArray(arr)) return;
                                 arr.forEach(r => {
                                     if (!r || !Array.isArray(r)) return;
 
-                                    let brand = '', model = '', sn = '', status = 'ปกติ', user = '-', actualCat = catType;
+                                    let user = r[1] || '-';
+                                    let brand = String(r[idxBrand] || '').trim();
+                                    let model = String(r[idxModel] || '').trim();
+                                    let sn = String(r[idxSn] || '').trim();
+                                    let status = String(r[idxStatus] || 'ปกติ').trim();
+                                    
+                                    let bb = brand.toLowerCase(); let mm = model.toLowerCase(); let ss = sn.toLowerCase();
 
-                                    if (catType === 'คอมพิวเตอร์' || catType === 'จอมอนิเตอร์') {
-                                        user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; status = r[5] || 'ปกติ';
-                                    } 
-                                    else if (catType === 'โน๊ตบุ๊ค') {
-                                        user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; status = r[5] || 'ปกติ';
-                                    }
-                                    else if (catType === 'เครื่องพิมพ์') {
-                                        user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; 
-                                        // ถ้ายาว 10 ช่อง (ใหม่) สถานะอยู่ช่อง 7, ถ้าน้อยกว่านั้น (เก่า) สถานะอยู่ช่อง 5
-                                        status = (r.length >= 10) ? (r[7] || 'ปกติ') : (r[5] || 'ปกติ');
-                                    }
-                                    else if (catType === 'เครื่องมือพิเศษ') {
-                                        // ถ้ายาว 9 ช่อง (ใหม่) โครงสร้างคือ: "", ประเภท, ผู้ใช้, ยี่ห้อ, รุ่น, SN, สถานะ
-                                        if (r.length >= 9) {
-                                            actualCat = r[1] || 'เครื่องมือพิเศษ/อื่นๆ';
-                                            user = r[2] || '-'; brand = r[3] || ''; model = r[4] || ''; sn = r[5] || ''; status = r[6] || 'ปกติ';
-                                        } else {
-                                            // ถ้าเป็นโครงสร้างเก่าสุดๆ โครงสร้างคือ: "", ผู้ใช้, ยี่ห้อ, รุ่น, SN, สถานะ
-                                            user = r[1] || '-'; brand = r[2] || ''; model = r[3] || ''; sn = r[4] || ''; status = r[5] || 'ปกติ';
-                                            actualCat = 'เครื่องมือพิเศษ/อื่นๆ'; 
-                                        }
+                                    // ถ้ายาว 9 ช่องแปลว่าเป็นตาราง SPC ให้ดัน Index ถัดไปอีก 1 ช่อง และดึง Type จากช่อง 1
+                                    let actualCat = catType;
+                                    if (catType === 'เครื่องมือพิเศษ' && r.length >= 9) {
+                                        actualCat = r[1] || 'เครื่องมือพิเศษ';
+                                        user = r[2] || '-'; brand = String(r[3]||'').trim(); model = String(r[4]||'').trim(); sn = String(r[5]||'').trim(); status = String(r[6]||'ปกติ').trim();
+                                        bb = brand.toLowerCase(); mm = model.toLowerCase(); ss = sn.toLowerCase();
                                     }
 
-                                    let bb = String(brand).trim().toLowerCase();
-                                    let mm = String(model).trim().toLowerCase();
-                                    let ss = String(sn).trim().toLowerCase();
-
-                                    // 🌟 ไม่นับแถวที่ว่างเปล่า หรือเขียนว่า "ไม่มี", "-"
+                                    // ไม่นับแถวที่ว่างเปล่า 
                                     if ((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a') && 
                                         (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a') && 
                                         (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a')) {
@@ -728,11 +715,17 @@
                                 });
                             };
 
-                            extractDeployed(dbData.cpu, 'คอมพิวเตอร์');
-                            extractDeployed(dbData.mon, 'จอมอนิเตอร์');
-                            extractDeployed(dbData.nb, 'โน๊ตบุ๊ค');
-                            extractDeployed(dbData.prn, 'เครื่องพิมพ์');
-                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ');
+                            // 🎯 ตั้งค่า Index ให้ตรงกับ Array JSON ที่คุณ BenP ส่งมาเป๊ะๆ
+                            // โครงสร้าง CPU, NB, MON คือ: [0:"", 1:"ผู้ใช้", 2:"ยี่ห้อ", 3:"รุ่น", 4:"S/N", 5:"สถานะ"]
+                            extractDeployed(dbData.cpu, 'คอมพิวเตอร์', 2, 3, 4, 5);
+                            extractDeployed(dbData.nb, 'โน๊ตบุ๊ค', 2, 3, 4, 5);
+                            extractDeployed(dbData.mon, 'จอมอนิเตอร์', 2, 3, 4, 5);
+                            
+                            // โครงสร้าง PRN คือ: [0:"", 1:"ผู้ใช้", 2:"ยี่ห้อ", 3:"รุ่น", 4:"S/N", 5:"สี", 6:"สแกน", 7:"สถานะ"]
+                            extractDeployed(dbData.prn, 'เครื่องพิมพ์', 2, 3, 4, 7);
+                            
+                            // โครงสร้าง SPC เก่า คือ: [0:"", 1:"ผู้ใช้", 2:"ยี่ห้อ", 3:"รุ่น", 4:"S/N", 5:"สถานะ"]
+                            extractDeployed(dbData.spc, 'เครื่องมือพิเศษ', 2, 3, 4, 5);
                         }
                     }
                 }
