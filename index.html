@@ -203,55 +203,84 @@
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] w-full max-w-4xl flex flex-col max-h-[95vh] sm:max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 sticky top-0 z-10">
                 <div>
-                    <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📖 คู่มือการใช้งานระบบ ADP-Inventory</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">อธิบายการทำงานและทริคการใช้งานต่างๆ เพื่อให้แอดมินทำงานง่ายขึ้น</p>
+                    <h3 id="helpModalTitle" class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📖 คู่มือการใช้งานระบบ</h3>
+                    <p id="helpModalSubtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">อธิบายการทำงานและขั้นตอนการใช้งาน</p>
                 </div>
                 <button onclick="closeHelpModal()" class="text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all transform hover:rotate-90 bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-full w-10 h-10 flex items-center justify-center font-medium">&times;</button>
             </div>
             
-            <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full space-y-6">
-
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
-                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การกรอกและแก้ไขข้อมูล (สำคัญ)</h4>
-                    <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
-                        <li><strong>การพิมพ์ภาษาไทย:</strong> ระบบนี้ใช้ตารางแบบพิเศษ คุณต้อง <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">ดับเบิลคลิก (Double-Click)</span> ให้เคอร์เซอร์กระพริบในช่องก่อน ถึงจะพิมพ์ภาษาไทยได้โดยที่สระไม่ลอย</li>
-                        <li><strong>การลบแถวที่พิมพ์ผิด:</strong> ห้ามลบข้อความทิ้งให้เป็นช่องว่างเฉยๆ ให้กดไอคอน <span class="font-mono">🗑️ (ถังขยะ)</span> ที่คอลัมน์ขวาสุด เพื่อนำข้อมูลและรูปภาพออกจากระบบอย่างสมบูรณ์</li>
-                        <li><strong>การเพิ่มทีละเยอะๆ:</strong> หากต้องการเพิ่มอุปกรณ์ 50 ชิ้น แนะนำให้กดปุ่ม <strong>"📥 Export"</strong> เพื่อโหลดไฟล์เปล่าไปทำในโปรแกรม Excel ก่อน แล้วค่อยกด <strong>"📤 นำเข้า"</strong> ทีหลัง</li>
-                        <li><span class="text-red-500 font-bold">จุดระวัง:</span> ทุกครั้งที่มีการแก้ไข/ลบ/นำเข้า ต้องกดปุ่ม <strong>"💾 บันทึก"</strong> เสมอ ข้อมูลถึงจะส่งไปเก็บที่เซิร์ฟเวอร์</li>
-                    </ul>
+            <div class="p-4 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] text-sm w-full">
+                
+                <div id="adminHelpContent" class="hidden space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การกรอกและแก้ไขข้อมูล (สำคัญ)</h4>
+                        <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                            <li><strong>การพิมพ์ภาษาไทย:</strong> ระบบนี้ใช้ตารางแบบพิเศษ คุณต้อง <span class="font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded">ดับเบิลคลิก (Double-Click)</span> ให้เคอร์เซอร์กระพริบในช่องก่อน ถึงจะพิมพ์ภาษาไทยได้โดยที่สระไม่ลอย</li>
+                            <li><strong>การลบแถวที่พิมพ์ผิด:</strong> ห้ามลบข้อความทิ้งให้เป็นช่องว่างเฉยๆ ให้กดไอคอน <span class="font-mono">🗑️ (ถังขยะ)</span> ที่คอลัมน์ขวาสุด เพื่อนำข้อมูลและรูปภาพออกจากระบบอย่างสมบูรณ์</li>
+                            <li><strong>การเพิ่มทีละเยอะๆ:</strong> หากต้องการเพิ่มอุปกรณ์ 50 ชิ้น แนะนำให้กดปุ่ม <strong>"ดาวน์โหลด (Excel)"</strong> เพื่อโหลดไฟล์ไปทำในโปรแกรม Excel ก่อน แล้วค่อยกด <strong>"นำเข้าไฟล์"</strong> ทีหลัง</li>
+                            <li><span class="text-red-500 font-bold">จุดระวัง:</span> ทุกครั้งที่มีการแก้ไข/ลบ/นำเข้า ต้องกดปุ่ม <strong>"💾 บันทึก"</strong> เสมอ ข้อมูลถึงจะส่งไปเก็บที่เซิร์ฟเวอร์</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> ระบบแจ้งชำรุดและอัปโหลดรูปภาพ</h4>
+                        <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">เมื่อมีอุปกรณ์เสีย แอดมินสามารถแนบรูปถ่ายความเสียหายเข้าระบบได้ทันที เพื่อให้ช่างประเมินอาการ:</p>
+                        <ol class="list-decimal pl-5 space-y-2 text-slate-600 dark:text-slate-300">
+                            <li>เปลี่ยนคอลัมน์ "สถานะ" เป็น <strong>"ชำรุด"</strong></li>
+                            <li>กดไอคอน <span class="font-bold text-emerald-600">📸 (กล้อง)</span> ที่คอลัมน์จัดการขวาสุด</li>
+                            <li>เลือกรูปภาพในมือถือหรือคอมพิวเตอร์ (ขนาดไม่เกิน 5MB)</li>
+                            <li>ระบบจะสร้างปุ่ม 🖼️ รูป ไว้ในช่องหมายเหตุให้อัตโนมัติ (อย่าลืมกดบันทึก)</li>
+                            <li><strong>การลบรูป:</strong> สามารถกดที่ปุ่ม 🖼️ รูป เพื่อเปิดรูปขึ้นมา แล้วกดปุ่ม "ลบรูปภาพนี้" ได้เลย</li>
+                        </ol>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> ระบบ QR Code ประจำเครื่อง</h4>
+                        <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                            <li>สามารถกดพิมพ์ป้าย QR Code ไปแปะติดอุปกรณ์ได้ โดยกดปุ่ม <strong>"🖨️ พิมพ์ QR"</strong> เพื่อพิมพ์รวดเดียวทั้งสถานี หรือกดไอคอนรูป QR ท้ายแถวเพื่อพิมพ์ทีละเครื่อง</li>
+                            <li>เมื่อนำมือถือมาสแกน QR Code ระบบจะพาเข้าสู่หน้าเว็บ พร้อมโชว์ <strong>ประวัติการซ่อมและการเปลี่ยนสถานะ</strong> ของเครื่องนั้นตั้งแต่เริ่มใช้งานให้ดูทันที</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-300">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-amber-500">4.</span> การส่งรายงานประจำเดือน</h4>
+                        <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                            <li>เมื่อตรวจสอบข้อมูลครบถ้วนแล้ว ให้กดปุ่ม <strong>"ส่งรายงาน"</strong> ระบบจะสรุปยอดทั้งหมดให้ดูอีกครั้งเพื่อยืนยัน</li>
+                            <li>สถานีที่ส่งแล้ว จะมีป้ายกำกับสีเขียวว่า <span class="bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded text-xs">✅ ส่งแล้ว</span> แสดงที่หน้าหลัก</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
-                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> ระบบแจ้งชำรุดและอัปโหลดรูปภาพ</h4>
-                    <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">เมื่อมีอุปกรณ์เสีย แอดมินสามารถแนบรูปถ่ายความเสียหายเข้าระบบได้ทันที เพื่อให้ช่างประเมินอาการ:</p>
-                    <ol class="list-decimal pl-5 space-y-2 text-slate-600 dark:text-slate-300">
-                        <li>เปลี่ยนคอลัมน์ "สถานะ" เป็น <strong>"ชำรุด"</strong></li>
-                        <li>กดไอคอน <span class="font-bold text-emerald-600">📸 (กล้อง)</span> ที่คอลัมน์จัดการขวาสุด</li>
-                        <li>เลือกรูปภาพในมือถือหรือคอมพิวเตอร์ (ขนาดไม่เกิน 5MB)</li>
-                        <li>ระบบจะสร้างปุ่ม <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">🖼️ รูป</span> ไว้ในช่องหมายเหตุให้อัตโนมัติ (อย่าลืมกดบันทึก)</li>
-                        <li><strong>การลบรูป:</strong> สามารถกดที่ปุ่ม 🖼️ รูป เพื่อเปิดรูปขึ้นมา แล้วกดปุ่ม "ลบรูปภาพนี้" ได้เลย (เหมาะสำหรับตอนที่ซ่อมเสร็จแล้ว)</li>
-                    </ol>
+                <div id="stationHelpContent" class="hidden space-y-6">
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การเปิดดูและตรวจสอบตาราง</h4>
+                        <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">ในหน้านี้ ข้อมูลตารางทั้งหมดจะถูก <strong>ล็อกสิทธิ์ให้อ่านได้อย่างเดียว (Read-Only)</strong> เพื่อความปลอดภัยของข้อมูลและป้องกันการเผลอกดลบ</p>
+                        <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                            <li>สามารถตรวจสอบรายการยุทโธปกรณ์ สถานะ และการเชื่อมต่อของสถานีท่านได้</li>
+                            <li>หากต้องการดูรูปภาพความเสียหายของอุปกรณ์ ให้คลิกที่ปุ่ม <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">🖼️ รูป</span> ในคอลัมน์ "หมายเหตุ"</li>
+                            <li>กดไอคอนคิวอาร์โค้ดที่คอลัมน์ขวาสุด เพื่อดูรหัส QR ประจำเครื่องนั้นๆ</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-100">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-emerald-500">2.</span> การ Export ไฟล์เพื่อนำไปแก้ไข</h4>
+                        <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">กรณีที่อุปกรณ์ในสถานีมีการเปลี่ยนแปลง เพิ่ม/ลด หรือชำรุด ให้ดำเนินการดังนี้:</p>
+                        <ol class="list-decimal pl-5 space-y-2 text-slate-600 dark:text-slate-300">
+                            <li>คลิกที่ปุ่ม <strong>"📥 ดาวน์โหลด (Excel)"</strong> ที่มุมบนขวาของหน้าต่าง</li>
+                            <li>ระบบจะทำการเซฟข้อมูลตารางทั้งหมดลงเครื่องคอมพิวเตอร์ของคุณเป็นไฟล์ Excel (.xlsx)</li>
+                            <li>เปิดไฟล์ Excel นั้นด้วยโปรแกรม Microsoft Excel ปกติ เพื่อทำการพิมพ์แก้ไขข้อมูล, เติมอุปกรณ์ใหม่ หรือเปลี่ยนสถานะให้เรียบร้อย</li>
+                            <li>เซฟไฟล์ Excel ที่แก้ไขเสร็จแล้วให้เรียบร้อย</li>
+                        </ol>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> การส่งไฟล์ให้ส่วนกลาง (โฟลเดอร์ ผกม.)</h4>
+                        <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
+                            <li>นำไฟล์ Excel ที่คุณแก้ไขข้อมูลเสร็จเรียบร้อยแล้ว ไปอัปโหลดใส่ใน <strong>"โฟลเดอร์ รับ-ส่ง ข้อมูล ผกม."</strong> ตามช่องทางที่ส่วนกลางกำหนดไว้</li>
+                            <li>จากนั้นแจ้งให้แอดมินส่วนกลาง (System Admin) รับทราบ</li>
+                            <li>แอดมินส่วนกลางจะนำไฟล์ Excel ของท่านไป Import เข้าระบบใหญ่ เพื่อให้ข้อมูลอัปเดตตรงกันต่อไป</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
-                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> ระบบ QR Code ประจำเครื่อง</h4>
-                    <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
-                        <li>สามารถกดพิมพ์ป้าย QR Code ไปแปะติดอุปกรณ์ได้ โดยกดปุ่ม <strong>"🖨️ พิมพ์ QR"</strong> เพื่อพิมพ์รวดเดียวทั้งสถานี หรือกดไอคอนเครื่องพิมพ์ท้ายแถวเพื่อพิมพ์ทีละเครื่อง</li>
-                        <li>เมื่อนำมือถือมาสแกน QR Code ระบบจะพาเข้าสู่หน้าเว็บ พร้อมโชว์ <strong>ประวัติการซ่อมและการเปลี่ยนสถานะ</strong> ของเครื่องนั้นตั้งแต่เริ่มใช้งานให้ดูทันที</li>
-                    </ul>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-300">
-                    <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-amber-500">4.</span> การส่งรายงานประจำเดือน</h4>
-                    <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
-                        <li>เมื่อตรวจสอบข้อมูลครบถ้วนแล้ว ให้กดปุ่ม <strong>"ส่งรายงาน"</strong> ระบบจะสรุปยอดทั้งหมดให้ดูอีกครั้งเพื่อยืนยัน</li>
-                        <li>สถานีที่ส่งแล้ว จะมีป้ายกำกับสีเขียวว่า <span class="bg-emerald-50 text-emerald-600 font-bold px-2 py-0.5 rounded text-xs">✅ ส่งแล้ว</span> แสดงที่หน้าหลัก</li>
-                        <li>หากมีข้อผิดพลาด สามารถแก้ข้อมูล กดบันทึก และกด <strong>"แก้ไขรายงาน"</strong> ส่งซ้ำได้ตลอดเวลา</li>
-                    </ul>
-                </div>
             </div>
             <div class="bg-white dark:bg-slate-800 p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end">
-                <button onclick="closeHelpModal()" class="px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95 w-full sm:w-auto">เข้าใจแล้ว, เริ่มใช้งานเลย</button>
+                <button onclick="closeHelpModal()" class="px-8 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95 w-full sm:w-auto">เข้าใจแล้ว, ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
@@ -2005,7 +2034,25 @@
         }
 
         function closeQrModal() { document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); }
-        function openHelpModal() { document.getElementById('helpModal').classList.remove('hidden'); document.getElementById('helpModal').classList.add('flex'); }
+        function openHelpModal() { 
+            const isAdmin = (currentUserRole === 'Admin');
+            
+            // สลับ Content คู่มือตามสิทธิ์
+            if (isAdmin) {
+                document.getElementById('adminHelpContent').classList.remove('hidden');
+                document.getElementById('stationHelpContent').classList.add('hidden');
+                document.getElementById('helpModalTitle').innerText = '📖 คู่มือการใช้งาน (System Admin)';
+                document.getElementById('helpModalSubtitle').innerText = 'อธิบายเทคนิคการแก้ไขข้อมูลและเครื่องมือแอดมิน';
+            } else {
+                document.getElementById('adminHelpContent').classList.add('hidden');
+                document.getElementById('stationHelpContent').classList.remove('hidden');
+                document.getElementById('helpModalTitle').innerText = '📖 คู่มือการอัปเดตข้อมูล (สถานี/ชุด)';
+                document.getElementById('helpModalSubtitle').innerText = 'ขั้นตอนการ Export ไฟล์และส่งข้อมูลให้ ผกม.';
+            }
+
+            document.getElementById('helpModal').classList.remove('hidden'); 
+            document.getElementById('helpModal').classList.add('flex'); 
+        }
         function closeHelpModal() { document.getElementById('helpModal').classList.add('hidden'); document.getElementById('helpModal').classList.remove('flex'); }
         
         async function exportStationExcel() {
