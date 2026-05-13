@@ -936,10 +936,10 @@
                             if (!sn || sn === '') sn = generateTempSN('SPC');
 
                             let rmkLower = remark.toLowerCase();
-                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || combinedText.includes('ups')) spcType = 'UPS';
-                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || combinedText.includes('server')) spcType = 'Server';
-                            else if (rmkLower.includes('switch') || combinedText.includes('switch')) spcType = 'Switch';
-                            else spcType = 'อื่นๆ';
+                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
+                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
+                            else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
+                            else type = 'อื่นๆ';
 
                             spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
                         }
