@@ -2,79 +2,203 @@
 <html lang="th" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADP-Warehouse ระบบคลังส่วนกลาง</title>
-    <meta name="theme-color" content="#0f172a">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ADP-Warehouse Admin</title>
     
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><path d='M25 30 L50 15 L75 30 L75 70 L50 85 L25 70 Z' fill='none' stroke='%23ffffff' stroke-width='6'/><circle cx='50' cy='50' r='10' fill='%233b82f6'/></svg>">
+    <link id="pwa-manifest" rel="manifest">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Prompt', 'sans-serif'] } } } }</script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Prompt', 'sans-serif'], } } } }</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/index.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4.13.3/dist/jspreadsheet.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #111827; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; }
-        .dark .loader { border-top: 3px solid #f9fafb; border-color: #374151; border-top-color: #f9fafb; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
         
         .toast-enter { transform: translateY(-100%); opacity: 0; }
         .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .toast-exit { transform: translateY(-100%); opacity: 0; transition: all 0.3s ease-in; }
-        
+
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pop-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
-        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-        .animate-slide-up { animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
-        .animate-pop-in { animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .animate-pop-in { animation: pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; }
         
         .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
+        .dark .jexcel_content { border-color: #334155; }
+        .dark .jexcel > thead > tr > td { background-color: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
+        .dark .jexcel > tbody > tr > td { background-color: #1e293b; color: #e2e8f0; }
+
+        .tab-btn.active { background-color: #1e293b; color: #ffffff; border-color: #1e293b; }
+        .dark .tab-btn.active { background-color: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
+        
+        .hover-card { transition: all 0.2s ease; cursor: pointer; }
+        .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
 
-    <div id="toastContainer" style="z-index: 9999;" class="fixed top-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 pointer-events-none w-max max-w-[90vw]"></div>
-    <div id="loadingOverlay" style="z-index: 9990;" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 hidden flex-col justify-center items-center backdrop-blur-md animate-fade-in">
+    <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
+
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md animate-fade-in">
         <div class="loader mb-4"></div>
-        <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังโหลดข้อมูลคลัง...</p>
+        <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังประมวลผลฐานข้อมูล...</p>
     </div>
 
-    <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[100]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">W</div>
-                <h1 class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight">ADP<span class="font-normal text-slate-500">Warehouse</span></h1>
+    <!-- 🌟 Modal กดดูรายละเอียด Card / Stats 🌟 -->
+    <div id="cardDetailModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[200] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <div>
+                    <h3 id="modalCardTitle" class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">รายละเอียด</h3>
+                    <p id="modalCardSubtitle" class="text-sm text-slate-500 dark:text-slate-400 mt-1">รายการอุปกรณ์</p>
+                </div>
+                <button onclick="closeCardModal()" class="text-slate-400 hover:text-red-500 transition-all transform hover:rotate-90 bg-white dark:bg-slate-700 rounded-full w-10 h-10 flex items-center justify-center font-medium shadow-sm">&times;</button>
             </div>
+            <div class="p-4 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a]">
+                <table class="w-full text-sm text-left border-collapse min-w-[700px] bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm">
+                    <thead class="bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 uppercase tracking-wider text-xs">
+                        <tr>
+                            <th class="p-4 font-medium rounded-tl-xl">ประเภท</th>
+                            <th class="p-4 font-medium">ยี่ห้อ/รุ่น</th>
+                            <th class="p-4 font-medium font-mono text-[10px]">S/N</th>
+                            <th class="p-4 font-medium">สถานี/สถานที่</th>
+                            <th class="p-4 font-medium text-center rounded-tr-xl">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cardDetailTableBody" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง 🌟 -->
+    <div id="withdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">📤 ทำรายการเบิกจ่าย</h3>
+                <button onclick="closeWithdrawModal()" class="text-slate-400 hover:text-red-500 font-medium text-xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <p id="withdrawItemName" class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-center text-lg">-</p>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">จำนวนที่ต้องการเบิก <span id="withdrawMaxLabel" class="text-xs text-amber-500 font-bold ml-2"></span></label>
+                    <input type="number" id="withdrawQtyInput" min="1" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">ชื่อผู้เบิก / ปลายทาง</label>
+                    <input type="text" id="withdrawUserInput" placeholder="เช่น ส.ต.อ.สมชาย หรือ นราธิวาส" class="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500">
+                </div>
+                <button onclick="confirmWithdraw()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-colors shadow-md">ยืนยันการเบิกจ่าย (ตัดสต็อกทันที)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 Modal เบิกจ่ายด่วนหน้าแรก (Quick Withdraw) 🌟 -->
+    <div id="quickWithdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh] animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📤 เบิกจ่ายด่วน</h3>
+                <button onclick="closeQuickWithdrawModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
+            </div>
+            
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800" id="qwSearchSection">
+                <input type="text" id="qwSearchInput" placeholder="พิมพ์ชื่ออะไหล่ หรือ วัสดุสิ้นเปลือง..." class="w-full px-5 py-4 text-base bg-slate-50 dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-blue-500 transition-all font-bold shadow-inner" autocomplete="off" oninput="searchQuickWithdraw(this.value)">
+            </div>
+            
+            <div id="qwListSection" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]"></div>
+
+            <div id="qwFormSection" class="p-6 bg-white dark:bg-slate-800 hidden flex-col gap-5 border-t border-slate-100 dark:border-slate-700">
+                <div class="flex justify-between items-center bg-blue-50 dark:bg-slate-700 p-4 rounded-xl border border-blue-100 dark:border-slate-600">
+                    <div>
+                        <p id="qwSelectedItemName" class="font-bold text-slate-800 dark:text-white text-base sm:text-lg">-</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">คงเหลือ: <span id="qwMaxQtyLabel" class="font-bold text-blue-600 dark:text-blue-400">-</span></p>
+                    </div>
+                    <button onclick="cancelQwSelection()" class="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline whitespace-nowrap ml-2">เปลี่ยนของ</button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">จำนวนที่เบิก</label>
+                        <input type="number" id="qwQtyInput" min="1" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500 font-bold text-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">ชื่อผู้เบิก / ปลายทาง</label>
+                        <input type="text" id="qwUserInput" placeholder="ระบุผู้เบิก..." class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500 font-medium text-base">
+                    </div>
+                </div>
+                
+                <button onclick="submitQuickWithdraw()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-transform active:scale-95 shadow-lg mt-2 flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> 
+                    ยืนยันเบิกและบันทึกคลังทันที
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+        <div class="w-full px-4 sm:px-6 h-16 flex justify-between items-center lg:px-8">
+            <div class="flex items-center gap-3">
+                <div onclick="switchTab('dashboard')" class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30 cursor-pointer transition-transform hover:scale-110">W</div>
+                <h1 onclick="switchTab('dashboard')" class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer">ADP<span class="font-normal text-slate-500">Warehouse</span></h1>
+            </div>
+            
             <div class="flex items-center gap-2">
-                <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><span id="darkModeIcon">🌙</span></button>
+                <button id="btnInstallApp" onclick="installApp()" class="hidden relative group text-blue-500 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors text-sm border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
+                    <span class="hidden lg:inline">ติดตั้งแอปคลัง</span>
+                </button>
+                <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                <button onclick="switchTab('dashboard')" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95 text-sm font-medium border border-slate-200 dark:border-slate-700">หน้าหลัก</button>
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <span id="darkModeIcon" class="text-lg">🌙</span>
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8 mt-6">
         
+        <!-- Tab Navigation -->
         <div class="flex flex-wrap gap-2 mb-8 animate-slide-up bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 w-max">
             <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700">📊 แดชบอร์ดคลัง</button>
-            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">💻 อุปกรณ์หลัก (มี S/N)</button>
-            <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">⚙️ วัสดุสิ้นเปลือง/อะไหล่</button>
-            <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย</button>
+            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📦 คลังส่วนกลาง (Stock)</button>
+            <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย (Stations)</button>
         </div>
 
+        <!-- 📊 Tab 1: Dashboard -->
         <div id="view-dashboard" class="animate-fade-in">
+            
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 เบิกจ่ายด่วน (Quick Withdraw)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและตัดสต็อก อะไหล่/อุปกรณ์/หมึก ทันที</p>
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและเบิกอะไหล่ซ่อม/อุปกรณ์สิ้นเปลือง ตัดสต็อกทันที</p>
                 </div>
                 <button onclick="openQuickWithdrawModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ทำรายการเบิกจ่าย
@@ -82,33 +206,35 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 cursor-pointer relative overflow-hidden">
-                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
+                <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
+                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">📦</div>
                 </div>
-                <div onclick="openCardModal('DEPLOYED')" class="hover-card bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg border border-blue-400 text-white cursor-pointer relative overflow-hidden">
-                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase opacity-90">จ่ายออกไปสถานีแล้ว</p><h3 class="text-4xl font-black" id="dashDeployedCount">-</h3></div>
+                
+                <div onclick="openCardModal('DEPLOYED')" class="hover-card bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg border border-blue-400 text-white relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
+                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-90">จ่ายออกไปสถานีแล้ว</p><h3 class="text-4xl font-black" id="dashDeployedCount">-</h3></div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">🌍</div>
                 </div>
-                <div onclick="openCardModal('BROKEN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-red-100 dark:border-slate-700 cursor-pointer flex flex-col justify-center">
+                
+                <div onclick="openCardModal('BROKEN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-red-100 dark:border-slate-700 flex flex-col justify-center cursor-pointer" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">เครื่องชำรุด (รอดำเนินการ)</p></div>
                     <h3 class="text-2xl font-bold text-red-500" id="dashBrokenCount">-</h3>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up mb-8 w-full">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">📈 สถิติแยกตามประเภทอุปกรณ์</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4" id="detailedStatsGrid">
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-100 mb-8 w-full">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">📈 สถิติแยกตามประเภทอุปกรณ์ (ทุกชนิด)</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="detailedStatsGrid">
                     <p class="text-slate-400 text-sm">กำลังคำนวณสถิติ...</p>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-100 mb-20">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">🔥 อะไหล่/วัสดุสิ้นเปลืองใกล้หมด</h2>
+            <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-200 mb-20">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">🔥 รายการวัสดุสิ้นเปลืองใกล้หมด (ในคลัง)</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm text-left border-collapse min-w-[500px]">
-                        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase text-xs">
-                            <tr><th class="p-4 font-medium">หมวดหมู่</th><th class="p-4 font-medium">รายการ (รุ่น/สเปค)</th><th class="p-4 font-medium text-center">จำนวนคงเหลือ</th><th class="p-4 font-medium">สถานะ</th></tr>
+                        <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase tracking-wider text-xs">
+                            <tr><th class="p-4 font-medium">ประเภท</th><th class="p-4 font-medium">รายละเอียดยี่ห้อ/รุ่น</th><th class="p-4 font-medium text-center">จำนวนคงเหลือ</th><th class="p-4 font-medium">สถานะ</th></tr>
                         </thead>
                         <tbody id="lowStockTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
                             <tr><td colspan="4" class="p-6 text-center text-slate-400">กำลังโหลดข้อมูล...</td></tr>
@@ -118,166 +244,89 @@
             </div>
         </div>
 
-        <div id="view-warehouse" class="hidden animate-fade-in pb-20">
+        <!-- 📦 Tab 2: Warehouse Stock -->
+        <div id="view-warehouse" class="hidden animate-fade-in">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">อุปกรณ์หลัก (มี S/N)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">PC, Notebook, จอมอนิเตอร์, เครื่องพิมพ์, Server, UPS ฯลฯ</p>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">จัดการคลังส่วนกลาง (Master Data)</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียน S/N และอะไหล่ เข้าสู่ระบบ เพื่อให้สถานีเบิกจ่ายได้</p>
                 </div>
+                
                 <div class="flex items-center gap-3 w-full md:w-auto">
-                    <input type="text" onkeyup="if(whMainTable) whMainTable.search(this.value)" placeholder="ค้นหา S/N, ยี่ห้อ..." class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 whitespace-nowrap">💾 บันทึก</button>
-                </div>
-            </div>
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">💻</span> จัดการอุปกรณ์หลัก</h3>
-                    <button onclick="document.getElementById('wh-main').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
-                </div>
-                <div id="wh-main" class="w-full text-black min-w-full"></div>
-            </div>
-        </div>
-
-        <div id="view-supplies" class="hidden animate-fade-in pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">วัสดุสิ้นเปลือง & อะไหล่</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">ใช้วิธีนับจำนวนสต็อก (เบิกแล้วระบบตัดยอดอัตโนมัติ)</p>
-                </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <input type="text" onkeyup="searchSupplies(this.value)" placeholder="ค้นหาหมึก, อะไหล่..." class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 whitespace-nowrap">💾 บันทึก</button>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-8 w-full">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-pink-500">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖨️</span> หมึกพิมพ์</h3>
-                        <button onclick="document.getElementById('wh-ink').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มหมึก</button>
+                    <div class="relative flex-1 md:w-64">
+                        <input type="text" id="whSearchInput" onkeyup="searchWarehouse()" placeholder="ค้นหา S/N, ยี่ห้อในคลัง..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <div id="wh-ink" class="w-full text-black min-w-full"></div>
+                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> <span class="hidden sm:inline">บันทึกคลัง</span>
+                    </button>
                 </div>
+            </div>
 
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-blue-500">
+            <div class="grid grid-cols-1 gap-8 w-full pb-32">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⌨️</span> อุปกรณ์คอมพิวเตอร์</h3>
-                        <button onclick="document.getElementById('wh-acc').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอุปกรณ์</button>
+                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">💻</span> คอมพิวเตอร์ & โน๊ตบุ๊ค (มี S/N)</h3>
+                        <button onclick="document.getElementById('wh-main').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                     </div>
-                    <div id="wh-acc" class="w-full text-black min-w-full"></div>
+                    <div id="wh-main" class="w-full text-black min-w-full"></div>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์ (Parts)</h3>
-                        <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอะไหล่</button>
+                        <div>
+                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์ (RAM, SSD, HDD, PSU)</h3>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ใช้วิธีนับจำนวนสต็อกคงเหลือ (กดปุ่มเบิกในตารางเพื่อตัดสต็อก)</p>
+                        </div>
+                        <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                     </div>
                     <div id="wh-parts" class="w-full text-black min-w-full"></div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-indigo-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖲️</span> อุปกรณ์เสริม & วัสดุสิ้นเปลือง</h3>
+                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 หมึกพิมพ์, เมาส์, คีย์บอร์ด, สายไฟ (กดปุ่มเบิกในตารางเพื่อตัดสต็อก)</p>
+                        </div>
+                        <button onclick="document.getElementById('wh-consumables').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
+                    </div>
+                    <div id="wh-consumables" class="w-full text-black min-w-full"></div>
                 </div>
             </div>
         </div>
 
-        <div id="view-deployed" class="hidden animate-fade-in pb-20">
+        <!-- 📍 Tab 3: Deployed Assets -->
+        <div id="view-deployed" class="hidden animate-fade-in">
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ข้อมูลการเบิกจ่าย (Deployed Assets)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">อุปกรณ์ทั้งหมดที่ดึงมาจากสถานีต่างๆ</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">อุปกรณ์ทั้งหมดที่จ่ายไปตามสถานี และประวัติเบิกอะไหล่</p>
                 </div>
-                <input type="text" id="globalSearchInput" onkeyup="filterDeployedTable()" placeholder="ค้นหา S/N, ยี่ห้อ, สถานี..." class="px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                <div class="relative w-full md:w-auto">
+                    <input type="text" id="globalSearchInput" onkeyup="filterDeployedTable()" placeholder="ค้นหา S/N, ยี่ห้อ, สถานี..." class="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                    <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto pb-4">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto pb-4 mb-20">
                 <table class="w-full text-sm text-left min-w-[900px]">
-                    <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase text-xs">
+                    <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase tracking-wider text-xs">
                         <tr>
-                            <th class="p-4 font-medium">พื้นที่</th><th class="p-4 font-medium">สถานี/ผู้เบิก</th><th class="p-4 font-medium">หมวดหมู่</th>
-                            <th class="p-4 font-medium">ยี่ห้อ/รุ่น/รายละเอียด</th><th class="p-4 font-medium font-mono text-[10px]">S/N / จำนวน</th>
+                            <th class="p-4 font-medium">พื้นที่</th><th class="p-4 font-medium">สถานี/วันที่เบิก</th><th class="p-4 font-medium">หมวดหมู่</th>
+                            <th class="p-4 font-medium">ผู้ใช้งาน / ปลายทาง</th><th class="p-4 font-medium">ยี่ห้อ/รุ่น/รายละเอียด</th><th class="p-4 font-medium font-mono text-[10px]">S/N / จำนวน</th>
                             <th class="p-4 font-medium text-center">สถานะ</th>
                         </tr>
                     </thead>
                     <tbody id="deployedTableBody" class="divide-y divide-slate-100 dark:divide-slate-700 text-slate-700 dark:text-slate-300">
-                        <tr><td colspan="6" class="p-8 text-center text-slate-400 font-medium">กำลังโหลดข้อมูล...</td></tr>
+                        <tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">กำลังโหลดข้อมูลการเบิกจ่ายจากทุกพื้นที่...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="quickWithdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh]">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white">📤 เบิกจ่ายด่วน (Quick Withdraw)</h3>
-                <button onclick="closeQuickWithdrawModal()" class="text-slate-400 hover:text-red-500 font-bold">&times;</button>
-            </div>
-            
-            <div id="qwSearchSection" class="p-6 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <input type="text" id="qwSearchInput" onkeyup="searchQuickWithdraw(this.value)" placeholder="ค้นหาชื่ออุปกรณ์, หมึก, อะไหล่..." class="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900 border-2 border-indigo-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-indigo-500 font-bold">
-            </div>
-
-            <div id="qwListSection" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]"></div>
-
-            <div id="qwFormSection" class="hidden flex-col p-6 bg-white dark:bg-slate-800">
-                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mb-4 border border-blue-100 dark:border-blue-800">
-                    <p class="text-xs text-blue-500 font-bold uppercase mb-1">อุปกรณ์ที่เลือก</p>
-                    <p id="qwSelectedItemName" class="font-bold text-slate-800 dark:text-white text-lg">-</p>
-                    <p class="text-xs text-slate-500 mt-1">คงเหลือในคลัง: <span id="qwMaxQtyLabel" class="font-bold text-emerald-600">-</span></p>
-                </div>
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">จำนวนที่เบิก</label>
-                        <input type="number" id="qwQtyInput" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-bold text-lg dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">ชื่อผู้เบิก / ปลายทาง</label>
-                        <input type="text" id="qwUserInput" placeholder="เช่น ร.อ. ชาติชาย" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                    </div>
-                </div>
-                <div class="flex gap-3 mt-2">
-                    <button onclick="cancelQwSelection()" class="flex-1 py-3 rounded-xl font-medium text-slate-600 border border-slate-200 hover:bg-slate-50 dark:text-slate-300 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors">ยกเลิก</button>
-                    <button onclick="submitQuickWithdraw()" class="flex-1 py-3 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-transform active:scale-95">ยืนยันการเบิก</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="cardDetailModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden max-h-[90vh] animate-pop-in">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                <div>
-                    <h3 id="modalCardTitle" class="text-lg md:text-xl font-bold text-slate-800 dark:text-white">-</h3>
-                    <p id="modalCardSubtitle" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">-</p>
-                </div>
-                <button onclick="closeCardModal()" class="text-slate-400 hover:text-red-500 font-bold text-xl">&times;</button>
-            </div>
-            <div class="overflow-y-auto custom-scrollbar flex-1 p-0 bg-[#f8fafc] dark:bg-[#0f172a]">
-                <table class="w-full text-sm text-left min-w-[700px]">
-                    <thead class="bg-white dark:bg-slate-800 sticky top-0 border-b border-slate-200 dark:border-slate-700">
-                        <tr><th class="p-4 font-medium text-slate-500 uppercase text-xs">ประเภท</th><th class="p-4 font-medium text-slate-500 uppercase text-xs">รุ่น/รายละเอียด</th><th class="p-4 font-medium text-slate-500 uppercase text-xs font-mono">S/N / จำนวน</th><th class="p-4 font-medium text-slate-500 uppercase text-xs">สถานี/ผู้ใช้</th><th class="p-4 font-medium text-center text-slate-500 uppercase text-xs">สถานะ</th></tr>
-                    </thead>
-                    <tbody id="cardDetailTableBody" class="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="withdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-pop-in">
-            <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">📤 เบิกจ่ายวัสดุ/อะไหล่</h3>
-            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mt-4 mb-5 border border-blue-100 dark:border-blue-800">
-                <p id="withdrawItemName" class="font-bold text-slate-800 dark:text-white text-base">-</p>
-                <p id="withdrawMaxLabel" class="text-xs text-emerald-600 font-bold mt-1">-</p>
-            </div>
-            <label class="block text-xs font-bold text-slate-500 mb-2">จำนวนที่เบิก</label>
-            <input type="number" id="withdrawQtyInput" min="1" class="w-full px-4 py-3 mb-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-            <label class="block text-xs font-bold text-slate-500 mb-2">ชื่อผู้เบิก / ปลายทาง</label>
-            <input type="text" id="withdrawUserInput" placeholder="เช่น ส.อ. สมชาย" class="w-full px-4 py-3 mb-6 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-            <div class="flex gap-3">
-                <button onclick="closeWithdrawModal()" class="flex-1 py-3 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700">ยกเลิก</button>
-                <button onclick="confirmWithdraw()" class="flex-1 py-3 rounded-xl font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md">ยืนยัน</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- Script Logic -->
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbw47nSolokBljZwKKEnVqOSFqKExPKRmBmmrl5zLTlqZQldI1SZgze57ddw79FMsEAp/exec'; 
         
@@ -305,19 +354,26 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-600', 'dark:text-slate-400'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
             ['dashboard', 'warehouse', 'supplies', 'deployed'].forEach(id => {
-                if(id !== tabId) document.getElementById(`tab-${id}`).classList.add('text-slate-600', 'dark:text-slate-400');
-                document.getElementById(`view-${id}`).classList.add('hidden');
+                if(id !== tabId) {
+                    let tBtn = document.getElementById(`tab-${id}`); if(tBtn) tBtn.classList.add('text-slate-600', 'dark:text-slate-400');
+                    let tView = document.getElementById(`view-${id}`); if(tView) tView.classList.add('hidden');
+                }
             });
             const targetView = document.getElementById(`view-${tabId}`);
-            targetView.classList.remove('hidden', 'animate-fade-in'); void targetView.offsetWidth; targetView.classList.add('animate-fade-in');
+            if(targetView) { targetView.classList.remove('hidden', 'animate-fade-in'); void targetView.offsetWidth; targetView.classList.add('animate-fade-in'); }
         }
 
         window.onload = async function() {
             try {
-                document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+                let over = document.getElementById('loadingOverlay');
+                if(over) { over.classList.remove('hidden'); over.classList.add('flex'); }
                 await fetchAllData();
-            } catch (e) { console.error("Load Error:", e); showToast("ดึงข้อมูลไม่สำเร็จ", "error");
-            } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (e) { 
+                console.error("Load Error:", e); showToast("ดึงข้อมูลไม่สำเร็จ", "error");
+            } finally { 
+                let over = document.getElementById('loadingOverlay');
+                if(over) { over.classList.add('hidden'); over.classList.remove('flex'); }
+            }
 
             setInterval(() => { if (!hasUnsavedWhChanges) fetchAllData(true); }, 60000);
         };
@@ -390,6 +446,7 @@
             qwItemsData = [];
             
             const extractQw = (tableObj, tableIdStr) => {
+                if(!tableObj) return;
                 tableObj.getData().forEach((r, rowIdx) => {
                     let qty = parseFloat(r[3]);
                     if (!isNaN(qty) && qty > 0) {
@@ -454,11 +511,8 @@
 
         function addStat(category, type, count, itemObj = null) {
             if (!category) return;
-            if (category === 'คอมพิวเตอร์' || category === 'PC') category = 'PC';
-            if (category === 'โน๊ตบุ๊ค' || category === 'Notebook') category = 'Notebook';
-            if (category === 'จอ' || category === 'จอมอนิเตอร์') category = 'Monitor (จอ)';
-            if (category === 'เครื่องพิมพ์') category = 'Printer';
-            if (!categoryStats[category]) { categoryStats[category] = { wh: 0, deployed: 0, broken: 0 }; categoryDetailedItems[category] = { wh: [], deployed: [] }; }
+            categoryStats[category] = categoryStats[category] || { wh: 0, deployed: 0, broken: 0 };
+            categoryDetailedItems[category] = categoryDetailedItems[category] || { wh: [], deployed: [] };
             categoryStats[category][type] += count;
             if (itemObj && (type === 'wh' || type === 'deployed')) categoryDetailedItems[category][type].push(itemObj);
         }
@@ -517,6 +571,7 @@
                                     if ((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a') && (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a') && (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a')) return; 
 
                                     totalDeployed++;
+                                    if (status === 'RCF') status = 'ปกติ'; // ลบ RCF ออกจากกราฟสถานะ
                                     let itemObj = { group, station, category: actualCat, user, specs: `${brand} ${model}`.trim()||'-', sn: sn||'-', status };
                                     globalDeployedData.push(itemObj); cardData.DEPLOYED.push(itemObj);
 
@@ -534,16 +589,18 @@
                     }
                 }
 
-                let whAvailableCount = 0; 
+                let whMainCount = 0; let whAvailableCount = 0; 
                 
                 // ประมวลผลตารางหลัก (มี S/N)
                 if(whMainDataJSON.main) {
                     whMainDataJSON.main.forEach(r => { 
-                        let sn = String(r[4]||'').trim();
-                        if (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') {
-                            let cat = r[1]; let itemObj = { group: 'คลังส่วนกลาง', station: 'โกดังหลัก', category: cat, user: 'Stock', specs: `${r[2]||''} ${r[3]||''}`.trim(), sn: sn, status: r[5]||'-' };
+                        let sn = String(r[4]||'').trim(); let brand = String(r[2]||'').trim(); let model = String(r[3]||'').trim();
+                        if ((sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') || (brand && brand !== '-') || (model && model !== '-')) {
+                            whMainCount++;
+                            let cat = r[1]; let itemObj = { group: 'คลังส่วนกลาง', station: 'โกดังหลัก', category: cat, user: 'Stock', specs: `${brand} ${model}`.trim(), sn: sn||'-', status: r[5]||'-' };
+                            cardData.MAIN.push(itemObj);
                             if(r[5] === 'ว่าง (พร้อมจ่าย)') { whAvailableCount++; cardData.AVAILABLE.push(itemObj); addStat(cat, 'wh', 1, itemObj); } 
-                            else if (r[5] === 'ส่งซ่อม' || r[5] === 'ชำรุด') { cardData.BROKEN.push(itemObj); brokenDeployed++; addStat(cat, 'broken', 1, itemObj); }
+                            else if (r[5] === 'ส่งซ่อม' || r[5] === 'ชำรุด' || r[5] === 'รอแทงจำหน่าย') { cardData.BROKEN.push(itemObj); brokenDeployed++; addStat(cat, 'broken', 1, itemObj); }
                         }
                     });
                 }
@@ -571,6 +628,7 @@
                     });
                 }
 
+                let elWhMain = document.getElementById('dashWHMain'); if(elWhMain) elWhMain.innerText = whMainCount; 
                 document.getElementById('dashWHAvailable').innerText = whAvailableCount; document.getElementById('dashDeployedCount').innerText = totalDeployed; document.getElementById('dashBrokenCount').innerText = brokenDeployed;
 
                 let statsHtml = '';
@@ -720,7 +778,7 @@
 
         function openCategoryModal(catName, type) {
             let dataArray = categoryDetailedItems[catName][type] || [];
-            document.getElementById('modalCardTitle').innerHTML = type === 'wh' ? `📦 พร้อมจ่าย: ${catName}` : `🌍 เบิกแล้ว: ${catName}`; document.getElementById('modalCardSubtitle').innerText = `รายการอุปกรณ์`;
+            document.getElementById('modalCardTitle').innerHTML = type === 'wh' ? `📦 พร้อมจ่าย: ${catName}` : `🌍 เบิกแล้ว: ${catName}`; document.getElementById('modalCardSubtitle').innerText = `รายการอุปกรณ์ (คลิกจากสถิติแยกประเภท)`;
             let html = '';
             dataArray.forEach(item => {
                 let badge = `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-medium text-[10px] md:text-xs">${item.status}</span>`; 
@@ -753,6 +811,281 @@
             const filtered = globalDeployedData.filter(i => i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q));
             renderDeployedTable(filtered);
         }
+
+        async function handleImportAllExcel(event) {
+            const file = event.target.files[0]; if (!file) return;
+            document.getElementById('loadingText').innerText = 'กำลังประมวลผลไฟล์รวม...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            
+            try {
+                const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
+                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "คลัง": "ผกบ.", "ฉก.182": "ฉก.นย.182", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ข.ก.": "ขอนแก่น", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
+                let saveQueue = []; let newlyAddedToWarehouse = 0;
+
+                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
+                let whMainData = []; let existingItems = new Set();
+                
+                if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
+                    try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); whDb.main = parsedWh.main || []; whDb.parts = parsedWh.parts || []; whDb.consumables = parsedWh.consumables || []; whDb.withdrawals = parsedWh.withdrawals || []; whMainData = whDb.main; whMainData.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
+                }
+
+                let tempSnCounter = 1;
+                let todayYMD = new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + String(new Date().getDate()).padStart(2, '0');
+                const generateTempSN = (typeAbbr) => {
+                    let newSN = "";
+                    while (true) { let paddedCounter = String(tempSnCounter).padStart(3, '0'); newSN = `${typeAbbr}-${todayYMD}-${paddedCounter} (ชั่วคราว)`; if (!existingItems.has(newSN.toLowerCase())) break; tempSnCounter++; }
+                    existingItems.add(newSN.toLowerCase()); tempSnCounter++; return newSN;
+                };
+
+                const mapConn = (c) => { let original = String(c).trim(); let l = original.toLowerCase(); if(!l || l === '-' || l === 'ไม่มี') return ''; if(l.includes('5')) return 'LAN กอง 5'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6'; if(l.includes('glaive')) return 'Glaive'; if(l.includes('sentinel')) return 'Sentinel'; if(l.includes('rcf')) return 'RCF'; return original; };
+                const mapStatus = (s) => { let original = String(s).trim(); let l = original.toLowerCase(); if(!l) return 'ปกติ'; if(l === 'ปกติ') return 'ปกติ'; if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; if(l.includes('rcf')) return 'RCF'; return original; };
+
+                wb.eachSheet((ws) => {
+                    let sName = ws.name.trim(); let fullStationName = abbrMap[sName] || sName; let groupName = null;
+                    for (let g in inventoryGroups) { let found = inventoryGroups[g].find(s => s === fullStationName || s.includes(fullStationName) || fullStationName.includes(s)); if (found) { fullStationName = found; groupName = g; break; } }
+                    if (!groupName) return; 
+
+                    let cpumonData = [], nbData = [], prnData = [], spcData = []; 
+                    let currentMode = null;
+
+                    ws.eachRow((row, rowNumber) => {
+                        let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber - 1] = cellVal ? String(cellVal).trim() : ''; }); 
+                        while(rowVals.length < 12) rowVals.push(''); 
+                        
+                        let firstCell = rowVals[0].toLowerCase().replace(/\s+/g, '');
+                        if (firstCell.includes('คอมพิวเตอร์และจอมอนิเตอร์')) { currentMode = 'CPUMON'; return; }
+                        if (firstCell.includes('โน๊ตบุ๊ค') || firstCell.includes('notebook')) { currentMode = 'NB'; return; }
+                        if (firstCell.includes('เครื่องพิมพ์') || firstCell.includes('printer')) { currentMode = 'PRN'; return; }
+                        if (firstCell.includes('server') || firstCell.includes('เครื่องมือพิเศษ') || firstCell.includes('อื่นๆ')) { currentMode = 'SPC'; return; }
+
+                        if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return; 
+
+                        let seqNum = parseInt(rowVals[0]);
+                        if (isNaN(seqNum) || seqNum <= 0) return; 
+
+                        if (!currentMode) return; 
+
+                        const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
+
+                        if (currentMode === 'CPUMON') {
+                            let user = getVal(1) || fullStationName;
+                            let cpuBrand = getVal(2), cpuModel = getVal(3), cpuSN = getVal(4);
+                            let statusCpu = mapStatus(getVal(5));
+                            let monBrand = getVal(6), monModel = getVal(7), monSN = getVal(8);
+                            let statusMon = mapStatus(getVal(9));
+                            let conn = mapConn(getVal(10));
+                            let remark = getVal(11);
+
+                            let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
+                            if (!hasCpu && !hasMon) return;
+                            if (hasCpu && (!cpuSN || cpuSN === '')) cpuSN = generateTempSN('PC'); 
+                            if (hasMon && (!monSN || monSN === '')) monSN = generateTempSN('MON');
+                            cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
+                        }
+                        else if (currentMode === 'NB') {
+                            let user = getVal(1) || fullStationName;
+                            let brand = getVal(2), model = getVal(3), sn = getVal(4);
+                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
+                            
+                            if (!brand && !model && !sn) return;
+                            if (!sn || sn === '') sn = generateTempSN('NB');
+                            nbData.push(["", user, brand, model, sn, status, conn, remark]);
+                        }
+                        else if (currentMode === 'PRN') {
+                            let user = getVal(1) || fullStationName;
+                            let brand = getVal(2), model = getVal(3), sn = getVal(4);
+                            let color = getVal(5); let scanner = getVal(6); let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
+                            
+                            if (!brand && !model && !sn) return;
+                            if (!sn || sn === '') sn = generateTempSN('PRN');
+                            prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
+                        }
+                        else if (currentMode === 'SPC') {
+                            let type = getVal(1) || 'เครื่องมือพิเศษ';
+                            let user = getVal(2) || fullStationName;
+                            let brand = getVal(3), model = getVal(4), sn = getVal(5);
+                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
+
+                            if (!brand && !model && !sn) return;
+                            if (!sn || sn === '') sn = generateTempSN('SPC');
+
+                            let rmkLower = remark.toLowerCase();
+                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
+                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
+                            else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
+                            else type = 'อื่นๆ';
+
+                            spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
+                        }
+                    });
+
+                    // 🌟 Diff
+                    const checkHas = (b, m, s) => { let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim(); return (bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-'); };
+                    let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], checkHas(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]); 
+                    let newMon = cpumonData.map(r => ["", r[1], r[6], r[7], r[8], checkHas(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
+                    
+                    let oldData = { cpu:[], nb:[], mon:[], prn:[], spc:[] }; let cacheKey = `ADP_${groupName}_${fullStationName}`;
+                    if (globalAllDataCache && globalAllDataCache[cacheKey]) { try { oldData = JSON.parse(globalAllDataCache[cacheKey]); } catch(e) {} }
+                    
+                    let added = [], removed = [], updated = [], rawNewItems = [];
+                    const compareArrays = (oldArr, newArr, type, mode) => {
+                        let oldMap = new Map();
+                        oldArr.forEach((r, i) => { let snIdx = mode === 'SPC' ? 5 : 4; let sn = String(r[snIdx] || '').trim().toLowerCase(); let key = (sn && sn !== '-') ? sn : `NO_SN_${i}`; oldMap.set(key, r); });
+
+                        let newMap = new Map();
+                        newArr.forEach((r, i) => {
+                            let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
+                            let sn = String(r[snIdx] || '').trim().toLowerCase(); let b = r[brandIdx]; let m = r[modelIdx]; let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(sn||'').trim();
+
+                            if ((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) {
+                                let key = (ss && ss !== '-') ? ss : `NO_SN_${i}`; newMap.set(key, r);
+                                let userIdx = mode === 'SPC' ? 2 : 1; let statusIdx = mode === 'PRN' ? 7 : (mode === 'SPC' ? 6 : 5); let connIdx = mode === 'PRN' ? 8 : (mode === 'SPC' ? 7 : (mode === 'MON' ? -1 : 6)); let remarkIdx = mode === 'PRN' ? 9 : (mode === 'SPC' ? 8 : (mode === 'MON' ? 6 : 7));
+                                let user = String(r[userIdx] || '').trim(); let brandModel = String(mode === 'SPC' ? `${r[3]||''} ${r[4]||''}` : `${r[2]||''} ${r[3]||''}`).trim(); let actualType = String(mode === 'SPC' ? r[1] : type).trim(); let status = String(r[statusIdx] || 'ปกติ').trim(); let conn = connIdx !== -1 ? String(r[connIdx] || '').trim() : ''; let remark = String(r[remarkIdx] || '').trim();
+
+                                if (oldMap.has(key)) {
+                                    let oldRow = oldMap.get(key); let oldStatus = String(oldRow[statusIdx] || 'ปกติ').trim(); let oldUser = String(oldRow[userIdx] || '').trim(); let oldBrandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); let oldActualType = String(mode === 'SPC' ? oldRow[1] : type).trim(); let oldConn = connIdx !== -1 ? String(oldRow[connIdx] || '').trim() : ''; let oldRemark = String(oldRow[remarkIdx] || '').trim();
+                                    let changes = [];
+                                    if (oldActualType !== actualType && mode === 'SPC') changes.push(`ประเภทเป็น '${actualType || '-'}'`);
+                                    if (oldUser !== user && user !== '') changes.push(`ผู้ใช้เป็น '${user || '-'}'`);
+                                    if (oldBrandModel !== brandModel) changes.push(`รุ่นเป็น '${brandModel || '-'}'`);
+                                    if (oldStatus !== status && status !== 'ไม่มี') changes.push(`สถานะเป็น '${status}'`);
+                                    if (oldConn !== oldConn && conn !== '') changes.push(`การเชื่อมต่อเป็น '${conn || '-'}'`);
+                                    if (oldRemark !== remark) changes.push(`แก้ไขหมายเหตุ`);
+
+                                    if (changes.length > 0) updated.push({ label: `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${r[snIdx]||'-'}) -> ${changes.join(', ')}`, status: status, isStatusChange: oldStatus !== status });
+                                } else {
+                                    added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${r[snIdx]||'-'})`);
+                                    let whType = actualType; if (actualType === 'คอมพิวเตอร์' || actualType === 'CPU') whType = 'PC'; else if (actualType === 'โน๊ตบุ๊ค') whType = 'Notebook'; else if (actualType === 'จอมอนิเตอร์') whType = 'Monitor'; else if (actualType === 'เครื่องพิมพ์') whType = 'Printer';
+                                    rawNewItems.push({ type: whType, brand: String(r[brandIdx]||'').trim(), model: String(r[modelIdx]||'').trim(), sn: ss });
+                                }
+                            }
+                        });
+
+                        for (let [key, oldRow] of oldMap.entries()) {
+                            if (!newMap.has(key)) {
+                                let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3; let userIdx = mode === 'SPC' ? 2 : 1; let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); let sn = String(oldRow[snIdx] || '').trim(); let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
+                                removed.push(`[${actualType}] ${oldRow[userIdx]||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
+                            }
+                        }
+                    };
+
+                    compareArrays(oldData.cpu || [], newCpu, 'คอมพิวเตอร์', 'CPU'); compareArrays(oldData.nb || [], nbData, 'โน๊ตบุ๊ค', 'NB'); compareArrays(oldData.mon || [], newMon, 'จอมอนิเตอร์', 'MON'); compareArrays(oldData.prn || [], prnData, 'เครื่องพิมพ์', 'PRN'); compareArrays(oldData.spc || [], spcData, 'เครื่องมือพิเศษ/Server/อื่นๆ', 'SPC');
+
+                    // 🌟 บันทึกก็ต่อเมื่อมีการเปลี่ยนแปลงเท่านั้น!
+                    if (added.length > 0 || removed.length > 0 || updated.length > 0) {
+                        let stationLogs = [];
+                        updated.forEach(i => stationLogs.push({ station: fullStationName, action: i.isStatusChange ? (i.status==='ชำรุด'?'แจ้งชำรุด':'เปลี่ยนสถานะ') : 'อัปเดตข้อมูล', detail: i.label }));
+                        added.forEach(i => stationLogs.push({ station: fullStationName, action: 'เพิ่มอุปกรณ์', detail: i }));
+                        removed.forEach(i => stationLogs.push({ station: fullStationName, action: 'ลบอุปกรณ์', detail: i }));
+
+                        let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: oldData.lastConfirmed };
+                        saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: stationLogs });
+
+                        rawNewItems.forEach(item => {
+                            let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
+                            if (!existingItems.has(uniqueKey)) {
+                                let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                                whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์รวมสถานี ${fullStationName}`]);
+                                existingItems.add(uniqueKey); newlyAddedToWarehouse++;
+                            }
+                        });
+                    }
+                });
+
+                if (saveQueue.length > 0) {
+                    let updatesPayload = [];
+                    if (newlyAddedToWarehouse > 0) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); } }
+                    for (let i = 0; i < saveQueue.length; i++) {
+                        let q = saveQueue[i]; document.getElementById('loadingText').innerText = `กำลังบันทึกสถานี: ${q.name} (${i + 1}/${saveQueue.length})...`;
+                        let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
+                        if (i === saveQueue.length - 1 && updatesPayload.length > 0) { currentUpdates.push(updatesPayload[0]); q.logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่เข้าคลัง ${newlyAddedToWarehouse} รายการ จากการนำเข้า All Import (ไฟล์ใหม่)` }); }
+                        try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: q.logs }) }); } catch (err) {}
+                    }
+                    showToast(`✅ นำเข้าสำเร็จ พบการเปลี่ยนแปลง ${saveQueue.length} สถานี\n📦 และลงทะเบียนเข้าคลังใหม่ ${newlyAddedToWarehouse} รายการ!`); loadDashboardStats(); 
+                } else { showToast("ไม่พบการเปลี่ยนแปลงใดๆ ในไฟล์รวมเลยครับ"); }
+            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
+
+        async function exportAllDataToExcel() {
+            if (!globalAllDataCache) { showToast("กำลังโหลดข้อมูล", "error"); return; }
+            showToast("สร้างไฟล์รวม..."); document.getElementById('loadingText').innerText = 'รวมไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            try {
+                const wb = new ExcelJS.Workbook();
+                const formatHeader = (rowObj, bgArgb) => { rowObj.eachCell((c) => { c.font = {bold: true, color: {argb: 'FFFFFFFF'}}; c.alignment = {vertical: 'middle', horizontal: 'center'}; c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: bgArgb}}; c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; }); };
+                const applyBorders = (rowObj) => { rowObj.eachCell((c) => { c.border = {top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}}; c.alignment = {vertical: 'middle', horizontal: 'left', wrapText: true}; }); };
+
+                for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
+                    if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey === 'ADP_WAREHOUSE_SUPPLIES' || dbKey === 'ADP_AUTH_DB' || dbKey.includes('WAREHOUSE')) continue;
+                    const parts = dbKey.split('_'); if (parts.length < 3) continue; 
+                    const station = parts[2]; const dbData = JSON.parse(jsonValue); 
+                    const safeSheetName = station.substring(0, 31); 
+                    const ws = wb.addWorksheet(safeSheetName);
+                    
+                    ws.addRow(["คอมพิวเตอร์และจอมอนิเตอร์"]);
+                    let rHead1 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ CPU", "รุ่น CPU", "S/N CPU", "สถานะ CPU", "ยี่ห้อ จอภาพ", "รุ่น จอภาพ", "S/N จอภาพ", "สถานะ จอภาพ", "การเชื่อมต่อ", "หมายเหตุ"]);
+                    formatHeader(rHead1, 'FF0f172a');
+                    let cLen = dbData.cpu ? dbData.cpu.length : 0; let mLen = dbData.mon ? dbData.mon.length : 0; let maxLen = Math.max(cLen, mLen);
+                    for(let i=0; i<maxLen; i++) {
+                        let c = dbData.cpu && dbData.cpu[i] ? dbData.cpu[i] : []; let m = dbData.mon && dbData.mon[i] ? dbData.mon[i] : [];
+                        if (c.join('').trim() !== '' || m.join('').trim() !== '') {
+                            let user = c[1] || m[1] || ''; let statusCpu = c[5] || 'ปกติ'; let statusMon = m[5] || 'ปกติ'; let conn = c[6] || ''; let remark = c[7] || m[6] || '';
+                            let row = ws.addRow([i+1, user, c[2]||'', c[3]||'', c[4]||'', statusCpu, m[2]||'', m[3]||'', m[4]||'', statusMon, conn, remark]);
+                            applyBorders(row);
+                        }
+                    }
+                    ws.addRow([]);
+
+                    ws.addRow(["โน๊ตบุ๊ค"]);
+                    let rHead2 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead2, 'FF334155');
+                    if(dbData.nb) dbData.nb.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', '', '', '', c[6]||'', c[5]||'', c[7]||'']); applyBorders(row); }});
+                    ws.addRow([]);
+
+                    ws.addRow(["เครื่องพิมพ์"]);
+                    let rHead3 = ws.addRow(["ลำดับ", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "ลักษณะสี", "Scanner", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead3, 'FF475569');
+                    if(dbData.prn) dbData.prn.forEach((c, i) => { if (c.join('').trim() !== '') { let row = ws.addRow([i+1, c[1]||'', c[2]||'', c[3]||'', c[4]||'', c[5]||'', c[6]||'', c[8]||'', c[7]||'', c[9]||'']); applyBorders(row); }});
+                    ws.addRow([]);
+
+                    ws.addRow(["SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ"]);
+                    let rHead4 = ws.addRow(["ลำดับ", "ประเภท", "ผู้ใช้งาน", "ยี่ห้อ", "รุ่น", "S/N", "-", "-", "การเชื่อมต่อ", "สถานะ", "หมายเหตุ"]);
+                    formatHeader(rHead4, 'FF64748B');
+                    if(dbData.spc) dbData.spc.forEach((c, i) => { 
+                        if (c.join('').trim() !== '') { 
+                            let isNew = c.length >= 9;
+                            let brand = isNew ? c[3] : ''; let model = isNew ? c[4] : c[3]; let sn = isNew ? c[5] : c[4];
+                            let status = isNew ? c[6] : c[5]; let conn = isNew ? c[7] : ''; let remark = isNew ? c[8] : c[6];
+                            let row = ws.addRow([i+1, c[1]||'', c[2]||'', brand||'', model||'', sn||'', '', '', conn||'', status||'', remark||'']); 
+                            applyBorders(row); 
+                        }
+                    });
+
+                    ws.columns = [ {width: 8}, {width: 20}, {width: 15}, {width: 20}, {width: 20}, {width: 12}, {width: 15}, {width: 20}, {width: 20}, {width: 12}, {width: 15}, {width: 25} ];
+                    ws.eachRow((row, rowNumber) => { const firstCell = row.getCell(1).value; if (typeof firstCell === 'string' && (firstCell === "คอมพิวเตอร์และจอมอนิเตอร์" || firstCell === "โน๊ตบุ๊ค" || firstCell === "เครื่องพิมพ์" || firstCell === "SERVER / เครื่องมือพิเศษ / RCF / อื่นๆ")) { ws.mergeCells(`A${rowNumber}:L${rowNumber}`); const cell = row.getCell(1); cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; cell.alignment = { horizontal: 'left' }; } });
+                }
+                
+                if(wb.worksheets.length === 0) wb.addWorksheet("Empty");
+                const b = await wb.xlsx.writeBuffer(); const now = new Date(); const dateStr = now.getFullYear() + String(now.getMonth() + 1).padStart(2, '0') + String(now.getDate()).padStart(2, '0'); saveAs(new Blob([b], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `ADP_All_Stations_${dateStr}.xlsx`); showToast("ดาวน์โหลดสำเร็จ");
+            } catch (error) { console.error(error); showToast("ข้อผิดพลาด", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+        }
+
+        const svgIcon = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='#0f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='#ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>`);
+        const manifest = { "name": "ADP Inventory", "short_name": "ADP", "start_url": window.location.href.split('?')[0], "display": "standalone", "background_color": "#f8fafc", "theme_color": "#0f172a", "icons": [ { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" }, { "src": "data:image/svg+xml;charset=utf-8," + svgIcon, "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" } ] };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
+
+        if ('serviceWorker' in navigator) {
+            const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl).catch(console.error);
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallApp').classList.remove('hidden'); });
+        function installApp() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden'); deferredPrompt = null; }); } }
+    
     </script>
 </body>
 </html>
