@@ -296,6 +296,32 @@
             </div>
         </div>
 
+        <div id="view-supplies" class="hidden animate-fade-in pb-20">
+            <div class="grid grid-cols-1 gap-8 w-full">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-pink-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖨️</span> หมึกพิมพ์</h3>
+                        <button onclick="document.getElementById('wh-ink').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มหมึก</button>
+                    </div>
+                    <div id="wh-ink" class="w-full text-black min-w-full"></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-blue-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⌨️</span> อุปกรณ์คอมพิวเตอร์</h3>
+                        <button onclick="document.getElementById('wh-acc').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอุปกรณ์</button>
+                    </div>
+                    <div id="wh-acc" class="w-full text-black min-w-full"></div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์</h3>
+                        <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอะไหล่</button>
+                    </div>
+                    <div id="wh-parts" class="w-full text-black min-w-full"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 📍 Tab 3: Deployed Assets -->
         <div id="view-deployed" class="hidden animate-fade-in">
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -332,9 +358,9 @@
         
         // 🌟 แยกฐานข้อมูลออกจากกันชัดเจน 🌟
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL'; 
-        const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES'; 
+        const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES'; // 🌟 เพิ่มคีย์ใหม่
 
-        let whMainTable = null, whInkTable = null, whAccTable = null, whPartsTable = null;
+        let whMainTable = null, whInkTable = null, whAccTable = null, whPartsTable = null; // 🌟 เปลี่ยนชื่อตัวแปรตาราง
         let globalDeployedData = [];
         let cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
         let categoryStats = {}; let categoryDetailedItems = {}; 
@@ -702,7 +728,7 @@
                 ], minDimensions: [9, 5]
             });
             
-            const suppliesColumns = [
+            const getSuppliesColumns = () => [
                 { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
                 { type: 'text', title: 'ประเภท/รุ่น', width: 180 }, 
                 { type: 'text', title: 'สเปค/เครื่องที่รองรับ', width: 200 }, 
@@ -714,9 +740,14 @@
                 { type: 'html', title: 'ลบ', width: 80, readOnly: true }
             ];
 
-            let inkCol = [...suppliesColumns]; inkCol[1] = { type: 'text', title: 'รุ่นหมึกพิมพ์', width: 180 };
-            let accCol = [...suppliesColumns]; accCol[1] = { type: 'dropdown', title: 'ประเภท', width: 180, source: whAccTypes, autocomplete: true, newOptions: true };
-            let partsCol = [...suppliesColumns]; partsCol[1] = { type: 'dropdown', title: 'ประเภท', width: 180, source: whPartsTypes, autocomplete: true, newOptions: true };
+            let inkCol = getSuppliesColumns(); 
+            inkCol[1] = { type: 'text', title: 'รุ่นหมึกพิมพ์', width: 180 };
+            
+            let accCol = getSuppliesColumns(); 
+            accCol[1] = { type: 'dropdown', title: 'ประเภท', width: 180, source: whAccTypes, autocomplete: true, newOptions: true };
+            
+            let partsCol = getSuppliesColumns(); 
+            partsCol[1] = { type: 'dropdown', title: 'ประเภท', width: 180, source: whPartsTypes, autocomplete: true, newOptions: true };
 
             whInkTable = jspreadsheet(document.getElementById('wh-ink'), { ...tableConfig, data: data.ink || [[]], columns: inkCol, minDimensions: [9, 5] });
             whAccTable = jspreadsheet(document.getElementById('wh-acc'), { ...tableConfig, data: data.accessories || [[]], columns: accCol, minDimensions: [9, 5] });
@@ -733,10 +764,7 @@
                     accessories: whAccTable.getData().map(r => r.slice(0, -2)),
                     parts: whPartsTable.getData().map(r => r.slice(0, -2))
                 };
-                
-                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
-                if (whPendingLogs.length > 0) logs = logs.concat(whPendingLogs);
-                
+
                 await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ 
