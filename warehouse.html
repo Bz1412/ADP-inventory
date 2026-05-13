@@ -185,11 +185,12 @@
 
     <div class="w-full px-4 sm:px-6 lg:px-8 mt-6">
         
-        <!-- Tab Navigation -->
         <div class="flex flex-wrap gap-2 mb-8 animate-slide-up bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 w-max">
             <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700">📊 แดชบอร์ดคลัง</button>
             <button onclick="switchTab('warehouse')" id="tab-warehouse" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📦 คลังส่วนกลาง (Stock)</button>
-            <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย (Stations)</button>
+            <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">⚙️ อะไหล่คอมพิวเตอร์</button>
+            <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">🖨️ หมึก & อุปกรณ์เสริม</button>
+            <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย</button>
         </div>
 
         <!-- 📊 Tab 1: Dashboard -->
@@ -294,7 +295,49 @@
             </div>
         </div>
 
+        <div id="view-parts" class="hidden animate-fade-in pb-20">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">อะไหล่คอมพิวเตอร์</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">RAM, SSD, HDD, PSU ฯลฯ (ใช้วิธีตัดสต็อกตามจำนวน)</p>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <input type="text" onkeyup="if(whPartsTable) whPartsTable.search(this.value.toLowerCase())" placeholder="ค้นหาอะไหล่..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> <span class="hidden sm:inline">บันทึกคลัง</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์</h3>
+                    <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอะไหล่</button>
+                </div>
+                <div id="wh-parts" class="w-full text-black min-w-full"></div>
+            </div>
+        </div>
+
         <div id="view-supplies" class="hidden animate-fade-in pb-20">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">หมึกพิมพ์ & อุปกรณ์คอมพิวเตอร์</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ใช้วิธีตัดสต็อกตามจำนวนเบิกจ่าย</p>
+                </div>
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:w-64">
+                        <input type="text" onkeyup="searchSupplies(this.value)" placeholder="ค้นหาหมึก, อุปกรณ์..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> <span class="hidden sm:inline">บันทึกคลัง</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 gap-8 w-full">
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-pink-500">
                     <div class="flex justify-between items-center mb-4">
@@ -303,19 +346,13 @@
                     </div>
                     <div id="wh-ink" class="w-full text-black min-w-full"></div>
                 </div>
+                
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-blue-500">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⌨️</span> อุปกรณ์คอมพิวเตอร์</h3>
                         <button onclick="document.getElementById('wh-acc').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอุปกรณ์</button>
                     </div>
                     <div id="wh-acc" class="w-full text-black min-w-full"></div>
-                </div>
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์</h3>
-                        <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอะไหล่</button>
-                    </div>
-                    <div id="wh-parts" class="w-full text-black min-w-full"></div>
                 </div>
             </div>
         </div>
@@ -377,7 +414,8 @@
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-600', 'dark:text-slate-400'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
-            ['dashboard', 'warehouse', 'supplies', 'deployed'].forEach(id => {
+
+            ['dashboard', 'warehouse', 'parts', 'supplies', 'deployed'].forEach(id => {
                 if(id !== tabId) {
                     let tBtn = document.getElementById(`tab-${id}`); if(tBtn) tBtn.classList.add('text-slate-600', 'dark:text-slate-400');
                     let tView = document.getElementById(`view-${id}`); if(tView) tView.classList.add('hidden');
@@ -422,7 +460,6 @@
             query = query.toLowerCase();
             if(whInkTable) whInkTable.search(query);
             if(whAccTable) whAccTable.search(query);
-            if(whPartsTable) whPartsTable.search(query);
         }
 
         function openWithdrawModal(tableId, row) {
