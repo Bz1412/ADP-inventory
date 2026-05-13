@@ -210,12 +210,10 @@
                     <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">📦</div>
                 </div>
-                
                 <div onclick="openCardModal('DEPLOYED')" class="hover-card bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg border border-blue-400 text-white relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-90">จ่ายออกไปสถานีแล้ว</p><h3 class="text-4xl font-black" id="dashDeployedCount">-</h3></div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">🌍</div>
                 </div>
-                
                 <div onclick="openCardModal('BROKEN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-red-100 dark:border-slate-700 flex flex-col justify-center cursor-pointer" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">เครื่องชำรุด (รอดำเนินการ)</p></div>
                     <h3 class="text-2xl font-bold text-red-500" id="dashBrokenCount">-</h3>
@@ -938,10 +936,10 @@
                             if (!sn || sn === '') sn = generateTempSN('SPC');
 
                             let rmkLower = remark.toLowerCase();
-                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
-                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
-                            else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
-                            else type = 'อื่นๆ';
+                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || combinedText.includes('ups')) spcType = 'UPS';
+                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || combinedText.includes('server')) spcType = 'Server';
+                            else if (rmkLower.includes('switch') || combinedText.includes('switch')) spcType = 'Switch';
+                            else spcType = 'อื่นๆ';
 
                             spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
                         }
