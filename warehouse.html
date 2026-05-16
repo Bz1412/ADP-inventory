@@ -59,6 +59,7 @@
         .hover-card { transition: all 0.2s ease; cursor: pointer; }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
 
+        /* 🌟 ซ่อนช่อง Search เดิมของ Jspreadsheet 🌟 */
         .jexcel_search, .jss_search, .jexcel_filter { display: none !important; }
     </style>
 </head>
@@ -66,12 +67,13 @@
 
     <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
-    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md animate-fade-in">
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 z-[250] hidden flex-col justify-center items-center backdrop-blur-md animate-fade-in no-print">
         <div class="loader mb-4"></div>
         <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังประมวลผลฐานข้อมูล...</p>
     </div>
 
-    <!-- 🌟 Modal กดดูรายละเอียด Card / Stats 🌟 -->
+    <div id="printArea" class="absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-50 flex flex-wrap gap-4 p-4 no-print only-print"></div>
+
     <div id="cardDetailModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[200] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-5xl flex flex-col max-h-[90vh] overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
@@ -99,7 +101,6 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal เบิกจ่ายอะไหล่และสิ้นเปลือง 🌟 -->
     <div id="withdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[500] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
@@ -121,20 +122,16 @@
         </div>
     </div>
 
-    <!-- 🌟 Modal เบิกจ่ายด่วนหน้าแรก (Quick Withdraw) 🌟 -->
     <div id="quickWithdrawModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh] animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
                 <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📤 เบิกจ่ายด่วน</h3>
                 <button onclick="closeQuickWithdrawModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
             </div>
-            
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800" id="qwSearchSection">
                 <input type="text" id="qwSearchInput" placeholder="พิมพ์ชื่ออะไหล่ หรือ วัสดุสิ้นเปลือง..." class="w-full px-5 py-4 text-base bg-slate-50 dark:bg-slate-900 border-2 border-blue-100 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:border-blue-500 transition-all font-bold shadow-inner" autocomplete="off" oninput="searchQuickWithdraw(this.value)">
             </div>
-            
             <div id="qwListSection" class="overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a] min-h-[250px] max-h-[40vh]"></div>
-
             <div id="qwFormSection" class="p-6 bg-white dark:bg-slate-800 hidden flex-col gap-5 border-t border-slate-100 dark:border-slate-700">
                 <div class="flex justify-between items-center bg-blue-50 dark:bg-slate-700 p-4 rounded-xl border border-blue-100 dark:border-slate-600">
                     <div>
@@ -143,7 +140,6 @@
                     </div>
                     <button onclick="cancelQwSelection()" class="text-xs font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 underline whitespace-nowrap ml-2">เปลี่ยนของ</button>
                 </div>
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">จำนวนที่เบิก</label>
@@ -154,7 +150,6 @@
                         <input type="text" id="qwUserInput" placeholder="ระบุผู้เบิก..." class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-blue-500 font-medium text-base">
                     </div>
                 </div>
-                
                 <button onclick="submitQuickWithdraw()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-transform active:scale-95 shadow-lg mt-2 flex justify-center items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> 
                     ยืนยันเบิกและบันทึกคลังทันที
@@ -169,8 +164,7 @@
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">➕ <span id="addModalTitle">เพิ่มรายการใหม่</span></h3>
                 <button onclick="closeAddItemModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto custom-scrollbar flex-col gap-4 flex bg-white dark:bg-slate-800" id="addModalForm">
-                </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-col gap-4 flex bg-white dark:bg-slate-800" id="addModalForm"></div>
             <div class="p-5 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 flex-wrap">
                 <button onclick="closeAddItemModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">ยกเลิก</button>
                 <button onclick="confirmAddItem()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">
@@ -180,21 +174,21 @@
         </div>
     </div>
 
-    <!-- Navbar -->
-    <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
+    <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 no-print">
         <div class="w-full px-4 sm:px-6 h-16 flex justify-between items-center lg:px-8">
             <div class="flex items-center gap-3">
                 <div onclick="switchTab('dashboard')" class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30 cursor-pointer transition-transform hover:scale-110">W</div>
                 <h1 onclick="switchTab('dashboard')" class="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight cursor-pointer">ADP<span class="font-normal text-slate-500">Warehouse</span></h1>
             </div>
-            
             <div class="flex items-center gap-2">
                 <button id="btnInstallApp" onclick="installApp()" class="hidden relative group text-blue-500 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors text-sm border border-blue-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 
                     <span class="hidden lg:inline">ติดตั้งแอปคลัง</span>
                 </button>
                 <div class="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                <button onclick="switchTab('dashboard')" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95 text-sm font-medium border border-slate-200 dark:border-slate-700">หน้าหลัก</button>
+                <button onclick="exportAllDataToExcel()" class="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 px-4 py-2 rounded-full transition-transform hover:scale-105 active:scale-95 text-sm font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> <span class="hidden sm:inline">โหลด All-Excel</span>
+                </button>
                 <button onclick="toggleDarkMode()" class="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                     <span id="darkModeIcon" class="text-lg">🌙</span>
                 </button>
@@ -212,9 +206,7 @@
             <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย</button>
         </div>
 
-        <!-- 📊 Tab 1: Dashboard -->
         <div id="view-dashboard" class="animate-fade-in">
-            
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
@@ -225,10 +217,14 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">📦</div>
+                </div>
+                <div onclick="openCardModal('MAIN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center" data-tooltip="คลิกเพื่อดูรายการ">
+                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">อุปกรณ์หลักทั้งหมดในระบบ</p></div>
+                    <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dashWHMain">-</h3>
                 </div>
                 <div onclick="openCardModal('DEPLOYED')" class="hover-card bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg border border-blue-400 text-white relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
                     <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-90">จ่ายออกไปสถานีแล้ว</p><h3 class="text-4xl font-black" id="dashDeployedCount">-</h3></div>
@@ -345,6 +341,7 @@
                     </div>
                     <div id="wh-ink" class="w-full text-black min-w-full"></div>
                 </div>
+                
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-blue-500">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⌨️</span> อุปกรณ์คอมพิวเตอร์</h3>
@@ -355,8 +352,7 @@
             </div>
         </div>
 
-        <!-- 📍 Tab 3: Deployed Assets -->
-        <div id="view-deployed" class="hidden animate-fade-in">
+        <div id="view-deployed" class="hidden animate-fade-in pb-20">
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ข้อมูลการเบิกจ่าย (Deployed Assets)</h2>
@@ -385,15 +381,12 @@
         </div>
     </div>
 
-    <!-- Script Logic -->
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbw47nSolokBljZwKKEnVqOSFqKExPKRmBmmrl5zLTlqZQldI1SZgze57ddw79FMsEAp/exec'; 
-        
-        // 🌟 แยกฐานข้อมูลออกจากกันชัดเจน 🌟
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL'; 
-        const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES'; // 🌟 เพิ่มคีย์ใหม่
+        const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES'; 
 
-        let whMainTable = null, whInkTable = null, whAccTable = null, whPartsTable = null; // 🌟 เปลี่ยนชื่อตัวแปรตาราง
+        let whMainTable = null, whInkTable = null, whAccTable = null, whPartsTable = null; 
         let globalDeployedData = [];
         let cardData = { AVAILABLE: [], MAIN: [], DEPLOYED: [], BROKEN: [] };
         let categoryStats = {}; let categoryDetailedItems = {}; 
@@ -408,6 +401,28 @@
         const whMainTypes = ['PC', 'Notebook', 'Monitor', 'Printer', 'UPS', 'Server', 'Switch', 'เครื่องมือพิเศษ', 'อื่นๆ'];
         const whAccTypes = ['เมาส์', 'คีย์บอร์ด', 'สายไฟ', 'สายจอ', 'แฟลชไดร์ฟ', 'อื่นๆ'];
         const whPartsTypes = ['RAM', 'SSD', 'HDD', 'Mainboard', 'Power Supply', 'VGA', 'อะไหล่อื่นๆ'];
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-500' : 'bg-slate-800 dark:bg-slate-700');
+            toast.className = `${bgColor} text-white px-5 py-3 rounded-2xl shadow-xl font-medium flex items-center gap-3 toast-enter pointer-events-auto text-sm`;
+            toast.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> <span>${message}</span>`; 
+            container.appendChild(toast);
+            requestAnimationFrame(() => { toast.classList.remove('toast-enter'); toast.classList.add('toast-enter-active'); });
+            setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.querySelectorAll('#darkModeIcon').forEach(icon => { icon.innerText = isDark ? '☀️' : '🌙'; });
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+        
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.querySelectorAll('#darkModeIcon').forEach(icon => { icon.innerText = '☀️'; });
+        }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-600', 'dark:text-slate-400'));
@@ -434,7 +449,6 @@
                 let over = document.getElementById('loadingOverlay');
                 if(over) { over.classList.add('hidden'); over.classList.remove('flex'); }
             }
-
             setInterval(() => { if (!hasUnsavedWhChanges) fetchAllData(true); }, 60000);
         };
 
@@ -470,7 +484,7 @@
 
             let category = tableId === 'wh-ink' ? 'หมึกพิมพ์' : (rData[1] || 'อุปกรณ์');
             let specs = (tableId === 'wh-ink') ? `${rData[1]||''} (ใช้กับ: ${rData[2]||''})` : `${rData[2]||''}`;
-            if (tableId === 'wh-acc' && rData[3]) specs += ` (S/N: ${rData[3]})`; // แปะ S/N ไปที่ชื่อเบิกด้วย
+            if (tableId === 'wh-acc' && rData[3]) specs += ` (S/N: ${rData[3]})`; 
             
             let itemName = `${category} ${specs}`.trim(); let unit = rData[unitCol] || 'ชิ้น';
 
@@ -575,9 +589,6 @@
             closeQuickWithdrawModal(); hasUnsavedWhChanges = true; await saveWarehouseData();
         }
 
-        // ==========================================
-        // 🌟 ระบบเพิ่มอุปกรณ์ผ่าน Popup Modal 🌟
-        // ==========================================
         let currentAddTableId = null;
 
         function openAddItemModal(tableId) {
@@ -585,7 +596,6 @@
             let title = "";
             let html = "";
 
-            // ฟังก์ชันช่วยสร้างฟอร์ม
             const renderSelect = (id, label, options) => `<div><label class="block text-xs font-bold text-slate-500 mb-1">${label}</label><select id="${id}" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-indigo-500 cursor-pointer">${options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
             const renderInput = (id, label, placeholder, type="text") => `<div><label class="block text-xs font-bold text-slate-500 mb-1">${label}</label><input type="${type}" id="${id}" placeholder="${placeholder}" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-indigo-500"></div>`;
 
@@ -654,7 +664,6 @@
                 rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
             }
 
-            // 🌟 แก้ไขตรงนี้: แทรกที่ Index 0 (บนสุด) และดันอันอื่นลงไป
             table.insertRow(rowData, 0, true); 
             
             hasUnsavedWhChanges = true;
@@ -761,11 +770,15 @@
                 // ประมวลผลตาราง Supplies แบบใหม่ 3 อัน
                 const extractSupplyStats = (arr, catPrefix) => {
                     if(arr) arr.forEach(r => { 
-                        let qty = parseFloat(r[3]); 
+                        let qtyIdx = catPrefix === 'Acc' ? 4 : 3;
+                        let qty = parseFloat(r[qtyIdx]); 
                         if(!isNaN(qty) && qty > 0) { 
                             let cat = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1];
                             let specs = catPrefix === 'Ink' ? `${r[1]||''} (ใช้กับ: ${r[2]||''})` : `${r[2]||''}`;
-                            let itemObj = { group: 'คลังวัสดุ', station: r[5]||'จุดเก็บ', category: cat, user: '-', specs: specs, sn: `(คงเหลือ ${qty} ${r[4]||''})`, status: 'พร้อมจ่าย' }; 
+                            if (catPrefix === 'Acc' && r[3]) specs += ` (S/N: ${r[3]})`;
+                            
+                            let unitIdx = catPrefix === 'Acc' ? 5 : 4;
+                            let itemObj = { group: 'คลังวัสดุ', station: r[unitIdx+1]||'จุดเก็บ', category: cat, user: '-', specs: specs, sn: `(คงเหลือ ${qty} ${r[unitIdx]||''})`, status: 'พร้อมจ่าย' }; 
                             addStat(cat, 'wh', qty, itemObj); 
                         } 
                     });
@@ -829,6 +842,7 @@
             }
         }
 
+        // 🌟 วาดตารางแบบมีการแบ่งหน้า 50 รายการ และมีช่อง S/N ในอุปกรณ์คอมฯ
         function initWarehouseSpreadsheets(data) {
             ['wh-main', 'wh-ink', 'wh-acc', 'wh-parts'].forEach(id => {
                 let el = document.getElementById(id);
@@ -864,6 +878,7 @@
                 ], minDimensions: [9, 5]
             });
             
+            // 🌟 ใช้ Function สร้างคอลัมน์ใหม่ทุกครั้ง ป้องกันตาราง Jspreadsheet ดึงข้อมูลตีกัน
             const getSuppliesColumns = () => [
                 { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
                 { type: 'text', title: 'ประเภท/รุ่น', width: 180 }, 
@@ -899,17 +914,19 @@
             whInkTable = jspreadsheet(document.getElementById('wh-ink'), { ...tableConfig, data: data.ink || [[]], columns: inkCol, minDimensions: [9, 5] });
             whAccTable = jspreadsheet(document.getElementById('wh-acc'), { ...tableConfig, data: data.accessories || [[]], columns: accCol, minDimensions: [10, 5] });
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { ...tableConfig, data: data.parts || [[]], columns: partsCol, minDimensions: [9, 5] });
-
+            
+            // ซ่อนช่อง Search ของ Jspreadsheet เพราะเรามีช่อง Search ใหญ่ด้านบนแล้ว
             document.querySelectorAll('.jexcel_search').forEach(s => s.style.display = 'none');
         }
 
+        // 🌟 แยกบันทึกลง 2 ฐานข้อมูล (ฉบับอัปเกรด แก้ไขปุ่มค้าง)
         async function saveWarehouseData() {
             document.getElementById('loadingText').innerText = 'บันทึกข้อมูลคลัง...'; 
             document.getElementById('loadingOverlay').classList.remove('hidden'); 
             document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
-
+                // ดึงข้อมูลจากตาราง (เช็คกันเหนียวเผื่อตารางโหลดยังไม่เสร็จ)
                 const mainPayload = { 
                     main: whMainTable ? whMainTable.getData().map(r => r.slice(0, -1)) : [], 
                     withdrawals: whWithdrawals || [] 
@@ -920,6 +937,7 @@
                     parts: whPartsTable ? whPartsTable.getData().map(r => r.slice(0, -2)) : []
                 };
 
+                // 🌟 จุดที่บัคครับ! เติมการประกาศตัวแปร logs ตรงนี้
                 let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
                 if (whPendingLogs && whPendingLogs.length > 0) {
                     logs = logs.concat(whPendingLogs);
@@ -940,6 +958,8 @@
                 whPendingLogs = []; 
                 hasUnsavedWhChanges = false; 
                 showToast("บันทึกสต็อกคลังสำเร็จ! 💾"); 
+                
+                // รีโหลดสถิติใหม่
                 fetchAllData(true);
             } catch (e) { 
                 console.error(e); 
@@ -1281,25 +1301,7 @@
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallApp').classList.remove('hidden'); });
         function installApp() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden'); deferredPrompt = null; }); } }
-
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-
-            document.querySelectorAll('#darkModeIcon').forEach(icon => {
-                icon.innerText = isDark ? '☀️' : '🌙';
-            });
-            
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        }
-
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            document.querySelectorAll('#darkModeIcon').forEach(icon => {
-                icon.innerText = '☀️';
-            });
-        }
-        
+    
     </script>
 </body>
 </html>
