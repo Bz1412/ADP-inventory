@@ -58,6 +58,8 @@
         
         .hover-card { transition: all 0.2s ease; cursor: pointer; }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        
+        .jexcel_search, .jss_search { display: none !important; }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
@@ -406,9 +408,6 @@
         const whMainTypes = ['PC', 'Notebook', 'Monitor', 'Printer', 'UPS', 'Server', 'Switch', 'เครื่องมือพิเศษ', 'อื่นๆ'];
         const whAccTypes = ['เมาส์', 'คีย์บอร์ด', 'สายไฟ', 'สายจอ', 'แฟลชไดร์ฟ', 'อื่นๆ'];
         const whPartsTypes = ['RAM', 'SSD', 'HDD', 'Mainboard', 'Power Supply', 'VGA', 'อะไหล่อื่นๆ'];
-
-        /* 🌟 ซ่อนช่อง Search เดิมของ Jspreadsheet 🌟 */
-        .jexcel_search, .jss_search { display: none !important; }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-600', 'dark:text-slate-400'));
