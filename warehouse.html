@@ -1301,6 +1301,48 @@
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallApp').classList.remove('hidden'); });
         function installApp() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden'); deferredPrompt = null; }); } }
+
+        function searchWarehouse() {
+            let query = document.getElementById('whSearchInput').value.toLowerCase();
+            if(whMainTable) whMainTable.search(query);
+        }
+
+        function createQRLabelElement(type, brand, model, sn, user, dateStr) {
+            let baseUrl = window.location.href.split('?')[0]; 
+            let qrUrl = baseUrl + "?sn=" + encodeURIComponent(sn);
+            let labelDiv = document.createElement('div'); labelDiv.className = 'qr-label flex flex-col items-center justify-center p-2 bg-white border border-slate-200 rounded-xl w-[4.5rem] h-[5.5rem] sm:w-48 sm:h-56 m-1 shadow-sm';
+            let titleDiv = document.createElement('div'); titleDiv.className = 'text-[9px] sm:text-xs font-bold text-center mb-2 w-full bg-slate-800 text-white py-1 rounded-md tracking-wide leading-tight truncate'; titleDiv.innerText = `คลังส่วนกลาง`;
+            let qrCanvas = document.createElement('canvas'); new QRious({ element: qrCanvas, value: qrUrl, size: 400, level: 'M' }); 
+            let qrImg = document.createElement('img'); qrImg.src = qrCanvas.toDataURL(); qrImg.className = "mx-auto border border-slate-100 p-1 w-16 h-16 sm:w-28 sm:h-28 rounded-lg";
+            let textDiv = document.createElement('div'); textDiv.className = 'text-[8px] sm:text-[10px] text-center mt-2 font-medium text-slate-800 leading-tight w-full truncate';
+            textDiv.innerHTML = `<span class="text-blue-600 uppercase tracking-widest font-bold">${type}</span><br>S/N: <span class="font-mono text-slate-500">${sn}</span>`;
+            labelDiv.appendChild(titleDiv); labelDiv.appendChild(qrImg); labelDiv.appendChild(textDiv); return labelDiv;
+        }
+
+        function generateAllQRCodes() {
+            if (!whMainTable) return;
+            const printArea = document.getElementById('printArea'); const previewArea = document.getElementById('qrPreviewContent'); printArea.innerHTML = ''; previewArea.innerHTML = '';
+            
+            let hasValidItems = false; let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+            
+            // ดึงข้อมูลจากตารางอุปกรณ์หลัก (wh-main) เพื่อสร้าง QR Code
+            whMainTable.getData().forEach(r => { 
+                let type = r[1]||'-'; let brand = r[2]||'-'; let model = r[3]||'-'; let sn = r[4]||'-';
+                if (sn && String(sn).trim() !== '-' && String(sn).trim() !== '') { 
+                    hasValidItems = true; 
+                    let labelElement = createQRLabelElement(type, brand, model, sn, 'Stock', dateStr); 
+                    previewArea.appendChild(labelElement); printArea.appendChild(labelElement.cloneNode(true)); 
+                } 
+            }); 
+            
+            if (!hasValidItems) { showToast("ไม่พบอุปกรณ์ที่มี S/N เพื่อสร้าง QR Code", "error"); return; } 
+            
+            document.getElementById('qrPreviewModal').classList.remove('hidden'); document.getElementById('qrPreviewModal').classList.add('flex');
+        }
+
+        function closeQrModal() { 
+            document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); 
+        }
     
     </script>
 </body>
