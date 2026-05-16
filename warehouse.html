@@ -161,6 +161,23 @@
         </div>
     </div>
 
+    <div id="addItemModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh] animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">➕ <span id="addModalTitle">เพิ่มรายการใหม่</span></h3>
+                <button onclick="closeAddItemModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-col gap-4 flex bg-white dark:bg-slate-800" id="addModalForm">
+                </div>
+            <div class="p-5 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 flex-wrap">
+                <button onclick="closeAddItemModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">ยกเลิก</button>
+                <button onclick="confirmAddItem()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    ยืนยันเพิ่มรายการ
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Navbar -->
     <nav class="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40">
         <div class="w-full px-4 sm:px-6 h-16 flex justify-between items-center lg:px-8">
@@ -244,64 +261,76 @@
         </div>
 
         <div id="view-warehouse" class="hidden animate-fade-in pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">จัดการคลังส่วนกลาง (Master Data)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียนอุปกรณ์หลัก (มี S/N) เข้าสู่ระบบ</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียน S/N และอุปกรณ์หลักเข้าสู่ระบบ</p>
                 </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <div class="relative flex-1 md:w-64">
-                        <input type="text" id="whSearchInput" onkeyup="searchWarehouse()" placeholder="ค้นหา S/N, ยี่ห้อในคลัง..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
-                        <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                    <div class="relative w-full sm:w-64 flex">
+                        <input type="text" id="whMainSearchInput" onkeyup="if(whMainTable) whMainTable.search(this.value)" placeholder="ค้นหา S/N, ยี่ห้อ..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
-                    </button>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="generateAllQRCodes()" class="flex-1 sm:flex-none bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 font-medium flex justify-center items-center gap-2 text-sm shadow-sm whitespace-nowrap">
+                            🖨️ พิมพ์ QR
+                        </button>
+                        <button onclick="saveWarehouseData()" class="flex-1 sm:flex-none bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
+                            💾 บันทึกคลัง
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">💻</span> คอมพิวเตอร์ & โน๊ตบุ๊ค (มี S/N)</h3>
-                    <button onclick="document.getElementById('wh-main').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
+                    <button onclick="openAddItemModal('wh-main')" class="px-4 py-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 hover:bg-indigo-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มอุปกรณ์</button>
                 </div>
                 <div id="wh-main" class="w-full text-black min-w-full"></div>
             </div>
         </div>
 
         <div id="view-parts" class="hidden animate-fade-in pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">อะไหล่คอมพิวเตอร์</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">RAM, SSD, HDD, PSU ฯลฯ (ใช้วิธีตัดสต็อกตามจำนวน)</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">RAM, SSD, HDD, PSU ฯลฯ</p>
                 </div>
-                <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
-                </button>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                    <div class="relative w-full sm:w-64 flex">
+                        <input type="text" onkeyup="if(whPartsTable) whPartsTable.search(this.value.toLowerCase())" placeholder="ค้นหาอะไหล่..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
+                        💾 บันทึกคลัง
+                    </button>
+                </div>
             </div>
 
             <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์</h3>
-                    <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอะไหล่</button>
+                    <button onclick="openAddItemModal('wh-parts')" class="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มอะไหล่</button>
                 </div>
                 <div id="wh-parts" class="w-full text-black min-w-full"></div>
             </div>
         </div>
 
         <div id="view-supplies" class="hidden animate-fade-in pb-20">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">หมึกพิมพ์ & อุปกรณ์คอมพิวเตอร์</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400">ใช้วิธีตัดสต็อกตามจำนวนเบิกจ่าย</p>
                 </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <div class="relative flex-1 md:w-64">
-                        <input type="text" onkeyup="searchSupplies(this.value)" placeholder="ค้นหาหมึก, อุปกรณ์..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
-                        <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                    <div class="relative w-full sm:w-64 flex">
+                        <input type="text" onkeyup="searchSupplies(this.value)" placeholder="ค้นหาหมึก, อุปกรณ์..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
+                    <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
+                        💾 บันทึกคลัง
                     </button>
                 </div>
             </div>
@@ -310,15 +339,14 @@
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-pink-500">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖨️</span> หมึกพิมพ์</h3>
-                        <button onclick="document.getElementById('wh-ink').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มหมึก</button>
+                        <button onclick="openAddItemModal('wh-ink')" class="px-4 py-2 bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400 hover:bg-pink-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มหมึกพิมพ์</button>
                     </div>
                     <div id="wh-ink" class="w-full text-black min-w-full"></div>
                 </div>
-                
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-blue-500">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⌨️</span> อุปกรณ์คอมพิวเตอร์</h3>
-                        <button onclick="document.getElementById('wh-acc').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 font-medium rounded-lg text-xs">+ เพิ่มอุปกรณ์</button>
+                        <button onclick="openAddItemModal('wh-acc')" class="px-4 py-2 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มอุปกรณ์</button>
                     </div>
                     <div id="wh-acc" class="w-full text-black min-w-full"></div>
                 </div>
@@ -543,6 +571,92 @@
             whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }), category: qwCurrentTarget.category, specs: qwCurrentTarget.specs, user: user, qty: qty, unit: qwCurrentTarget.unit });
 
             closeQuickWithdrawModal(); hasUnsavedWhChanges = true; await saveWarehouseData();
+        }
+
+        // ==========================================
+        // 🌟 ระบบเพิ่มอุปกรณ์ผ่าน Popup Modal 🌟
+        // ==========================================
+        let currentAddTableId = null;
+
+        function openAddItemModal(tableId) {
+            currentAddTableId = tableId;
+            let title = "";
+            let html = "";
+
+            // ฟังก์ชันช่วยสร้างฟอร์ม
+            const renderSelect = (id, label, options) => `<div><label class="block text-xs font-bold text-slate-500 mb-1">${label}</label><select id="${id}" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-indigo-500 cursor-pointer">${options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`;
+            const renderInput = (id, label, placeholder, type="text") => `<div><label class="block text-xs font-bold text-slate-500 mb-1">${label}</label><input type="${type}" id="${id}" placeholder="${placeholder}" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-indigo-500"></div>`;
+
+            if (tableId === 'wh-main') {
+                title = "เพิ่มอุปกรณ์หลัก (มี S/N)";
+                html += renderSelect('addType', 'ประเภทอุปกรณ์', whMainTypes);
+                html += `<div class="grid grid-cols-2 gap-4">${renderInput('addBrand', 'ยี่ห้อ', 'เช่น DELL')}${renderInput('addModel', 'รุ่น', 'เช่น Optiplex 7050')}</div>`;
+                html += renderInput('addSN', 'Serial Number (S/N)', 'ระบุ S/N... (บังคับ)');
+                html += renderSelect('addStatus', 'สถานะในคลัง', whStatusOptions);
+                html += renderInput('addRemark', 'หมายเหตุ', 'รายละเอียดเพิ่มเติม...');
+            } else if (tableId === 'wh-parts') {
+                title = "เพิ่มอะไหล่คอมพิวเตอร์";
+                html += renderSelect('addType', 'ประเภทอะไหล่', whPartsTypes);
+                html += renderInput('addSpec', 'สเปค/รายละเอียด', 'เช่น DDR4 8GB 2666MHz');
+                html += `<div class="grid grid-cols-2 gap-4">${renderInput('addQty', 'จำนวนคงเหลือ', '0', 'number')}${renderSelect('addUnit', 'หน่วยนับ', whUnits)}</div>`;
+                html += renderInput('addLoc', 'ชั้นวาง/จุดเก็บ', 'เช่น ตู้ A ชั้น 2');
+                html += renderInput('addRemark', 'หมายเหตุ', 'รายละเอียดเพิ่มเติม...');
+            } else if (tableId === 'wh-acc') {
+                title = "เพิ่มอุปกรณ์คอมพิวเตอร์";
+                html += renderSelect('addType', 'ประเภทอุปกรณ์', whAccTypes);
+                html += renderInput('addSpec', 'ยี่ห้อ/รุ่น/สเปค', 'เช่น เมาส์ไร้สาย Logitech');
+                html += renderInput('addSN', 'S/N (ไม่บังคับ)', 'ใส่ S/N ถ้ามี...');
+                html += `<div class="grid grid-cols-2 gap-4">${renderInput('addQty', 'จำนวนคงเหลือ', '0', 'number')}${renderSelect('addUnit', 'หน่วยนับ', whUnits)}</div>`;
+                html += renderInput('addLoc', 'ชั้นวาง/จุดเก็บ', 'เช่น ลังพลาสติก 1');
+                html += renderInput('addRemark', 'หมายเหตุ', 'รายละเอียดเพิ่มเติม...');
+            } else if (tableId === 'wh-ink') {
+                title = "เพิ่มหมึกพิมพ์";
+                html += renderInput('addType', 'รุ่นหมึกพิมพ์', 'เช่น HP 83A');
+                html += renderInput('addSpec', 'เครื่องที่รองรับ', 'เช่น HP LaserJet M201');
+                html += `<div class="grid grid-cols-2 gap-4">${renderInput('addQty', 'จำนวนคงเหลือ', '0', 'number')}${renderSelect('addUnit', 'หน่วยนับ', whUnits)}</div>`;
+                html += renderInput('addLoc', 'ชั้นวาง/จุดเก็บ', 'เช่น ตู้เก็บหมึก');
+                html += renderInput('addRemark', 'หมายเหตุ', 'รายละเอียดเพิ่มเติม...');
+            }
+
+            document.getElementById('addModalTitle').innerText = title;
+            document.getElementById('addModalForm').innerHTML = html;
+            document.getElementById('addItemModal').classList.remove('hidden');
+            document.getElementById('addItemModal').classList.add('flex');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('addItemModal').classList.add('hidden');
+            document.getElementById('addItemModal').classList.remove('flex');
+            currentAddTableId = null;
+        }
+
+        function confirmAddItem() {
+            if(!currentAddTableId) return;
+            let table = document.getElementById(currentAddTableId).jexcel;
+            let newRowIdx = table.options.data.length; 
+            const getVal = id => document.getElementById(id) ? document.getElementById(id).value.trim() : '';
+            
+            let rowData = [];
+            let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+
+            if (currentAddTableId === 'wh-main') {
+                if(!getVal('addSN')) return showToast("กรุณาระบุ S/N", "error");
+                rowData = ["", getVal('addType'), getVal('addBrand'), getVal('addModel'), getVal('addSN'), getVal('addStatus'), todayStr, getVal('addRemark')];
+            } else if (currentAddTableId === 'wh-parts') {
+                if(!getVal('addQty') || getVal('addQty')<=0) return showToast("กรุณาระบุจำนวน", "error");
+                rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
+            } else if (currentAddTableId === 'wh-acc') {
+                if(!getVal('addQty') || getVal('addQty')<=0) return showToast("กรุณาระบุจำนวน", "error");
+                rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addSN'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
+            } else if (currentAddTableId === 'wh-ink') {
+                if(!getVal('addQty') || getVal('addQty')<=0) return showToast("กรุณาระบุจำนวน", "error");
+                rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
+            }
+
+            table.insertRow(rowData, newRowIdx);
+            hasUnsavedWhChanges = true;
+            showToast("เพิ่มรายการลงตารางสำเร็จ (อย่าลืมกดบันทึกคลัง)");
+            closeAddItemModal();
         }
 
         function addStat(category, type, count, itemObj = null) {
