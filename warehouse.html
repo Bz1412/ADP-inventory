@@ -407,6 +407,9 @@
         const whAccTypes = ['เมาส์', 'คีย์บอร์ด', 'สายไฟ', 'สายจอ', 'แฟลชไดร์ฟ', 'อื่นๆ'];
         const whPartsTypes = ['RAM', 'SSD', 'HDD', 'Mainboard', 'Power Supply', 'VGA', 'อะไหล่อื่นๆ'];
 
+        /* 🌟 ซ่อนช่อง Search เดิมของ Jspreadsheet 🌟 */
+        .jexcel_search, .jss_search { display: none !important; }
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-600', 'dark:text-slate-400'));
             document.getElementById(`tab-${tabId}`).classList.add('active');
