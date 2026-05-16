@@ -58,8 +58,8 @@
         
         .hover-card { transition: all 0.2s ease; cursor: pointer; }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
-        
-        .jexcel_search, .jss_search { display: none !important; }
+
+        .jexcel_search, .jss_search, .jexcel_filter { display: none !important; }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
@@ -635,7 +635,6 @@
         function confirmAddItem() {
             if(!currentAddTableId) return;
             let table = document.getElementById(currentAddTableId).jexcel;
-            let newRowIdx = table.options.data.length; 
             const getVal = id => document.getElementById(id) ? document.getElementById(id).value.trim() : '';
             
             let rowData = [];
@@ -655,7 +654,9 @@
                 rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
             }
 
-            table.insertRow(rowData, newRowIdx);
+            // 🌟 แก้ไขตรงนี้: แทรกที่ Index 0 (บนสุด) และดันอันอื่นลงไป
+            table.insertRow(rowData, 0, true); 
+            
             hasUnsavedWhChanges = true;
             showToast("เพิ่มรายการลงตารางสำเร็จ (อย่าลืมกดบันทึกคลัง)");
             closeAddItemModal();
@@ -898,22 +899,29 @@
             whInkTable = jspreadsheet(document.getElementById('wh-ink'), { ...tableConfig, data: data.ink || [[]], columns: inkCol, minDimensions: [9, 5] });
             whAccTable = jspreadsheet(document.getElementById('wh-acc'), { ...tableConfig, data: data.accessories || [[]], columns: accCol, minDimensions: [10, 5] });
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { ...tableConfig, data: data.parts || [[]], columns: partsCol, minDimensions: [9, 5] });
-            
-            // ซ่อนช่อง Search ของ Jspreadsheet เพราะเรามีช่อง Search ใหญ่ด้านบนแล้ว
+
             document.querySelectorAll('.jexcel_search').forEach(s => s.style.display = 'none');
         }
 
-        // 🌟 แยกบันทึกลง 2 ฐานข้อมูล
         async function saveWarehouseData() {
-            document.getElementById('loadingText').innerText = 'บันทึกข้อมูลคลัง...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            document.getElementById('loadingText').innerText = 'บันทึกข้อมูลคลัง...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); 
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
             try {
-                const mainPayload = { main: whMainTable.getData().map(r => r.slice(0, -1)), withdrawals: whWithdrawals };
+                const mainPayload = { 
+                    main: whMainTable ? whMainTable.getData().map(r => r.slice(0, -1)) : [], 
+                    withdrawals: whWithdrawals || [] 
+                };
                 const suppliesPayload = { 
-                    ink: whInkTable.getData().map(r => r.slice(0, -2)), 
-                    accessories: whAccTable.getData().map(r => r.slice(0, -2)),
-                    parts: whPartsTable.getData().map(r => r.slice(0, -2))
+                    ink: whInkTable ? whInkTable.getData().map(r => r.slice(0, -2)) : [], 
+                    accessories: whAccTable ? whAccTable.getData().map(r => r.slice(0, -2)) : [],
+                    parts: whPartsTable ? whPartsTable.getData().map(r => r.slice(0, -2)) : []
                 };
 
+                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
+                if (whPendingLogs && whPendingLogs.length > 0) logs = logs.concat(whPendingLogs);
+                
                 await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ 
@@ -926,9 +934,19 @@
                     }) 
                 });
                 
-                whPendingLogs = []; hasUnsavedWhChanges = false; 
-                showToast("บันทึกสต็อกคลังสำเร็จ!"); fetchAllData();
-            } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+                whPendingLogs = []; 
+                hasUnsavedWhChanges = false; 
+                showToast("บันทึกสต็อกคลังสำเร็จ! 💾"); 
+                
+                // รีโหลดสถิติใหม่
+                fetchAllData(true);
+            } catch (e) { 
+                console.error(e); 
+                showToast("บันทึกไม่สำเร็จ กรุณาลองใหม่", "error"); 
+            } finally { 
+                document.getElementById('loadingOverlay').classList.add('hidden'); 
+                document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
         function openCardModal(type) {
