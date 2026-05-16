@@ -243,55 +243,29 @@
             </div>
         </div>
 
-        <!-- 📦 Tab 2: Warehouse Stock -->
-        <div id="view-warehouse" class="hidden animate-fade-in">
+        <div id="view-warehouse" class="hidden animate-fade-in pb-20">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">จัดการคลังส่วนกลาง (Master Data)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียน S/N และอะไหล่ เข้าสู่ระบบ เพื่อให้สถานีเบิกจ่ายได้</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ลงทะเบียนอุปกรณ์หลัก (มี S/N) เข้าสู่ระบบ</p>
                 </div>
-                
                 <div class="flex items-center gap-3 w-full md:w-auto">
                     <div class="relative flex-1 md:w-64">
                         <input type="text" id="whSearchInput" onkeyup="searchWarehouse()" placeholder="ค้นหา S/N, ยี่ห้อในคลัง..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
                         <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                     <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> <span class="hidden sm:inline">บันทึกคลัง</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-8 w-full pb-32">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">💻</span> คอมพิวเตอร์ & โน๊ตบุ๊ค (มี S/N)</h3>
-                        <button onclick="document.getElementById('wh-main').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
-                    </div>
-                    <div id="wh-main" class="w-full text-black min-w-full"></div>
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">💻</span> คอมพิวเตอร์ & โน๊ตบุ๊ค (มี S/N)</h3>
+                    <button onclick="document.getElementById('wh-main').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
                 </div>
-
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์ (RAM, SSD, HDD, PSU)</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ใช้วิธีนับจำนวนสต็อกคงเหลือ (กดปุ่มเบิกในตารางเพื่อตัดสต็อก)</p>
-                        </div>
-                        <button onclick="document.getElementById('wh-parts').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
-                    </div>
-                    <div id="wh-parts" class="w-full text-black min-w-full"></div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-indigo-500">
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖲️</span> อุปกรณ์เสริม & วัสดุสิ้นเปลือง</h3>
-                            <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 หมึกพิมพ์, เมาส์, คีย์บอร์ด, สายไฟ (กดปุ่มเบิกในตารางเพื่อตัดสต็อก)</p>
-                        </div>
-                        <button onclick="document.getElementById('wh-consumables').jexcel.insertRow()" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs">+ เพิ่มแถว</button>
-                    </div>
-                    <div id="wh-consumables" class="w-full text-black min-w-full"></div>
-                </div>
+                <div id="wh-main" class="w-full text-black min-w-full"></div>
             </div>
         </div>
 
@@ -301,15 +275,9 @@
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">อะไหล่คอมพิวเตอร์</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400">RAM, SSD, HDD, PSU ฯลฯ (ใช้วิธีตัดสต็อกตามจำนวน)</p>
                 </div>
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <div class="relative flex-1 md:w-64">
-                        <input type="text" onkeyup="if(whPartsTable) whPartsTable.search(this.value.toLowerCase())" placeholder="ค้นหาอะไหล่..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
-                        <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> <span class="hidden sm:inline">บันทึกคลัง</span>
-                    </button>
-                </div>
+                <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
+                </button>
             </div>
 
             <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
@@ -332,8 +300,8 @@
                         <input type="text" onkeyup="searchSupplies(this.value)" placeholder="ค้นหาหมึก, อุปกรณ์..." class="pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
                         <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> <span class="hidden sm:inline">บันทึกคลัง</span>
+                    <button onclick="saveWarehouseData()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-medium shadow-lg hover:bg-black transition-transform active:scale-95 flex items-center gap-2 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึกคลัง
                     </button>
                 </div>
             </div>
@@ -464,13 +432,16 @@
 
         function openWithdrawModal(tableId, row) {
             let table = document.getElementById(tableId).jexcel; let rData = table.getRowData(row);
-            let qtyCol = 3; let unitCol = 4;
+            let qtyCol = tableId === 'wh-acc' ? 4 : 3; 
+            let unitCol = tableId === 'wh-acc' ? 5 : 4; 
             
             let currentQty = parseFloat(rData[qtyCol]) || 0;
             if (currentQty <= 0) { showToast("ของหมด ไม่สามารถทำเบิกได้!", "error"); return; }
 
             let category = tableId === 'wh-ink' ? 'หมึกพิมพ์' : (rData[1] || 'อุปกรณ์');
             let specs = (tableId === 'wh-ink') ? `${rData[1]||''} (ใช้กับ: ${rData[2]||''})` : `${rData[2]||''}`;
+            if (tableId === 'wh-acc' && rData[3]) specs += ` (S/N: ${rData[3]})`; // แปะ S/N ไปที่ชื่อเบิกด้วย
+            
             let itemName = `${category} ${specs}`.trim(); let unit = rData[unitCol] || 'ชิ้น';
 
             currentWithdrawTarget = { tableId, row, qtyCol, currentQty, itemName, unit, category, specs };
@@ -508,12 +479,16 @@
             
             const extractQw = (tableObj, tableIdStr) => {
                 if(!tableObj) return;
+                let qtyColIdx = tableIdStr === 'wh-acc' ? 4 : 3;
+                let unitColIdx = tableIdStr === 'wh-acc' ? 5 : 4;
+                
                 tableObj.getData().forEach((r, rowIdx) => {
-                    let qty = parseFloat(r[3]);
+                    let qty = parseFloat(r[qtyColIdx]);
                     if (!isNaN(qty) && qty > 0) {
                         let cat = tableIdStr === 'wh-ink' ? 'หมึกพิมพ์' : r[1];
                         let spc = tableIdStr === 'wh-ink' ? `${r[1]||''} (${r[2]||''})` : r[2];
-                        qwItemsData.push({ tableId: tableIdStr, row: rowIdx, qtyCol: 3, category: cat, specs: spc, itemName: `${cat} ${spc}`.trim(), qty: qty, unit: r[4] || 'ชิ้น' });
+                        if (tableIdStr === 'wh-acc' && r[3]) spc += ` [S/N: ${r[3]}]`;
+                        qwItemsData.push({ tableId: tableIdStr, row: rowIdx, qtyCol: qtyColIdx, category: cat, specs: spc, itemName: `${cat} ${spc}`.trim(), qty: qty, unit: r[unitColIdx] || 'ชิ้น' });
                     }
                 });
             };
@@ -707,7 +682,15 @@
                 const checkLowStock = (arr, catPrefix) => {
                     if(!arr) return;
                     arr.forEach(r => {
-                        let qty = parseFloat(r[3]); let typeName = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1]; let desc = catPrefix === 'Ink' ? `${r[1]||'-'} (${r[2]||''})` : `${r[2]||'-'}`; let unit = r[4]||'';
+                        let qtyIdx = catPrefix === 'Acc' ? 4 : 3;
+                        let unitIdx = catPrefix === 'Acc' ? 5 : 4;
+                        
+                        let qty = parseFloat(r[qtyIdx]); 
+                        let typeName = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1]; 
+                        let desc = catPrefix === 'Ink' ? `${r[1]||'-'} (${r[2]||''})` : `${r[2]||'-'}`; 
+                        if (catPrefix === 'Acc' && r[3]) desc += ` (S/N: ${r[3]})`;
+                        
+                        let unit = r[unitIdx]||'';
                         if(!isNaN(qty) && qty <= 5 && typeName) {
                             let badge = qty <= 2 ? `<span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold">วิกฤต (เหลือ ${qty})</span>` : `<span class="px-2 py-1 bg-amber-100 text-amber-600 rounded text-xs font-bold">ใกล้หมด (เหลือ ${qty})</span>`;
                             lowStockHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-4 border-b border-slate-100 dark:border-slate-700 font-medium dark:text-slate-200">${typeName}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400">${desc}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-center font-bold text-lg text-slate-800 dark:text-white">${qty} <span class="text-xs font-normal text-slate-500">${unit}</span></td><td class="p-4 border-b border-slate-100 dark:border-slate-700">${badge}</td></tr>`;
@@ -729,7 +712,6 @@
             }
         }
 
-        // 🌟 วาดตาราง 4 ตัวแบบใหม่ล่าสุด 🌟
         function initWarehouseSpreadsheets(data) {
             ['wh-main', 'wh-ink', 'wh-acc', 'wh-parts'].forEach(id => {
                 let el = document.getElementById(id);
@@ -746,7 +728,9 @@
                     }
                 }
             };
-            const tableConfig = { tableWidth: "100%", allowInsertRow: true, allowInsertColumn: false, wordWrap: true, onchange: autoFillDate, updateTable: customWhRender };
+            
+            // 🌟 เพิ่ม pagination: 50 หน้าละ 50 อัน พร้อมระบบค้นหา
+            const tableConfig = { tableWidth: "100%", allowInsertRow: true, allowInsertColumn: false, wordWrap: true, pagination: 50, search: true, onchange: autoFillDate, updateTable: customWhRender };
 
             whMainTable = jspreadsheet(document.getElementById('wh-main'), { 
                 ...tableConfig, data: data.main || [[]], 
@@ -778,15 +762,29 @@
             let inkCol = getSuppliesColumns(); 
             inkCol[1] = { type: 'text', title: 'รุ่นหมึกพิมพ์', width: 180 };
             
-            let accCol = getSuppliesColumns(); 
-            accCol[1] = { type: 'dropdown', title: 'ประเภท', width: 180, source: whAccTypes, autocomplete: true, newOptions: true };
+            // 🌟 ตารางอุปกรณ์คอมฯ: เพิ่มช่อง S/N ตรงกลาง (ใส่ก็ได้ไม่ใส่ก็ได้)
+            let accCol = [
+                { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
+                { type: 'dropdown', title: 'ประเภท', width: 160, source: whAccTypes, autocomplete: true, newOptions: true }, 
+                { type: 'text', title: 'ยี่ห้อ/รุ่น/สเปค', width: 200 }, 
+                { type: 'text', title: 'S/N (ไม่บังคับ)', width: 160 }, 
+                { type: 'numeric', title: 'จำนวนคงเหลือ', width: 100 }, 
+                { type: 'dropdown', title: 'หน่วยนับ', width: 80, source: whUnits }, 
+                { type: 'text', title: 'ชั้นวาง/จุดเก็บ', width: 140 }, 
+                { type: 'text', title: 'หมายเหตุ', width: 150 }, 
+                { type: 'html', title: 'เบิกจ่าย', width: 100, readOnly: true }, 
+                { type: 'html', title: 'ลบ', width: 80, readOnly: true }
+            ];
             
             let partsCol = getSuppliesColumns(); 
             partsCol[1] = { type: 'dropdown', title: 'ประเภท', width: 180, source: whPartsTypes, autocomplete: true, newOptions: true };
 
             whInkTable = jspreadsheet(document.getElementById('wh-ink'), { ...tableConfig, data: data.ink || [[]], columns: inkCol, minDimensions: [9, 5] });
-            whAccTable = jspreadsheet(document.getElementById('wh-acc'), { ...tableConfig, data: data.accessories || [[]], columns: accCol, minDimensions: [9, 5] });
+            whAccTable = jspreadsheet(document.getElementById('wh-acc'), { ...tableConfig, data: data.accessories || [[]], columns: accCol, minDimensions: [10, 5] });
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { ...tableConfig, data: data.parts || [[]], columns: partsCol, minDimensions: [9, 5] });
+            
+            // ซ่อนช่อง Search ของ Jspreadsheet เพราะเรามีช่อง Search ใหญ่ด้านบนแล้ว
+            document.querySelectorAll('.jexcel_search').forEach(s => s.style.display = 'none');
         }
 
         // 🌟 แยกบันทึกลง 2 ฐานข้อมูล
