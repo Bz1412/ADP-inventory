@@ -909,6 +909,7 @@
             document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
+
                 const mainPayload = { 
                     main: whMainTable ? whMainTable.getData().map(r => r.slice(0, -1)) : [], 
                     withdrawals: whWithdrawals || [] 
@@ -920,7 +921,9 @@
                 };
 
                 let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
-                if (whPendingLogs && whPendingLogs.length > 0) logs = logs.concat(whPendingLogs);
+                if (whPendingLogs && whPendingLogs.length > 0) {
+                    logs = logs.concat(whPendingLogs);
+                }
                 
                 await fetch(API_URL, { 
                     method: 'POST', 
@@ -937,8 +940,6 @@
                 whPendingLogs = []; 
                 hasUnsavedWhChanges = false; 
                 showToast("บันทึกสต็อกคลังสำเร็จ! 💾"); 
-                
-                // รีโหลดสถิติใหม่
                 fetchAllData(true);
             } catch (e) { 
                 console.error(e); 
@@ -1280,7 +1281,25 @@
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('btnInstallApp').classList.remove('hidden'); });
         function installApp() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { if (choiceResult.outcome === 'accepted') document.getElementById('btnInstallApp').classList.add('hidden'); deferredPrompt = null; }); } }
-    
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+
+            document.querySelectorAll('#darkModeIcon').forEach(icon => {
+                icon.innerText = isDark ? '☀️' : '🌙';
+            });
+            
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.querySelectorAll('#darkModeIcon').forEach(icon => {
+                icon.innerText = '☀️';
+            });
+        }
+        
     </script>
 </body>
 </html>
