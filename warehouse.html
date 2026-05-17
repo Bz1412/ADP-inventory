@@ -627,7 +627,7 @@
             table.setValueFromCoords(qwCurrentTarget.qtyCol, qwCurrentTarget.row, newQty);
             
             whPendingLogs.push({ station: 'คลังวัสดุส่วนกลาง', action: 'เบิกจ่ายด่วน', detail: `[เบิก] ${qwCurrentTarget.itemName} จำนวน ${qty} ${qwCurrentTarget.unit} โดย: ${user}` });
-            whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }), category: qwCurrentTarget.category, specs: qwCurrentTarget.specs, user: user, qty: qty, unit: qwCurrentTarget.unit });
+            whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }), action: 'เบิกจ่าย', category: qwCurrentTarget.category, specs: qwCurrentTarget.specs, user: user, qty: qty, unit: qwCurrentTarget.unit });
 
             closeQuickWithdrawModal(); hasUnsavedWhChanges = true; await saveWarehouseData();
         }
@@ -715,6 +715,13 @@
             table.insertRow(rowData, 0, true); 
 
             whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เพิ่มอุปกรณ์', detail: `[นำเข้า] ${itemName}` });
+
+            whWithdrawals.push({ 
+                date: todayStr, action: 'นำเข้า', category: getVal('addType'), 
+                specs: currentAddTableId === 'wh-main' ? `${getVal('addBrand')} ${getVal('addModel')}`.trim() : getVal('addSpec'), 
+                user: 'แอดมินเพิ่มข้อมูลตรง', sn: currentAddTableId === 'wh-main' ? getVal('addSN') : null,
+                qty: currentAddTableId !== 'wh-main' ? getVal('addQty') : null, unit: currentAddTableId !== 'wh-main' ? getVal('addUnit') : null
+            });
 
             hasUnsavedWhChanges = true;
             showToast("เพิ่มลงตารางสำเร็จ! (กรุณากดบันทึกคลัง)");
@@ -876,9 +883,19 @@
 
                 if (whWithdrawals && whWithdrawals.length > 0) {
                     whWithdrawals.forEach(w => {
-                        let itemObj = { group: 'ประวัติเบิก (คลัง)', station: `วันที่ ${w.date || '-'}`, category: w.category || '-', user: w.user || '-', specs: w.specs || '-', sn: `(เบิก ${w.qty} ${w.unit})`, status: 'จ่ายแล้ว' };
-                        globalDeployedData.push(itemObj); cardData.DEPLOYED.push(itemObj);
-                        addStat(w.category, 'deployed', parseFloat(w.qty) || 1, itemObj); 
+                        let action = w.action || 'เบิกจ่าย';
+                        let snDisplay = w.sn ? w.sn : `(จำนวน ${w.qty} ${w.unit})`;
+                        
+                        let itemObj = { 
+                            group: 'ประวัติคลัง (Logs)', 
+                            station: `วันที่ ${w.date || '-'}`, 
+                            category: w.category || '-', 
+                            user: w.user || '-', 
+                            specs: w.specs || '-', 
+                            sn: snDisplay, 
+                            status: action // ส่ง action เข้าไปตรงนี้ เพื่อทำสีป้ายครับ
+                        };
+                        globalDeployedData.push(itemObj); cardData.DEPLOYED.push(itemObj); 
                     });
                 }
 
@@ -1201,7 +1218,9 @@
                 let badge = `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-medium text-[10px] md:text-xs">${item.status}</span>`; 
                 if(item.status==='ปกติ') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded text-xs">ปกติ</span>`; 
                 if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(item.status)) badge = `<span class="px-2 py-1 bg-red-50 text-red-500 border border-red-100 rounded text-xs">ชำรุด</span>`;
-                if(item.status==='สำรอง' || item.status==='จ่ายแล้ว') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded text-xs">${item.status}</span>`;
+                if(item.status==='สำรอง' || item.status==='จ่ายแล้ว' || item.status==='เบิกจ่าย') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded text-xs">${item.status}</span>`;
+                if(item.status==='นำเข้า' || item.status.includes('Auto-add')) badge = `<span class="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded text-xs">${item.status}</span>`;
+                if(item.status==='รับคืน') badge = `<span class="px-2 py-1 bg-purple-50 text-purple-600 border border-purple-100 rounded text-xs">${item.status}</span>`;
                 
                 html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="p-4 whitespace-nowrap text-slate-500 text-xs">${item.group}</td><td class="p-4 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">${item.station}</td><td class="p-4 text-slate-600 dark:text-slate-400">${item.category}</td><td class="p-4 text-slate-700 dark:text-slate-300 font-medium">${item.user}</td><td class="p-4 text-slate-600 dark:text-slate-400 text-xs">${item.specs}</td><td class="p-4 font-mono text-[11px] text-slate-500">${item.sn}</td><td class="p-4 text-center">${badge}</td></tr>`;
             });
