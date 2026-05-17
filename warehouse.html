@@ -201,8 +201,8 @@
         <div class="flex flex-wrap gap-2 mb-8 animate-slide-up bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 w-max">
             <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700">📊 แดชบอร์ดคลัง</button>
             <button onclick="switchTab('warehouse')" id="tab-warehouse" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📦 คลังส่วนกลาง (Stock)</button>
-            <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">⚙️ อะไหล่คอมพิวเตอร์</button>
-            <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">🖨️ หมึก & อุปกรณ์เสริม</button>
+            <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">⚙️ อะไหล่ & อุปกรณ์</button>
+            <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">🖨️ หมึกพิมพ์</button>
             <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย</button>
         </div>
 
@@ -293,38 +293,12 @@
         <div id="view-parts" class="hidden animate-fade-in pb-20">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">อะไหล่คอมพิวเตอร์</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">RAM, SSD, HDD, PSU ฯลฯ</p>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">อะไหล่ & อุปกรณ์คอมพิวเตอร์</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">RAM, SSD, เมาส์, คีย์บอร์ด, สายไฟ ฯลฯ</p>
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
                     <div class="relative w-full sm:w-64 flex">
-                        <input type="text" onkeyup="if(whPartsTable) whPartsTable.search(this.value.toLowerCase())" placeholder="ค้นหาอะไหล่..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
-                        <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    </div>
-                    <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
-                        💾 บันทึกคลัง
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์</h3>
-                    <button onclick="openAddItemModal('wh-parts')" class="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มอะไหล่</button>
-                </div>
-                <div id="wh-parts" class="w-full text-black min-w-full"></div>
-            </div>
-        </div>
-
-        <div id="view-supplies" class="hidden animate-fade-in pb-20">
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">หมึกพิมพ์ & อุปกรณ์คอมพิวเตอร์</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">ใช้วิธีตัดสต็อกตามจำนวนเบิกจ่าย</p>
-                </div>
-                <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                    <div class="relative w-full sm:w-64 flex">
-                        <input type="text" onkeyup="searchSupplies(this.value)" placeholder="ค้นหาหมึก, อุปกรณ์..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <input type="text" onkeyup="if(whPartsTable) whPartsTable.search(this.value.toLowerCase()); if(whAccTable) whAccTable.search(this.value.toLowerCase());" placeholder="ค้นหาอะไหล่, อุปกรณ์..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
                         <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                     <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
@@ -334,14 +308,14 @@
             </div>
 
             <div class="grid grid-cols-1 gap-8 w-full">
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-pink-500">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-emerald-500">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖨️</span> หมึกพิมพ์</h3>
-                        <button onclick="openAddItemModal('wh-ink')" class="px-4 py-2 bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400 hover:bg-pink-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มหมึกพิมพ์</button>
+                        <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⚙️</span> อะไหล่คอมพิวเตอร์</h3>
+                        <button onclick="openAddItemModal('wh-parts')" class="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มอะไหล่</button>
                     </div>
-                    <div id="wh-ink" class="w-full text-black min-w-full"></div>
+                    <div id="wh-parts" class="w-full text-black min-w-full"></div>
                 </div>
-                
+
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-blue-500">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">⌨️</span> อุปกรณ์คอมพิวเตอร์</h3>
@@ -352,19 +326,53 @@
             </div>
         </div>
 
+        <div id="view-supplies" class="hidden animate-fade-in pb-20">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 dark:text-white">หมึกพิมพ์</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">สต็อกหมึกพิมพ์ ใช้วิธีตัดสต็อกตามจำนวนเบิกจ่าย</p>
+                </div>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                    <div class="relative w-full sm:w-64 flex">
+                        <input type="text" onkeyup="if(whInkTable) whInkTable.search(this.value.toLowerCase())" placeholder="ค้นหาหมึกพิมพ์..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
+                        <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
+                        💾 บันทึกคลัง
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-x-auto w-full border-l-4 border-l-pink-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="text-xl">🖨️</span> หมึกพิมพ์</h3>
+                    <button onclick="openAddItemModal('wh-ink')" class="px-4 py-2 bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400 hover:bg-pink-100 font-bold rounded-xl text-xs transition-colors shadow-sm">+ เพิ่มหมึกพิมพ์</button>
+                </div>
+                <div id="wh-ink" class="w-full text-black min-w-full"></div>
+            </div>
+        </div>
+
         <div id="view-deployed" class="hidden animate-fade-in pb-20">
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-900 dark:text-white">ข้อมูลการเบิกจ่าย (Deployed Assets)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">อุปกรณ์ทั้งหมดที่จ่ายไปตามสถานี และประวัติเบิกอะไหล่</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">ประวัติการเบิกอุปกรณ์และวัสดุสิ้นเปลืองทั้งหมด</p>
                 </div>
-                <div class="relative w-full md:w-auto">
-                    <input type="text" id="globalSearchInput" onkeyup="filterDeployedTable()" placeholder="ค้นหา S/N, ยี่ห้อ, สถานี..." class="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-64 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
-                    <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <div class="flex gap-2 items-center bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1">
+                        <span class="text-xs font-semibold text-slate-500 uppercase">ตั้งแต่:</span>
+                        <input type="date" id="filterStartDate" onchange="filterDeployedTable(1)" class="bg-transparent text-sm outline-none text-slate-800 dark:text-white font-medium cursor-pointer">
+                        <span class="text-xs font-semibold text-slate-500 uppercase">ถึง:</span>
+                        <input type="date" id="filterEndDate" onchange="filterDeployedTable(1)" class="bg-transparent text-sm outline-none text-slate-800 dark:text-white font-medium cursor-pointer">
+                    </div>
+                    <div class="relative w-full md:w-64">
+                        <input type="text" id="globalSearchInput" onkeyup="filterDeployedTable(1)" placeholder="ค้นหา S/N, ยี่ห้อ, สถานี..." class="pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white">
+                        <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto pb-4 mb-20">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full overflow-x-auto pb-4 mb-20 flex flex-col">
                 <table class="w-full text-sm text-left min-w-[900px]">
                     <thead class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700 uppercase tracking-wider text-xs">
                         <tr>
@@ -377,6 +385,8 @@
                         <tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">กำลังโหลดข้อมูลการเบิกจ่ายจากทุกพื้นที่...</td></tr>
                     </tbody>
                 </table>
+                <div id="deployedPagination" class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 mt-auto">
+                    </div>
             </div>
         </div>
     </div>
@@ -837,7 +847,7 @@
                 checkLowStock(whSuppliesDataJSON.ink, 'Ink'); checkLowStock(whSuppliesDataJSON.accessories, 'Acc'); checkLowStock(whSuppliesDataJSON.parts, 'Part');
                 if(lowStockHtml === '') lowStockHtml = `<tr><td colspan="4" class="p-6 text-center text-slate-400">สต็อกอะไหล่และวัสดุสิ้นเปลืองอยู่ในเกณฑ์ปลอดภัย 🎉</td></tr>`;
                 document.getElementById('lowStockTableBody').innerHTML = lowStockHtml;
-                renderDeployedTable(globalDeployedData);
+                filterDeployedTable(1);
                 
                 if(!isSilent || !whMainTable) { 
                     initWarehouseSpreadsheets({ main: whMainDataJSON.main, ink: whSuppliesDataJSON.ink, accessories: whSuppliesDataJSON.accessories, parts: whSuppliesDataJSON.parts }); 
@@ -1024,23 +1034,83 @@
 
         function closeCardModal() { document.getElementById('cardDetailModal').classList.add('hidden'); document.getElementById('cardDetailModal').classList.remove('flex'); }
 
-        function renderDeployedTable(dataArr) {
+        let currentDeployedPage = 1;
+        const DEPLOYED_PER_PAGE = 50;
+        let filteredDeployedData = [];
+
+        function parseThaiDateObj(dateStr) {
+            if(!dateStr) return null;
+            const months = {'ม.ค.':0, 'ก.พ.':1, 'มี.ค.':2, 'เม.ย.':3, 'พ.ค.':4, 'มิ.ย.':5, 'ก.ค.':6, 'ส.ค.':7, 'ก.ย.':8, 'ต.ค.':9, 'พ.ย.':10, 'ธ.ค.':11};
+            let parts = dateStr.replace('วันที่ ', '').split(' ');
+            if(parts.length >= 3) {
+                let d = parseInt(parts[0]); let m = months[parts[1]]; let y = parseInt(parts[2]) - 543;
+                if(!isNaN(d) && m !== undefined && !isNaN(y)) return new Date(y, m, d);
+            }
+            return null;
+        }
+
+        function filterDeployedTable(page = 1) {
+            currentDeployedPage = page;
+            const q = document.getElementById('globalSearchInput').value.toLowerCase();
+            const startStr = document.getElementById('filterStartDate').value;
+            const endStr = document.getElementById('filterEndDate').value;
+            
+            let start = startStr ? new Date(startStr) : null;
+            let end = endStr ? new Date(endStr) : null;
+            if(start) start.setHours(0,0,0,0);
+            if(end) end.setHours(23,59,59,999);
+
+            // กลับข้อมูลให้ของล่าสุดขึ้นบนสุดก่อน
+            let reversedData = [...globalDeployedData].reverse();
+
+            filteredDeployedData = reversedData.filter(i => {
+                let matchQ = i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q) || i.group.toLowerCase().includes(q);
+                
+                let matchDate = true;
+                if (start || end) {
+                    let itemDate = parseThaiDateObj(i.station);
+                    if (itemDate) {
+                        if (start && itemDate < start) matchDate = false;
+                        if (end && itemDate > end) matchDate = false;
+                    } else {
+
+                        matchDate = false; 
+                    }
+                }
+                return matchQ && matchDate;
+            });
+
+            renderDeployedTable();
+        }
+
+        function renderDeployedTable() {
+            let totalPages = Math.ceil(filteredDeployedData.length / DEPLOYED_PER_PAGE) || 1;
+            if(currentDeployedPage > totalPages) currentDeployedPage = totalPages;
+            
+            let startIdx = (currentDeployedPage - 1) * DEPLOYED_PER_PAGE;
+            let endIdx = startIdx + DEPLOYED_PER_PAGE;
+            let dataToShow = filteredDeployedData.slice(startIdx, endIdx);
+
             let html = '';
-            dataArr.forEach(item => {
+            dataToShow.forEach(item => {
                 let badge = `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-medium text-[10px] md:text-xs">${item.status}</span>`; 
                 if(item.status==='ปกติ') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded text-xs">ปกติ</span>`; 
                 if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(item.status)) badge = `<span class="px-2 py-1 bg-red-50 text-red-500 border border-red-100 rounded text-xs">ชำรุด</span>`;
                 if(item.status==='สำรอง' || item.status==='จ่ายแล้ว') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded text-xs">${item.status}</span>`;
+                
                 html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"><td class="p-4 whitespace-nowrap text-slate-500 text-xs">${item.group}</td><td class="p-4 font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">${item.station}</td><td class="p-4 text-slate-600 dark:text-slate-400">${item.category}</td><td class="p-4 text-slate-700 dark:text-slate-300 font-medium">${item.user}</td><td class="p-4 text-slate-600 dark:text-slate-400 text-xs">${item.specs}</td><td class="p-4 font-mono text-[11px] text-slate-500">${item.sn}</td><td class="p-4 text-center">${badge}</td></tr>`;
             });
-            if(html === '') html = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">ไม่พบข้อมูลการเบิกจ่าย</td></tr>`;
+            
+            if(html === '') html = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-medium">ไม่พบข้อมูลการเบิกจ่ายตามที่ค้นหา</td></tr>`;
             document.getElementById('deployedTableBody').innerHTML = html;
-        }
 
-        function filterDeployedTable() {
-            const q = document.getElementById('globalSearchInput').value.toLowerCase();
-            const filtered = globalDeployedData.filter(i => i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q));
-            renderDeployedTable(filtered);
+            document.getElementById('deployedPagination').innerHTML = `
+                <span class="text-sm font-medium text-slate-500 dark:text-slate-400">แสดงหน้า ${currentDeployedPage} จาก ${totalPages} <span class="hidden sm:inline">(รวมทั้งหมด ${filteredDeployedData.length} รายการ)</span></span>
+                <div class="flex gap-2">
+                    <button onclick="filterDeployedTable(${currentDeployedPage - 1})" ${currentDeployedPage === 1 ? 'disabled class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed font-medium text-sm"' : 'class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium text-sm shadow-sm"'} >ก่อนหน้า</button>
+                    <button onclick="filterDeployedTable(${currentDeployedPage + 1})" ${currentDeployedPage === totalPages ? 'disabled class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600 cursor-not-allowed font-medium text-sm"' : 'class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors font-medium text-sm shadow-sm"'} >ถัดไป</button>
+                </div>
+            `;
         }
 
         async function handleImportAllExcel(event) {
