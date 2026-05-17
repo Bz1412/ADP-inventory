@@ -1677,8 +1677,7 @@
         function calculateDiff() {
             let oldCpu = originalDbData.cpu || []; let oldNb = originalDbData.nb || [];
             let oldMon = originalDbData.mon || []; let oldPrn = originalDbData.prn || []; let oldSpc = originalDbData.spc || [];
-            
-            // 🌟 ป้องกันแถวว่าง 100% ไม่ให้หลุดไปสร้าง Log ขยะ (ลบตารางเปล่า)
+
             const isValidItem = (b, m, s) => { 
                 let bb = (b === undefined || b === null) ? '' : String(b).trim().toLowerCase();
                 let mm = (m === undefined || m === null) ? '' : String(m).trim().toLowerCase(); 
@@ -1702,9 +1701,11 @@
                 let oldMap = new Map();
                 oldArr.forEach((r, i) => {
                     let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
-                    let sn = String(r[snIdx] || '').trim(); let b = r[brandIdx]; let m = r[modelIdx];
-                    if (isValidItem(b, m, sn)) {
-                        let key = (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') ? sn.toLowerCase() : `NO_SN_${i}`; 
+                    let originalSn = String(r[snIdx] || '').trim();
+                    let snLower = originalSn.toLowerCase();
+                    let b = r[brandIdx]; let m = r[modelIdx];
+                    if (isValidItem(b, m, originalSn)) {
+                        let key = (snLower && snLower !== '-' && snLower !== 'ไม่มี' && snLower !== 'n/a') ? snLower : `${String(b||'').trim().toLowerCase()}_${String(m||'').trim().toLowerCase()}_${i}`; 
                         oldMap.set(key, r);
                     }
                 });
@@ -1712,9 +1713,13 @@
                 let newMap = new Map();
                 newArr.forEach((r, i) => {
                     let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
-                    let sn = String(r[snIdx] || '').trim(); let b = r[brandIdx]; let m = r[modelIdx];
-                    if (isValidItem(b, m, sn)) {
-                        let key = (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') ? sn.toLowerCase() : `NO_SN_${i}`; 
+                    
+                    let originalSn = String(r[snIdx] || '').trim();
+                    let snLower = originalSn.toLowerCase();
+                    let b = r[brandIdx]; let m = r[modelIdx];
+                    
+                    if (isValidItem(b, m, originalSn)) {
+                        let key = (snLower && snLower !== '-' && snLower !== 'ไม่มี' && snLower !== 'n/a') ? snLower : `${String(b||'').trim().toLowerCase()}_${String(m||'').trim().toLowerCase()}_${i}`; 
                         newMap.set(key, r);
                         let userIdx = mode === 'SPC' ? 2 : 1; let statusIdx = mode === 'PRN' ? 7 : (mode === 'SPC' ? 6 : 5);
                         let connIdx = mode === 'PRN' ? 8 : (mode === 'SPC' ? 7 : (mode === 'MON' ? -1 : 6)); let remarkIdx = mode === 'PRN' ? 9 : (mode === 'SPC' ? 8 : (mode === 'MON' ? 6 : 7));
@@ -1731,13 +1736,13 @@
                             if (oldRemark !== remark) changes.push(`แก้ไขหมายเหตุ`);
                             
                             if (changes.length > 0) { 
-                                updated.push({ label: `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${sn||'-'}) -> ${changes.join(', ')}`, status: status, isStatusChange: oldStatus !== status }); 
+                                updated.push({ label: `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${originalSn||'-'}) -> ${changes.join(', ')}`, status: status, isStatusChange: oldStatus !== status }); 
                             }
                         } else {
-                            added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
+                            added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${originalSn||'-'})`);
                             let whType = actualType; if (actualType === 'คอมพิวเตอร์' || actualType === 'CPU') whType = 'PC'; else if (actualType === 'โน๊ตบุ๊ค') whType = 'Notebook'; else if (actualType === 'จอมอนิเตอร์') whType = 'Monitor'; else if (actualType === 'เครื่องพิมพ์') whType = 'Printer';
                             let cleanBrand = mode === 'SPC' ? '' : String(r[brandIdx]||'').trim(); let cleanModel = mode === 'SPC' ? String(r[modelIdx]||'').trim() : String(r[modelIdx]||'').trim();
-                            rawNewItems.push({ type: whType, brand: cleanBrand, model: cleanModel, sn: sn });
+                            rawNewItems.push({ type: whType, brand: cleanBrand, model: cleanModel, sn: originalSn });
                         }
                     }
                 });
@@ -1745,8 +1750,8 @@
                 for (let [key, oldRow] of oldMap.entries()) {
                     if (!newMap.has(key)) {
                         let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3; let userIdx = mode === 'SPC' ? 2 : 1;
-                        let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); let sn = String(oldRow[snIdx] || '').trim(); let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
-                        removed.push(`[${actualType}] ${oldRow[userIdx]||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
+                        let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); let originalSn = String(oldRow[snIdx] || '').trim(); let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
+                        removed.push(`[${actualType}] ${oldRow[userIdx]||'-'} | ${brandModel} (S/N: ${originalSn||'-'})`);
                     }
                 }
             };
@@ -2781,7 +2786,6 @@
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 1. ฟังก์ชัน All Import (ไฟล์ใหม่) - อิงตำแหน่งตารางจากระบบ Export เป๊ะ 100%
         async function handleImportAllExcelNew(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'กำลังตรวจสอบไฟล์ All Import...'; 
@@ -2833,11 +2837,14 @@
                         let seqNum = parseInt(rowVals[0]);
                         if (isNaN(seqNum) || seqNum <= 0) return; // ต้องเป็นบรรทัดที่มีเลขลำดับ
 
-                        if (!currentMode) return; 
-
+                        if (!currentMode) return;
                         const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
+                        
+                        const needsSN = (s) => { 
+                            let str = String(s).trim().toLowerCase(); 
+                            return !str || str === '' || str === '-' || str === 'ไม่มี' || str === 'n/a'; 
+                        };
 
-                        // 🌟 ดึงข้อมูลตามคอลัมน์ Export เป๊ะๆ 100% ไม่มีสลับช่อง
                         if (currentMode === 'CPUMON') {
                             let user = getVal(1) || fullStationName;
                             let cpuBrand = getVal(2), cpuModel = getVal(3), cpuSN = getVal(4);
@@ -2849,25 +2856,30 @@
 
                             let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
                             if (!hasCpu && !hasMon) return;
-                            if (hasCpu && !cpuSN) cpuSN = generateTempSN('PC'); if (hasMon && !monSN) monSN = generateTempSN('MON');
+
+                            if (hasCpu && needsSN(cpuSN)) cpuSN = generateTempSN('PC');
+                            if (hasMon && needsSN(monSN)) monSN = generateTempSN('MON');
+                            
                             cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
                         }
                         else if (currentMode === 'NB') {
                             let user = getVal(1) || fullStationName;
                             let brand = getVal(2), model = getVal(3), sn = getVal(4);
-                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
+                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9));
+                            let remark = getVal(10);
                             
                             if (!brand && !model && !sn) return;
-                            if (!sn) sn = generateTempSN('NB');
+                            if (needsSN(sn)) sn = generateTempSN('NB');
                             nbData.push(["", user, brand, model, sn, status, conn, remark]);
                         }
                         else if (currentMode === 'PRN') {
                             let user = getVal(1) || fullStationName;
                             let brand = getVal(2), model = getVal(3), sn = getVal(4);
-                            let color = getVal(5); let scanner = getVal(6); let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
+                            let color = getVal(5); let scanner = getVal(6);
+                            let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
                             
                             if (!brand && !model && !sn) return;
-                            if (!sn) sn = generateTempSN('PRN');
+                            if (needsSN(sn)) sn = generateTempSN('PRN');
                             prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
                         }
                         else if (currentMode === 'SPC') {
@@ -2877,13 +2889,14 @@
                             let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
 
                             if (!brand && !model && !sn) return;
-                            if (!sn) sn = generateTempSN('SPC');
+                            if (needsSN(sn)) sn = generateTempSN('SPC');
 
                             let rmkLower = remark.toLowerCase();
-                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups')) type = 'UPS';
-                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์')) type = 'Server';
-                            else if (rmkLower.includes('rcf')) type = 'RCF';
-                            else if (rmkLower.includes('switch')) type = 'Switch';
+                            let rowStr = rowVals.join(' ').toLowerCase(); 
+                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
+                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
+                            else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
+                            else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) type = 'RCF';
 
                             spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
                         }
@@ -2976,7 +2989,6 @@
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
-        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดี่ยว (NEW) - สำหรับดึงไฟล์ Export เข้ามาใส่ในตารางเพื่อรอเซฟ
         async function handleImportExcelNew(event) {
             const file = event.target.files[0]; if (!file) return;
             document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
@@ -3021,60 +3033,71 @@
                     let seqNum = parseInt(rowVals[0]);
                     if (isNaN(seqNum) || seqNum <= 0) return; 
 
-                    if (!currentMode) return; 
+                    if (!currentMode) return;
+                        const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
 
-                    const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
+                        const needsSN = (s) => { 
+                            let str = String(s).trim().toLowerCase(); 
+                            return !str || str === '' || str === '-' || str === 'ไม่มี' || str === 'n/a'; 
+                        };
 
-                    if (currentMode === 'CPUMON') {
-                        let user = getVal(1) || currentStation;
-                        let cpuBrand = getVal(2), cpuModel = getVal(3), cpuSN = getVal(4);
-                        let statusCpu = mapStatus(getVal(5));
-                        let monBrand = getVal(6), monModel = getVal(7), monSN = getVal(8);
-                        let statusMon = mapStatus(getVal(9));
-                        let conn = mapConn(getVal(10));
-                        let remark = getVal(11);
+                        if (currentMode === 'CPUMON') {
+                            let user = getVal(1) || currentStation;
+                            let cpuBrand = getVal(2), cpuModel = getVal(3), cpuSN = getVal(4);
+                            let statusCpu = mapStatus(getVal(5));
+                            let monBrand = getVal(6), monModel = getVal(7), monSN = getVal(8);
+                            let statusMon = mapStatus(getVal(9));
+                            let conn = mapConn(getVal(10));
+                            let remark = getVal(11);
 
-                        let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
-                        if (!hasCpu && !hasMon) return;
-                        if (hasCpu && !cpuSN) cpuSN = generateTempSN('PC'); if (hasMon && !monSN) monSN = generateTempSN('MON');
-                        cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
-                    }
-                    else if (currentMode === 'NB') {
-                        let user = getVal(1) || currentStation;
-                        let brand = getVal(2), model = getVal(3), sn = getVal(4);
-                        let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
-                        
-                        if (!brand && !model && !sn) return;
-                        if (!sn) sn = generateTempSN('NB');
-                        nbData.push(["", user, brand, model, sn, status, conn, remark]);
-                    }
-                    else if (currentMode === 'PRN') {
-                        let user = getVal(1) || currentStation;
-                        let brand = getVal(2), model = getVal(3), sn = getVal(4);
-                        let color = getVal(5); let scanner = getVal(6); let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
-                        
-                        if (!brand && !model && !sn) return;
-                        if (!sn) sn = generateTempSN('PRN');
-                        prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
-                    }
-                    else if (currentMode === 'SPC') {
-                        let type = getVal(1) || 'เครื่องมือพิเศษ';
-                        let user = getVal(2) || currentStation;
-                        let brand = getVal(3), model = getVal(4), sn = getVal(5);
-                        let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
+                            let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
+                            if (!hasCpu && !hasMon) return;
+                            
+                            if (hasCpu && needsSN(cpuSN)) cpuSN = generateTempSN('PC');
+                            if (hasMon && needsSN(monSN)) monSN = generateTempSN('MON');
+                            
+                            cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
+                        }
+                        else if (currentMode === 'NB') {
+                            let user = getVal(1) || currentStation;
+                            let brand = getVal(2), model = getVal(3), sn = getVal(4);
+                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9));
+                            let remark = getVal(10);
+                            
+                            if (!brand && !model && !sn) return;
+                            if (needsSN(sn)) sn = generateTempSN('NB');
+                            nbData.push(["", user, brand, model, sn, status, conn, remark]);
+                        }
+                        else if (currentMode === 'PRN') {
+                            let user = getVal(1) || currentStation;
+                            let brand = getVal(2), model = getVal(3), sn = getVal(4);
+                            let color = getVal(5); let scanner = getVal(6);
+                            let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
+                            
+                            if (!brand && !model && !sn) return;
+                            if (needsSN(sn)) sn = generateTempSN('PRN');
+                            prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
+                        }
+                        else if (currentMode === 'SPC') {
+                            let type = getVal(1) || 'เครื่องมือพิเศษ';
+                            let user = getVal(2) || currentStation;
+                            let brand = getVal(3), model = getVal(4), sn = getVal(5);
+                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9));
+                            let remark = getVal(10);
 
-                        if (!brand && !model && !sn) return;
-                        if (!sn) sn = generateTempSN('SPC');
+                            if (!brand && !model && !sn) return;
+                            if (needsSN(sn)) sn = generateTempSN('SPC');
 
-                        let rmkLower = remark.toLowerCase();
-                        if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups')) type = 'UPS';
-                        else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์')) type = 'Server';
-                        else if (rmkLower.includes('rcf')) type = 'RCF';
-                        else if (rmkLower.includes('switch')) type = 'Switch';
+                            let rmkLower = remark.toLowerCase();
+                            let rowStr = rowVals.join(' ').toLowerCase(); 
+                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
+                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
+                            else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
+                            else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) type = 'RCF';
 
-                        spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
-                    }
-                });
+                            spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
+                        }
+                    });
 
                 if(cpumonData.length > 0) tableCPUMON.setData(cpumonData);
                 if(nbData.length > 0) tableNB.setData(nbData);
