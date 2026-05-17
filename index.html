@@ -1618,37 +1618,33 @@
 
         function calculateDiff() {
             let oldCpu = originalDbData.cpu || []; let oldNb = originalDbData.nb || [];
-            let oldMon = originalDbData.mon || []; let oldPrn = originalDbData.prn || []; 
-            let oldSpc = originalDbData.spc || [];
+            let oldMon = originalDbData.mon || []; let oldPrn = originalDbData.prn || []; let oldSpc = originalDbData.spc || [];
             
-            // 🌟 เช็คว่าอุปกรณ์นั้นๆ มีตัวตนจริงๆ ไหม (ไม่นับคำว่า ไม่มี, N/A, -)
+            // 🌟 ป้องกันแถวว่าง 100% ไม่ให้หลุดไปสร้าง Log ขยะ (ลบตารางเปล่า)
             const isValidItem = (b, m, s) => { 
-                let bb = String(b||'').trim().toLowerCase(); let mm = String(m||'').trim().toLowerCase(); let ss = String(s||'').trim().toLowerCase(); 
-                if ((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a') && 
-                    (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a') && 
-                    (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a')) {
+                let bb = (b === undefined || b === null) ? '' : String(b).trim().toLowerCase();
+                let mm = (m === undefined || m === null) ? '' : String(m).trim().toLowerCase(); 
+                let ss = (s === undefined || s === null) ? '' : String(s).trim().toLowerCase(); 
+                if ((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a' || bb==='undefined' || bb==='null') && 
+                    (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a' || mm==='undefined' || mm==='null') && 
+                    (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a' || ss==='undefined' || ss==='null')) {
                     return false;
                 }
                 return true;
             };
-            
+
             let combinedData = tableCPUMON ? tableCPUMON.getData() : [];
             let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], isValidItem(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
             let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], isValidItem(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
-            
-            let newNb = tableNB ? tableNB.getData() : [];
-            let newPrn = tablePrn ? tablePrn.getData() : [];
-            let newSpc = tableSpc ? tableSpc.getData() : [];
+            let newNb = tableNB ? tableNB.getData() : []; let newPrn = tablePrn ? tablePrn.getData() : []; let newSpc = tableSpc ? tableSpc.getData() : [];
 
-            let added = []; let removed = []; let updated = [];
-            let rawNewItems = [];
+            let added = []; let removed = []; let updated = []; let rawNewItems = [];
 
             const compareArrays = (oldArr, newArr, type, mode) => {
                 let oldMap = new Map();
                 oldArr.forEach((r, i) => {
                     let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
                     let sn = String(r[snIdx] || '').trim(); let b = r[brandIdx]; let m = r[modelIdx];
-                    
                     if (isValidItem(b, m, sn)) {
                         let key = (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') ? sn.toLowerCase() : `NO_SN_${i}`; 
                         oldMap.set(key, r);
@@ -1659,32 +1655,15 @@
                 newArr.forEach((r, i) => {
                     let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
                     let sn = String(r[snIdx] || '').trim(); let b = r[brandIdx]; let m = r[modelIdx];
-                    
                     if (isValidItem(b, m, sn)) {
-                        let key = (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') ? sn.toLowerCase() : `NO_SN_${i}`;
+                        let key = (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') ? sn.toLowerCase() : `NO_SN_${i}`; 
                         newMap.set(key, r);
-
-                        let userIdx = mode === 'SPC' ? 2 : 1;
-                        let statusIdx = mode === 'PRN' ? 7 : (mode === 'SPC' ? 6 : 5);
-                        let connIdx = mode === 'PRN' ? 8 : (mode === 'SPC' ? 7 : (mode === 'MON' ? -1 : 6)); 
-                        let remarkIdx = mode === 'PRN' ? 9 : (mode === 'SPC' ? 8 : (mode === 'MON' ? 6 : 7));
+                        let userIdx = mode === 'SPC' ? 2 : 1; let statusIdx = mode === 'PRN' ? 7 : (mode === 'SPC' ? 6 : 5);
+                        let connIdx = mode === 'PRN' ? 8 : (mode === 'SPC' ? 7 : (mode === 'MON' ? -1 : 6)); let remarkIdx = mode === 'PRN' ? 9 : (mode === 'SPC' ? 8 : (mode === 'MON' ? 6 : 7));
+                        let user = String(r[userIdx] || '').trim(); let brandModel = String(mode === 'SPC' ? `${r[3]||''} ${r[4]||''}` : `${r[2]||''} ${r[3]||''}`).trim(); let actualType = String(mode === 'SPC' ? r[1] : type).trim(); let status = String(r[statusIdx] || 'ปกติ').trim(); let conn = connIdx !== -1 ? String(r[connIdx] || '').trim() : ''; let remark = remarkIdx !== -1 ? String(r[remarkIdx] || '').trim() : '';
                         
-                        let user = String(r[userIdx] || '').trim();
-                        let brandModel = String(mode === 'SPC' ? `${r[3]||''} ${r[4]||''}` : `${r[2]||''} ${r[3]||''}`).trim();
-                        let actualType = String(mode === 'SPC' ? r[1] : type).trim();
-                        let status = String(r[statusIdx] || 'ปกติ').trim();
-                        let conn = connIdx !== -1 ? String(r[connIdx] || '').trim() : '';
-                        let remark = remarkIdx !== -1 ? String(r[remarkIdx] || '').trim() : '';
-
                         if (oldMap.has(key)) {
-                            let oldRow = oldMap.get(key);
-                            let oldStatus = String(oldRow[statusIdx] || 'ปกติ').trim();
-                            let oldUser = String(oldRow[userIdx] || '').trim();
-                            let oldBrandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim();
-                            let oldActualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
-                            let oldConn = connIdx !== -1 ? String(oldRow[connIdx] || '').trim() : '';
-                            let oldRemark = remarkIdx !== -1 ? String(oldRow[remarkIdx] || '').trim() : '';
-
+                            let oldRow = oldMap.get(key); let oldStatus = String(oldRow[statusIdx] || 'ปกติ').trim(); let oldUser = String(oldRow[userIdx] || '').trim(); let oldBrandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); let oldActualType = String(mode === 'SPC' ? oldRow[1] : type).trim(); let oldConn = connIdx !== -1 ? String(oldRow[connIdx] || '').trim() : ''; let oldRemark = remarkIdx !== -1 ? String(oldRow[remarkIdx] || '').trim() : '';
                             let changes = [];
                             if (oldActualType !== actualType && mode === 'SPC') changes.push(`ประเภทเป็น '${actualType || '-'}'`);
                             if (oldUser !== user && user !== '') changes.push(`ผู้ใช้เป็น '${user || '-'}'`);
@@ -1692,21 +1671,14 @@
                             if (oldStatus !== status && status !== 'ไม่มี') changes.push(`สถานะเป็น '${status}'`);
                             if (oldConn !== conn && connIdx !== -1) changes.push(`การเชื่อมต่อเป็น '${conn || '-'}'`);
                             if (oldRemark !== remark) changes.push(`แก้ไขหมายเหตุ`);
-
-                            if (changes.length > 0) {
-                                let label = `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${sn||'-'}) -> ${changes.join(', ')}`;
-                                updated.push({ label: label, status: status, isStatusChange: oldStatus !== status });
+                            
+                            if (changes.length > 0) { 
+                                updated.push({ label: `[${oldActualType || actualType}] ${oldUser||'-'} | ${oldBrandModel||'-'} (S/N: ${sn||'-'}) -> ${changes.join(', ')}`, status: status, isStatusChange: oldStatus !== status }); 
                             }
                         } else {
                             added.push(`[${actualType}] ${user||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
-                            let whType = actualType;
-                            if (actualType === 'คอมพิวเตอร์' || actualType === 'CPU') whType = 'PC'; 
-                            else if (actualType === 'โน๊ตบุ๊ค') whType = 'Notebook'; 
-                            else if (actualType === 'จอมอนิเตอร์') whType = 'Monitor'; 
-                            else if (actualType === 'เครื่องพิมพ์') whType = 'Printer';
-                            
-                            let cleanBrand = mode === 'SPC' ? '' : String(r[brandIdx]||'').trim(); 
-                            let cleanModel = mode === 'SPC' ? String(r[modelIdx]||'').trim() : String(r[modelIdx]||'').trim();
+                            let whType = actualType; if (actualType === 'คอมพิวเตอร์' || actualType === 'CPU') whType = 'PC'; else if (actualType === 'โน๊ตบุ๊ค') whType = 'Notebook'; else if (actualType === 'จอมอนิเตอร์') whType = 'Monitor'; else if (actualType === 'เครื่องพิมพ์') whType = 'Printer';
+                            let cleanBrand = mode === 'SPC' ? '' : String(r[brandIdx]||'').trim(); let cleanModel = mode === 'SPC' ? String(r[modelIdx]||'').trim() : String(r[modelIdx]||'').trim();
                             rawNewItems.push({ type: whType, brand: cleanBrand, model: cleanModel, sn: sn });
                         }
                     }
@@ -1715,19 +1687,12 @@
                 for (let [key, oldRow] of oldMap.entries()) {
                     if (!newMap.has(key)) {
                         let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3; let userIdx = mode === 'SPC' ? 2 : 1;
-                        let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim();
-                        let sn = String(oldRow[snIdx] || '').trim(); let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
+                        let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); let sn = String(oldRow[snIdx] || '').trim(); let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
                         removed.push(`[${actualType}] ${oldRow[userIdx]||'-'} | ${brandModel} (S/N: ${sn||'-'})`);
                     }
                 }
             };
-
-            compareArrays(oldCpu, newCpu, 'คอมพิวเตอร์', 'CPU'); 
-            compareArrays(oldNb, newNb, 'โน๊ตบุ๊ค', 'NB'); 
-            compareArrays(oldMon, newMon, 'จอมอนิเตอร์', 'MON'); 
-            compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์', 'PRN'); 
-            compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ/Server/อื่นๆ', 'SPC');
-            
+            compareArrays(oldCpu, newCpu, 'คอมพิวเตอร์', 'CPU'); compareArrays(oldNb, newNb, 'โน๊ตบุ๊ค', 'NB'); compareArrays(oldMon, newMon, 'จอมอนิเตอร์', 'MON'); compareArrays(oldPrn, newPrn, 'เครื่องพิมพ์', 'PRN'); compareArrays(oldSpc, newSpc, 'เครื่องมือพิเศษ/Server/อื่นๆ', 'SPC');
             return { added, removed, updated, rawNewItems };
         }
 
@@ -1907,9 +1872,20 @@
             document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
+
+                fillMissingSNs();
+
                 let combinedData = tableCPUMON.getData();
-                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], (r[2]||r[3]||r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
-                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], (r[6]||r[7]||r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
+
+                const isValidItem = (b, m, s) => { 
+                    let bb = (b === undefined || b === null) ? '' : String(b).trim().toLowerCase(); 
+                    let mm = (m === undefined || m === null) ? '' : String(m).trim().toLowerCase(); 
+                    let ss = (s === undefined || s === null) ? '' : String(s).trim().toLowerCase(); 
+                    return !((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a' || bb==='undefined' || bb==='null') && (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a' || mm==='undefined' || mm==='null') && (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a' || ss==='undefined' || ss==='null'));
+                };
+
+                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], isValidItem(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], isValidItem(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
                 
                 const newPayload = { 
                     cpu: newCpu, 
@@ -1919,76 +1895,6 @@
                     spc: tableSpc.getData().map(r => r.slice(0, -1)), 
                     lastConfirmed: originalDbData.lastConfirmed 
                 };
-
-                // 🌟 ฟังก์ชันกรองขยะ: คัดเฉพาะแถวที่มีตัวหนังสือจริงๆ (กัน Log ว่างเปล่า)
-                const filterValid = (arr, mode) => {
-                    return (arr || []).filter(r => {
-                        let snIdx = mode === 'SPC' ? 5 : 4; let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
-                        let b = String(r[brandIdx]||'').trim(); let m = String(r[modelIdx]||'').trim(); let s = String(r[snIdx]||'').trim();
-                        return (b && b !== '-') || (m && m !== '-') || (s && s !== '-');
-                    });
-                };
-
-                let added = [], removed = [], updated = [];
-                const compareArrays = (oldRaw, newRaw, type, mode) => {
-                    let oldArr = filterValid(oldRaw, mode); // กรองของเก่า
-                    let newArr = filterValid(newRaw, mode); // กรองของใหม่
-                    
-                    let oldMap = new Map();
-                    oldArr.forEach((r, i) => { 
-                        let snIdx = mode === 'SPC' ? 5 : 4; let sn = String(r[snIdx] || '').trim().toLowerCase(); 
-                        let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
-                        // ถ้าไม่มี S/N ให้จับคู่ ยี่ห้อ+รุ่น+ลำดับ ป้องกันการมั่ว
-                        let key = (sn && sn !== '-') ? sn : `${String(r[brandIdx]||'').trim()}_${String(r[modelIdx]||'').trim()}_${i}`; 
-                        oldMap.set(key, r); 
-                    });
-
-                    let newMap = new Map();
-                    newArr.forEach((r, i) => {
-                        let snIdx = mode === 'SPC' ? 5 : 4; let sn = String(r[snIdx] || '').trim().toLowerCase(); 
-                        let brandIdx = mode === 'SPC' ? 3 : 2; let modelIdx = mode === 'SPC' ? 4 : 3;
-                        let key = (sn && sn !== '-') ? sn : `${String(r[brandIdx]||'').trim()}_${String(r[modelIdx]||'').trim()}_${i}`; 
-                        newMap.set(key, r);
-                        
-                        let userIdx = mode === 'SPC' ? 2 : 1; let statusIdx = mode === 'PRN' ? 7 : (mode === 'SPC' ? 6 : 5);
-                        let user = String(r[userIdx] || '').trim(); 
-                        let brandModel = String(mode === 'SPC' ? `${r[3]||''} ${r[4]||''}` : `${r[2]||''} ${r[3]||''}`).trim(); 
-                        let actualType = String(mode === 'SPC' ? r[1] : type).trim(); 
-                        let status = String(r[statusIdx] || 'ปกติ').trim();
-                        let ss = String(r[snIdx]||'').trim();
-
-                        if (oldMap.has(key)) {
-                            let oldRow = oldMap.get(key); 
-                            let oldStatus = String(oldRow[statusIdx] || 'ปกติ').trim(); let oldUser = String(oldRow[userIdx] || '').trim();
-                            let changes = [];
-                            if (oldUser !== user && user !== '') changes.push(`ผู้ใช้เป็น '${user || '-'}'`);
-                            if (oldStatus !== status && status !== 'ไม่มี') changes.push(`สถานะเป็น '${status}'`);
-                            if (changes.length > 0) updated.push({ label: `[${actualType}] ${oldUser||'-'} | ${brandModel||'-'} (S/N: ${ss||'-'}) -> ${changes.join(', ')}`, status: status, isStatusChange: oldStatus !== status });
-                        } else {
-                            added.push(`[${actualType}] ${user||'-'} | ${brandModel||'-'} (S/N: ${ss||'-'})`);
-                        }
-                    });
-
-                    for (let [key, oldRow] of oldMap.entries()) {
-                        if (!newMap.has(key)) {
-                            let snIdx = mode === 'SPC' ? 5 : 4; let userIdx = mode === 'SPC' ? 2 : 1; 
-                            let brandModel = String(mode === 'SPC' ? `${oldRow[3]||''} ${oldRow[4]||''}` : `${oldRow[2]||''} ${oldRow[3]||''}`).trim(); 
-                            let actualType = String(mode === 'SPC' ? oldRow[1] : type).trim();
-                            let ss = String(oldRow[snIdx] || '').trim();
-                            removed.push(`[${actualType}] ${oldRow[userIdx]||'-'} | ${brandModel||'-'} (S/N: ${ss||'-'})`);
-                        }
-                    }
-                };
-
-                compareArrays(originalDbData.cpu, newCpu, 'คอมพิวเตอร์', 'CPU'); 
-                compareArrays(originalDbData.nb, newPayload.nb, 'โน๊ตบุ๊ค', 'NB'); 
-                compareArrays(originalDbData.mon, newMon, 'จอมอนิเตอร์', 'MON'); 
-                compareArrays(originalDbData.prn, newPayload.prn, 'เครื่องพิมพ์', 'PRN'); 
-                compareArrays(originalDbData.spc, newPayload.spc, 'เครื่องมือพิเศษ/อื่นๆ', 'SPC');
-
-                updated.forEach(i => pendingLogs.push({ station: currentStation, action: i.isStatusChange ? (i.status==='ชำรุด'?'แจ้งชำรุด':'เปลี่ยนสถานะ') : 'อัปเดตข้อมูล', detail: i.label }));
-                added.forEach(i => pendingLogs.push({ station: currentStation, action: 'เพิ่มอุปกรณ์', detail: i }));
-                removed.forEach(i => pendingLogs.push({ station: currentStation, action: 'ลบอุปกรณ์', detail: i }));
 
                 let response = await fetch(API_URL, { 
                     method: 'POST', 
@@ -2005,13 +1911,16 @@
                 try { result = JSON.parse(textResult); } catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
 
                 if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
+                
                 if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
 
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); 
-                hasUnsavedDeletions = false; pendingLogs = []; 
+                hasUnsavedDeletions = false; 
+                pendingLogs = [];
                 showToast(`บันทึกข้อมูลเรียบร้อย`);
                 
                 if (currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') loadDashboardStats();
+
                 openStation(currentGroup, currentStation);
 
             } catch (e) { 
