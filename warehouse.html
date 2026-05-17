@@ -794,30 +794,58 @@
                     }
                 }
 
-                let whMainCount = 0; let whAvailableCount = 0; 
+                let whMainCount = 0;
+                let whAvailableCount = 0; 
+                let needsHeal = false;
                 
                 if(whMainDataJSON.main) {
+                    let uniqueMain = [];
+                    let seenSNs = new Set();
+                    whMainDataJSON.main.forEach(r => {
+                         let s = String(r[4]||'').trim().toLowerCase();
+                         if (s && s !== '-' && s !== 'ไม่มี' && s !== 'n/a') {
+                             if (!seenSNs.has(s)) { seenSNs.add(s); uniqueMain.push(r); }
+                         } else {
+                             uniqueMain.push(r);
+                         }
+                    });
+                    whMainDataJSON.main = uniqueMain;
+
                     whMainDataJSON.main.forEach(r => { 
                         let sn = String(r[4]||'').trim(); let brand = String(r[2]||'').trim(); let model = String(r[3]||'').trim();
+                        
                         if ((sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') || (brand && brand !== '-') || (model && model !== '-')) {
+
+                            if (sn && sn !== '-' && sn.toLowerCase() !== 'ไม่มี') {
+                                 let deployedMatch = globalDeployedData.find(d => d.sn && d.sn.toLowerCase() === sn.toLowerCase() && d.sn !== sn);
+                                 if (deployedMatch) {
+                                     r[4] = deployedMatch.sn;
+                                     sn = deployedMatch.sn;
+                                     needsHeal = true;
+                                 }
+                            }
+
                             whMainCount++;
                             let cat = r[1]; let itemObj = { group: 'คลังส่วนกลาง', station: 'โกดังหลัก', category: cat, user: 'Stock', specs: `${brand} ${model}`.trim(), sn: sn||'-', status: r[5]||'-' };
                             cardData.MAIN.push(itemObj);
                             
-                            // 🌟 แก้ไข: เปลี่ยนมาใช้ .includes() เพื่อดักจับทุกข้อความ ยอดจะไม่ตกหล่นอีกต่อไป
                             let statusStr = String(r[5]||'').trim();
                             if(statusStr.includes('ว่าง') || statusStr.includes('พร้อม')) { 
-                                whAvailableCount++; 
+                                whAvailableCount++;
                                 cardData.AVAILABLE.push(itemObj); 
                                 addStat(cat, 'wh', 1, itemObj); 
                             } 
                             else if (statusStr.includes('ซ่อม') || statusStr.includes('ชำรุด') || statusStr.includes('จำหน่าย')) { 
-                                cardData.BROKEN.push(itemObj); 
+                                cardData.BROKEN.push(itemObj);
                                 brokenDeployed++; 
                                 addStat(cat, 'broken', 1, itemObj); 
                             }
                         }
                     });
+                }
+
+                if (needsHeal || (whMainDataJSON.main && whMainDataJSON.main.length !== whMainCount)) {
+                    hasUnsavedWhChanges = true;
                 }
                 
                 const extractSupplyStats = (arr, catPrefix) => {
