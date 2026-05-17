@@ -649,25 +649,32 @@
             
             let rowData = [];
             let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+            let itemName = "";
 
             if (currentAddTableId === 'wh-main') {
                 if(!getVal('addSN')) return showToast("กรุณาระบุ S/N", "error");
                 rowData = ["", getVal('addType'), getVal('addBrand'), getVal('addModel'), getVal('addSN'), getVal('addStatus'), todayStr, getVal('addRemark')];
+                itemName = `${getVal('addBrand')} ${getVal('addModel')} (S/N: ${getVal('addSN')})`;
             } else if (currentAddTableId === 'wh-parts') {
                 if(!getVal('addQty') || getVal('addQty')<=0) return showToast("กรุณาระบุจำนวน", "error");
                 rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
+                itemName = `${getVal('addType')} ${getVal('addSpec')}`;
             } else if (currentAddTableId === 'wh-acc') {
                 if(!getVal('addQty') || getVal('addQty')<=0) return showToast("กรุณาระบุจำนวน", "error");
                 rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addSN'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
+                itemName = `${getVal('addType')} ${getVal('addSpec')}`;
             } else if (currentAddTableId === 'wh-ink') {
                 if(!getVal('addQty') || getVal('addQty')<=0) return showToast("กรุณาระบุจำนวน", "error");
                 rowData = ["", getVal('addType'), getVal('addSpec'), getVal('addQty'), getVal('addUnit'), getVal('addLoc'), getVal('addRemark')];
+                itemName = `${getVal('addType')} ${getVal('addSpec')}`;
             }
 
             table.insertRow(rowData, 0, true); 
-            
+
+            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เพิ่มอุปกรณ์', detail: `[นำเข้า] ${itemName}` });
+
             hasUnsavedWhChanges = true;
-            showToast("เพิ่มรายการลงตารางสำเร็จ (อย่าลืมกดบันทึกคลัง)");
+            showToast("เพิ่มลงตารางสำเร็จ! (กรุณากดบันทึกคลัง)");
             closeAddItemModal();
         }
 
@@ -914,19 +921,17 @@
             whInkTable = jspreadsheet(document.getElementById('wh-ink'), { ...tableConfig, data: data.ink || [[]], columns: inkCol, minDimensions: [9, 5] });
             whAccTable = jspreadsheet(document.getElementById('wh-acc'), { ...tableConfig, data: data.accessories || [[]], columns: accCol, minDimensions: [10, 5] });
             whPartsTable = jspreadsheet(document.getElementById('wh-parts'), { ...tableConfig, data: data.parts || [[]], columns: partsCol, minDimensions: [9, 5] });
-            
-            // ซ่อนช่อง Search ของ Jspreadsheet เพราะเรามีช่อง Search ใหญ่ด้านบนแล้ว
+
             document.querySelectorAll('.jexcel_search').forEach(s => s.style.display = 'none');
         }
 
-        // 🌟 แยกบันทึกลง 2 ฐานข้อมูล (ฉบับอัปเกรด แก้ไขปุ่มค้าง)
         async function saveWarehouseData() {
             document.getElementById('loadingText').innerText = 'บันทึกข้อมูลคลัง...'; 
             document.getElementById('loadingOverlay').classList.remove('hidden'); 
             document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
-                // ดึงข้อมูลจากตาราง (เช็คกันเหนียวเผื่อตารางโหลดยังไม่เสร็จ)
+                // ดึงข้อมูลจากตาราง (ป้องกัน Error กรณีบางตารางโหลดไม่ขึ้น)
                 const mainPayload = { 
                     main: whMainTable ? whMainTable.getData().map(r => r.slice(0, -1)) : [], 
                     withdrawals: whWithdrawals || [] 
@@ -937,14 +942,15 @@
                     parts: whPartsTable ? whPartsTable.getData().map(r => r.slice(0, -2)) : []
                 };
 
-                // 🌟 จุดที่บัคครับ! เติมการประกาศตัวแปร logs ตรงนี้
-                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
+                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ล่าสุด' }];
                 if (whPendingLogs && whPendingLogs.length > 0) {
                     logs = logs.concat(whPendingLogs);
                 }
                 
-                await fetch(API_URL, { 
+                // 🌟 เพิ่ม Headers text/plain บังคับให้ส่งผ่าน Apps Script ได้ชัวร์ๆ
+                let response = await fetch(API_URL, { 
                     method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ 
                         action: 'SYNC_ASSETS',
                         updates: [
@@ -955,15 +961,19 @@
                     }) 
                 });
                 
+                let result = await response.json();
+                if(result.status !== 'success') {
+                    throw new Error("Backend Error");
+                }
+                
                 whPendingLogs = []; 
                 hasUnsavedWhChanges = false; 
                 showToast("บันทึกสต็อกคลังสำเร็จ! 💾"); 
-                
-                // รีโหลดสถิติใหม่
                 fetchAllData(true);
+
             } catch (e) { 
-                console.error(e); 
-                showToast("บันทึกไม่สำเร็จ กรุณาลองใหม่", "error"); 
+                console.error("Save Error: ", e); 
+                showToast("บันทึกไม่สำเร็จ (โปรดเช็ค URL ของ Apps Script)", "error"); 
             } finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); 
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
