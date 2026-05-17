@@ -233,22 +233,29 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-100 dark:to-slate-300 p-6 rounded-3xl shadow-lg border border-slate-700 dark:border-slate-100 text-white dark:text-slate-900 relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
-                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-80">ของว่างในคลัง (พร้อมจ่าย)</p><h3 class="text-4xl font-black" id="dashWHAvailable">-</h3></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div onclick="openCardModal('MAIN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
+                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full blur-2xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">อุปกรณ์และอะไหล่ทั้งหมดในระบบ</p></div>
+                        <h3 class="text-4xl font-black text-slate-800 dark:text-slate-100" id="dashWHMain">-</h3>
+                    </div>
+                </div>
+
+                <div onclick="openCardModal('AVAILABLE')" class="hover-card bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-3xl shadow-lg border border-emerald-400 text-white relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
+                    <div class="relative z-10">
+                        <p class="font-bold mb-1 text-xs uppercase tracking-wider opacity-90">ของว่างในคลัง (พร้อมจ่าย)</p>
+                        <h3 class="text-4xl font-black" id="dashWHAvailable">-</h3>
+                    </div>
                     <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">📦</div>
                 </div>
-                <div onclick="openCardModal('MAIN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center" data-tooltip="คลิกเพื่อดูรายการ">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">อุปกรณ์หลักทั้งหมดในระบบ</p></div>
-                    <h3 class="text-2xl font-bold text-slate-800 dark:text-slate-100" id="dashWHMain">-</h3>
-                </div>
-                <div onclick="openCardModal('DEPLOYED')" class="hover-card bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg border border-blue-400 text-white relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
-                    <div class="relative z-10"><p class="font-medium mb-1 text-sm uppercase tracking-wider opacity-90">จ่ายออกไปสถานีแล้ว</p><h3 class="text-4xl font-black" id="dashDeployedCount">-</h3></div>
-                    <div class="absolute -right-4 -bottom-4 text-7xl opacity-20">🌍</div>
-                </div>
-                <div onclick="openCardModal('BROKEN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-red-100 dark:border-slate-700 flex flex-col justify-center cursor-pointer" data-tooltip="คลิกเพื่อดูรายการ">
-                    <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><p class="text-slate-500 dark:text-slate-400 font-medium text-xs uppercase">เครื่องชำรุด (รอดำเนินการ)</p></div>
-                    <h3 class="text-2xl font-bold text-red-500" id="dashBrokenCount">-</h3>
+
+                <div onclick="openCardModal('BROKEN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-red-100 dark:border-slate-700 flex flex-col justify-center cursor-pointer relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
+                    <div class="absolute -right-6 -top-6 w-32 h-32 bg-red-50 dark:bg-red-900/20 rounded-full blur-2xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-2 mb-2"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span><p class="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-wider">เครื่องชำรุด (รอดำเนินการ)</p></div>
+                        <h3 class="text-4xl font-black text-red-500" id="dashBrokenCount">-</h3>
+                    </div>
                 </div>
             </div>
 
@@ -722,7 +729,6 @@
             if (itemObj && (type === 'wh' || type === 'deployed')) categoryDetailedItems[category][type].push(itemObj);
         }
 
-        // 🌟 ดึงข้อมูลและ Parse ให้เป๊ะ 🌟
         async function fetchAllData(isSilent = false) {
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`);
@@ -876,9 +882,42 @@
                     });
                 }
 
-                let elWhMain = document.getElementById('dashWHMain'); if(elWhMain) elWhMain.innerText = whMainCount; 
-                document.getElementById('dashWHAvailable').innerText = whAvailableCount; document.getElementById('dashDeployedCount').innerText = totalDeployed; document.getElementById('dashBrokenCount').innerText = brokenDeployed;
+                let totalAllSupplies = 0;
+                const sumSupplies = (arr, catPrefix) => {
+                    if(!arr) return;
+                    arr.forEach(r => { 
+                        let qtyIdx = catPrefix === 'Acc' ? 4 : 3;
+                        let qty = parseFloat(r[qtyIdx]); 
+                        if(!isNaN(qty) && qty > 0) totalAllSupplies += qty;
+                    });
+                };
+                sumSupplies(whSuppliesDataJSON.ink, 'Ink');
+                sumSupplies(whSuppliesDataJSON.accessories, 'Acc');
+                sumSupplies(whSuppliesDataJSON.parts, 'Part');
 
+                let grandTotal = whMainCount + totalAllSupplies;
+
+                let elWhMain = document.getElementById('dashWHMain'); if(elWhMain) elWhMain.innerText = grandTotal; 
+                let elAvailable = document.getElementById('dashWHAvailable'); if(elAvailable) elAvailable.innerText = whAvailableCount;
+                let elBroken = document.getElementById('dashBrokenCount'); if(elBroken) elBroken.innerText = brokenDeployed;
+
+                const ctx = document.getElementById('warehouseChart');
+                if (ctx) {
+                    if(window.whChart) window.whChart.destroy();
+                    window.whChart = new Chart(ctx.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['พร้อมจ่าย', 'ชำรุดรอซ่อม'],
+                            datasets: [{
+                                data: [whAvailableCount, brokenDeployed],
+                                backgroundColor: ['#10b981', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+                    });
+                }
+                
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
                     let isMainAsset = ['PC', 'Notebook', 'Monitor (จอ)', 'Printer', 'UPS', 'Server', 'Switch', 'RCF', 'เครื่องมือพิเศษ', 'อื่นๆ'].includes(catName) || (categoryDetailedItems[catName] && categoryDetailedItems[catName].wh && categoryDetailedItems[catName].wh.some(i => !String(i.sn).includes('(คงเหลือ')));
