@@ -1555,14 +1555,15 @@
             if (migratedSpc.length === 0) migratedSpc = [[]];
 
             const tableConfig = { 
+                tableWidth: "100%", 
                 allowInsertRow: !isReadOnly, 
-                allowManualInsertRow: !isReadOnly, 
                 allowInsertColumn: false, 
-                allowDeleteRow: !isReadOnly, 
-                editable: !isReadOnly,       // 🔒 ปิดไม่ให้ดับเบิลคลิกพิมพ์ถ้าไม่ใช่แอดมิน
                 wordWrap: true, 
-                oneditionstart: isReadOnly ? null : handleSNEdit, 
-                updateTable: customRenderTable 
+                pagination: 5, // จำกัด 5 แถวต่อหน้า
+                search: true, 
+                tableOverflow: true, // บังคับให้มี Scrollbar ซ้ายขวาติดขอบตาราง
+                onchange: autoFillDate, 
+                updateTable: customRender 
             };
 
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { ...tableConfig, data: cpumonData, columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, { type: 'text', title: 'รุ่น CPU', width: 130 }, { type: 'text', title: 'S/N CPU', width: 150 }, { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, { type: 'text', title: 'S/N จอภาพ', width: 150 }, { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [13, 3] });
