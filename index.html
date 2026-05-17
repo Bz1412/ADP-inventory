@@ -3030,7 +3030,12 @@
                             }
                         };
 
-                        compareArrays(oldData.cpu || [], newCpu, 'คอมพิวเตอร์', 'CPU'); compareArrays(oldData.nb || [], nbData, 'โน๊ตบุ๊ค', 'NB'); compareArrays(oldData.mon || [], newMon, 'จอมอนิเตอร์', 'MON'); compareArrays(oldData.prn || [], prnData, 'เครื่องพิมพ์', 'PRN'); compareArrays(oldData.spc || [], spcData, 'เครื่องมือพิเศษ/Server/อื่นๆ', 'SPC');
+                        // 🌟 แก้ไขตรงนี้: ดึงค่าจาก oldData มาตรวจสอบให้ถูกต้อง 🌟
+                        compareArrays(oldData.cpu || [], newCpu, 'คอมพิวเตอร์', 'CPU'); 
+                        compareArrays(oldData.nb || [], nbData, 'โน๊ตบุ๊ค', 'NB'); 
+                        compareArrays(oldData.mon || [], newMon, 'จอมอนิเตอร์', 'MON'); 
+                        compareArrays(oldData.prn || [], prnData, 'เครื่องพิมพ์', 'PRN'); 
+                        compareArrays(oldData.spc || [], spcData, 'เครื่องมือพิเศษ/Server/อื่นๆ', 'SPC');
 
                         if (added.length > 0 || removed.length > 0 || updated.length > 0) {
                             let stationLogs = [];
@@ -3048,38 +3053,38 @@
                                 saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: stationLogs });
                             }
 
-                // 🌟 ระบบดึงของเข้าคลังและดึงมาเบิกอัตโนมัติ พร้อมสแตมป์ประวัติ (Logs)
-                rawNewItems.forEach(item => {
-                    let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
-                    let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                    let stName = typeof fullStationName !== 'undefined' ? fullStationName : currentStation;
-                    
-                    if (!existingItems.has(uniqueKey)) {
-                        whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${stName}]`]);
-                        whDb.withdrawals.push({ date: todayStr, action: 'นำเข้า', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `อัปโหลดรับจาก ${stName}`, sn: item.sn });
-                        existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
-                    } else {
-                        if (item.sn && item.sn !== '-' && item.sn !== '') {
-                            for (let r = 0; r < whMainData.length; r++) {
-                                let whSn = String(whMainData[r][4] || '').trim().toLowerCase();
-                                if (whSn === uniqueKey) {
-                                    if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
-                                        whMainData[r][5] = 'จ่ายแล้ว';
-                                        let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
-                                        whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${stName}]`;
-                                        whDb.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `จ่ายให้: ${stName}`, sn: item.sn });
-                                        updatedInWarehouse++; warehouseNeedsUpdate = true;
+                            rawNewItems.forEach(item => {
+                                let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
+                                if (!existingItems.has(uniqueKey)) {
+                                    let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                                    whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${fullStationName}]`]);
+                                    whDb.withdrawals.push({ date: todayStr, action: 'นำเข้า', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `อัปโหลดรับจาก ${fullStationName}`, sn: item.sn });
+                                    existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
+                                } else {
+                                    if (item.sn && item.sn !== '-' && item.sn !== '') {
+                                        for (let r = 0; r < whMainData.length; r++) {
+                                            let whSn = String(whMainData[r][4] || '').trim().toLowerCase();
+                                            if (whSn === uniqueKey) {
+                                                if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
+                                                    whMainData[r][5] = 'จ่ายแล้ว';
+                                                    let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
+                                                    whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${fullStationName}]`;
+                                                    whDb.withdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }), action: 'เบิกจ่าย', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `จ่ายให้: ${fullStationName}`, sn: item.sn });
+                                                    updatedInWarehouse++; warehouseNeedsUpdate = true;
+                                                }
+                                                break;
+                                            }
+                                        }
                                     }
-                                    break;
                                 }
-                            }
+                            });
                         }
-                    }
-                });
+                    });
+                } 
 
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
-                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) {} }
+                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); } }
                     for (let i = 0; i < saveQueue.length; i++) {
                         let q = saveQueue[i]; document.getElementById('loadingText').innerText = `กำลังบันทึกสถานี: ${q.name} (${i + 1}/${saveQueue.length})...`;
                         let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
@@ -3087,7 +3092,7 @@
                         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: q.logs }) }); } catch (err) {}
                     }
                     showToast(`✅ นำเข้าสำเร็จ พบการเปลี่ยนแปลง ${saveQueue.length} สถานี\n📦 เพิ่มใหม่: ${newlyAddedToWarehouse} | ดึงเบิก: ${updatedInWarehouse} รายการ`); 
-
+                    
                     document.getElementById('loadingText').innerText = 'อัปเดตหน้าจอ...';
                     if (typeof currentUserRole !== 'undefined' && currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') {
                         await loadDashboardStats();
