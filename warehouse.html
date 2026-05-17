@@ -391,6 +391,16 @@
         </div>
     </div>
 
+    <div class="fixed bottom-6 left-6 z-50 flex items-center bg-white dark:bg-slate-800 rounded-full shadow-2xl border border-slate-200 dark:border-slate-700 p-1.5 transition-transform hover:scale-105">
+        <button onclick="changeZoom(-1)" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 hover:bg-red-100 dark:bg-slate-700 dark:hover:bg-red-900/30 text-slate-600 hover:text-red-600 dark:text-slate-300 transition-colors shadow-sm font-black text-xl">
+            -
+        </button>
+        <span id="zoomLabel" class="w-16 text-center font-extrabold text-slate-700 dark:text-slate-200 text-sm">100%</span>
+        <button onclick="changeZoom(1)" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 hover:bg-emerald-100 dark:bg-slate-700 dark:hover:bg-emerald-900/30 text-slate-600 hover:text-emerald-600 dark:text-slate-300 transition-colors shadow-sm font-black text-xl">
+            +
+        </button>
+    </div>
+
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec'; 
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL'; 
@@ -1428,6 +1438,41 @@
         function closeQrModal() { 
             document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); 
         }
+
+        // ==========================================
+        // 🔍 ระบบ Zoom หน้าเว็บ (100% - 300%)
+        // ==========================================
+        const zoomLevels = [100, 125, 150]; // สเกลที่ต้องการ
+        let currentZoomIndex = 0;
+
+        function changeZoom(direction) {
+            currentZoomIndex += direction;
+            
+            // ล็อกขอบเขตไม่ให้กดต่ำกว่า 100% และเกิน 300%
+            if (currentZoomIndex < 0) currentZoomIndex = 0;
+            if (currentZoomIndex >= zoomLevels.length) currentZoomIndex = zoomLevels.length - 1;
+            
+            const zoomValue = zoomLevels[currentZoomIndex];
+            
+            // สั่งขยายหน้าเว็บทั้งหน้า (ตัวหนังสือ, ตาราง, กล่อง)
+            document.body.style.zoom = zoomValue + "%";
+            
+            // อัปเดตตัวเลขโชว์บนปุ่ม
+            const zoomLabel = document.getElementById('zoomLabel');
+            if(zoomLabel) zoomLabel.innerText = zoomValue + "%";
+            
+            // 💾 จำค่าไว้ในเครื่อง (เปิดปิดเว็บใหม่ก็ยังใหญ่เหมือนเดิม)
+            localStorage.setItem('adp_zoom_level', currentZoomIndex);
+        }
+
+        // ดึงค่าซูมเดิมมาใช้งานอัตโนมัติ ตอนโหลดหน้าเว็บเสร็จ
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedZoom = localStorage.getItem('adp_zoom_level');
+            if (savedZoom !== null) {
+                currentZoomIndex = parseInt(savedZoom);
+                changeZoom(0);
+            }
+        });
     
     </script>
 </body>
