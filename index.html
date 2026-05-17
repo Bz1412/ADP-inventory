@@ -3048,6 +3048,7 @@
                                 saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: stationLogs });
                             }
 
+                // 🌟 ระบบดึงของเข้าคลังและดึงมาเบิกอัตโนมัติ พร้อมสแตมป์ประวัติ (Logs)
                 rawNewItems.forEach(item => {
                     let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
                     let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
