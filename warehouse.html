@@ -931,7 +931,6 @@
             document.getElementById('loadingOverlay').classList.add('flex');
             
             try {
-                // ดึงข้อมูลจากตาราง
                 const mainPayload = { 
                     main: whMainTable ? whMainTable.getData().map(r => r.slice(0, -1)) : [], 
                     withdrawals: whWithdrawals || [] 
@@ -942,15 +941,14 @@
                     parts: whPartsTable ? whPartsTable.getData().map(r => r.slice(0, -2)) : []
                 };
 
-                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ล่าสุด' }];
+                let logs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตสต็อก', detail: 'บันทึกอุปกรณ์และอะไหล่ (Admin)' }];
                 if (whPendingLogs && whPendingLogs.length > 0) {
                     logs = logs.concat(whPendingLogs);
                 }
                 
-                // 🌟 บังคับใช้ text/plain เพื่อป้องกันการโดนบล็อก CORS จากเบราว์เซอร์
+                // ส่งเป็น String เปล่าๆ ไม่แนบ Content-Type เพื่อให้ทะลุระบบความปลอดภัยของเบราว์เซอร์
                 let response = await fetch(API_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    method: 'POST',
                     body: JSON.stringify({ 
                         action: 'SYNC_ASSETS',
                         updates: [
@@ -961,21 +959,16 @@
                     }) 
                 });
                 
-                // 🌟 อ่านค่าที่ Google ส่งกลับมาก่อน เพื่อเช็คบัค
-                let textResponse = await response.text();
-                
+                let textResult = await response.text();
                 let result;
                 try {
-                    // ลองแปลผลลัพธ์เป็น JSON
-                    result = JSON.parse(textResponse);
-                } catch(err) {
-                    // ถ้าแปลไม่ได้ แปลว่า Google ปฏิเสธการเข้าถึงและส่งหน้าเว็บ HTML มาให้
-                    console.error("Google Server Error:", textResponse);
-                    throw new Error("ตั้งค่าสิทธิ์ Deploy ผิด (สคริปต์โดนบล็อก)");
+                    result = JSON.parse(textResult);
+                } catch(e) {
+                    throw new Error("สิทธิ์ Apps Script ถูกบล็อก (โปรดเช็คตอน Deploy ว่าเปิดสิทธิ์เป็น 'ทุกคน' หรือ Anyone หรือไม่)");
                 }
 
                 if(result.status !== 'success') {
-                    throw new Error("Backend ตอบกลับว่า Error");
+                    throw new Error(result.message || "ระบบขัดข้อง");
                 }
                 
                 whPendingLogs = []; 
@@ -991,6 +984,7 @@
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
             }
         }
+        
         function openCardModal(type) {
             let title = "", subtitle = "", dataArray = [];
             if (type === 'AVAILABLE') { title = "📦 ของว่างในคลัง (พร้อมจ่าย)"; subtitle = "รายการอุปกรณ์หลักที่ยังไม่ได้เบิก"; dataArray = cardData.AVAILABLE; }
