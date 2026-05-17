@@ -3048,32 +3048,33 @@
                                 saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: stationLogs });
                             }
 
-                            rawNewItems.forEach(item => {
-                                let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
-                                if (!existingItems.has(uniqueKey)) {
-                                    let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                                    whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${fullStationName}]`]);
-                                    existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
-                                } else {
-                                    if (item.sn && item.sn !== '-' && item.sn !== '') {
-                                        for (let r = 0; r < whMainData.length; r++) {
-                                            let whSn = String(whMainData[r][4] || '').trim().toLowerCase();
-                                            if (whSn === uniqueKey) {
-                                                if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
-                                                    whMainData[r][5] = 'จ่ายแล้ว';
-                                                    let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
-                                                    whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${fullStationName}]`;
-                                                    updatedInWarehouse++; warehouseNeedsUpdate = true;
-                                                }
-                                                break;
-                                            }
-                                        }
+                rawNewItems.forEach(item => {
+                    let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
+                    let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                    let stName = typeof fullStationName !== 'undefined' ? fullStationName : currentStation;
+                    
+                    if (!existingItems.has(uniqueKey)) {
+                        whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${stName}]`]);
+                        whDb.withdrawals.push({ date: todayStr, action: 'นำเข้า', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `อัปโหลดรับจาก ${stName}`, sn: item.sn });
+                        existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
+                    } else {
+                        if (item.sn && item.sn !== '-' && item.sn !== '') {
+                            for (let r = 0; r < whMainData.length; r++) {
+                                let whSn = String(whMainData[r][4] || '').trim().toLowerCase();
+                                if (whSn === uniqueKey) {
+                                    if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
+                                        whMainData[r][5] = 'จ่ายแล้ว';
+                                        let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
+                                        whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${stName}]`;
+                                        whDb.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `จ่ายให้: ${stName}`, sn: item.sn });
+                                        updatedInWarehouse++; warehouseNeedsUpdate = true;
                                     }
+                                    break;
                                 }
-                            });
+                            }
                         }
-                    });
-                } 
+                    }
+                });
 
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
@@ -3241,11 +3242,15 @@
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
                 
+                // 🌟 ระบบดึงของเข้าคลังและดึงมาเบิกอัตโนมัติ พร้อมสแตมป์ประวัติ (Logs)
                 rawNewItems.forEach(item => {
                     let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
+                    let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                    let stName = typeof fullStationName !== 'undefined' ? fullStationName : currentStation;
+                    
                     if (!existingItems.has(uniqueKey)) {
-                        let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                        whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${currentStation}]`]);
+                        whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${stName}]`]);
+                        whDb.withdrawals.push({ date: todayStr, action: 'นำเข้า', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `อัปโหลดรับจาก ${stName}`, sn: item.sn });
                         existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
                     } else {
                         if (item.sn && item.sn !== '-' && item.sn !== '') {
@@ -3255,7 +3260,8 @@
                                     if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
                                         whMainData[r][5] = 'จ่ายแล้ว';
                                         let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
-                                        whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${currentStation}]`;
+                                        whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${stName}]`;
+                                        whDb.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: item.type, specs: `${item.brand} ${item.model}`.trim(), user: `จ่ายให้: ${stName}`, sn: item.sn });
                                         updatedInWarehouse++; warehouseNeedsUpdate = true;
                                     }
                                     break;
