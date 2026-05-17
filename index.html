@@ -1088,10 +1088,13 @@
             
             let elBtnHome = document.getElementById('btnHome'); if(elBtnHome) elBtnHome.classList.remove('hidden'); 
             document.getElementById('currentStationTitle').innerText = stationName; document.getElementById('currentGroupSubtitle').innerText = `กลุ่ม: ${groupName}`;
-            document.getElementById('loadingText').innerText = 'กำลังเปิดตาราง...'; 
+            document.getElementById('loadingText').innerText = 'โหลดข้อมูลล่าสุด...'; 
             let over = document.getElementById('loadingOverlay'); if(over) { over.classList.remove('hidden'); over.classList.add('flex'); }
             
             try {
+                // 🌟 บังคับดึงข้อมูลใหม่ล่าสุดจาก Sheet ทุกครั้งที่กดเข้าสถานี (Real-time)
+                await fetchAllData(true);
+
                 let defaultDbData = { cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]], lastConfirmed: null };
                 let dbData = JSON.parse(JSON.stringify(defaultDbData));
                 let cacheKey = `ADP_${groupName}_${stationName}`;
@@ -1100,18 +1103,7 @@
                     try { 
                         let parsed = JSON.parse(globalAllDataCache[cacheKey]); 
                         if(parsed) dbData = { ...dbData, ...parsed };
-                    } catch(e) { console.warn("Cache parse error"); }
-                } else {
-                    try {
-                        const response = await fetch(`${API_URL}?key=${encodeURIComponent(cacheKey)}`); 
-                        const result = await response.json();
-                        if (result.value) {
-                            let parsed = JSON.parse(result.value);
-                            if(parsed) dbData = { ...dbData, ...parsed };
-                            if (!globalAllDataCache) globalAllDataCache = {};
-                            globalAllDataCache[cacheKey] = result.value;
-                        }
-                    } catch(e) { console.warn("Fetch Parse Error"); }
+                    } catch(e) {}
                 }
                 
                 if (!dbData.cpu || !Array.isArray(dbData.cpu) || dbData.cpu.length === 0) dbData.cpu = [[]];
@@ -1159,17 +1151,14 @@
                     }
                 }
                 
-                // 🌟 ตรวจสอบสิทธิ์: ถ้าไม่ใช่ Admin ให้เป็นโหมดอ่านอย่างเดียว
                 const isReadOnly = (currentUserRole !== 'Admin');
                 initSpreadsheets(dbData, isReadOnly);
                 
-                // 🌟 ควบคุมการซ่อนปุ่มแบบปลอดภัยสุดๆ (ป้องกัน Error หาปุ่มไม่เจอ)
                 const adminBtnIds = ['btnImportOld', 'btnConfirmMonth'];
                 const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"]');
 
                 if (isReadOnly) {
                     adminBtnIds.forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
-                    // ค้นหาปุ่มในหน้า editorPage ทั้งหมด และซ่อนปุ่มที่เกี่ยวกับ บันทึก/นำเข้า
                     document.querySelectorAll('#editorPage button').forEach(btn => {
                         let txt = btn.innerText || '';
                         if (txt.includes('บันทึก') || txt.includes('นำเข้า')) btn.classList.add('hidden');
@@ -1224,11 +1213,8 @@
                     });
                 }
             } catch (error) { 
-                console.error(error); 
-                showToast("พบปัญหาในการเปิดหน้าตาราง", "error"); 
-                try { initSpreadsheets({ cpu: [[]], nb: [[]], mon: [[]], prn: [[]], spc: [[]] }, true); } catch(e){}
-            } 
-            finally { 
+                console.error(error); showToast("พบปัญหาในการเปิดหน้าตาราง", "error"); 
+            } finally { 
                 let over = document.getElementById('loadingOverlay');
                 if(over) { over.classList.add('hidden'); over.classList.remove('flex'); }
             }
@@ -1927,8 +1913,7 @@
                     lastConfirmed: originalDbData.lastConfirmed 
                 };
                 
-                // 🌟 เปลี่ยนมาใช้การส่งแบบ { key, value, logs } เพื่อให้ Apps Script รู้ว่าเป็นข้อมูลจากสถานี
-                // 🌟 ระบบจะทำการตัดสต็อก หรือ คืนคลังให้อัตโนมัติทันที!
+                // 🌟 ส่งข้อมูลด้วย key, value, logs เพื่อให้ Apps Script รู้ว่านี่คือการบันทึกสถานี และต้องคืนคลัง
                 let response = await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ 
@@ -1940,25 +1925,18 @@
 
                 let textResult = await response.text();
                 let result;
-                try {
-                    result = JSON.parse(textResult);
-                } catch(e) {
-                    throw new Error("เซิร์ฟเวอร์ขัดข้อง หรือสิทธิ์ถูกบล็อก");
-                }
+                try { result = JSON.parse(textResult); } 
+                catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
 
-                if(result.status !== 'success') {
-                    throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
-                }
+                if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
                 
-                // 🌟 อัปเดต Cache หน้าเว็บทันที
-                if(globalAllDataCache) {
-                    globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
-                }
-
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); 
                 hasUnsavedDeletions = false; 
                 pendingWarehouseItems = []; 
                 showToast(`บันทึกข้อมูลเรียบร้อย`);
+                
+                // 🌟 ดึงข้อมูลอัปเดตจากเซิร์ฟเวอร์มาแสดงทันทีหลังบันทึกเสร็จ (Real-time)
+                await fetchAllData(true);
 
             } catch (e) { 
                 console.error(e); 
