@@ -1908,55 +1908,65 @@
         }
 
         async function executeSaveData() {
-            closeConfirmModal(); document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            closeConfirmModal(); 
+            document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); 
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
             try {
                 let combinedData = tableCPUMON.getData();
                 let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], (r[2]||r[3]||r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
                 let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], (r[6]||r[7]||r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
                 
-                const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: originalDbData.lastConfirmed };
+                const newPayload = { 
+                    cpu: newCpu, 
+                    nb: tableNB.getData().map(r => r.slice(0, -1)), 
+                    mon: newMon, 
+                    prn: tablePrn.getData().map(r => r.slice(0, -1)), 
+                    spc: tableSpc.getData().map(r => r.slice(0, -1)), 
+                    lastConfirmed: originalDbData.lastConfirmed 
+                };
                 
-                await fetch(API_URL, { 
+                // 🌟 เปลี่ยนมาใช้การส่งแบบ { key, value, logs } เพื่อให้ Apps Script รู้ว่าเป็นข้อมูลจากสถานี
+                // 🌟 ระบบจะทำการตัดสต็อก หรือ คืนคลังให้อัตโนมัติทันที!
+                let response = await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ 
-                        action: 'SYNC_ASSETS', 
-                        updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], 
+                        key: `ADP_${currentGroup}_${currentStation}`, 
+                        value: JSON.stringify(newPayload), 
                         logs: pendingLogs 
                     }) 
                 });
-                
-                if (pendingWarehouseItems && pendingWarehouseItems.length > 0) {
-                    let whDb = { main: [], parts: [], consumables: [], withdrawals: [] };
-                    if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
-                        try { whDb = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); } catch(e) {}
-                    }
-                    if(!whDb.main) whDb.main = [];
-                    
-                    let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                    let addedCount = 0; let existingSNs = new Set();
-                    whDb.main.forEach(r => existingSNs.add(String(r[4]).trim().toLowerCase()));
 
-                    pendingWarehouseItems.forEach(item => {
-                        if (!existingSNs.has(item.sn.toLowerCase())) {
-                            whDb.main.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `เพิ่มจากสถานี ${currentStation}`]);
-                            existingSNs.add(item.sn.toLowerCase()); addedCount++;
-                        }
-                    });
-
-                    if (addedCount > 0) {
-                        let whLogs = [{ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่เข้าคลัง ${addedCount} รายการ (จากการคีย์เพิ่มของสถานี ${currentStation})` }];
-                        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }], logs: whLogs }) });
-                    }
+                let textResult = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(textResult);
+                } catch(e) {
+                    throw new Error("เซิร์ฟเวอร์ขัดข้อง หรือสิทธิ์ถูกบล็อก");
                 }
 
-                // 🌟 อัปเดต Cache หน้าเว็บทันที! ค้นหาปุ๊บเจอปั๊บ ประวัติขึ้นเลยไม่ต้อง F5
+                if(result.status !== 'success') {
+                    throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
+                }
+                
+                // 🌟 อัปเดต Cache หน้าเว็บทันที
                 if(globalAllDataCache) {
                     globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
                 }
 
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); hasUnsavedDeletions = false; pendingWarehouseItems = []; 
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+                hasUnsavedDeletions = false; 
+                pendingWarehouseItems = []; 
                 showToast(`บันทึกข้อมูลเรียบร้อย`);
-            } catch (e) { console.error(e); showToast("บันทึกไม่สำเร็จ", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+
+            } catch (e) { 
+                console.error(e); 
+                showToast("บันทึกไม่สำเร็จ: " + e.message, "error"); 
+            } finally { 
+                document.getElementById('loadingOverlay').classList.add('hidden'); 
+                document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
         function createQRLabelElement(type, brand, model, sn, user, dateStr) {
