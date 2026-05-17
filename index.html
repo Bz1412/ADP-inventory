@@ -3085,13 +3085,12 @@
                         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: q.logs }) }); } catch (err) {}
                     }
                     showToast(`✅ นำเข้าสำเร็จ พบการเปลี่ยนแปลง ${saveQueue.length} สถานี\n📦 เพิ่มใหม่: ${newlyAddedToWarehouse} | ดึงเบิก: ${updatedInWarehouse} รายการ`); 
-                    
+
                     document.getElementById('loadingText').innerText = 'อัปเดตหน้าจอ...';
-                    await fetchAllData(true);
-                    if (currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') {
-                        loadDashboardStats();
-                    } else if (currentStation) {
-                        openStation(currentGroup, currentStation);
+                    if (typeof currentUserRole !== 'undefined' && currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') {
+                        await loadDashboardStats();
+                    } else if (typeof currentStation !== 'undefined' && currentStation) {
+                        await openStation(currentGroup, currentStation);
                     }
                 } else { showToast("ไม่พบการเปลี่ยนแปลงใดๆ ในไฟล์เลยครับ"); }
             } catch (err) { 
