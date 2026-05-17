@@ -473,7 +473,7 @@
                 <input type="file" id="importAllExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportAllExcel(event)">
                 <input type="file" id="importAllExcelNewInput" accept=".xlsx, .xls" class="hidden" multiple onchange="handleImportAllExcelNew(event)">
                 
-                <button onclick="document.getElementById('importAllExcelNewInput').click()" data-tooltip="นำเข้าไฟล์ Excel ที่เพิ่ง Export ออกไป (รองรับโครงสร้างตาราง SPC ใหม่ และตรวจสอบการเปลี่ยนแปลงก่อนบันทึก)" class="has-tooltip bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border border-transparent px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:bg-black dark:hover:bg-white font-bold flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
+                <button onclick="document.getElementById('importAllExcelNewInput').click()" data-tooltip="นำเข้าไฟล์ Excel" class="has-tooltip bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border border-transparent px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:bg-black dark:hover:bg-white font-bold flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
                     <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Stations Import (Excel)
                 </button>
                 
@@ -609,10 +609,6 @@
                 
                 <input type="file" id="importExcelInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcel(event)">
                 <input type="file" id="importExcelNewInput" accept=".xlsx, .xls" class="hidden" onchange="handleImportExcelNew(event)">
-                
-                <button onclick="document.getElementById('importExcelNewInput').click()" data-tooltip="นำเข้าไฟล์ Excel ที่เพิ่ง Export ออกไป" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-3 py-2.5 rounded-xl border border-transparent hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm whitespace-nowrap">
-                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> นำเข้าไฟล์ (Excel)
-                </button>
                 
                 <button onclick="exportStationExcel()" data-tooltip="ดาวน์โหลดข้อมูลเป็น Excel" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> ดาวน์โหลด (Excel)
@@ -2825,7 +2821,19 @@
                 let whMainData = []; let existingItems = new Set();
                 
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
-                    try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); whDb.main = parsedWh.main || []; whDb.withdrawals = parsedWh.withdrawals || []; whMainData = whDb.main; whMainData.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
+                    try { 
+                        let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); 
+                        whDb.main = parsedWh.main || []; 
+                        whDb.withdrawals = parsedWh.withdrawals || []; 
+                        whMainData = whDb.main; 
+                        whMainData.forEach(r => { 
+                            let sn = String(r[4] || '').trim().toLowerCase(); 
+                            let brand = String(r[2] || '').trim().toLowerCase(); 
+                            let model = String(r[3] || '').trim().toLowerCase(); 
+                            if (sn && sn !== '-' && sn !== '') existingItems.add(sn); 
+                            else if (brand || model) existingItems.add(`${brand}_${model}`); 
+                        }); 
+                    } catch(e) {}
                 }
 
                 let tempSnCounter = 1;
@@ -3065,11 +3073,11 @@
                             });
                         }
                     });
-                } // สิ้นสุดลูปอ่านไฟล์
+                } 
 
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
-                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); } }
+                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) {} }
                     for (let i = 0; i < saveQueue.length; i++) {
                         let q = saveQueue[i]; document.getElementById('loadingText').innerText = `กำลังบันทึกสถานี: ${q.name} (${i + 1}/${saveQueue.length})...`;
                         let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
@@ -3077,15 +3085,23 @@
                         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: q.logs }) }); } catch (err) {}
                     }
                     showToast(`✅ นำเข้าสำเร็จ พบการเปลี่ยนแปลง ${saveQueue.length} สถานี\n📦 เพิ่มใหม่: ${newlyAddedToWarehouse} | ดึงเบิก: ${updatedInWarehouse} รายการ`); 
+                    
                     document.getElementById('loadingText').innerText = 'อัปเดตหน้าจอ...';
                     await fetchAllData(true);
                     if (currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') {
                         loadDashboardStats();
                     } else if (currentStation) {
                         openStation(currentGroup, currentStation);
-                    } 
+                    }
                 } else { showToast("ไม่พบการเปลี่ยนแปลงใดๆ ในไฟล์เลยครับ"); }
-            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (err) { 
+                console.error(err); 
+                showToast("พบข้อผิดพลาด: " + err.message, "error"); 
+            } finally { 
+                document.getElementById('importAllExcelNewInput').value = ""; 
+                document.getElementById('loadingOverlay').classList.add('hidden'); 
+                document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
         async function handleImportExcelNew(event) {
@@ -3104,8 +3120,21 @@
                 let whMainData = []; let existingItems = new Set(); 
                 let newlyAddedToWarehouse = 0; let updatedInWarehouse = 0; let warehouseNeedsUpdate = false;
                 
+                // 🌟 แก้ไขบัคก๊อปปี้ของคลังเดิมกลับมาให้ครบถ้วน 🌟
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
-                    try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); if(parsedWh.main) parsedWh.main.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
+                    try { 
+                        let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); 
+                        whDb.main = parsedWh.main || []; 
+                        whDb.withdrawals = parsedWh.withdrawals || []; 
+                        whMainData = whDb.main; 
+                        whMainData.forEach(r => { 
+                            let sn = String(r[4] || '').trim().toLowerCase(); 
+                            let brand = String(r[2] || '').trim().toLowerCase(); 
+                            let model = String(r[3] || '').trim().toLowerCase(); 
+                            if (sn && sn !== '-' && sn !== '') existingItems.add(sn); 
+                            else if (brand || model) existingItems.add(`${brand}_${model}`); 
+                        }); 
+                    } catch(e) {}
                 }
 
                 let tempSnCounter = 1;
@@ -3123,7 +3152,7 @@
 
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber - 1] = cellVal ? String(cellVal).trim() : ''; }); 
-                    while(rowVals.length < 12) rowVals.push('');
+                    while(rowVals.length < 12) rowVals.push(''); 
                     
                     let firstCell = rowVals[0].toLowerCase().replace(/\s+/g, '');
                     if (firstCell.includes('คอมพิวเตอร์และจอมอนิเตอร์')) { currentMode = 'CPUMON'; return; }
@@ -3131,10 +3160,10 @@
                     if (firstCell.includes('เครื่องพิมพ์') || firstCell.includes('printer')) { currentMode = 'PRN'; return; }
                     if (firstCell.includes('server') || firstCell.includes('เครื่องมือพิเศษ') || firstCell.includes('อื่นๆ')) { currentMode = 'SPC'; return; }
 
-                    if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return;
+                    if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return; 
 
                     let seqNum = parseInt(rowVals[0]);
-                    if (isNaN(seqNum) || seqNum <= 0) return;
+                    if (isNaN(seqNum) || seqNum <= 0) return; 
 
                     if (!currentMode) return; 
 
@@ -3212,7 +3241,7 @@
                 if(nbData.length > 0) tableNB.setData(nbData);
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
-
+                
                 rawNewItems.forEach(item => {
                     let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
                     if (!existingItems.has(uniqueKey)) {
@@ -3248,12 +3277,16 @@
                     showToast("โหลดข้อมูลลงตารางสำเร็จ! โปรดตรวจสอบและกด 'บันทึก' เพื่อยืนยันข้อมูล");
                 }
 
-            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (err) { 
+                console.error(err);
+                showToast("พบข้อผิดพลาด: " + err.message, "error"); 
+            } finally { 
+                document.getElementById('importExcelNewInput').value = ""; 
+                document.getElementById('loadingOverlay').classList.add('hidden'); 
+                document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
-        // ==========================================
-        // 🌟 ระบบ Auto-Reload ดึงข้อมูลล่าสุดแบบเงียบๆ ทุก 15 วินาที
-        // ==========================================
         let autoReloadInterval = null;
         let isUserTyping = false; 
 
