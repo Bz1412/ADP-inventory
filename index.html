@@ -3063,10 +3063,13 @@
                                     }
                                 }
                             });
+                        }
+                    });
+                } // สิ้นสุดลูปอ่านไฟล์
 
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
-                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) {} }
+                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); } }
                     for (let i = 0; i < saveQueue.length; i++) {
                         let q = saveQueue[i]; document.getElementById('loadingText').innerText = `กำลังบันทึกสถานี: ${q.name} (${i + 1}/${saveQueue.length})...`;
                         let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
