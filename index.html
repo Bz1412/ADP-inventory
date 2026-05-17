@@ -2819,7 +2819,7 @@
             
             try {
                 const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "คลัง": "ผกบ.", "ฉก.182": "ฉก.นย.182", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ข.ก.": "ขอนแก่น", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
-                let saveQueue = []; let newlyAddedToWarehouse = 0;
+                let saveQueue = []; let newlyAddedToWarehouse = 0; let updatedInWarehouse = 0; let warehouseNeedsUpdate = false;
 
                 let whDb = { main: [], withdrawals: [] };
                 let whMainData = []; let existingItems = new Set();
@@ -2839,28 +2839,24 @@
                 const mapConn = (c) => { let original = String(c).trim(); let l = original.toLowerCase(); if(!l || l === '-' || l === 'ไม่มี') return ''; if(l.includes('5')) return 'LAN กอง 5'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6'; if(l.includes('glaive')) return 'Glaive'; if(l.includes('sentinel')) return 'Sentinel'; if(l.includes('rcf')) return 'RCF'; return original; };
                 const mapStatus = (s) => { let original = String(s).trim(); let l = original.toLowerCase(); if(!l) return 'ปกติ'; if(l === 'ปกติ') return 'ปกติ'; if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; if(l.includes('rcf')) return 'RCF'; return original; };
 
-                // 🌟 วนลูปอ่านทุกไฟล์ที่อัปโหลดเข้ามาพร้อมกัน
                 for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
                     const file = files[fileIdx];
                     const wb = new ExcelJS.Workbook(); 
                     const buffer = await file.arrayBuffer(); 
                     await wb.xlsx.load(buffer);
-                    
-                    // สกัดชื่อไฟล์เผื่อเอาไว้เดาชื่อสถานี (กรณีที่เป็นไฟล์เดี่ยวแล้วชีทชื่อ Sheet1)
+
                     let baseFileName = file.name.replace(/\.[^/.]+$/, "").trim();
 
                     wb.eachSheet((ws) => {
                         let sName = ws.name.trim(); 
                         let fullStationName = abbrMap[sName] || sName; 
                         let groupName = null;
-                        
-                        // 1. ลองค้นหาสถานีจาก "ชื่อชีท" ก่อน
+
                         for (let g in inventoryGroups) { 
                             let found = inventoryGroups[g].find(s => s === fullStationName || s.includes(fullStationName) || fullStationName.includes(s)); 
                             if (found) { fullStationName = found; groupName = g; break; } 
                         }
-                        
-                        // 🌟 2. ถ้าชีทชื่อทั่วไป (เช่น Sheet1) หรือหาไม่เจอ ให้ลองเดาจาก "ชื่อไฟล์" แทน!
+
                         if (!groupName) {
                             let possibleName = abbrMap[baseFileName] || baseFileName;
                             for (let g in inventoryGroups) { 
@@ -2869,7 +2865,7 @@
                             }
                         }
 
-                        if (!groupName) return; // ถ้าหาไม่เจอจริงๆ ให้ข้ามเพื่อป้องกันระบบรวน
+                        if (!groupName) return;
 
                         let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                         let currentMode = null;
@@ -3048,24 +3044,36 @@
                                 let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
                                 if (!existingItems.has(uniqueKey)) {
                                     let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
-                                    whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `อัปเดตอัตโนมัติจากไฟล์นำเข้า ${fullStationName}`]);
-                                    existingItems.add(uniqueKey); newlyAddedToWarehouse++;
+                                    whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${fullStationName}]`]);
+                                    existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
+                                } else {
+                                    if (item.sn && item.sn !== '-' && item.sn !== '') {
+                                        for (let r = 0; r < whMainData.length; r++) {
+                                            let whSn = String(whMainData[r][4] || '').trim().toLowerCase();
+                                            if (whSn === uniqueKey) {
+                                                if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
+                                                    whMainData[r][5] = 'จ่ายแล้ว';
+                                                    let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
+                                                    whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${fullStationName}]`;
+                                                    updatedInWarehouse++; warehouseNeedsUpdate = true;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             });
-                        }
-                    });
-                }
 
                 if (saveQueue.length > 0) {
                     let updatesPayload = [];
-                    if (newlyAddedToWarehouse > 0) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) { console.error('ไม่สามารถอัปเดตคลังได้', e); } }
+                    if (warehouseNeedsUpdate) { try { whDb.main = whMainData; updatesPayload.push({ key: 'ADP_WAREHOUSE_CENTRAL', value: JSON.stringify(whDb) }); } catch(e) {} }
                     for (let i = 0; i < saveQueue.length; i++) {
                         let q = saveQueue[i]; document.getElementById('loadingText').innerText = `กำลังบันทึกสถานี: ${q.name} (${i + 1}/${saveQueue.length})...`;
                         let currentUpdates = [{ key: q.key, value: JSON.stringify(q.payload) }];
-                        if (i === saveQueue.length - 1 && updatesPayload.length > 0) { currentUpdates.push(updatesPayload[0]); q.logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนอุปกรณ์ใหม่เข้าคลัง ${newlyAddedToWarehouse} รายการ จากการนำเข้าไฟล์` }); }
+                        if (i === saveQueue.length - 1 && updatesPayload.length > 0) { currentUpdates.push(updatesPayload[0]); q.logs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนใหม่ ${newlyAddedToWarehouse} / ดึงไปเบิก ${updatedInWarehouse} รายการ (จากการนำเข้าไฟล์)` }); }
                         try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: currentUpdates, logs: q.logs }) }); } catch (err) {}
                     }
-                    showToast(`✅ นำเข้าสำเร็จ พบการเปลี่ยนแปลง ${saveQueue.length} สถานี\n📦 และลงทะเบียนเข้าคลังใหม่ ${newlyAddedToWarehouse} รายการ!`); 
+                    showToast(`✅ นำเข้าสำเร็จ พบการเปลี่ยนแปลง ${saveQueue.length} สถานี\n📦 เพิ่มใหม่: ${newlyAddedToWarehouse} | ดึงเบิก: ${updatedInWarehouse} รายการ`); 
                     setTimeout(() => window.location.reload(), 3000); 
                 } else { showToast("ไม่พบการเปลี่ยนแปลงใดๆ ในไฟล์เลยครับ"); }
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
@@ -3083,128 +3091,10 @@
                 let cpumonData = [], nbData = [], prnData = [], spcData = []; 
                 let currentMode = null;
                 
-                let whDb = { main: [], parts: [], consumables: [], withdrawals: [] }; let whMainData = []; let existingItems = new Set();
+                let whDb = { main: [], withdrawals: [] };
+                let whMainData = []; let existingItems = new Set(); 
+                let newlyAddedToWarehouse = 0; let updatedInWarehouse = 0; let warehouseNeedsUpdate = false;
                 
-                if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
-                    try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); whDb.main = parsedWh.main || []; whDb.parts = parsedWh.parts || []; whDb.consumables = parsedWh.consumables || []; whDb.withdrawals = parsedWh.withdrawals || []; whMainData = whDb.main; whMainData.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
-                }
-
-                let tempSnCounter = 1;
-                let todayYMD = new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + String(new Date().getDate()).padStart(2, '0');
-                const generateTempSN = (typeAbbr) => {
-                    let newSN = "";
-                    while (true) { let paddedCounter = String(tempSnCounter).padStart(3, '0'); newSN = `${typeAbbr}-${todayYMD}-${paddedCounter} (ชั่วคราว)`; if (!existingItems.has(newSN.toLowerCase())) break; tempSnCounter++; }
-                    existingItems.add(newSN.toLowerCase()); tempSnCounter++; return newSN;
-                };
-
-                const mapConn = (c) => { let l = String(c).toLowerCase().trim(); if(!l || l === '-' || l === 'ไม่มี') return ''; if(l.includes('5')) return 'LAN กอง 5'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6'; if(l.includes('glaive')) return 'Glaive'; if(l.includes('sentinel')) return 'Sentinel'; if(l.includes('rcf')) return 'RCF'; return String(c).trim(); };
-                const mapStatus = (s) => { let l = String(s).toLowerCase().trim(); if(!l) return 'ปกติ'; if(l === 'ปกติ') return 'ปกติ'; if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; if(l.includes('rcf')) return 'RCF'; return String(s).trim(); };
-
-                targetSheet.eachRow((row, rowNumber) => {
-                    let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber - 1] = cellVal ? String(cellVal).trim() : ''; }); 
-                    while(rowVals.length < 12) rowVals.push(''); 
-                    
-                    let firstCell = rowVals[0].toLowerCase().replace(/\s+/g, '');
-                    if (firstCell.includes('คอมพิวเตอร์และจอมอนิเตอร์')) { currentMode = 'CPUMON'; return; }
-                    if (firstCell.includes('โน๊ตบุ๊ค') || firstCell.includes('notebook')) { currentMode = 'NB'; return; }
-                    if (firstCell.includes('เครื่องพิมพ์') || firstCell.includes('printer')) { currentMode = 'PRN'; return; }
-                    if (firstCell.includes('server') || firstCell.includes('เครื่องมือพิเศษ')) { currentMode = 'SPC'; return; }
-
-                    if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return;
-
-                    let seqNum = parseInt(rowVals[0]);
-                    if (isNaN(seqNum) || seqNum <= 0) return; 
-
-                    if (!currentMode) return;
-                        const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
-
-                        const needsSN = (s) => { 
-                            let str = String(s).trim().toLowerCase(); 
-                            return !str || str === '' || str === '-' || str === 'ไม่มี' || str === 'n/a'; 
-                        };
-
-                        if (currentMode === 'CPUMON') {
-                            let user = getVal(1) || currentStation;
-                            let cpuBrand = getVal(2), cpuModel = getVal(3), cpuSN = getVal(4);
-                            let statusCpu = mapStatus(getVal(5));
-                            let monBrand = getVal(6), monModel = getVal(7), monSN = getVal(8);
-                            let statusMon = mapStatus(getVal(9));
-                            let conn = mapConn(getVal(10));
-                            let remark = getVal(11);
-
-                            let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
-                            if (!hasCpu && !hasMon) return;
-                            
-                            if (hasCpu && needsSN(cpuSN)) cpuSN = generateTempSN('PC');
-                            if (hasMon && needsSN(monSN)) monSN = generateTempSN('MON');
-                            
-                            cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
-                        }
-                        else if (currentMode === 'NB') {
-                            let user = getVal(1) || currentStation;
-                            let brand = getVal(2), model = getVal(3), sn = getVal(4);
-                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9));
-                            let remark = getVal(10);
-                            
-                            if (!brand && !model && !sn) return;
-                            if (needsSN(sn)) sn = generateTempSN('NB');
-                            nbData.push(["", user, brand, model, sn, status, conn, remark]);
-                        }
-                        else if (currentMode === 'PRN') {
-                            let user = getVal(1) || currentStation;
-                            let brand = getVal(2), model = getVal(3), sn = getVal(4);
-                            let color = getVal(5); let scanner = getVal(6);
-                            let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
-                            
-                            if (!brand && !model && !sn) return;
-                            if (needsSN(sn)) sn = generateTempSN('PRN');
-                            prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
-                        }
-                        else if (currentMode === 'SPC') {
-                            let type = getVal(1) || 'เครื่องมือพิเศษ';
-                            let user = getVal(2) || currentStation;
-                            let brand = getVal(3), model = getVal(4), sn = getVal(5);
-                            let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9));
-                            let remark = getVal(10);
-
-                            if (!brand && !model && !sn) return;
-                            if (needsSN(sn)) sn = generateTempSN('SPC');
-
-                            let rmkLower = remark.toLowerCase();
-                            let rowStr = rowVals.join(' ').toLowerCase(); 
-                            if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
-                            else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
-                            else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
-                            else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) type = 'RCF';
-
-                            spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
-                        }
-                    });
-
-                if(cpumonData.length > 0) tableCPUMON.setData(cpumonData);
-                if(nbData.length > 0) tableNB.setData(nbData);
-                if(prnData.length > 0) tablePrn.setData(prnData);
-                if(spcData.length > 0) tableSpc.setData(spcData);
-                
-                hasUnsavedDeletions = true; 
-                showToast("โหลดข้อมูลลงตารางสำเร็จ! โปรดตรวจสอบและกด 'บันทึก' เพื่อยืนยันข้อมูล");
-            } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importAllExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
-        }
-
-        // 🌟 2. ฟังก์ชัน นำเข้าไฟล์เดียว (NEW) - สำหรับดึงไฟล์ Export เข้ามาใส่ในตารางเพื่อรอเซฟ
-        async function handleImportExcelNew(event) {
-            const file = event.target.files[0]; if (!file) return;
-            document.getElementById('loadingText').innerText = 'อ่านไฟล์ Excel...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
-            try {
-                const wb = new ExcelJS.Workbook(); const buffer = await file.arrayBuffer(); await wb.xlsx.load(buffer);
-                const abbrMap = { "ช.ม.": "เชียงใหม่", "น.ค.": "หนองคาย", "อ.ด.": "อุดรธานี", "อ.บ.": "อุบลราชธานี", "คลัง": "ผกบ.", "ฉก.182": "ฉก.นย.182", "น.พ.": "นครพนม", "ม.ส.": "แม่ฮ่องสอน", "ข.ก.": "ขอนแก่น", "ป.น.": "ปัตตานี", "ล.ป.": "ลำปาง", "น.ธ.": "นราธิวาส", "ป.ข.": "ประจวบคีรีขันธ์" };
-                let targetSheet = null; wb.eachSheet((ws) => { let sName = ws.name.trim(); if (sName === currentStation || abbrMap[sName] === currentStation || currentStation.includes(sName) || sName.includes(currentStation)) { targetSheet = ws; } });
-                if (!targetSheet) targetSheet = wb.worksheets[0];
-                
-                let cpumonData = [], nbData = [], prnData = [], spcData = []; 
-                let currentMode = null;
-                
-                let existingItems = new Set();
                 if (globalAllDataCache && globalAllDataCache['ADP_WAREHOUSE_CENTRAL']) {
                     try { let parsedWh = JSON.parse(globalAllDataCache['ADP_WAREHOUSE_CENTRAL']); if(parsedWh.main) parsedWh.main.forEach(r => { let sn = String(r[4]).trim().toLowerCase(); let brand = String(r[2]).trim().toLowerCase(); let model = String(r[3]).trim().toLowerCase(); if (sn && sn !== '-' && sn !== '') existingItems.add(sn); else if (brand || model) existingItems.add(`${brand}_${model}`); }); } catch(e) {}
                 }
@@ -3220,9 +3110,11 @@
                 const mapConn = (c) => { let original = String(c).trim(); let l = original.toLowerCase(); if(!l || l === '-' || l === 'ไม่มี') return ''; if(l.includes('5')) return 'LAN กอง 5'; if(l.includes('net') || l.includes('อินเตอร์เน็ต') || l.includes('wifi') || l.includes('ภายนอก') || l.includes('เน็ต') || l.includes('www')) return 'อินเตอร์เน็ต'; if(l.includes('stand') || l.includes('alone') || l.includes('เดี่ยว') || l.includes('ตนเอง')) return 'Standalone'; if(l.includes('6') || l.includes('lan')) return 'LAN กอง 6'; if(l.includes('glaive')) return 'Glaive'; if(l.includes('sentinel')) return 'Sentinel'; if(l.includes('rcf')) return 'RCF'; return original; };
                 const mapStatus = (s) => { let original = String(s).trim(); let l = original.toLowerCase(); if(!l) return 'ปกติ'; if(l === 'ปกติ') return 'ปกติ'; if(l.includes('ชำรุด') || l.includes('เสีย')) return 'ชำรุด'; if(l.includes('สำรอง')) return 'สำรอง'; if(l.includes('ไม่มี')) return 'ไม่มี'; if(l.includes('rcf')) return 'RCF'; return original; };
 
+                let rawNewItems = [];
+
                 targetSheet.eachRow((row, rowNumber) => {
                     let rowVals = []; row.eachCell({ includeEmpty: true }, (cell, colNumber) => { let cellVal = cell.value; if (cellVal !== null && typeof cellVal === 'object') { cellVal = cell.result !== undefined ? cell.result : (cellVal.richText ? cellVal.richText.map(rt => rt.text).join('') : JSON.stringify(cellVal)); } rowVals[colNumber - 1] = cellVal ? String(cellVal).trim() : ''; }); 
-                    while(rowVals.length < 12) rowVals.push(''); // เติมช่องว่างให้ครบตาม Export
+                    while(rowVals.length < 12) rowVals.push('');
                     
                     let firstCell = rowVals[0].toLowerCase().replace(/\s+/g, '');
                     if (firstCell.includes('คอมพิวเตอร์และจอมอนิเตอร์')) { currentMode = 'CPUMON'; return; }
@@ -3230,14 +3122,19 @@
                     if (firstCell.includes('เครื่องพิมพ์') || firstCell.includes('printer')) { currentMode = 'PRN'; return; }
                     if (firstCell.includes('server') || firstCell.includes('เครื่องมือพิเศษ') || firstCell.includes('อื่นๆ')) { currentMode = 'SPC'; return; }
 
-                    if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return; // ข้ามหัวตาราง
+                    if (rowVals[0].includes('ลำดับ') || rowVals[1].includes('ผู้ใช้งาน')) return;
 
                     let seqNum = parseInt(rowVals[0]);
-                    if (isNaN(seqNum) || seqNum <= 0) return; // ต้องเป็นบรรทัดที่มีเลขลำดับ
+                    if (isNaN(seqNum) || seqNum <= 0) return;
 
                     if (!currentMode) return; 
 
                     const getVal = (idx) => { let v = rowVals[idx]; return v === '-' ? '' : v; };
+
+                    const needsSN = (s) => { 
+                        let str = String(s).trim().toLowerCase(); 
+                        return !str || str === '' || str === '-' || str === 'ไม่มี' || str === 'n/a'; 
+                    };
 
                     if (currentMode === 'CPUMON') {
                         let user = getVal(1) || currentStation;
@@ -3250,9 +3147,14 @@
 
                         let hasCpu = cpuBrand || cpuModel || cpuSN; let hasMon = monBrand || monModel || monSN;
                         if (!hasCpu && !hasMon) return;
-                        if (hasCpu && (!cpuSN || cpuSN === '')) cpuSN = generateTempSN('PC'); 
-                        if (hasMon && (!monSN || monSN === '')) monSN = generateTempSN('MON');
+                        
+                        if (hasCpu && needsSN(cpuSN)) cpuSN = generateTempSN('PC'); 
+                        if (hasMon && needsSN(monSN)) monSN = generateTempSN('MON');
+                        
                         cpumonData.push(["", user, cpuBrand, cpuModel, cpuSN, hasCpu?statusCpu:'ไม่มี', monBrand, monModel, monSN, hasMon?statusMon:'ไม่มี', conn, remark]);
+                        
+                        if (hasCpu) rawNewItems.push({ type: 'PC', brand: cpuBrand, model: cpuModel, sn: cpuSN });
+                        if (hasMon) rawNewItems.push({ type: 'Monitor', brand: monBrand, model: monModel, sn: monSN });
                     }
                     else if (currentMode === 'NB') {
                         let user = getVal(1) || currentStation;
@@ -3260,8 +3162,10 @@
                         let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
                         
                         if (!brand && !model && !sn) return;
-                        if (!sn || sn === '') sn = generateTempSN('NB');
+                        if (needsSN(sn)) sn = generateTempSN('NB');
+                        
                         nbData.push(["", user, brand, model, sn, status, conn, remark]);
+                        rawNewItems.push({ type: 'Notebook', brand: brand, model: model, sn: sn });
                     }
                     else if (currentMode === 'PRN') {
                         let user = getVal(1) || currentStation;
@@ -3269,8 +3173,10 @@
                         let color = getVal(5); let scanner = getVal(6); let conn = mapConn(getVal(7)); let status = mapStatus(getVal(8)); let remark = getVal(9);
                         
                         if (!brand && !model && !sn) return;
-                        if (!sn || sn === '') sn = generateTempSN('PRN');
+                        if (needsSN(sn)) sn = generateTempSN('PRN');
+                        
                         prnData.push(["", user, brand, model, sn, color, scanner, status, conn, remark]);
+                        rawNewItems.push({ type: 'Printer', brand: brand, model: model, sn: sn });
                     }
                     else if (currentMode === 'SPC') {
                         let type = getVal(1) || 'เครื่องมือพิเศษ';
@@ -3279,15 +3185,17 @@
                         let conn = mapConn(getVal(8)); let status = mapStatus(getVal(9)); let remark = getVal(10);
 
                         if (!brand && !model && !sn) return;
-                        if (!sn || sn === '') sn = generateTempSN('SPC');
+                        if (needsSN(sn)) sn = generateTempSN('SPC');
 
                         let rmkLower = remark.toLowerCase();
-                        if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups')) type = 'UPS';
-                        else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์')) type = 'Server';
-                        else if (rmkLower.includes('rcf')) type = 'RCF';
-                        else if (rmkLower.includes('switch')) type = 'Switch';
+                        let rowStr = rowVals.join(' ').toLowerCase(); 
+                        if (rmkLower.includes('สำรองไฟ') || rmkLower.includes('ups') || rowStr.includes('ups')) type = 'UPS';
+                        else if (rmkLower.includes('server') || rmkLower.includes('เซิร์ฟเวอร์') || rowStr.includes('server')) type = 'Server';
+                        else if (rmkLower.includes('switch') || rowStr.includes('switch')) type = 'Switch';
+                        else if (rmkLower.includes('rcf') || rowStr.includes('rcf')) type = 'RCF';
 
                         spcData.push(["", type, user, brand, model, sn, status, conn, remark]);
+                        rawNewItems.push({ type: type, brand: brand, model: model, sn: sn });
                     }
                 });
 
@@ -3295,9 +3203,42 @@
                 if(nbData.length > 0) tableNB.setData(nbData);
                 if(prnData.length > 0) tablePrn.setData(prnData);
                 if(spcData.length > 0) tableSpc.setData(spcData);
-                
-                hasUnsavedDeletions = true; 
-                showToast("โหลดข้อมูลลงตารางสำเร็จ! โปรดตรวจสอบและกด 'บันทึก' เพื่อยืนยันข้อมูล");
+
+                rawNewItems.forEach(item => {
+                    let uniqueKey = (item.sn && item.sn !== '-' && item.sn !== '') ? item.sn.toLowerCase() : `${item.brand.toLowerCase()}_${item.model.toLowerCase()}`;
+                    if (!existingItems.has(uniqueKey)) {
+                        let todayStr = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(new Date().getDate()).padStart(2, '0');
+                        whMainData.push(["", item.type, item.brand, item.model, item.sn, 'จ่ายแล้ว', todayStr, `[นำเข้าไฟล์: ${currentStation}]`]);
+                        existingItems.add(uniqueKey); newlyAddedToWarehouse++; warehouseNeedsUpdate = true;
+                    } else {
+                        if (item.sn && item.sn !== '-' && item.sn !== '') {
+                            for (let r = 0; r < whMainData.length; r++) {
+                                let whSn = String(whMainData[r][4] || '').trim().toLowerCase();
+                                if (whSn === uniqueKey) {
+                                    if (whMainData[r][5] === 'ว่าง (พร้อมจ่าย)' || whMainData[r][5] === 'จ่ายแล้ว') {
+                                        whMainData[r][5] = 'จ่ายแล้ว';
+                                        let cNote = String(whMainData[r][7] || '').replace(/\[รับคืนจาก:.*?\]/g, "").replace(/\[จ่ายให้:.*?\]/g, "").trim();
+                                        whMainData[r][7] = cNote + (cNote ? " " : "") + `[จ่ายให้: ${currentStation}]`;
+                                        updatedInWarehouse++; warehouseNeedsUpdate = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                });
+
+                if (warehouseNeedsUpdate) {
+                    whDb.main = whMainData;
+                    pendingLogs.push({ station: 'คลังส่วนกลาง', action: 'อัปเดตอัตโนมัติ', detail: `ลงทะเบียนใหม่ ${newlyAddedToWarehouse} / ดึงไปเบิก ${updatedInWarehouse} รายการ (จากการนำเข้าไฟล์)` });
+                    globalAllDataCache['ADP_WAREHOUSE_CENTRAL'] = JSON.stringify(whDb); 
+                    hasUnsavedDeletions = true; 
+                    showToast(`โหลดตารางสำเร็จ!\n📦 พบของใหม่ ${newlyAddedToWarehouse} | ดึงเบิก ${updatedInWarehouse} รายการ\n(กรุณากดปุ่มบันทึกเพื่อยืนยัน)`);
+                } else {
+                    hasUnsavedDeletions = true; 
+                    showToast("โหลดข้อมูลลงตารางสำเร็จ! โปรดตรวจสอบและกด 'บันทึก' เพื่อยืนยันข้อมูล");
+                }
+
             } catch (err) { console.error(err); showToast("รูปแบบไฟล์ไม่ถูกต้อง", "error"); } finally { document.getElementById('importExcelNewInput').value = ""; document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
         }
 
