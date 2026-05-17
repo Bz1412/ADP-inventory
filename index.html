@@ -94,8 +94,8 @@
     <div id="landingPage" class="fixed inset-0 top-16 bg-[#f8fafc] dark:bg-[#0f172a] z-[50] overflow-y-auto custom-scrollbar flex flex-col items-center py-10 px-4 sm:px-6 animate-fade-in transition-colors duration-300">
         <div class="text-center mb-8 w-full max-w-4xl animate-slide-up">
             <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl cursor-default">A</div>
-            <h2 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">เลือกระบบสถานี/ชุด ของท่าน</h2>
-            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">กรุณาคลิกเลือกสถานีเพื่อตรวจเช็คสถานภาพ (สถานี/ชุด จะไม่สามารถแก้ไขได้)</p>
+            <h2 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">เลือกระบบสถานี/ชุด หรือแผนกของท่าน</h2>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">กรุณาคลิกเลือกสถานี/ชุด หรือแผนกเพื่อตรวจเช็คสถานภาพ</p>
         </div>
         
         <div class="w-full max-w-5xl animate-slide-up delay-100">
@@ -253,7 +253,7 @@
                         <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-indigo-500">1.</span> การเปิดดูและตรวจสอบตาราง</h4>
                         <p class="text-slate-600 dark:text-slate-300 mb-3 leading-relaxed">ในหน้านี้ ข้อมูลตารางทั้งหมดจะถูก <strong>ล็อกสิทธิ์ให้อ่านได้อย่างเดียว (Read-Only)</strong> เพื่อความปลอดภัยของข้อมูลและป้องกันการเผลอกดลบ</p>
                         <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
-                            <li>สามารถตรวจสอบรายการยุทโธปกรณ์ สถานะ และการเชื่อมต่อของสถานีท่านได้</li>
+                            <li>สามารถตรวจสอบรายการอุปกรณ์ สถานะ และรูปแบบการเชื่อมต่อของหน่วยท่านได้</li>
                             <li>หากต้องการดูรูปภาพความเสียหายของอุปกรณ์ ให้คลิกที่ปุ่ม <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs font-bold">🖼️ รูป</span> ในคอลัมน์ "หมายเหตุ"</li>
                             <li>กดไอคอนคิวอาร์โค้ดที่คอลัมน์ขวาสุด เพื่อดูรหัส QR ประจำเครื่องนั้นๆ</li>
                         </ul>
@@ -265,14 +265,14 @@
                             <li>คลิกที่ปุ่ม <strong>"📥 ดาวน์โหลด (Excel)"</strong> ที่มุมบนขวาของหน้าต่าง</li>
                             <li>ระบบจะทำการเซฟข้อมูลตารางทั้งหมดลงเครื่องคอมพิวเตอร์ของคุณเป็นไฟล์ Excel (.xlsx)</li>
                             <li>เปิดไฟล์ Excel นั้นด้วยโปรแกรม Microsoft Excel ปกติ เพื่อทำการพิมพ์แก้ไขข้อมูล, เติมอุปกรณ์ใหม่ หรือเปลี่ยนสถานะให้เรียบร้อย</li>
-                            <li>เซฟไฟล์ Excel ที่แก้ไขเสร็จแล้วให้เรียบร้อย โดยตั้งชื่อไฟล์เป็น <strong>สน.ส.วจ.___/ชุด ส.วจ.___/ผ__.(ในที่ตั้ง) แก้ไขเมื่อ (วันที่)</strong></li>
+                            <li>เซฟไฟล์ Excel ที่แก้ไขเสร็จแล้วให้เรียบร้อย โดยตั้งชื่อไฟล์เป็น <strong>สน.ส.วจ.___</strong> หรือ <strong>ชุด ส.วจ.___</strong> หรือ <strong>ผ__.(ในที่ตั้ง)</strong> และตามด้วยวันที่แก้ไข เช่น <strong>17-05-2569</strong></li>
                         </ol>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm animate-slide-up delay-200">
                         <h4 class="font-bold text-base text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2"><span class="text-blue-500">3.</span> การส่งไฟล์ให้ส่วนกลาง (โฟลเดอร์ ผกม.)</h4>
                         <ul class="list-disc pl-5 space-y-3 text-slate-600 dark:text-slate-300">
-                            <li>นำไฟล์ Excel ที่คุณแก้ไขข้อมูลเสร็จเรียบร้อยแล้ว ไปอัปโหลดใส่ใน <strong>"โฟลเดอร์ รับ-ส่ง ข้อมูล ผกม. สำหรับ สถานี/ชุด (ส่งผ่าน Paperless สำหรับ ในที่ตั้ง)"</strong></li>
-                            <li>จากนั้นแจ้งให้แอดมินส่วนกลาง (ADP Admin) รับทราบ</li>
+                            <li>นำไฟล์ Excel ที่คุณแก้ไขข้อมูลเสร็จเรียบร้อยแล้ว ไปวางลงใน <strong>"โฟลเดอร์ รับ-ส่ง ข้อมูล ผกม. สำหรับ สถานี/ชุด (ส่งผ่าน Paperless สำหรับ ในที่ตั้ง)"</strong></li>
+                            <li>จากนั้นแจ้งให้แอดมินส่วนกลาง ผกม. (ภายใน:2298, DDN:9401) เพื่อรับทราบ</li>
                             <li>แอดมินส่วนกลางจะนำไฟล์ Excel ของท่านไป Import เข้าระบบใหญ่ เพื่อให้ข้อมูลอัปเดตตรงกันต่อไป</li>
                         </ul>
                     </div>
@@ -515,8 +515,8 @@
         </div>
 
         <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-300">
-            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์ข้ามสถานี</h2>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">ค้นหาเพื่อดูว่าอุปกรณ์ชิ้นนั้นๆ ถูกจ่ายให้ใคร หรืออยู่สถานีไหน</p>
+            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">ค้นหาเพื่อดูว่าอุปกรณ์ชิ้นนั้นๆ ถูกจ่ายให้ใคร หรืออยู่หน่วยใด</p>
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="searchInput" placeholder="พิมพ์ S/N, ชื่อรุ่น, ยี่ห้อ, หรือ ชื่อผู้ใช้งาน..." class="flex-1 px-5 py-3.5 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 transition-all w-full">
                 <button onclick="globalSearch()" class="bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-8 py-3.5 rounded-2xl font-medium hover:bg-black dark:hover:bg-white shadow-sm transition-transform active:scale-95 w-full sm:w-auto">ค้นหา</button>
@@ -563,7 +563,7 @@
             </div>
             
             <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full lg:w-auto lg:justify-end">
-                <button onclick="openAuditLog()" data-tooltip="ดูประวัติการเพิ่ม/ลบ/แก้ไข ของสถานีนี้" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
+                <button onclick="openAuditLog()" data-tooltip="ดูประวัติการเพิ่ม/ลบ/แก้ไข" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ประวัติ
                 </button>
                 
@@ -601,7 +601,7 @@
                 <div class="col-span-2 md:col-span-5 bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-between relative overflow-hidden">
                     <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full blur-2xl"></div>
                     <div class="relative z-10">
-                        <p class="text-slate-500 dark:text-slate-400 font-medium mb-1 text-sm uppercase tracking-wider">อุปกรณ์ทั้งหมดของสถานี</p>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium mb-1 text-sm uppercase tracking-wider">อุปกรณ์ทั้งหมด</p>
                         <h3 class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight" id="stStatTotal">-</h3>
                     </div>
                     <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-slate-700 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl relative z-10">📦</div>
@@ -628,7 +628,7 @@
                 </div>
             </div>
             <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center h-full">
-                <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left flex items-center gap-2">สัดส่วนสถานะสถานี <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></h3>
+                <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-4 text-sm uppercase tracking-wider w-full text-left flex items-center gap-2">สถานะอุปกรณ์ <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></h3>
                 <div class="relative w-full h-48 sm:h-56"><canvas id="stStatusChart"></canvas></div>
             </div>
         </div>
@@ -2023,7 +2023,7 @@
             } else {
                 document.getElementById('adminHelpContent').classList.add('hidden');
                 document.getElementById('stationHelpContent').classList.remove('hidden');
-                document.getElementById('helpModalTitle').innerText = '📖 คู่มือการอัปเดตข้อมูล (สถานี/ชุด)';
+                document.getElementById('helpModalTitle').innerText = '📖 คู่มือการอัปเดตข้อมูล (สถานี/ชุด,ในที่ตั้ง)';
                 document.getElementById('helpModalSubtitle').innerText = 'ขั้นตอนการ Export ไฟล์และส่งข้อมูลให้ ผกม.';
             }
 
