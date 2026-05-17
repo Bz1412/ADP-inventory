@@ -29,6 +29,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
     <style>
+        .jexcel_search {
+            font-family: 'Prompt', sans-serif;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .dark .jexcel_search { color: #cbd5e1; }
+        
+        .jexcel_search input {
+            background-color: #f0fdf4 !important;
+            border: 2px solid #86efac !important;
+            border-radius: 12px !important;
+            padding: 8px 16px !important;
+            color: #166534 !important;
+            font-family: 'Prompt', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            outline: none !important;
+            margin-left: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.2s ease;
+            width: 250px !important;
+        }
+        
+        .jexcel_search input:focus {
+            border-color: #22c55e !important;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2) !important;
+            background-color: #ffffff !important;
+        }
+        
+        .dark .jexcel_search input {
+            background-color: #1e293b !important;
+            border: 2px solid #3b82f6 !important;
+            color: #ffffff !important;
+        }
+        .dark .jexcel_search input:focus {
+            background-color: #0f172a !important;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3) !important;
+        }
         body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #111827; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; }
         .dark .loader { border-top: 3px solid #f9fafb; border-color: #374151; border-top-color: #f9fafb; }
