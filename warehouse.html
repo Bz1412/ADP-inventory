@@ -930,7 +930,7 @@
                     whWithdrawals.forEach(w => {
                         let action = w.action || 'เบิกจ่าย';
                         let snDisplay = w.sn ? w.sn : `(จำนวน ${w.qty} ${w.unit})`;
-
+                        
                         let cat = String(w.category || '-').trim();
                         if (cat === 'คอมพิวเตอร์' || cat === 'CPU') cat = 'PC';
                         else if (cat === 'โน๊ตบุ๊ค') cat = 'Notebook';
@@ -1015,10 +1015,12 @@
                         options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
                     });
                 }
-                
+
                 let statsHtml = '';
                 for (const [catName, counts] of Object.entries(categoryStats)) {
-                    let totalInSystem = (counts.wh || 0) + (counts.deployed || 0);
+                    let whCount = counts.wh || 0;
+                    let deployedCount = counts.deployed || 0;
+                    let totalInSystem = whCount + deployedCount;
                     
                     statsHtml += `
                         <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-sm">
@@ -1026,9 +1028,9 @@
                                 <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate pr-2">${catName}</p>
                                 <span class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap shadow-sm">รวม: ${totalInSystem}</span>
                             </div>
-                            <div class="flex justify-between items-center text-xs">
-                                <span onclick="openCategoryModal('${catName}', 'wh')" class="text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">ในคลัง: ${counts.wh || 0}</span>
-                                <span onclick="openCategoryModal('${catName}', 'deployed')" class="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline">ประวัติเบิก: ${counts.deployed || 0}</span>
+                            <div class="flex justify-between items-center text-xs mt-1">
+                                <span onclick="openCategoryModal('${catName}', 'wh')" class="text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">ในคลัง: ${whCount}</span>
+                                <span onclick="openCategoryModal('${catName}', 'deployed')" class="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline">ประวัติเบิก: ${deployedCount}</span>
                             </div>
                         </div>`;
                 }
@@ -1244,8 +1246,10 @@
                 if(item.status==='ปกติ' || item.status==='ว่าง (พร้อมจ่าย)' || item.status==='พร้อมจ่าย') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded text-xs">${item.status}</span>`; 
                 if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(item.status)) badge = `<span class="px-2 py-1 bg-red-50 text-red-500 border border-red-100 rounded text-xs">${item.status}</span>`;
                 if(item.status==='หมดเกลี้ยง') badge = `<span class="px-2 py-1 bg-slate-100 text-slate-500 border border-slate-300 rounded text-xs">${item.status}</span>`;
-                // เพิ่มการทำสีให้เหมาะสมกับ Log ของวัสดุสิ้นเปลือง
-                if(item.status==='นำเข้า' || item.status==='เบิกจ่าย' || item.status==='รับคืน') badge = `<span class="px-2 py-1 bg-indigo-50 text-indigo-600 border border-indigo-100 rounded text-xs font-semibold">${item.status}</span>`;
+
+                if(item.status==='นำเข้า') badge = `<span class="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded text-xs font-semibold">${item.status}</span>`;
+                if(item.status==='เบิกจ่าย' || item.status==='จ่ายแล้ว') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded text-xs font-semibold">${item.status}</span>`;
+                if(item.status==='รับคืน') badge = `<span class="px-2 py-1 bg-purple-50 text-purple-600 border border-purple-100 rounded text-xs font-semibold">${item.status}</span>`;
 
                 html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-3 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">${item.category}</td><td class="p-3 text-slate-600 dark:text-slate-400 text-xs">${item.specs}</td><td class="p-3 font-mono text-[11px] text-slate-500">${item.sn}</td><td class="p-3 text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs"><span class="font-semibold text-slate-800 dark:text-slate-200">${item.station}</span> <br>(${item.user})</td><td class="p-3 text-center">${badge}</td></tr>`;
             });
