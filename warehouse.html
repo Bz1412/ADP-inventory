@@ -290,7 +290,10 @@
             </div>
 
             <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 animate-slide-up delay-100 mb-8 w-full">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">📈 สถิติแยกตามประเภทอุปกรณ์ (ทุกชนิด)</h2>
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4 border-b border-slate-100 dark:border-slate-700 pb-4">
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 whitespace-nowrap">📈 สถิติแยกตามประเภทอุปกรณ์</h2>
+                    <div id="breakdownAllTypes" class="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs"></div>
+                </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="detailedStatsGrid">
                     <p class="text-slate-400 text-sm">กำลังคำนวณสถิติ...</p>
                 </div>
@@ -967,6 +970,35 @@
                 let elAvailable = document.getElementById('dashWHAvailable'); if(elAvailable) elAvailable.innerText = whAvailableCount;
                 let elBroken = document.getElementById('dashBrokenCount'); if(elBroken) elBroken.innerText = brokenDeployed;
 
+                const getBreakdownHtml = (dataArray) => {
+                    let c = { pc: 0, nb: 0, mon: 0, prn: 0, spc: 0 };
+                    dataArray.forEach(item => {
+                        let cat = item.category || '';
+                        if (['PC', 'คอมพิวเตอร์'].includes(cat)) c.pc++;
+                        else if (['Notebook', 'โน๊ตบุ๊ค'].includes(cat)) c.nb++;
+                        else if (['Monitor', 'จอมอนิเตอร์'].includes(cat)) c.mon++;
+                        else if (['Printer', 'เครื่องพิมพ์'].includes(cat)) c.prn++;
+                        else c.spc++;
+                    });
+                    
+                    let bg = 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400';
+                    let html = '';
+                    if (c.pc > 0) html += `<span class="${bg} px-2.5 py-1 rounded-lg font-bold shadow-sm">💻 PC: ${c.pc}</span>`;
+                    if (c.nb > 0) html += `<span class="${bg} px-2.5 py-1 rounded-lg font-bold shadow-sm">💻 NB: ${c.nb}</span>`;
+                    if (c.mon > 0) html += `<span class="${bg} px-2.5 py-1 rounded-lg font-bold shadow-sm">🖥️ จอ: ${c.mon}</span>`;
+                    if (c.prn > 0) html += `<span class="${bg} px-2.5 py-1 rounded-lg font-bold shadow-sm">🖨️ พิมพ์: ${c.prn}</span>`;
+                    if (c.spc > 0) html += `<span class="${bg} px-2.5 py-1 rounded-lg font-bold shadow-sm">🛠️ พิเศษ: ${c.spc}</span>`;
+                    
+                    if (totalAllSupplies > 0) {
+                        html += `<span class="bg-pink-50 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400 px-2.5 py-1 rounded-lg font-bold shadow-sm">📦 วัสดุสิ้นเปลือง: ${totalAllSupplies}</span>`;
+                    }
+                    return html || `<span class="opacity-50 font-medium text-slate-500">ไม่มีอุปกรณ์ในคลัง</span>`;
+                };
+
+                let elBreakdownAllTypes = document.getElementById('breakdownAllTypes');
+                if (elBreakdownAllTypes) {
+                    elBreakdownAllTypes.innerHTML = `<span class="text-slate-500 font-semibold mr-1">พร้อมจ่ายในคลัง:</span> ` + getBreakdownHtml(cardData.AVAILABLE);
+                }
                 const ctx = document.getElementById('warehouseChart');
                 if (ctx) {
                     if(window.whChart) window.whChart.destroy();
