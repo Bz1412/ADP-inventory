@@ -864,17 +864,22 @@
                     if(arr) arr.forEach(r => { 
                         let qtyIdx = catPrefix === 'Acc' ? 4 : 3;
                         let qty = parseFloat(r[qtyIdx]); 
-                        if(!isNaN(qty) && qty > 0) { 
+                        if(!isNaN(qty)) {
                             let cat = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1];
-                            let specs = catPrefix === 'Ink' ? `${r[1]||''} (ใช้กับ: ${r[2]||''})` : `${r[2]||''}`;
+
+                            let specs = catPrefix === 'Ink' ? String(r[1]||'-') : String(r[2]||'-');
                             if (catPrefix === 'Acc' && r[3]) specs += ` (S/N: ${r[3]})`;
                             
                             let unitIdx = catPrefix === 'Acc' ? 5 : 4;
-                            let itemObj = { group: 'คลังวัสดุ', station: r[unitIdx+1]||'จุดเก็บ', category: cat, user: '-', specs: specs, sn: `(คงเหลือ ${qty} ${r[unitIdx]||''})`, status: 'พร้อมจ่าย' }; 
+                            let statusText = qty > 0 ? 'พร้อมจ่าย' : 'หมดเกลี้ยง';
+                            
+                            let itemObj = { group: 'คลังวัสดุ', station: r[unitIdx+1]||'จุดเก็บ', category: cat, user: '-', specs: specs, sn: `(คงเหลือ ${qty} ${r[unitIdx]||''})`, status: statusText }; 
+                            
                             addStat(cat, 'wh', qty, itemObj); 
                         } 
                     });
                 };
+                
                 extractSupplyStats(whSuppliesDataJSON.ink, 'Ink');
                 extractSupplyStats(whSuppliesDataJSON.accessories, 'Acc');
                 extractSupplyStats(whSuppliesDataJSON.parts, 'Part');
@@ -954,14 +959,19 @@
                         
                         let qty = parseFloat(r[qtyIdx]); 
                         let typeName = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1]; 
-
                         let desc = catPrefix === 'Ink' ? String(r[1]||'-') : String(r[2]||'-'); 
                         if (catPrefix === 'Acc' && r[3]) desc += ` (S/N: ${r[3]})`;
                         
                         let unit = r[unitIdx]||'';
                         if(!isNaN(qty) && qty <= 5 && typeName) {
-                            let badge = qty <= 2 ? `<span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold">วิกฤต (เหลือ ${qty})</span>` : `<span class="px-2 py-1 bg-amber-100 text-amber-600 rounded text-xs font-bold">ใกล้หมด (เหลือ ${qty})</span>`;
-                            lowStockHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-4 border-b border-slate-100 dark:border-slate-700 font-medium dark:text-slate-200">${typeName}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400">${desc}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-center font-bold text-lg text-slate-800 dark:text-white">${qty} <span class="text-xs font-normal text-slate-500">${unit}</span></td><td class="p-4 border-b border-slate-100 dark:border-slate-700">${badge}</td></tr>`;
+                            let badge = '';
+                            if (qty <= 0) badge = `<span class="px-2 py-1 bg-slate-100 text-slate-500 border border-slate-200 rounded text-xs font-bold">หมดเกลี้ยง (0)</span>`;
+                            else if (qty <= 2) badge = `<span class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs font-bold">วิกฤต (เหลือ ${qty})</span>`;
+                            else badge = `<span class="px-2 py-1 bg-amber-100 text-amber-600 rounded text-xs font-bold">ใกล้หมด (เหลือ ${qty})</span>`;
+                            
+                            let textOpacity = qty <= 0 ? 'opacity-50 grayscale' : '';
+                            
+                            lowStockHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 ${textOpacity}"><td class="p-4 border-b border-slate-100 dark:border-slate-700 font-medium dark:text-slate-200">${typeName}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-400">${desc}</td><td class="p-4 border-b border-slate-100 dark:border-slate-700 text-center font-bold text-lg text-slate-800 dark:text-white">${qty} <span class="text-xs font-normal text-slate-500">${unit}</span></td><td class="p-4 border-b border-slate-100 dark:border-slate-700">${badge}</td></tr>`;
                         }
                     });
                 };
@@ -1145,9 +1155,9 @@
             let html = '';
             dataArray.forEach(item => {
                 let badge = `<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded font-medium text-[10px] md:text-xs">${item.status}</span>`; 
-                if(item.status==='ปกติ' || item.status==='ว่าง (พร้อมจ่าย)') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded text-xs">${item.status}</span>`; 
+                if(item.status==='ปกติ' || item.status==='ว่าง (พร้อมจ่าย)' || item.status==='พร้อมจ่าย') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded text-xs">${item.status}</span>`; 
                 if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(item.status)) badge = `<span class="px-2 py-1 bg-red-50 text-red-500 border border-red-100 rounded text-xs">${item.status}</span>`;
-                html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="p-3 font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">${item.category}</td><td class="p-3 text-slate-600 dark:text-slate-400 text-xs">${item.specs}</td><td class="p-3 font-mono text-[11px] text-slate-500">${item.sn}</td><td class="p-3 text-slate-600 dark:text-slate-400 whitespace-nowrap text-xs"><span class="font-semibold text-slate-800 dark:text-slate-200">${item.station}</span> <br>(${item.user})</td><td class="p-3 text-center">${badge}</td></tr>`;
+                if(item.status==='หมดเกลี้ยง') badge = `<span class="px-2 py-1 bg-slate-100 text-slate-500 border border-slate-300 rounded text-xs">${item.status}</span>`;
             });
             if (html === '') html = '<tr><td colspan="5" class="p-8 text-center text-slate-400 font-medium">ไม่พบรายการที่มี S/N (อาจเป็นวัสดุสิ้นเปลือง)</td></tr>';
             document.getElementById('cardDetailTableBody').innerHTML = html;
