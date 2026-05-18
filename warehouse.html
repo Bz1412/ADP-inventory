@@ -555,7 +555,6 @@
             hasUnsavedWhChanges = true; showToast(`✅ เบิกสำเร็จ! ระบบตัดสต็อกเหลือ ${newQty} ${currentWithdrawTarget.unit}`); closeWithdrawModal();
         }
 
-        // 🌟 เบิกด่วน 
         let qwItemsData = []; let qwCurrentTarget = null;
         function openQuickWithdrawModal() {
             if (!whInkTable || !whAccTable || !whPartsTable) { showToast("ระบบกำลังโหลด", "error"); return; }
@@ -570,8 +569,10 @@
                     let qty = parseFloat(r[qtyColIdx]);
                     if (!isNaN(qty) && qty > 0) {
                         let cat = tableIdStr === 'wh-ink' ? 'หมึกพิมพ์' : r[1];
-                        let spc = tableIdStr === 'wh-ink' ? `${r[1]||''} (${r[2]||''})` : r[2];
+
+                        let spc = tableIdStr === 'wh-ink' ? String(r[1]||'') : r[2]; 
                         if (tableIdStr === 'wh-acc' && r[3]) spc += ` [S/N: ${r[3]}]`;
+                        
                         qwItemsData.push({ tableId: tableIdStr, row: rowIdx, qtyCol: qtyColIdx, category: cat, specs: spc, itemName: `${cat} ${spc}`.trim(), qty: qty, unit: r[unitColIdx] || 'ชิ้น' });
                     }
                 });
@@ -953,7 +954,8 @@
                         
                         let qty = parseFloat(r[qtyIdx]); 
                         let typeName = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1]; 
-                        let desc = catPrefix === 'Ink' ? `${r[1]||'-'} (${r[2]||''})` : `${r[2]||'-'}`; 
+
+                        let desc = catPrefix === 'Ink' ? String(r[1]||'-') : String(r[2]||'-'); 
                         if (catPrefix === 'Acc' && r[3]) desc += ` (S/N: ${r[3]})`;
                         
                         let unit = r[unitIdx]||'';
@@ -963,6 +965,7 @@
                         }
                     });
                 };
+                
                 checkLowStock(whSuppliesDataJSON.ink, 'Ink'); checkLowStock(whSuppliesDataJSON.accessories, 'Acc'); checkLowStock(whSuppliesDataJSON.parts, 'Part');
                 if(lowStockHtml === '') lowStockHtml = `<tr><td colspan="4" class="p-6 text-center text-slate-400">สต็อกอะไหล่และวัสดุสิ้นเปลืองอยู่ในเกณฑ์ปลอดภัย 🎉</td></tr>`;
                 document.getElementById('lowStockTableBody').innerHTML = lowStockHtml;
