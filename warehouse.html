@@ -906,8 +906,13 @@
                     if(arr) arr.forEach(r => { 
                         let qtyIdx = catPrefix === 'Acc' ? 4 : 3;
                         let qty = parseFloat(r[qtyIdx]); 
+
                         if(!isNaN(qty)) {
                             let cat = catPrefix === 'Ink' ? 'หมึกพิมพ์' : r[1];
+                            if (cat === 'คอมพิวเตอร์' || cat === 'CPU') cat = 'PC';
+                            else if (cat === 'โน๊ตบุ๊ค') cat = 'Notebook';
+                            else if (cat === 'จอมอนิเตอร์') cat = 'Monitor';
+                            else if (cat === 'เครื่องพิมพ์') cat = 'Printer';
 
                             let specs = catPrefix === 'Ink' ? String(r[1]||'-') : String(r[2]||'-');
                             if (catPrefix === 'Acc' && r[3]) specs += ` (S/N: ${r[3]})`;
@@ -915,8 +920,16 @@
                             let unitIdx = catPrefix === 'Acc' ? 5 : 4;
                             let statusText = qty > 0 ? 'พร้อมจ่าย' : 'หมดเกลี้ยง';
                             
-                            let itemObj = { group: 'คลังวัสดุ', station: r[unitIdx+1]||'จุดเก็บ', category: cat, user: '-', specs: specs, sn: `(คงเหลือ ${qty} ${r[unitIdx]||''})`, status: statusText }; 
-                            
+                            let itemObj = { 
+                                group: 'คลังวัสดุ', 
+                                station: r[unitIdx+1]||'จุดเก็บ', 
+                                category: cat, 
+                                user: '-', 
+                                specs: specs, 
+                                sn: `(คงเหลือ ${qty} ${r[unitIdx]||''})`, 
+                                status: statusText 
+                            }; 
+
                             addStat(cat, 'wh', qty, itemObj); 
                         } 
                     });
