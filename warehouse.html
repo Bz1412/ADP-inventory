@@ -770,10 +770,12 @@
 
         function addStat(category, type, count, itemObj = null) {
             if (!category) return;
-            categoryStats[category] = categoryStats[category] || { wh: 0, deployed: 0, broken: 0 };
-            categoryDetailedItems[category] = categoryDetailedItems[category] || { wh: [], deployed: [] };
+            categoryStats[category] = categoryStats[category] || { wh: 0, deployed: 0, broken: 0, history: 0 };
+            categoryDetailedItems[category] = categoryDetailedItems[category] || { wh: [], deployed: [], history: [] };
             categoryStats[category][type] += count;
-            if (itemObj && (type === 'wh' || type === 'deployed')) categoryDetailedItems[category][type].push(itemObj);
+            if (itemObj && (type === 'wh' || type === 'deployed' || type === 'history')) {
+                categoryDetailedItems[category][type].push(itemObj);
+            }
         }
 
         async function fetchAllData(isSilent = false) {
@@ -960,7 +962,7 @@
                             status: action 
                         };
                         globalDeployedData.push(itemObj); cardData.DEPLOYED.push(itemObj); 
-                        addStat(cat, 'deployed', parseFloat(w.qty) || 1, itemObj);
+                        addStat(cat, 'history', 1, itemObj);
                     });
                 }
 
@@ -1033,17 +1035,20 @@
                 for (const [catName, counts] of Object.entries(categoryStats)) {
                     let whCount = counts.wh || 0;
                     let deployedCount = counts.deployed || 0;
-                    let totalInSystem = whCount + deployedCount;
+                    let totalInSystem = whCount + deployedCount; 
                     
                     statsHtml += `
                         <div class="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex flex-col justify-between hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-sm">
                             <div class="flex justify-between items-start mb-2">
                                 <p class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate pr-2">${catName}</p>
-                                <span class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap shadow-sm">รวม: ${totalInSystem}</span>
+                                <span class="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap shadow-sm" title="จำนวนของที่มีอยู่จริง (ในคลัง+สถานี)">รวม: ${totalInSystem}</span>
                             </div>
-                            <div class="flex justify-between items-center text-xs mt-1">
+                            <div class="flex justify-between items-center text-[11px] sm:text-xs mt-1">
                                 <span onclick="openCategoryModal('${catName}', 'wh')" class="text-emerald-600 dark:text-emerald-400 font-semibold cursor-pointer hover:underline">ในคลัง: ${whCount}</span>
-                                <span onclick="openCategoryModal('${catName}', 'deployed')" class="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline">ประวัติเบิก: ${deployedCount}</span>
+                                <span onclick="openCategoryModal('${catName}', 'deployed')" class="text-blue-600 dark:text-blue-400 font-semibold cursor-pointer hover:underline">ใช้งาน: ${deployedCount}</span>
+                                <span onclick="openCategoryModal('${catName}', 'history')" class="text-slate-500 dark:text-slate-400 font-semibold cursor-pointer hover:underline flex items-center gap-0.5" title="ดูประวัติการเบิกจ่าย">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Log
+                                </span>
                             </div>
                         </div>`;
                 }
@@ -1250,8 +1255,14 @@
 
         function openCategoryModal(catName, type) {
             let dataArray = categoryDetailedItems[catName][type] || [];
-            document.getElementById('modalCardTitle').innerHTML = type === 'wh' ? `📦 รายการคงเหลือในคลัง: ${catName}` : `🌍 ประวัติความเคลื่อนไหวระบบ: ${catName}`; 
-            document.getElementById('modalCardSubtitle').innerText = type === 'wh' ? `แสดงจำนวนพัสดุและจุดเก็บปัจจุบัน` : `แสดงรายการบันทึก นำเข้า / เบิกจ่าย / ส่งคืนคลังย้อนหลัง`;
+            
+            let tTitle = ""; let tSub = "";
+            if (type === 'wh') { tTitle = `📦 รายการคงเหลือในคลัง: ${catName}`; tSub = `แสดงจำนวนพัสดุและจุดเก็บปัจจุบัน`; }
+            else if (type === 'deployed') { tTitle = `📍 อุปกรณ์ที่กำลังใช้งาน: ${catName}`; tSub = `แสดงอุปกรณ์ที่ตั้งอยู่ตามสถานีต่างๆ ในระบบ`; }
+            else if (type === 'history') { tTitle = `🌍 ประวัติความเคลื่อนไหว: ${catName}`; tSub = `แสดงรายการบันทึก นำเข้า / เบิกจ่าย / ส่งคืนคลัง ย้อนหลัง`; }
+            
+            document.getElementById('modalCardTitle').innerHTML = tTitle; 
+            document.getElementById('modalCardSubtitle').innerText = tSub;
             
             let html = '';
             dataArray.forEach(item => {
@@ -1259,7 +1270,7 @@
                 if(item.status==='ปกติ' || item.status==='ว่าง (พร้อมจ่าย)' || item.status==='พร้อมจ่าย') badge = `<span class="px-2 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded text-xs">${item.status}</span>`; 
                 if(['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(item.status)) badge = `<span class="px-2 py-1 bg-red-50 text-red-500 border border-red-100 rounded text-xs">${item.status}</span>`;
                 if(item.status==='หมดเกลี้ยง') badge = `<span class="px-2 py-1 bg-slate-100 text-slate-500 border border-slate-300 rounded text-xs">${item.status}</span>`;
-
+                
                 if(item.status==='นำเข้า') badge = `<span class="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded text-xs font-semibold">${item.status}</span>`;
                 if(item.status==='เบิกจ่าย' || item.status==='จ่ายแล้ว') badge = `<span class="px-2 py-1 bg-amber-50 text-amber-600 border border-amber-100 rounded text-xs font-semibold">${item.status}</span>`;
                 if(item.status==='รับคืน') badge = `<span class="px-2 py-1 bg-purple-50 text-purple-600 border border-purple-100 rounded text-xs font-semibold">${item.status}</span>`;
