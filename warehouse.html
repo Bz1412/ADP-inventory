@@ -174,6 +174,40 @@
         </div>
     </div>
 
+    <div id="refillModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh] animate-pop-in">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">📦 เติมสต็อก (เพิ่มจำนวนของเดิม)</h3>
+                <button onclick="closeRefillModal()" class="text-slate-400 hover:text-red-500 font-medium text-2xl transition-transform hover:rotate-90">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-col gap-5 flex bg-white dark:bg-slate-800 relative">
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">ค้นหาอุปกรณ์/หมึกพิมพ์ ที่มีในคลัง</label>
+                    <input type="text" id="refillSearchInput" placeholder="พิมพ์ชื่อรุ่น หรือ สเปค..." class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-emerald-500" autocomplete="off" oninput="searchRefillItems(this.value)">
+                    
+                    <div id="refillDropdown" class="absolute z-10 w-[calc(100%-3rem)] mt-1 max-h-48 overflow-y-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl hidden custom-scrollbar"></div>
+                </div>
+                
+                <div id="refillSelectedTarget" class="hidden bg-emerald-50 dark:bg-slate-700 p-4 rounded-xl border border-emerald-100 dark:border-slate-600">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">รายการที่เลือกเตรียมเติม:</p>
+                    <p id="refillItemNameDisplay" class="font-bold text-slate-800 dark:text-white">-</p>
+                    <p class="text-xs text-slate-500 mt-1">ยอดในคลังปัจจุบัน: <span id="refillCurrentQtyDisplay" class="font-bold text-emerald-600">0</span></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-600 dark:text-slate-400 mb-2">จำนวนที่รับเข้าเพิ่ม</label>
+                    <input type="number" id="refillQtyInput" min="1" placeholder="ระบุจำนวนตัวเลข..." class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-white outline-none focus:border-emerald-500 font-bold text-lg">
+                </div>
+            </div>
+            <div class="p-5 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3 flex-wrap">
+                <button onclick="closeRefillModal()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">ยกเลิก</button>
+                <button onclick="submitRefill()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">
+                    📥 ยืนยันการเติมสต็อก
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="addItemModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 no-print animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 max-h-[90vh] animate-pop-in">
             <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
@@ -321,6 +355,9 @@
                         <input type="text" onkeyup="if(whPartsTable) whPartsTable.search(this.value.toLowerCase()); if(whAccTable) whAccTable.search(this.value.toLowerCase());" placeholder="ค้นหาอะไหล่, อุปกรณ์..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
                         <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
+                    <button onclick="openRefillModal()" class="w-full sm:w-auto bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 px-5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-medium flex justify-center items-center gap-2 text-sm shadow-sm whitespace-nowrap transition-transform active:scale-95">
+                        📦 เติมสต็อก (เพิ่มจำนวน)
+                    </button>
                     <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
                         💾 บันทึกคลัง
                     </button>
@@ -357,6 +394,9 @@
                         <input type="text" onkeyup="if(whInkTable) whInkTable.search(this.value.toLowerCase())" placeholder="ค้นหาหมึกพิมพ์..." class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full outline-none focus:ring-2 focus:ring-blue-500 dark:text-white shadow-sm">
                         <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
+                    <button onclick="openRefillModal()" class="w-full sm:w-auto bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 px-5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-medium flex justify-center items-center gap-2 text-sm shadow-sm whitespace-nowrap transition-transform active:scale-95">
+                        📦 เติมสต็อก (เพิ่มจำนวน)
+                    </button>
                     <button onclick="saveWarehouseData()" class="w-full sm:w-auto bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-black transition-transform active:scale-95 flex justify-center items-center gap-2 whitespace-nowrap z-10">
                         💾 บันทึกคลัง
                     </button>
@@ -1610,33 +1650,25 @@
             document.getElementById('qrPreviewModal').classList.add('hidden'); document.getElementById('qrPreviewModal').classList.remove('flex'); 
         }
 
-        // ==========================================
-        // 🔍 ระบบ Zoom หน้าเว็บ (100% - 300%)
-        // ==========================================
-        const zoomLevels = [100, 125, 150]; // สเกลที่ต้องการ
+        const zoomLevels = [100, 125, 150];
         let currentZoomIndex = 0;
 
         function changeZoom(direction) {
             currentZoomIndex += direction;
-            
-            // ล็อกขอบเขตไม่ให้กดต่ำกว่า 100% และเกิน 300%
+
             if (currentZoomIndex < 0) currentZoomIndex = 0;
             if (currentZoomIndex >= zoomLevels.length) currentZoomIndex = zoomLevels.length - 1;
             
             const zoomValue = zoomLevels[currentZoomIndex];
-            
-            // สั่งขยายหน้าเว็บทั้งหน้า (ตัวหนังสือ, ตาราง, กล่อง)
+
             document.body.style.zoom = zoomValue + "%";
-            
-            // อัปเดตตัวเลขโชว์บนปุ่ม
+
             const zoomLabel = document.getElementById('zoomLabel');
             if(zoomLabel) zoomLabel.innerText = zoomValue + "%";
-            
-            // 💾 จำค่าไว้ในเครื่อง (เปิดปิดเว็บใหม่ก็ยังใหญ่เหมือนเดิม)
+
             localStorage.setItem('adp_zoom_level', currentZoomIndex);
         }
 
-        // ดึงค่าซูมเดิมมาใช้งานอัตโนมัติ ตอนโหลดหน้าเว็บเสร็จ
         window.addEventListener('DOMContentLoaded', () => {
             const savedZoom = localStorage.getItem('adp_zoom_level');
             if (savedZoom !== null) {
@@ -1644,6 +1676,114 @@
                 changeZoom(0);
             }
         });
+
+        let refillItemsData = [];
+        let refillCurrentTarget = null;
+
+        function openRefillModal() {
+            if (!whInkTable || !whAccTable || !whPartsTable) { showToast("ระบบกำลังโหลด", "error"); return; }
+            refillItemsData = [];
+            
+            const extractRefill = (tableObj, tableIdStr) => {
+                if(!tableObj) return;
+                let qtyColIdx = tableIdStr === 'wh-acc' ? 4 : 3;
+                let unitColIdx = tableIdStr === 'wh-acc' ? 5 : 4;
+                
+                tableObj.getData().forEach((r, rowIdx) => {
+                    let type = r[1] || '';
+                    if (type) {
+                        let cat = tableIdStr === 'wh-ink' ? 'หมึกพิมพ์' : type;
+                        let spc = tableIdStr === 'wh-ink' ? String(r[1]||'') : String(r[2]||''); 
+                        if (tableIdStr === 'wh-acc' && r[3]) spc += ` [S/N: ${r[3]}]`;
+                        let qty = parseFloat(r[qtyColIdx]) || 0; // ยอมดึงอันที่เหลือ 0 มาด้วย จะได้เติมได้
+                        let itemName = `${cat} ${spc}`.trim();
+                        
+                        refillItemsData.push({ 
+                            tableId: tableIdStr, row: rowIdx, qtyCol: qtyColIdx, 
+                            category: cat, specs: spc, itemName: itemName, 
+                            qty: qty, unit: r[unitColIdx] || 'ชิ้น' 
+                        });
+                    }
+                });
+            };
+            extractRefill(whInkTable, 'wh-ink'); 
+            extractRefill(whAccTable, 'wh-acc'); 
+            extractRefill(whPartsTable, 'wh-parts');
+
+            document.getElementById('refillSearchInput').value = ''; 
+            document.getElementById('refillQtyInput').value = '';
+            document.getElementById('refillDropdown').classList.add('hidden');
+            document.getElementById('refillSelectedTarget').classList.add('hidden');
+            refillCurrentTarget = null;
+
+            document.getElementById('refillModal').classList.remove('hidden'); 
+            document.getElementById('refillModal').classList.add('flex');
+            setTimeout(() => document.getElementById('refillSearchInput').focus(), 100);
+        }
+
+        function closeRefillModal() { 
+            document.getElementById('refillModal').classList.add('hidden'); 
+            document.getElementById('refillModal').classList.remove('flex'); 
+        }
+
+        function searchRefillItems(query) {
+            query = query.toLowerCase().trim();
+            let dd = document.getElementById('refillDropdown');
+            if (!query) { dd.classList.add('hidden'); return; }
+            
+            let matches = refillItemsData.filter(i => i.itemName.toLowerCase().includes(query));
+            if (matches.length === 0) { 
+                dd.innerHTML = `<div class="p-4 text-slate-500 text-sm text-center font-bold">❌ ไม่พบรายการนี้ในคลัง<br><span class="text-xs font-normal">หากเป็นของใหม่ ให้กดปุ่ม "+ เพิ่มรายการ" ด้านนอกครับ</span></div>`; 
+                dd.classList.remove('hidden'); return; 
+            }
+
+            let html = '';
+            matches.slice(0, 10).forEach(item => {
+                let badge = item.qty > 0 ? `<span class="text-emerald-600 font-bold">มี ${item.qty} ${item.unit}</span>` : `<span class="text-red-500 font-bold">หมดเกลี้ยง (0)</span>`;
+                html += `<div onclick="selectRefillItem('${item.tableId}', ${item.row})" class="p-3 hover:bg-emerald-50 dark:hover:bg-slate-700/50 cursor-pointer border-b border-slate-100 dark:border-slate-600 last:border-0 text-sm flex justify-between items-center transition-colors">
+                    <div class="font-bold text-slate-800 dark:text-slate-200">${item.itemName}</div>
+                    <div class="text-xs bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded-md shadow-inner">${badge}</div>
+                </div>`;
+            });
+            dd.innerHTML = html;
+            dd.classList.remove('hidden');
+        }
+
+        function selectRefillItem(tableId, rowIdx) {
+            let item = refillItemsData.find(i => i.tableId === tableId && i.row === rowIdx); 
+            if (!item) return;
+            refillCurrentTarget = item;
+            
+            document.getElementById('refillSearchInput').value = item.itemName;
+            document.getElementById('refillDropdown').classList.add('hidden');
+            
+            document.getElementById('refillItemNameDisplay').innerText = item.itemName;
+            document.getElementById('refillCurrentQtyDisplay').innerText = `${item.qty} ${item.unit}`;
+            document.getElementById('refillSelectedTarget').classList.remove('hidden');
+            
+            setTimeout(() => document.getElementById('refillQtyInput').focus(), 100);
+        }
+
+        function submitRefill() {
+            if (!refillCurrentTarget) { showToast("กรุณาเลือกอุปกรณ์ที่ต้องการเติมสต็อกก่อน", "error"); return; }
+            let addQty = parseFloat(document.getElementById('refillQtyInput').value);
+            if (!addQty || addQty <= 0) { showToast("กรุณาระบุจำนวนที่จะเติมให้ถูกต้อง", "error"); return; }
+
+            let table = document.getElementById(refillCurrentTarget.tableId).jexcel;
+            let newQty = refillCurrentTarget.qty + addQty;
+            
+            table.setValueFromCoords(refillCurrentTarget.qtyCol, refillCurrentTarget.row, newQty, true);
+            
+            whPendingLogs.push({ 
+                station: 'คลังส่วนกลาง', 
+                action: 'นำเข้า', 
+                detail: `[เติมสต็อก] ${refillCurrentTarget.itemName} รับเข้าเพิ่ม ${addQty} ${refillCurrentTarget.unit} (รวมมี ${newQty})` 
+            });
+
+            hasUnsavedWhChanges = true; 
+            showToast(`✅ เติมสต็อกสำเร็จ! อัปเดตยอดรวมเป็น ${newQty} ${refillCurrentTarget.unit}`); 
+            closeRefillModal();
+        }
     
     </script>
 </body>
