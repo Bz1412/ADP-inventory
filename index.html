@@ -963,6 +963,7 @@ nav {
         }
 
         function finalizeLogin(role, stationName, groupName) {
+            unlockBodyScroll();
             closeLoginModal();
             
             let elLanding = document.getElementById('landingPage'); if (elLanding) elLanding.classList.add('hidden');
@@ -1369,6 +1370,7 @@ nav {
         }
 
         function goHome() {
+            unlockBodyScroll();
             if (!currentUserRole) return; 
 
             // ซ่อนหน้าตารางและหน้ารวม
