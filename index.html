@@ -794,40 +794,53 @@
             document.getElementById('darkModeIcon').innerText = '☀️';
         }
 
-        window.onload = async function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             try {
-                document.querySelectorAll('.max-w-7xl').forEach(el => { el.classList.remove('max-w-7xl'); el.classList.add('w-full', 'px-2', '2xl:px-8'); });
-                updateClock();
-
-                document.getElementById('homePage').classList.add('hidden');
-                document.getElementById('editorPage').classList.add('hidden');
-                document.getElementById('aggregatePage').classList.add('hidden');
-                document.getElementById('landingPage').classList.add('hidden');
+                document.querySelectorAll('.max-w-7xl').forEach(el => { 
+                    el.classList.remove('max-w-7xl'); 
+                    el.classList.add('w-full', 'px-2', '2xl:px-8'); 
+                });
                 
-                document.getElementById('loadingText').innerText = 'กำลังเชื่อมต่อและโหลดข้อมูลระบบ...';
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                document.getElementById('loadingOverlay').classList.add('flex');
-            } catch(e) {}
+                if (typeof updateClock === 'function') updateClock();
+
+                ['homePage', 'editorPage', 'aggregatePage', 'landingPage'].forEach(id => {
+                    let el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+                
+                let loadText = document.getElementById('loadingText');
+                if (loadText) loadText.innerText = 'กำลังเชื่อมต่อและโหลดข้อมูลระบบ...';
+                
+                let overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                }
+            } catch(e) { console.error("Init Error:", e); }
             
             try {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await response.json();
-                if (result.value) {
+                if (result && result.value) {
                     globalAllDataCache = result.value;
                     if (globalAllDataCache['ADP_AUTH_DB']) authDb = JSON.parse(globalAllDataCache['ADP_AUTH_DB']);
                 }
             } catch(e) { 
                 console.error("Load Initial Data Error", e);
             } finally {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('loadingOverlay').classList.remove('flex');
+                let overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }
 
                 try { renderLandingGrid(); } catch(e) { console.error("Error Landing:", e); }
                 try { renderIndexPage(); } catch(e) { console.error("Error Index:", e); }
                 
-                document.getElementById('landingPage').classList.remove('hidden');
+                let landing = document.getElementById('landingPage');
+                if (landing) landing.classList.remove('hidden');
             }
-        };
+        });
 
         function renderLandingGrid() {
             const container = document.getElementById('landingGrid');
@@ -837,6 +850,7 @@
                 html += `<div class="mb-8 w-full animate-slide-up" style="animation-delay: ${idx * 50}ms">`;
                 html += `<h2 class="text-sm font-bold mb-4 text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-indigo-500">${groupName}</h2>`;
                 html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
+                
                 if(inventoryGroups[groupName]) {
                     inventoryGroups[groupName].forEach(station => {
                         html += `<button type="button" onclick="openLoginModal('Station', '${station}', '${groupName}')" class="w-full bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center min-h-[90px] group outline-none appearance-none">
@@ -883,12 +897,10 @@
 
         function openLoginModal(role, stationName, groupName) {
             if (role === 'Station') {
-                // ถ้าเป็นเจ้าหน้าที่สถานี ให้ข้ามการใส่รหัสและ Login ทันที
                 finalizeLogin('Station', stationName, groupName);
                 return;
             }
-            
-            // ถ้าเป็น System Admin ให้เปิด Modal ถามรหัสผ่านตามปกติ
+
             loginTarget = { role, stationName, groupName };
             document.getElementById('loginUsernameDisplay').innerText = 'System Administrator';
             document.getElementById('loginPassword').value = '';
