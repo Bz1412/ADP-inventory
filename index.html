@@ -795,50 +795,40 @@
         }
 
         document.addEventListener('DOMContentLoaded', async function() {
+
             try {
                 document.querySelectorAll('.max-w-7xl').forEach(el => { 
                     el.classList.remove('max-w-7xl'); 
                     el.classList.add('w-full', 'px-2', '2xl:px-8'); 
                 });
-                
                 if (typeof updateClock === 'function') updateClock();
+            } catch(e) {}
 
-                ['homePage', 'editorPage', 'aggregatePage', 'landingPage'].forEach(id => {
-                    let el = document.getElementById(id);
-                    if (el) el.classList.add('hidden');
-                });
-                
-                let loadText = document.getElementById('loadingText');
-                if (loadText) loadText.innerText = 'กำลังเชื่อมต่อและโหลดข้อมูลระบบ...';
-                
-                let overlay = document.getElementById('loadingOverlay');
-                if (overlay) {
-                    overlay.classList.remove('hidden');
-                    overlay.classList.add('flex');
-                }
-            } catch(e) { console.error("Init Error:", e); }
-            
             try {
+                renderLandingGrid();
+                renderIndexPage();
+                document.getElementById('landingPage').classList.remove('hidden');
+            } catch(e) { console.error("Render Error:", e); }
+
+            try {
+                let overlay = document.getElementById('loadingOverlay');
+                if (overlay) { overlay.classList.remove('hidden'); overlay.classList.add('flex'); }
+
                 const response = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await response.json();
+                
                 if (result && result.value) {
                     globalAllDataCache = result.value;
                     if (globalAllDataCache['ADP_AUTH_DB']) authDb = JSON.parse(globalAllDataCache['ADP_AUTH_DB']);
+
+                    if (typeof loadDashboardStats === 'function') await loadDashboardStats();
                 }
             } catch(e) { 
-                console.error("Load Initial Data Error", e);
+                console.error("Data Load Error:", e);
+                showToast("ไม่สามารถโหลดข้อมูลล่าสุดได้", "error");
             } finally {
                 let overlay = document.getElementById('loadingOverlay');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                    overlay.classList.remove('flex');
-                }
-
-                try { renderLandingGrid(); } catch(e) { console.error("Error Landing:", e); }
-                try { renderIndexPage(); } catch(e) { console.error("Error Index:", e); }
-                
-                let landing = document.getElementById('landingPage');
-                if (landing) landing.classList.remove('hidden');
+                if (overlay) { overlay.classList.add('hidden'); overlay.classList.remove('flex'); }
             }
         });
 
