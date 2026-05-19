@@ -3578,8 +3578,7 @@ nav {
 const modalIds = [
     'loginModal', 'imageViewerModal', 'snHistoryModal', 'auditLogModal',
     'helpModal', 'snSearchModal', 'saveFirstModal', 'deleteConfirmModal',
-    'confirmModal', 'monthlyConfirmModal', 'qrPreviewModal', 'exportModal',
-    'loadingOverlay', 'landingPage'
+    'confirmModal', 'monthlyConfirmModal', 'qrPreviewModal', 'exportModal'
 ];
 
 function lockBodyScroll() {
@@ -3592,6 +3591,7 @@ function unlockBodyScroll() {
     const scrollY = document.body.style.top;
     document.body.classList.remove('modal-open');
     document.body.style.top = '';
+    document.body.style.position = '';
     if (scrollY) {
         window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
