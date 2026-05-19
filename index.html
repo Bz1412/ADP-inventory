@@ -2392,9 +2392,14 @@ nav {
         }
 
         function closeSnSearchModal() {
+            const scrollPos = window.scrollY || window.pageYOffset;
+            
             document.getElementById('snSearchModal').classList.add('hidden');
             document.getElementById('snSearchModal').classList.remove('flex');
             currentSnTarget = null;
+            setTimeout(() => {
+                window.scrollTo(0, scrollPos);
+            }, 0);
         }
 
         function renderModalSnList(query) {
