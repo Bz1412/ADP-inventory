@@ -1255,6 +1255,14 @@
 
         function openCategoryModal(catName, type) {
             let dataArray = categoryDetailedItems[catName][type] || [];
+
+            if (type === 'history') {
+                dataArray = [...dataArray].sort((a, b) => {
+                    let dateA = parseThaiDateObj(a.station) || new Date(0);
+                    let dateB = parseThaiDateObj(b.station) || new Date(0);
+                    return dateB - dateA;
+                });
+            }
             
             let tTitle = ""; let tSub = "";
             if (type === 'wh') { tTitle = `📦 รายการคงเหลือในคลัง: ${catName}`; tSub = `แสดงจำนวนพัสดุและจุดเก็บปัจจุบัน`; }
@@ -1299,39 +1307,39 @@
             return null;
         }
 
-        function filterDeployedTable(page = 1) {
-            currentDeployedPage = page;
-            const q = document.getElementById('globalSearchInput').value.toLowerCase();
-            const startStr = document.getElementById('filterStartDate').value;
-            const endStr = document.getElementById('filterEndDate').value;
-            
-            let start = startStr ? new Date(startStr) : null;
-            let end = endStr ? new Date(endStr) : null;
-            if(start) start.setHours(0,0,0,0);
-            if(end) end.setHours(23,59,59,999);
+function filterDeployedTable(page = 1) {
+    currentDeployedPage = page;
+    const q = document.getElementById('globalSearchInput').value.toLowerCase();
+    const startStr = document.getElementById('filterStartDate').value;
+    const endStr = document.getElementById('filterEndDate').value;
+    
+    let start = startStr ? new Date(startStr) : null;
+    let end = endStr ? new Date(endStr) : null;
+    if(start) start.setHours(0,0,0,0);
+    if(end) end.setHours(23,59,59,999);
 
-            // กลับข้อมูลให้ของล่าสุดขึ้นบนสุดก่อน
-            let reversedData = [...globalDeployedData].reverse();
+    let sortedData = [...globalDeployedData].sort((a, b) => {
+        let dateA = parseThaiDateObj(a.station) || new Date(0);
+        let dateB = parseThaiDateObj(b.station) || new Date(0);
+        return dateB - dateA; //
+    });
 
-            filteredDeployedData = reversedData.filter(i => {
-                let matchQ = i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q) || i.group.toLowerCase().includes(q);
-                
-                let matchDate = true;
-                if (start || end) {
-                    let itemDate = parseThaiDateObj(i.station);
-                    if (itemDate) {
-                        if (start && itemDate < start) matchDate = false;
-                        if (end && itemDate > end) matchDate = false;
-                    } else {
-
-                        matchDate = false; 
-                    }
-                }
-                return matchQ && matchDate;
-            });
-
-            renderDeployedTable();
+    filteredDeployedData = sortedData.filter(i => {
+        let matchQ = i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q) || i.group.toLowerCase().includes(q);
+        
+        let matchDate = true;
+        if (start || end) {
+            let itemDate = parseThaiDateObj(i.station);
+            if (itemDate) {
+                if (start && itemDate < start) matchDate = false;
+                if (end && itemDate > end) matchDate = false;
+            } else { matchDate = false; }
         }
+        return matchQ && matchDate;
+    });
+
+    renderDeployedTable();
+}
 
         function renderDeployedTable() {
             let totalPages = Math.ceil(filteredDeployedData.length / DEPLOYED_PER_PAGE) || 1;
