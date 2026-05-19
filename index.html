@@ -833,9 +833,9 @@
                 html += `<h2 class="text-sm font-bold mb-4 text-slate-400 uppercase tracking-widest pl-2 border-l-4 border-indigo-500">${groupName}</h2>`;
                 html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">`;
                 inventoryGroups[groupName].forEach(station => {
-                    html += `<div onclick="openLoginModal('Station', '${station}', '${groupName}')" class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center min-h-[90px] group">
+                    html += `<button type="button" onclick="openLoginModal('Station', '${station}', '${groupName}')" class="w-full bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-md border border-slate-200 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center min-h-[90px] group outline-none">
                                 <span class="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">${station}</span>
-                             </div>`;
+                             </button>`;
                 });
                 html += `</div></div>`;
             });
@@ -851,9 +851,16 @@
                 groupSection.innerHTML = `<h2 class="text-sm font-semibold mb-3 text-slate-500 dark:text-slate-400 uppercase tracking-wider pl-1">${groupName}</h2>`;
                 const gridDiv = document.createElement('div'); gridDiv.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
                 inventoryGroups[groupName].forEach(station => {
-                    const btn = document.createElement('div'); btn.className = "bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-1 min-h-[90px]";
-                    btn.innerHTML = `<span class="text-sm font-bold text-slate-800 dark:text-slate-200">${station}</span><div id="badge_${groupName}_${station}" class="animate-pulse w-12 h-3 rounded bg-slate-100 dark:bg-slate-700 my-1"></div><div id="counts_${groupName}_${station}" class="flex flex-wrap justify-center gap-1.5 text-[10px] mt-1 hidden"></div>`; 
-                    btn.onclick = () => openStation(groupName, station); gridDiv.appendChild(btn);
+                    const btn = document.createElement('button'); 
+                    btn.type = "button"; 
+                    btn.className = "w-full bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700 cursor-pointer transform hover:-translate-y-1 transition-all text-center flex flex-col items-center justify-center gap-1 min-h-[90px] outline-none";
+                    btn.innerHTML = `
+                        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">${station}</span>
+                        <div id="badge_${groupName}_${station}" class="animate-pulse w-12 h-3 rounded bg-slate-100 dark:bg-slate-700 my-1"></div>
+                        <div id="counts_${groupName}_${station}" class="flex flex-wrap justify-center gap-1.5 text-[10px] mt-1 hidden"></div>
+                    `; 
+                    btn.onclick = () => openStation(groupName, station); 
+                    gridDiv.appendChild(btn);
                 });
                 groupSection.appendChild(gridDiv); indexPage.appendChild(groupSection);
             });
