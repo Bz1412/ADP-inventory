@@ -1218,6 +1218,8 @@ nav {
         }
 
         async function openStation(groupName, stationName) {
+            unlockBodyScroll();
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
             currentGroup = groupName; currentStation = stationName; hasUnsavedDeletions = false;
             
