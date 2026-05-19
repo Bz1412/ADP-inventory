@@ -24,6 +24,7 @@
     <script src="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 
     <style>
         body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; }
@@ -258,6 +259,12 @@
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและเบิกอะไหล่ซ่อม/อุปกรณ์สิ้นเปลือง ตัดสต็อกทันที</p>
                 </div>
+                <button onclick="openMultiScan()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+    </svg>
+    สแกนบาร์โค้ด (USB)
+</button>
                 <button onclick="openQuickWithdrawModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ทำรายการเบิกจ่าย
                 </button>
@@ -463,6 +470,32 @@
         </button>
     </div>
 
+    <div id="multiScanModal" class="fixed inset-0 bg-slate-900/80 z-[800] hidden flex-col p-4 no-print animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-4xl w-full mx-auto h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+        <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+            <h3 class="font-bold text-lg">📸 สแกนบาร์โค้ดเข้าคลัง (USB Scanner)</h3>
+            <button onclick="closeMultiScan()" class="text-2xl hover:text-red-500">&times;</button>
+        </div>
+        <div class="p-6 bg-indigo-50 dark:bg-indigo-900/20">
+            <input type="text" id="barcodeInput" autofocus placeholder="ยิงบาร์โค้ดที่นี่..." 
+                   class="w-full p-4 text-2xl font-mono text-center rounded-2xl border-2 border-indigo-300 outline-none focus:border-indigo-500"
+                   onkeypress="if(event.key==='Enter') handleBarcodeEnter(this.value)">
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            <table class="w-full text-sm text-left">
+                <thead class="sticky top-0 bg-slate-100 dark:bg-slate-700">
+                    <tr><th class="p-2">S/N</th><th class="p-2">รายละเอียด</th><th class="p-2 text-center">ประเภท</th></tr>
+                </thead>
+                <tbody id="scanBufferTable"></tbody>
+            </table>
+        </div>
+        <div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
+            <input type="text" id="scanUser" placeholder="ชื่อผู้เบิก / ปลายทาง" class="w-full p-3 mb-3 rounded-xl border border-slate-200">
+            <button onclick="commitScan()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 active:scale-95 transition-transform">ยืนยันนำเข้า/เบิกจ่ายทั้งหมด</button>
+        </div>
+    </div>
+</div>
+
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec'; 
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL'; 
@@ -592,7 +625,7 @@
             table.setValueFromCoords(currentWithdrawTarget.qtyCol, currentWithdrawTarget.row, newQty);
             
             whPendingLogs.push({ station: 'คลังวัสดุส่วนกลาง', action: 'เบิกจ่าย', detail: `[เบิก] ${currentWithdrawTarget.itemName} จำนวน ${qty} ${currentWithdrawTarget.unit} โดย: ${user}` });
-            whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }), category: currentWithdrawTarget.category, specs: currentWithdrawTarget.specs, user: user, qty: qty, unit: currentWithdrawTarget.unit });
+            whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }), category: currentWithdrawTarget.category, specs: currentWithdrawTarget.specs, user: user, qty: qty, unit: currentWithdrawTarget.unit });
 
             hasUnsavedWhChanges = true; showToast(`✅ เบิกสำเร็จ! ระบบตัดสต็อกเหลือ ${newQty} ${currentWithdrawTarget.unit}`); closeWithdrawModal();
         }
@@ -667,7 +700,7 @@
             table.setValueFromCoords(qwCurrentTarget.qtyCol, qwCurrentTarget.row, newQty);
             
             whPendingLogs.push({ station: 'คลังวัสดุส่วนกลาง', action: 'เบิกจ่ายด่วน', detail: `[เบิก] ${qwCurrentTarget.itemName} จำนวน ${qty} ${qwCurrentTarget.unit} โดย: ${user}` });
-            whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }), action: 'เบิกจ่าย', category: qwCurrentTarget.category, specs: qwCurrentTarget.specs, user: user, qty: qty, unit: qwCurrentTarget.unit });
+            whWithdrawals.push({ date: new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }), action: 'เบิกจ่าย', category: qwCurrentTarget.category, specs: qwCurrentTarget.specs, user: user, qty: qty, unit: qwCurrentTarget.unit });
 
             closeQuickWithdrawModal(); hasUnsavedWhChanges = true; await saveWarehouseData();
         }
@@ -1255,15 +1288,19 @@
         function openCategoryModal(catName, type) {
             let dataArray = categoryDetailedItems[catName][type] || [];
 
-            if (type === 'history') {
+            if (type === 'history' || type === 'deployed') {
                 dataArray = [...dataArray].reverse().sort((a, b) => {
-                    let dateA = parseThaiDateObj(a.station) || new Date(0);
-                    let dateB = parseThaiDateObj(b.station) || new Date(0);
-                    return dateB - dateA;
+                    let dateA = parseThaiDateObj(a.station);
+                    let dateB = parseThaiDateObj(b.station);
+                    if (dateA && dateB) return dateB - dateA;
+                    if (dateA && !dateB) return -1;
+                    if (!dateA && dateB) return 1;
+                    return 0;
                 });
             }
             
             let tTitle = ""; let tSub = "";
+            // ... (โค้ดบรรทัดล่างๆ ปล่อยไว้เหมือนเดิมครับ) ...
             if (type === 'wh') { tTitle = `📦 รายการคงเหลือในคลัง: ${catName}`; tSub = `แสดงจำนวนพัสดุและจุดเก็บปัจจุบัน`; }
             else if (type === 'deployed') { tTitle = `📍 อุปกรณ์ที่กำลังใช้งาน: ${catName}`; tSub = `แสดงอุปกรณ์ที่ตั้งอยู่ตามสถานีต่างๆ ในระบบ`; }
             else if (type === 'history') { tTitle = `🌍 ประวัติความเคลื่อนไหว: ${catName}`; tSub = `แสดงรายการบันทึก นำเข้า / เบิกจ่าย / ส่งคืนคลัง ย้อนหลัง`; }
@@ -1297,9 +1334,9 @@
 
         function parseThaiDateObj(dateStr) {
             if(!dateStr) return null;
-            let cleanStr = dateStr.replace('วันที่ ', '').trim();
+            let cleanStr = String(dateStr).replace('วันที่ ', '').trim();
 
-            if (cleanStr.includes('-')) {
+            if (cleanStr.includes('-') && !cleanStr.includes(' ')) {
                 let d = new Date(cleanStr);
                 if (!isNaN(d.getTime())) return d;
             }
@@ -1308,7 +1345,14 @@
             let parts = cleanStr.split(' ');
             if(parts.length >= 3) {
                 let d = parseInt(parts[0]); let m = months[parts[1]]; let y = parseInt(parts[2]) - 543;
-                if(!isNaN(d) && m !== undefined && !isNaN(y)) return new Date(y, m, d);
+                let hrs = 0, mins = 0;
+
+                if (parts.length >= 4 && parts[3].includes(':')) {
+                    let timeParts = parts[3].split(':');
+                    hrs = parseInt(timeParts[0]); mins = parseInt(timeParts[1]);
+                }
+                
+                if(!isNaN(d) && m !== undefined && !isNaN(y)) return new Date(y, m, d, hrs, mins);
             }
             return null;
         }
@@ -1325,9 +1369,12 @@
             if(end) end.setHours(23,59,59,999);
 
             let sortedData = [...globalDeployedData].reverse().sort((a, b) => {
-                let dateA = parseThaiDateObj(a.station) || new Date(0);
-                let dateB = parseThaiDateObj(b.station) || new Date(0);
-                return dateB - dateA; 
+                let dateA = parseThaiDateObj(a.station);
+                let dateB = parseThaiDateObj(b.station);
+                if (dateA && dateB) return dateB - dateA;
+                if (dateA && !dateB) return -1;
+                if (!dateA && dateB) return 1;
+                return 0; 
             });
 
             filteredDeployedData = sortedData.filter(i => {
@@ -1876,6 +1923,73 @@
             showToast(`✅ เติมสต็อกสำเร็จ! อัปเดตยอดรวมเป็น ${newQty} ${refillCurrentTarget.unit}`); 
             closeRefillModal();
         }
+
+let scanBuffer = []; 
+
+function openMultiScan() {
+    scanBuffer = [];
+    document.getElementById('scanBufferTable').innerHTML = '';
+    document.getElementById('multiScanModal').classList.remove('hidden');
+    document.getElementById('multiScanModal').classList.add('flex');
+    setTimeout(() => document.getElementById('barcodeInput').focus(), 300);
+}
+
+function closeMultiScan() {
+    document.getElementById('multiScanModal').classList.add('hidden');
+    document.getElementById('multiScanModal').classList.remove('flex');
+}
+
+function handleBarcodeEnter(sn) {
+    if(!sn) return;
+    sn = sn.trim();
+    
+    // ค้นหาในตารางหลัก (whMainTable) เพื่อดึงข้อมูลอัตโนมัติ
+    let foundItem = null;
+    let data = whMainTable.getData();
+    let rowIdx = data.findIndex(r => r[4] === sn); // S/N อยู่คอลัมน์ที่ 4
+
+    if (rowIdx !== -1) {
+        foundItem = { sn: sn, brand: data[rowIdx][2], model: data[rowIdx][3], type: data[rowIdx][1], row: rowIdx, tableId: 'wh-main' };
+    } else {
+        foundItem = { sn: sn, brand: 'ใหม่', model: 'ใหม่', type: 'PC', row: -1, tableId: 'wh-main' };
+    }
+
+    scanBuffer.push(foundItem);
+    renderScanBuffer();
+    document.getElementById('barcodeInput').value = ''; // ล้างค่าเพื่อรอสแกนชิ้นต่อไป
+}
+
+function renderScanBuffer() {
+    document.getElementById('scanBufferTable').innerHTML = scanBuffer.map(item => `
+        <tr class="border-b dark:border-slate-700">
+            <td class="p-2 font-mono text-blue-600 dark:text-blue-400">${item.sn}</td>
+            <td class="p-2">${item.brand} ${item.model}</td>
+            <td class="p-2 text-center">${item.type}</td>
+        </tr>
+    `).join('');
+}
+
+async function commitScan() {
+    let user = document.getElementById('scanUser').value;
+    if(!user) { showToast("กรุณาระบุชื่อผู้เบิก", "error"); return; }
+    
+    scanBuffer.forEach(item => {
+        if (item.row !== -1) {
+            // กรณีมีของอยู่แล้ว -> ตัดสต็อกเบิกออก
+            let qty = parseFloat(whMainTable.getValueFromCoords(3, item.row)) - 1;
+            whMainTable.setValueFromCoords(3, item.row, qty, true);
+            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(สแกน)', detail: `S/N: ${item.sn} ให้ ${user}` });
+        } else {
+            // กรณีของใหม่ -> เพิ่มแถวใหม่
+            whMainTable.insertRow(['', item.type, 'ใหม่', 'ใหม่', item.sn, 'จ่ายแล้ว', new Date().toISOString().split('T')[0], 'สแกนเข้าอัตโนมัติ'], 0, true);
+            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เพิ่มอุปกรณ์(สแกน)', detail: `S/N: ${item.sn} โดย ${user}` });
+        }
+    });
+    
+    closeMultiScan();
+    await saveWarehouseData();
+    showToast("บันทึกรายการสแกนเรียบร้อย");
+}
     
     </script>
 </body>
