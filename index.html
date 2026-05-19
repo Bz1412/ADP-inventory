@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230f172a'/><text x='50' y='68' font-family='sans-serif' font-weight='900' font-size='42' fill='%23ffffff' text-anchor='middle' letter-spacing='-2'>ADP</text></svg>">
     <link id="pwa-manifest" rel="manifest">
     
@@ -125,6 +126,57 @@
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .qr-label { page-break-inside: avoid; border: 1px solid #e2e8f0; background: white; border-radius: 12px; }
         }
+
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    top: var(--scroll-y, 0);
+}
+
+#loginModal,
+#imageViewerModal,
+#snHistoryModal,
+#auditLogModal,
+#helpModal,
+#snSearchModal,
+#saveFirstModal,
+#deleteConfirmModal,
+#confirmModal,
+#monthlyConfirmModal,
+#qrPreviewModal,
+#exportModal,
+#loadingOverlay,
+#landingPage {
+    height: 100dvh !important;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: auto;
+}
+
+#snHistoryModal .overflow-y-auto,
+#auditLogModal .overflow-y-auto,
+#helpModal .overflow-y-auto,
+#confirmModal .overflow-y-auto,
+#monthlyConfirmModal .overflow-y-auto,
+#qrPreviewModal .overflow-y-auto,
+#exportModal .overflow-y-auto,
+#snSearchModal #modalSnList {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+nav {
+    padding-top: env(safe-area-inset-top);
+}
+
+#landingPage {
+    top: 64px !important;
+    height: calc(100dvh - 64px) !important;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
 
     </style>
 </head>
@@ -3503,6 +3555,79 @@
             closeExportModal();
             exportAllDataToExcel(selectedStations);
         }
+
+const modalIds = [
+    'loginModal', 'imageViewerModal', 'snHistoryModal', 'auditLogModal',
+    'helpModal', 'snSearchModal', 'saveFirstModal', 'deleteConfirmModal',
+    'confirmModal', 'monthlyConfirmModal', 'qrPreviewModal', 'exportModal',
+    'loadingOverlay', 'landingPage'
+];
+
+function lockBodyScroll() {
+    const scrollY = window.scrollY;
+    document.documentElement.style.setProperty('--scroll-y', `-${scrollY}px`);
+    document.body.classList.add('modal-open');
+}
+
+function unlockBodyScroll() {
+    const scrollY = document.body.style.top;
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+}
+
+const modalObserver = new MutationObserver(() => {
+    const anyModalOpen = modalIds.some(id => {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        return !el.classList.contains('hidden') && 
+               getComputedStyle(el).display !== 'none';
+    });
+
+    if (anyModalOpen) {
+        lockBodyScroll();
+    } else {
+        unlockBodyScroll();
+    }
+});
+
+modalIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        modalObserver.observe(el, { 
+            attributes: true, 
+            attributeFilter: ['class', 'style'] 
+        });
+    }
+});
+
+document.addEventListener('touchmove', (e) => {
+    const anyModalOpen = modalIds.some(id => {
+        const el = document.getElementById(id);
+        return el && !el.classList.contains('hidden') && 
+               getComputedStyle(el).display !== 'none' &&
+               id !== 'landingPage';
+    });
+
+    if (anyModalOpen) {
+        let target = e.target;
+        let isScrollable = false;
+        while (target && target !== document.body) {
+            const style = getComputedStyle(target);
+            if (style.overflowY === 'scroll' || style.overflowY === 'auto' ||
+                style.overflow === 'scroll' || style.overflow === 'auto') {
+                isScrollable = true;
+                break;
+            }
+            target = target.parentElement;
+        }
+        if (!isScrollable) {
+            e.preventDefault();
+        }
+    }
+}, { passive: false });
         
     </script>
 </body>
