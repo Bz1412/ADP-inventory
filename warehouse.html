@@ -1095,7 +1095,6 @@
             }
         }
 
-        // 🌟 วาดตารางแบบมีการแบ่งหน้า 50 รายการ และมีช่อง S/N ในอุปกรณ์คอมฯ
         function initWarehouseSpreadsheets(data) {
             ['wh-main', 'wh-ink', 'wh-acc', 'wh-parts'].forEach(id => {
                 let el = document.getElementById(id);
@@ -1257,7 +1256,7 @@
             let dataArray = categoryDetailedItems[catName][type] || [];
 
             if (type === 'history') {
-                dataArray = [...dataArray].sort((a, b) => {
+                dataArray = [...dataArray].reverse().sort((a, b) => {
                     let dateA = parseThaiDateObj(a.station) || new Date(0);
                     let dateB = parseThaiDateObj(b.station) || new Date(0);
                     return dateB - dateA;
@@ -1298,8 +1297,15 @@
 
         function parseThaiDateObj(dateStr) {
             if(!dateStr) return null;
+            let cleanStr = dateStr.replace('วันที่ ', '').trim();
+
+            if (cleanStr.includes('-')) {
+                let d = new Date(cleanStr);
+                if (!isNaN(d.getTime())) return d;
+            }
+
             const months = {'ม.ค.':0, 'ก.พ.':1, 'มี.ค.':2, 'เม.ย.':3, 'พ.ค.':4, 'มิ.ย.':5, 'ก.ค.':6, 'ส.ค.':7, 'ก.ย.':8, 'ต.ค.':9, 'พ.ย.':10, 'ธ.ค.':11};
-            let parts = dateStr.replace('วันที่ ', '').split(' ');
+            let parts = cleanStr.split(' ');
             if(parts.length >= 3) {
                 let d = parseInt(parts[0]); let m = months[parts[1]]; let y = parseInt(parts[2]) - 543;
                 if(!isNaN(d) && m !== undefined && !isNaN(y)) return new Date(y, m, d);
@@ -1307,39 +1313,39 @@
             return null;
         }
 
-function filterDeployedTable(page = 1) {
-    currentDeployedPage = page;
-    const q = document.getElementById('globalSearchInput').value.toLowerCase();
-    const startStr = document.getElementById('filterStartDate').value;
-    const endStr = document.getElementById('filterEndDate').value;
-    
-    let start = startStr ? new Date(startStr) : null;
-    let end = endStr ? new Date(endStr) : null;
-    if(start) start.setHours(0,0,0,0);
-    if(end) end.setHours(23,59,59,999);
+        function filterDeployedTable(page = 1) {
+            currentDeployedPage = page;
+            const q = document.getElementById('globalSearchInput').value.toLowerCase();
+            const startStr = document.getElementById('filterStartDate').value;
+            const endStr = document.getElementById('filterEndDate').value;
+            
+            let start = startStr ? new Date(startStr) : null;
+            let end = endStr ? new Date(endStr) : null;
+            if(start) start.setHours(0,0,0,0);
+            if(end) end.setHours(23,59,59,999);
 
-    let sortedData = [...globalDeployedData].sort((a, b) => {
-        let dateA = parseThaiDateObj(a.station) || new Date(0);
-        let dateB = parseThaiDateObj(b.station) || new Date(0);
-        return dateB - dateA; //
-    });
+            let sortedData = [...globalDeployedData].reverse().sort((a, b) => {
+                let dateA = parseThaiDateObj(a.station) || new Date(0);
+                let dateB = parseThaiDateObj(b.station) || new Date(0);
+                return dateB - dateA; 
+            });
 
-    filteredDeployedData = sortedData.filter(i => {
-        let matchQ = i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q) || i.group.toLowerCase().includes(q);
-        
-        let matchDate = true;
-        if (start || end) {
-            let itemDate = parseThaiDateObj(i.station);
-            if (itemDate) {
-                if (start && itemDate < start) matchDate = false;
-                if (end && itemDate > end) matchDate = false;
-            } else { matchDate = false; }
+            filteredDeployedData = sortedData.filter(i => {
+                let matchQ = i.sn.toLowerCase().includes(q) || i.specs.toLowerCase().includes(q) || i.station.toLowerCase().includes(q) || i.user.toLowerCase().includes(q) || i.group.toLowerCase().includes(q);
+                
+                let matchDate = true;
+                if (start || end) {
+                    let itemDate = parseThaiDateObj(i.station);
+                    if (itemDate) {
+                        if (start && itemDate < start) matchDate = false;
+                        if (end && itemDate > end) matchDate = false;
+                    } else { matchDate = false; }
+                }
+                return matchQ && matchDate;
+            });
+
+            renderDeployedTable();
         }
-        return matchQ && matchDate;
-    });
-
-    renderDeployedTable();
-}
 
         function renderDeployedTable() {
             let totalPages = Math.ceil(filteredDeployedData.length / DEPLOYED_PER_PAGE) || 1;
