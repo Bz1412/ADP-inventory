@@ -2436,9 +2436,14 @@ nav {
             let tCols = table.options.columns;
             
             if (currentSnTarget.tableId === 'spreadsheet-cpumon') {
-                if (colTitle === 'S/N CPU') { brandCol = 2; modelCol = 3; }
-                if (colTitle === 'S/N จอภาพ') { brandCol = 5; modelCol = 6; }
-                statusCol = 8;
+                if (colTitle === 'S/N CPU') { 
+                    brandCol = 2; modelCol = 3; statusCol = 5; 
+                }
+                if (colTitle === 'S/N จอภาพ') { 
+                    brandCol = 6; 
+                    modelCol = 7; 
+                    statusCol = 9; 
+                }
             } else {
                 for(let i=0; i<tCols.length; i++) {
                     if(tCols[i].title === 'ยี่ห้อ') brandCol = i;
@@ -2452,7 +2457,9 @@ nav {
             if(modelCol !== -1 && model) table.setValueFromCoords(modelCol, currentSnTarget.y, model);
             if(statusCol !== -1) table.setValueFromCoords(statusCol, currentSnTarget.y, 'ปกติ');
 
-            hasUnsavedDeletions = true; showToast(`✨ ดึงอุปกรณ์ ${brand} จากคลังสำเร็จ!`); closeSnSearchModal();
+            hasUnsavedDeletions = true; 
+            showToast(`✨ ดึงอุปกรณ์ ${brand} จากคลังสำเร็จ!`); 
+            closeSnSearchModal();
         }
 
         window.applyManualSn = function() {
