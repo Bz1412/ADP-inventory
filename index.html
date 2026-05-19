@@ -177,6 +177,13 @@ nav {
     padding-bottom: env(safe-area-inset-bottom);
 }
 
+#editorPage .grid,
+#editorPage [id^="stStat"] {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: contents;
+}
+
 
     </style>
 </head>
@@ -1352,6 +1359,14 @@ nav {
                 let elMon = document.getElementById('stStatMon'); if(elMon) elMon.innerText = stTotalMon; 
                 let elPrn = document.getElementById('stStatPrn'); if(elPrn) elPrn.innerText = stTotalPrn;
                 let elSpc = document.getElementById('stStatSpc'); if(elSpc) elSpc.innerText = stTotalSpc;
+
+                requestAnimationFrame(() => {
+                    document.querySelectorAll('[id^="stStat"]').forEach(el => {
+                        el.style.display = 'none';
+                        el.offsetHeight;
+                        el.style.display = '';
+                    });
+                });
 
                 const ctxStEl = document.getElementById('stStatusChart');
                 if (ctxStEl) {
