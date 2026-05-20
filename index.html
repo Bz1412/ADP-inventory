@@ -3717,88 +3717,119 @@ document.addEventListener('touchmove', (e) => {
     }
 }, { passive: false });
 
-        // 🌟 ชุดฟังก์ชันสำหรับ ควบคุมการผสานเซลล์
-        window.mergeSelected = function(tableId) {
-            let table = document.getElementById(tableId).jexcel;
-            if (!table || !table.selectedCell) {
-                showToast("กรุณาลากคลุมดำเซลล์ที่ต้องการผสานก่อน", "error");
-                return;
-            }
-            
-            // อ่านค่าพื้นที่ที่ลากคลุม [x1, y1, x2, y2]
-            let [x1, y1, x2, y2] = table.selectedCell;
-            let startCol = Math.min(x1, x2);
-            let startRow = Math.min(y1, y2);
-            let endCol = Math.max(x1, x2);
-            let endRow = Math.max(y1, y2);
+window.mergeSelected = function(tableId) {
+    let table = document.getElementById(tableId).jexcel;
+    if (!table || !table.selectedCell) {
+        showToast("กรุณาลากคลุมดำเซลล์ที่ต้องการผสานก่อน", "error");
+        return;
+    }
 
-            let colspan = endCol - startCol + 1;
-            let rowspan = endRow - startRow + 1;
+    let [x1, y1, x2, y2] = table.selectedCell;
+    let startCol = Math.min(x1, x2);
+    let startRow = Math.min(y1, y2);
+    let endCol   = Math.max(x1, x2);
+    let endRow   = Math.max(y1, y2);
 
-            if (colspan <= 1 && rowspan <= 1) {
-                showToast("กรุณาเลือกมากกว่า 1 ช่องเพื่อทำการผสาน", "error");
-                return;
-            }
+    if (endCol - startCol < 1 && endRow - startRow < 1) {
+        showToast("กรุณาเลือกมากกว่า 1 ช่องเพื่อทำการผสาน", "error");
+        return;
+    }
 
-            // ฟังก์ชันแปลงตัวเลขคอลัมน์เป็น A, B, C...
-            const getColumnName = (colIndex) => {
-                let letter = '';
-                while (colIndex >= 0) {
-                    letter = String.fromCharCode((colIndex % 26) + 65) + letter;
-                    colIndex = Math.floor(colIndex / 26) - 1;
-                }
-                return letter;
-            };
-
-            let cellName = getColumnName(startCol) + (startRow + 1); // เช่น B2
-            table.setMerge(cellName, colspan, rowspan);
-            hasUnsavedDeletions = true; // เปิดแจ้งเตือนให้เซฟ
-            showToast("🔗 ผสานเซลล์สำเร็จ (อย่าลืมกดบันทึกเพื่อจัดเก็บรูปแบบ)");
+    let texts = [];
+    for (let r = startRow; r <= endRow; r++) {
+        for (let c = startCol; c <= endCol; c++) {
+            let v = String(table.getValueFromCoords(c, r) || '').trim();
+            if (v && v !== '-') texts.push(v);
         }
+    }
+    let combined = texts.join(' | ');
 
-        window.unmergeSelected = function(tableId) {
-            let table = document.getElementById(tableId).jexcel;
-            if (!table || !table.selectedCell) {
-                showToast("กรุณาเลือกพื้นที่ที่มีการผสานเซลล์ไว้", "error");
-                return;
-            }
-            
-            let [x1, y1, x2, y2] = table.selectedCell;
-            let startCol = Math.min(x1, x2);
-            let startRow = Math.min(y1, y2);
-            let endCol = Math.max(x1, x2);
-            let endRow = Math.max(y1, y2);
-            
-            const getColumnName = (colIndex) => {
-                let letter = '';
-                while (colIndex >= 0) {
-                    letter = String.fromCharCode((colIndex % 26) + 65) + letter;
-                    colIndex = Math.floor(colIndex / 26) - 1;
-                }
-                return letter;
-            };
+    const toColLetter = (n) => {
+        let s = '';
+        for (let i = n; i >= 0; i = Math.floor(i / 26) - 1) {
+            s = String.fromCharCode((i % 26) + 65) + s;
+        }
+        return s;
+    };
 
-            let unmerged = false;
-            let currentMerges = table.options.mergeCells || {};
-            
-            // วนลูปเพื่อหาว่าตรงที่คลุมมีช่องไหนที่โดนผสานไว้ แล้วสั่งลบออก
-            for(let c = startCol; c <= endCol; c++) {
-                for(let r = startRow; r <= endRow; r++) {
-                    let cellName = getColumnName(c) + (r + 1);
-                    if (currentMerges[cellName]) {
-                        table.removeMerge(cellName);
-                        unmerged = true;
+    let colspan = endCol - startCol + 1;
+    let rowspan = endRow - startRow + 1;
+    let cellName = toColLetter(startCol) + (startRow + 1);
+
+    table.setMerge(cellName, colspan, rowspan);
+
+    if (combined) {
+        table.setValueFromCoords(startCol, startRow, combined, true);
+    }
+
+    hasUnsavedDeletions = true;
+    showToast("🔗 ผสานเซลล์สำเร็จ (อย่าลืมกดบันทึก)");
+}
+
+window.unmergeSelected = function(tableId) {
+    let table = document.getElementById(tableId).jexcel;
+    if (!table || !table.selectedCell) {
+        showToast("กรุณาเลือกพื้นที่ที่มีการผสานเซลล์ไว้", "error");
+        return;
+    }
+
+    let [x1, y1, x2, y2] = table.selectedCell;
+    let startCol = Math.min(x1, x2);
+    let startRow = Math.min(y1, y2);
+    let endCol   = Math.max(x1, x2);
+    let endRow   = Math.max(y1, y2);
+
+    const toColLetter = (n) => {
+        let s = '';
+        for (let i = n; i >= 0; i = Math.floor(i / 26) - 1) {
+            s = String.fromCharCode((i % 26) + 65) + s;
+        }
+        return s;
+    };
+
+    let currentMerges = table.options.mergeCells || {};
+    let unmerged = false;
+
+    for (let c = startCol; c <= endCol; c++) {
+        for (let r = startRow; r <= endRow; r++) {
+            let cellName = toColLetter(c) + (r + 1);
+            if (currentMerges[cellName]) {
+                let existingVal = String(table.getValueFromCoords(c, r) || '').trim();
+
+                table.removeMerge(cellName);
+
+                if (existingVal.includes(' | ')) {
+                    let parts = existingVal.split(' | ');
+                    let idx = 0;
+                    let [mc, mr] = [c, r];
+                    let mergeInfo = currentMerges[cellName];
+                    let mColspan = mergeInfo ? mergeInfo[0] : 1;
+                    let mRowspan = mergeInfo ? mergeInfo[1] : 1;
+
+                    outer: for (let dr = 0; dr < mRowspan; dr++) {
+                        for (let dc = 0; dc < mColspan; dc++) {
+                            if (idx >= parts.length) break outer;
+                            if (dc === 0 && dr === 0) {
+                                table.setValueFromCoords(mc + dc, mr + dr, parts[idx] || '', true);
+                            } else {
+                                table.setValueFromCoords(mc + dc, mr + dr, parts[idx] || '', true);
+                            }
+                            idx++;
+                        }
                     }
                 }
-            }
-            
-            if (unmerged) {
-                hasUnsavedDeletions = true;
-                showToast("⛓️ ยกเลิกผสานเซลล์สำเร็จ");
-            } else {
-                showToast("ไม่พบเซลล์ที่ถูกผสานในพื้นที่ที่เลือก", "error");
+                unmerged = true;
             }
         }
+    }
+
+    if (unmerged) {
+        hasUnsavedDeletions = true;
+        showToast("⛓️ ยกเลิกผสานเซลล์สำเร็จ");
+    } else {
+        showToast("ไม่พบเซลล์ที่ถูกผสานในพื้นที่ที่เลือก", "error");
+    }
+}
         
     </script>
 </body>
