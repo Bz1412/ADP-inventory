@@ -119,15 +119,30 @@
             border-radius: 8px; 
             max-height: none !important;
             overflow-y: hidden !important; 
+            padding-bottom: 220px !important; 
         }
         
         .jsuites-dropdown {
-            font-family: 'Prompt', sans-serif !important;
-            text-align: left !important;
+            z-index: 99999 !important;
+        }
+
+        .jsuites-dropdown-list {
+            z-index: 999999 !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        html.dark .jsuites-dropdown-list {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
         }
         
         .jexcel tbody tr td.edition {
-            z-index: 9999 !important;
+            z-index: 99999 !important;
         }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
