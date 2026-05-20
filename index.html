@@ -1344,23 +1344,21 @@ nav {
                 let stTotalCPU = 0, stTotalMon = 0, stTotalPrn = 0, stTotalSpc = 0, stTotalNB = 0;
                 let stStatCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
 
-const countStItems = (arr, isPrn=false, isSpc=false) => { 
-    if(!arr || !Array.isArray(arr)) return 0; 
-    let c = 0; 
-    arr.forEach(r => { 
-        if (!r || !Array.isArray(r)) return;
-        let hasData = r.some((cell, idx) => idx > 0 && cell && String(cell).trim() !== '-' && String(cell).trim() !== '');
-        
-        if (hasData) {
-            c++; 
-            let statusIdx = isPrn ? 7 : (isSpc ? 6 : 5); 
-            let st = r[statusIdx] || 'ปกติ'; 
-            if(['ปกติ','ชำรุด','สำรอง','RCF'].includes(st)) statCounts[st]++; 
-            else statCounts['ปกติ']++; 
-        } 
-    }); 
-    return c; 
-};
+            const countStItems = (arr, isPrn=false, isSpc=false) => { 
+                    if(!arr || !Array.isArray(arr)) return 0; 
+                    let c = 0; 
+                    arr.forEach(r => { 
+                        if (!r || !Array.isArray(r)) return;
+                        let isNewSpc = isSpc && r.length >= 9;
+                        let b = isSpc ? (isNewSpc ? r[3] : '') : r[2]; let m = isSpc ? (isNewSpc ? r[4] : r[3]) : r[3]; let s = isSpc && isNewSpc ? r[5] : r[4];
+                        let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim();
+                        if((bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-')) { 
+                            c++; let statusIdx = isPrn ? 7 : (isSpc ? (isNewSpc ? 6 : 5) : 5); let st = r[statusIdx]; 
+                            if(['ปกติ','ชำรุด','สำรอง','RCF'].includes(st)) stStatCounts[st]++; else stStatCounts['ปกติ']++; 
+                        } 
+                    }); return c; 
+                };
+
 
                 stTotalCPU = countStItems(dbData.cpu); stTotalNB = countStItems(dbData.nb);
                 stTotalMon = countStItems(dbData.mon); stTotalPrn = countStItems(dbData.prn, true, false);
