@@ -113,7 +113,44 @@
         .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
         .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, 4px); }
 
-        .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
+        /* 🌟 แก้ปัญหา Dropdown จมหายใต้ตารางล่างสุด 🌟 */
+        .jexcel_content { 
+            box-shadow: none !important; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            max-height: none !important;
+            overflow-y: hidden !important; 
+            
+            /* ดันพื้นที่ด้านล่างตารางเผื่อไว้ 220px เพื่อให้ Dropdown กางออกได้โดยไม่โดนกรอบตัด */
+            padding-bottom: 220px !important; 
+        }
+
+        /* ยกกล่องเซลล์ที่กำลังคลิกแก้ไข ให้ลอยเหนือทุกสิ่งในหน้าเว็บ */
+        .jexcel tbody tr td.edition {
+            z-index: 99999 !important;
+        }
+
+        /* ยกตัวเลือก Dropdown ให้ลอยอยู่หน้าสุด */
+        .jsuites-dropdown {
+            z-index: 99999 !important;
+        }
+
+        /* จำกัดความยาวเมนูไม่ให้ยาวทะลุจอ และเพิ่มเงาให้ดูแยกลอยจากพื้นตารางชัดเจน */
+        .jsuites-dropdown-list {
+            z-index: 999999 !important;
+            max-height: 200px !important; /* ถ้าตัวเลือกยาวกว่า 200px จะมีแถบเลื่อน Scrollbar ให้อัตโนมัติ */
+            overflow-y: auto !important;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        /* สไตล์สำหรับโหมด Dark Mode (ถ้าเว็บมี Dark mode) */
+        html.dark .jsuites-dropdown-list {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f8fafc !important;
+        }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
         
@@ -196,8 +233,8 @@ nav {
     </div>
 
     <div id="landingPage" class="fixed inset-0 top-16 bg-[#f8fafc] dark:bg-[#0f172a] z-[50] overflow-y-auto custom-scrollbar flex flex-col items-center py-10 px-4 sm:px-6 animate-fade-in transition-colors duration-300">
-        <div class="text-center mb-8 w-full max-w-4xl animate-slide-up">
-            <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl cursor-default">A</div>
+    <div class="text-center mb-8 w-full max-w-4xl animate-slide-up">
+        <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl cursor-default">A</div>
             <h2 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">เลือกระบบสถานี/ชุด หรือแผนกของท่าน</h2>
             <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">กรุณาคลิกเลือกสถานี/ชุด หรือแผนกเพื่อตรวจเช็คสถานภาพ</p>
         </div>
@@ -1735,7 +1772,7 @@ nav {
                 wordWrap: true, 
                 pagination: 5,
                 search: true, 
-                tableOverflow: true,
+                tableOverflow: false,
                 oneditionstart: isReadOnly ? null : handleSNEdit, 
                 updateTable: customRenderTable
             };
