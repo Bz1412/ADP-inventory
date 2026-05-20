@@ -118,8 +118,9 @@
             border: 1px solid #e2e8f0; 
             border-radius: 8px; 
             max-height: none !important;
-            overflow-y: hidden !important; 
-            padding-bottom: 220px !important; 
+            overflow-y: hidden !important;
+            overflow-x: auto !important;
+            padding-bottom: 20px !important; 
         }
         
         .jsuites-dropdown {
@@ -1791,20 +1792,21 @@ nav {
             if (migratedSpc.length === 0) migratedSpc = [[]];
 
             const tableConfig = { 
-                tableWidth: "100%",
-                allowInsertRow: !isReadOnly, 
-                allowManualInsertRow: !isReadOnly, 
-                allowInsertColumn: false, 
-                allowDeleteRow: !isReadOnly, 
-                editable: !isReadOnly,       
-                wordWrap: true,
-                pagination: 5,
-                search: true, 
-                tableOverflow: false, // 🌟
-                oneditionstart: isReadOnly ? null : handleSNEdit,
-                onchange: isReadOnly ? null : handleCellChange,
-                updateTable: customRenderTable
-            };
+    tableWidth: "100%",
+    allowInsertRow: !isReadOnly, 
+    allowManualInsertRow: !isReadOnly, 
+    allowInsertColumn: false, 
+    allowDeleteRow: !isReadOnly, 
+    editable: !isReadOnly,       
+    wordWrap: true, 
+    pagination: 5,
+    search: true, 
+    tableOverflow: false,
+    oneditionstart: isReadOnly ? null : handleSNEdit,
+    onselection: isReadOnly ? null : handleSelection,
+    onchange: isReadOnly ? null : handleCellChange,
+    updateTable: customRenderTable
+};
         
             
             let cpuMergeObj = data.cpuMerge || {};
