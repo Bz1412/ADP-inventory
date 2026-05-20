@@ -255,20 +255,22 @@
 
         <div id="view-dashboard" class="animate-fade-in">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและเบิกอะไหล่ซ่อม/อุปกรณ์สิ้นเปลือง ตัดสต็อกทันที</p>
-                </div>
-                <button onclick="openMultiScan()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-    </svg>
-    สแกนบาร์โค้ด (USB)
-</button>
-                <button onclick="openQuickWithdrawModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> ทำรายการเบิกจ่าย
-                </button>
-            </div>
+    <div>
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและเบิกอะไหล่ซ่อม/อุปกรณ์สิ้นเปลือง ตัดสต็อกทันที</p>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <button onclick="openMultiScan()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+            สแกนบาร์โค้ด
+        </button>
+        <button onclick="openQuickWithdrawModal()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 
+            ทำรายการเบิกจ่าย
+        </button>
+    </div>
+</div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div onclick="openCardModal('MAIN')" class="hover-card bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col justify-center relative overflow-hidden" data-tooltip="คลิกเพื่อดูรายการ">
@@ -470,28 +472,51 @@
         </button>
     </div>
 
-    <div id="multiScanModal" class="fixed inset-0 bg-slate-900/80 z-[800] hidden flex-col p-4 no-print animate-fade-in">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-4xl w-full mx-auto h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-        <div class="p-4 border-b dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-            <h3 class="font-bold text-lg">📸 สแกนบาร์โค้ดเข้าคลัง (USB Scanner)</h3>
-            <button onclick="closeMultiScan()" class="text-2xl hover:text-red-500">&times;</button>
+    <div id="multiScanModal" class="fixed inset-0 bg-slate-900/80 z-[800] hidden flex-col p-3 sm:p-6 no-print animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full mx-auto h-[95vh] flex flex-col overflow-hidden shadow-2xl">
+        
+        <div class="p-4 sm:p-6 border-b dark:border-slate-700 flex flex-wrap justify-between items-center bg-slate-50 dark:bg-slate-800/50 gap-4">
+            <h3 class="font-bold text-lg sm:text-xl flex items-center gap-2">📸 ระบบสแกนบาร์โค้ด (Multi-Scan)</h3>
+            <div class="flex gap-2">
+                <select id="scanModeSelector" onchange="document.getElementById('barcodeInput').focus()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-sm rounded-xl px-4 py-2 font-bold outline-none cursor-pointer">
+                    <option value="IN">📥 นำเข้าคลัง</option>
+                    <option value="OUT">📤 เบิกจ่ายตัดสต็อก</option>
+                </select>
+                <button onclick="closeMultiScan()" class="bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-bold transition-colors">ปิด</button>
+            </div>
         </div>
-        <div class="p-6 bg-indigo-50 dark:bg-indigo-900/20">
-            <input type="text" id="barcodeInput" autofocus placeholder="ยิงบาร์โค้ดที่นี่..." 
-                   class="w-full p-4 text-2xl font-mono text-center rounded-2xl border-2 border-indigo-300 outline-none focus:border-indigo-500"
+
+        <div class="p-6 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800">
+            <p class="text-center text-indigo-600 dark:text-indigo-400 text-sm font-bold mb-2 uppercase tracking-widest">ยิงบาร์โค้ดที่นี่ (สแกนต่อเนื่องได้เลย)</p>
+            <input type="text" id="barcodeInput" placeholder="||||||||||||||||||||" 
+                   class="w-full p-4 text-3xl font-mono text-center rounded-2xl border-2 border-indigo-300 outline-none focus:border-indigo-500 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.2)] transition-all bg-white"
                    onkeypress="if(event.key==='Enter') handleBarcodeEnter(this.value)">
         </div>
-        <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            <table class="w-full text-sm text-left">
-                <thead class="sticky top-0 bg-slate-100 dark:bg-slate-700">
-                    <tr><th class="p-2">S/N</th><th class="p-2">รายละเอียด</th><th class="p-2 text-center">ประเภท</th></tr>
+
+        <div class="flex-1 overflow-y-auto p-0 sm:p-4 custom-scrollbar bg-slate-100/50 dark:bg-[#0f172a]">
+            <table class="w-full text-sm text-left border-collapse bg-white dark:bg-slate-800 sm:rounded-xl overflow-hidden shadow-sm">
+                <thead class="sticky top-0 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs">
+                    <tr>
+                        <th class="p-3 w-10 text-center">#</th>
+                        <th class="p-3 w-40">S/N</th>
+                        <th class="p-3 w-40">ประเภท (แก้ไขได้)</th>
+                        <th class="p-3">ยี่ห้อ / รุ่น / สเปค (แก้ไขได้)</th>
+                        <th class="p-3 w-20 text-center">สถานะ</th>
+                        <th class="p-3 w-16 text-center">ลบ</th>
+                    </tr>
                 </thead>
-                <tbody id="scanBufferTable"></tbody>
+                <tbody id="scanBufferTable" class="divide-y divide-slate-100 dark:divide-slate-700">
+                    <tr><td colspan="6" class="p-10 text-center text-slate-400 font-medium">ยังไม่มีรายการที่สแกน</td></tr>
+                </tbody>
             </table>
         </div>
-        <div class="p-4 border-t dark:border-slate-700 bg-white dark:bg-slate-800">
-            <input type="text" id="scanUser" placeholder="ชื่อผู้เบิก / ปลายทาง" class="w-full p-3 mb-3 rounded-xl border border-slate-200">
-            <button onclick="commitScan()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 active:scale-95 transition-transform">ยืนยันนำเข้า/เบิกจ่ายทั้งหมด</button>
+
+        <div class="p-5 sm:p-6 border-t dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col sm:flex-row gap-4">
+            <input type="text" id="scanUser" placeholder="ระบุ: ชื่อคนเบิก / สถานที่ / นำเข้าโดยใคร" class="flex-1 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 dark:bg-slate-900 outline-none focus:border-blue-500 font-medium text-base">
+            <button onclick="commitScan()" class="w-full sm:w-auto px-10 bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 active:scale-95 transition-transform shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 text-lg whitespace-nowrap">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                บันทึกรายการ
+            </button>
         </div>
     </div>
 </div>
@@ -1928,7 +1953,10 @@ let scanBuffer = [];
 
 function openMultiScan() {
     scanBuffer = [];
-    document.getElementById('scanBufferTable').innerHTML = '';
+    document.getElementById('scanModeSelector').value = 'IN';
+    document.getElementById('scanUser').value = '';
+    renderScanBuffer();
+    
     document.getElementById('multiScanModal').classList.remove('hidden');
     document.getElementById('multiScanModal').classList.add('flex');
     setTimeout(() => document.getElementById('barcodeInput').focus(), 300);
@@ -1942,53 +1970,129 @@ function closeMultiScan() {
 function handleBarcodeEnter(sn) {
     if(!sn) return;
     sn = sn.trim();
+    let mode = document.getElementById('scanModeSelector').value;
     
-    // ค้นหาในตารางหลัก (whMainTable) เพื่อดึงข้อมูลอัตโนมัติ
+    if(scanBuffer.find(i => i.sn === sn)) {
+        showToast("สแกน S/N นี้ไปแล้ว!", "error");
+        document.getElementById('barcodeInput').value = ''; 
+        return;
+    }
+
     let foundItem = null;
-    let data = whMainTable.getData();
-    let rowIdx = data.findIndex(r => r[4] === sn); // S/N อยู่คอลัมน์ที่ 4
+    let data = whMainTable ? whMainTable.getData() : [];
+
+    let rowIdx = data.findIndex(r => String(r[4]).trim().toLowerCase() === sn.toLowerCase());
 
     if (rowIdx !== -1) {
-        foundItem = { sn: sn, brand: data[rowIdx][2], model: data[rowIdx][3], type: data[rowIdx][1], row: rowIdx, tableId: 'wh-main' };
+        foundItem = { 
+            sn: sn, 
+            type: data[rowIdx][1] || 'PC', 
+            brand: data[rowIdx][2] || '-', 
+            model: data[rowIdx][3] || '-', 
+            row: rowIdx, 
+            isNew: false 
+        };
+        if(mode === 'IN') showToast(`เจอ ${foundItem.brand} ในคลัง (ระวังของซ้ำ)`, "error");
     } else {
-        foundItem = { sn: sn, brand: 'ใหม่', model: 'ใหม่', type: 'PC', row: -1, tableId: 'wh-main' };
+        foundItem = { 
+            sn: sn, 
+            type: 'PC', 
+            brand: 'ใส่ยี่ห้อ', 
+            model: 'ใส่รุ่น', 
+            row: -1, 
+            isNew: true 
+        };
+        if(mode === 'OUT') showToast(`ไม่พบ ${sn} ในคลัง (ระวังเบิกของผิด)`, "error");
     }
 
     scanBuffer.push(foundItem);
     renderScanBuffer();
-    document.getElementById('barcodeInput').value = ''; // ล้างค่าเพื่อรอสแกนชิ้นต่อไป
+    
+    document.getElementById('barcodeInput').value = ''; 
+    document.getElementById('barcodeInput').focus();
 }
 
 function renderScanBuffer() {
-    document.getElementById('scanBufferTable').innerHTML = scanBuffer.map(item => `
+    let tbody = document.getElementById('scanBufferTable');
+    if (scanBuffer.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-slate-400 font-medium">ยังไม่มีรายการที่สแกน (ยิงบาร์โค้ดด้านบนได้เลย)</td></tr>';
+        return;
+    }
+
+    let mode = document.getElementById('scanModeSelector').value;
+
+    tbody.innerHTML = scanBuffer.map((item, idx) => {
+        let typeSelect = `<select onchange="scanBuffer[${idx}].type=this.value" class="p-2 border rounded-lg bg-slate-50 w-full text-xs">
+            <option value="PC" ${item.type==='PC'?'selected':''}>PC</option>
+            <option value="Notebook" ${item.type==='Notebook'?'selected':''}>Notebook</option>
+            <option value="Monitor" ${item.type==='Monitor'?'selected':''}>Monitor</option>
+            <option value="Printer" ${item.type==='Printer'?'selected':''}>Printer</option>
+            <option value="UPS" ${item.type==='UPS'?'selected':''}>UPS</option>
+            <option value="Server" ${item.type==='Server'?'selected':''}>Server</option>
+            <option value="Switch" ${item.type==='Switch'?'selected':''}>Switch</option>
+        </select>`;
+
+        let detailInput = `<div class="flex gap-2">
+            <input type="text" value="${item.brand}" onchange="scanBuffer[${idx}].brand=this.value" class="p-2 border rounded-lg w-1/2 text-xs" placeholder="ยี่ห้อ">
+            <input type="text" value="${item.model}" onchange="scanBuffer[${idx}].model=this.value" class="p-2 border rounded-lg w-1/2 text-xs" placeholder="รุ่น">
+        </div>`;
+
+        let statusBadge = item.isNew 
+            ? `<span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[10px] font-bold">ของใหม่</span>` 
+            : `<span class="bg-emerald-100 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold">มีในคลัง</span>`;
+
+        return `
         <tr class="border-b dark:border-slate-700">
-            <td class="p-2 font-mono text-blue-600 dark:text-blue-400">${item.sn}</td>
-            <td class="p-2">${item.brand} ${item.model}</td>
-            <td class="p-2 text-center">${item.type}</td>
-        </tr>
-    `).join('');
+            <td class="p-3 text-center text-xs font-bold text-slate-400">${scanBuffer.length - idx}</td>
+            <td class="p-3 font-mono text-indigo-600 font-bold">${item.sn}</td>
+            <td class="p-3">${item.isNew || mode==='IN' ? typeSelect : item.type}</td>
+            <td class="p-3">${item.isNew || mode==='IN' ? detailInput : `${item.brand} ${item.model}`}</td>
+            <td class="p-3 text-center">${statusBadge}</td>
+            <td class="p-3 text-center">
+                <button onclick="scanBuffer.splice(${idx}, 1); renderScanBuffer(); document.getElementById('barcodeInput').focus();" class="text-red-500 hover:bg-red-50 p-2 rounded-lg text-lg">&times;</button>
+            </td>
+        </tr>`;
+    }).reverse().join('');
 }
 
 async function commitScan() {
-    let user = document.getElementById('scanUser').value;
-    if(!user) { showToast("กรุณาระบุชื่อผู้เบิก", "error"); return; }
+    if (scanBuffer.length === 0) { showToast("ยังไม่ได้สแกนอะไรเลย!", "error"); return; }
     
+    let user = document.getElementById('scanUser').value.trim();
+    if(!user) { showToast("กรุณาระบุชื่อผู้เบิก / รายละเอียดการนำเข้า", "error"); return; }
+    
+    let mode = document.getElementById('scanModeSelector').value;
+    let todayStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
+    let inCount = 0, outCount = 0;
+
     scanBuffer.forEach(item => {
-        if (item.row !== -1) {
-            // กรณีมีของอยู่แล้ว -> ตัดสต็อกเบิกออก
-            let qty = parseFloat(whMainTable.getValueFromCoords(3, item.row)) - 1;
-            whMainTable.setValueFromCoords(3, item.row, qty, true);
-            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(สแกน)', detail: `S/N: ${item.sn} ให้ ${user}` });
-        } else {
-            // กรณีของใหม่ -> เพิ่มแถวใหม่
-            whMainTable.insertRow(['', item.type, 'ใหม่', 'ใหม่', item.sn, 'จ่ายแล้ว', new Date().toISOString().split('T')[0], 'สแกนเข้าอัตโนมัติ'], 0, true);
-            whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เพิ่มอุปกรณ์(สแกน)', detail: `S/N: ${item.sn} โดย ${user}` });
+        if (mode === 'IN') {
+            if (item.isNew) {
+                whMainTable.insertRow(['', item.type, item.brand, item.model, item.sn, 'ว่าง (พร้อมจ่าย)', new Date().toISOString().split('T')[0], 'สแกนเข้าคลัง'], 0, true);
+                whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เพิ่มอุปกรณ์(สแกน)', detail: `นำเข้า: ${item.brand} ${item.model} (S/N: ${item.sn}) โดย ${user}` });
+                inCount++;
+            } else {
+                whMainTable.setValueFromCoords(5, item.row, 'ว่าง (พร้อมจ่าย)', true);
+                whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'รับคืนคลัง(สแกน)', detail: `S/N: ${item.sn} รับคืนจาก ${user}` });
+                inCount++;
+            }
+        } else if (mode === 'OUT') {
+            if (!item.isNew) {
+                whMainTable.setValueFromCoords(5, item.row, 'จ่ายแล้ว', true);
+                let oldRmk = String(whMainTable.getValueFromCoords(7, item.row) || '');
+                whMainTable.setValueFromCoords(7, item.row, oldRmk + ` [จ่ายให้: ${user}]`, true);
+                
+                whPendingLogs.push({ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(สแกน)', detail: `จ่าย ${item.brand} (S/N: ${item.sn}) ให้ ${user}` });
+                whWithdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: item.type, specs: `${item.brand} ${item.model}`, user: user, qty: 1, unit: 'เครื่อง', sn: item.sn });
+                outCount++;
+            }
         }
     });
     
     closeMultiScan();
+    showToast(`กำลังบันทึก... นำเข้า: ${inCount} ชิ้น | เบิกออก: ${outCount} ชิ้น`);
     await saveWarehouseData();
-    showToast("บันทึกรายการสแกนเรียบร้อย");
+    alert(`สรุปการทำงานเสร็จสิ้น!\n\nนำเข้าคลังใหม่/รับคืน: ${inCount} รายการ\nตัดสต็อกจ่ายออก: ${outCount} รายการ`);
 }
     
     </script>
