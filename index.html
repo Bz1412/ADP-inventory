@@ -2054,7 +2054,7 @@ nav {
             const now = new Date(); 
             const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             pendingLogs = isEditingConfirmedReport ? [{ station: currentStation, action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ station: currentStation, action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
-            document.getElementById('loadingText').innerText = 'บันทึกรายงาน...'; 
+            document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; 
             document.getElementById('loadingOverlay').classList.remove('hidden'); 
             document.getElementById('loadingOverlay').classList.add('flex');
             
@@ -2072,26 +2072,38 @@ nav {
                     prn: tablePrn.getData().map(r => r.slice(0, -1)), 
                     spc: tableSpc.getData().map(r => r.slice(0, -1)), 
                     cpuMerge: cpuMergeObj, 
-                    lastConfirmed: currentMonthStr 
+                    lastConfirmed: currentMonthStr
                 };
 
-                await fetch(API_URL, { 
+                let response = await fetch(API_URL, { 
                     method: 'POST', 
-                    body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'CONFIRM_MONTHLY',
+                        key: `ADP_${currentGroup}_${currentStation}`, 
+                        value: JSON.stringify(newPayload), 
+                        logs: pendingLogs,
+                        stationName: currentStation,
+                        reportMonth: currentMonthStr
+                    }) 
                 });
 
-                if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
-                
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
-                showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
-                isEditingConfirmedReport = true; 
+                let textResult = await response.text();
+                let result;
+                try { result = JSON.parse(textResult); } catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
+                if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
 
+                if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+                
+                showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จและแจ้งเตือนแล้ว` : `ส่งรายงานสำเร็จและแจ้งเตือนแล้ว`); 
+                isEditingConfirmedReport = true; 
                 document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
                 document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 hasUnsavedDeletions = false; 
             } catch (e) { 
                 console.error(e); 
-                showToast("ส่งรายงานล้มเหลว", "error"); 
+                showToast("ส่งรายงานล้มเหลว: " + e.message, "error"); 
             } finally { 
                 document.getElementById('loadingOverlay').classList.add('hidden'); 
                 document.getElementById('loadingOverlay').classList.remove('flex'); 
