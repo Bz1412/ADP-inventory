@@ -1805,6 +1805,7 @@ nav {
                 onchange: isReadOnly ? null : handleCellChange,
                 updateTable: customRenderTable
             };
+        
             
             let cpuMergeObj = data.cpuMerge || {};
 
@@ -1862,6 +1863,7 @@ nav {
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
                 ], minDimensions: [11, 3] 
             });
+        }
 
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { 
                 ...tableConfig, 
