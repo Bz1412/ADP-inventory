@@ -210,7 +210,7 @@ nav {
         <p id="loadingText" class="text-slate-800 dark:text-white font-medium text-sm tracking-wide animate-pulse">กำลังซิงค์ข้อมูล...</p>
     </div>
 
-    <div id="landingPage" class="fixed inset-0 top-16 bg-[#f8fafc] dark:bg-[#0f172a] z-[50] overflow-y-auto custom-scrollbar flex flex-col items-center py-10 px-4 sm:px-6 animate-fade-in transition-colors duration-300">
+    <div id="landingPage" class="fixed inset-0 top-16 bg-[#f8fafc] dark:bg-[#0f172a] z-[50] overflow-y-auto custom-scrollbar flex flex-col items-center pt-20 pb-10 px-4 sm:px-6 animate-fade-in transition-colors duration-300">
         <div class="text-center mb-8 w-full max-w-4xl animate-slide-up">
             <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl cursor-default">A</div>
             <h2 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">เลือกระบบสถานี/ชุด หรือแผนกของท่าน</h2>
@@ -1780,7 +1780,8 @@ nav {
                 allowInsertColumn: false, 
                 allowDeleteRow: !isReadOnly, 
                 editable: !isReadOnly,       
-                wordWrap: true, 
+                wordWrap: true,
+                pagination: 5,
                 search: true, 
                 tableOverflow: false, // 🌟
                 oneditionstart: isReadOnly ? null : handleSNEdit, 
