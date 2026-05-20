@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ADP-Warehouse Admin</title>
     
+    <meta name="theme-color" content="#0f172a"><!DOCTYPE html>
+<html lang="th" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ADP-Warehouse Admin</title>
+    
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -29,7 +36,9 @@
     <style>
         body { font-family: 'Prompt', sans-serif; -webkit-font-smoothing: antialiased; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 36px; height: 36px; animation: spin 0.8s linear infinite; }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .dark .loader { border-top-color: #60a5fa; border-left-color: #334155; border-right-color: #334155; border-bottom-color: #334155; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
@@ -48,20 +57,59 @@
         .animate-pop-in { animation: pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; }
         
-        .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
-        .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
+        /* 🌟 ปรับแต่งตาราง Jspreadsheet ให้คลีน และไม่ตกขอบ */
+        .jexcel_content { 
+            box-shadow: none !important; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 16px; 
+            padding-bottom: 140px !important; /* กัน Dropdown ตกขอบ */
+            max-height: none !important;      /* ปลดล็อคความสูง */
+            overflow-y: hidden !important;    /* ปิดแถบเลื่อนแนวตั้ง ภายในตาราง */
+        }
         .dark .jexcel_content { border-color: #334155; }
+        
+        .jexcel > thead > tr > td { 
+            background-color: #f8fafc !important; 
+            color: #475569 !important; 
+            font-weight: 600 !important; 
+            font-family: 'Prompt', sans-serif; 
+            font-size: 13px; 
+            border-bottom: 2px solid #e2e8f0 !important; 
+            padding: 12px 4px !important; 
+        }
         .dark .jexcel > thead > tr > td { background-color: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
+        
+        .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
         .dark .jexcel > tbody > tr > td { background-color: #1e293b; color: #e2e8f0; }
+
+        /* 🌟 Z-index แก้ปัญหา Dropdown โดนบัง */
+        .jsuites-dropdown { font-family: 'Prompt', sans-serif !important; text-align: left !important; }
+        .jexcel tbody tr td.edition { z-index: 9999 !important; }
+
+        /* 🌟 แก้ไขช่องค้นหาให้แสดงผลสวยงาม และซ่อนเฉพาะฟิลเตอร์ที่ไม่จำเป็น */
+        .jexcel_search { display: flex !important; align-items: center !important; margin-bottom: 15px !important; }
+        .jss_search, .jexcel_filter { display: none !important; }
+        
+        .jexcel_search input {
+            background-color: #ffffff !important;
+            border: 2px solid #94a3b8 !important;
+            color: #0f172a !important;
+            border-radius: 12px !important;
+            padding: 8px 16px !important;
+            font-family: 'Prompt', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            width: 280px !important;
+        }
+        .jexcel_search input:focus { border-color: #3b82f6 !important; outline: none !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important; }
+        .dark .jexcel_search input { background-color: #1e293b !important; border-color: #475569 !important; color: #ffffff !important; }
+        .dark .jexcel_search input:focus { border-color: #60a5fa !important; box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3) !important; }
 
         .tab-btn.active { background-color: #1e293b; color: #ffffff; border-color: #1e293b; }
         .dark .tab-btn.active { background-color: #e2e8f0; color: #0f172a; border-color: #e2e8f0; }
         
         .hover-card { transition: all 0.2s ease; cursor: pointer; }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
-
-        .jexcel_search, .jss_search, .jexcel_filter { display: none !important; }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
