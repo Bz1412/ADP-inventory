@@ -1323,7 +1323,7 @@ nav {
                 initSpreadsheets(dbData, isReadOnly);
                 
                 const adminBtnIds = ['btnImportOld', 'btnConfirmMonth'];
-                const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"], button[onclick^="mergeSelected"], button[onclick^="unmergeSelected"]');
+                const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"], button[onmousedown*="mergeSelected"], button[onmousedown*="unmergeSelected"]');
 
                 if (isReadOnly) {
                     adminBtnIds.forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
