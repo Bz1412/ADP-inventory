@@ -731,9 +731,13 @@ nav {
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                     <div>
                         <h3 class="text-base md:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> 1. คอมพิวเตอร์และจอมอนิเตอร์</h3>
-                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 จับคู่ CPU และจอภาพ ให้อยู่แถวเดียวกัน | ดับเบิลคลิกเพื่อพิมพ์ข้อความ</p>
+                        <p class="text-[10px] sm:text-xs text-slate-400 mt-1">📌 ลากคลุมดำช่องที่จะรวม แล้วกดผสานเซลล์ (Merge) กรณี 1 คอมฯต่อหลายจอ หรือ 1 จอต่อกับหลายคอมฯ</p>
                     </div>
-                    <button onclick="addNewRow('spreadsheet-cpumon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="mergeSelected('spreadsheet-cpumon')" class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-800 border border-indigo-200 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 font-bold rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">🔗 ผสานเซลล์</button>
+                        <button onclick="unmergeSelected('spreadsheet-cpumon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">⛓️ ยกเลิกผสาน</button>
+                        <button onclick="addNewRow('spreadsheet-cpumon')" class="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-medium rounded-lg text-xs transition-transform active:scale-95 flex items-center gap-1 shrink-0">+ เพิ่มแถวใหม่</button>
+                    </div>
                 </div>
                 <div id="spreadsheet-cpumon" class="w-full text-black min-w-full"></div>
             </div>
@@ -1313,7 +1317,7 @@ nav {
                 initSpreadsheets(dbData, isReadOnly);
                 
                 const adminBtnIds = ['btnImportOld', 'btnConfirmMonth'];
-                const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"]');
+                const addRowButtons = document.querySelectorAll('button[onclick^="addNewRow"], button[onclick^="mergeSelected"], button[onclick^="unmergeSelected"]');
 
                 if (isReadOnly) {
                     adminBtnIds.forEach(id => { let el = document.getElementById(id); if(el) el.classList.add('hidden'); });
@@ -1728,9 +1732,13 @@ nav {
                 oneditionstart: isReadOnly ? null : handleSNEdit, 
                 updateTable: customRenderTable
             };
+            let cpuMergeObj = data.cpuMerge || {};
 
-            tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { ...tableConfig, data: cpumonData, columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, { type: 'text', title: 'รุ่น CPU', width: 130 }, { type: 'text', title: 'S/N CPU', width: 150 }, { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, { type: 'text', title: 'S/N จอภาพ', width: 150 }, { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [13, 3] });
-            tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { ...tableConfig, data: (data.nb && Array.isArray(data.nb) && data.nb.length > 0) ? data.nb : [[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 200 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [9, 3] });
+            tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
+                ...tableConfig, 
+                data: cpumonData, 
+                mergeCells: cpuMergeObj,
+                columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, { type: 'text', title: 'รุ่น CPU', width: 130 }, { type: 'text', title: 'S/N CPU', width: 150 }, { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, { type: 'text', title: 'S/N จอภาพ', width: 150 }, { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [13, 3] });tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { ...tableConfig, data: (data.nb && Array.isArray(data.nb) && data.nb.length > 0) ? data.nb : [[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 200 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [9, 3] });
             tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { ...tableConfig, data: (data.prn && Array.isArray(data.prn) && data.prn.length > 0) ? data.prn : [[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 110 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'text', title: 'ลักษณะสี', width: 100 }, { type: 'text', title: 'Scanner', width: 100 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [11, 3] });
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { ...tableConfig, data: migratedSpc, columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ประเภท', width: 140 }, { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [10, 3] });
         }
@@ -2043,11 +2051,18 @@ nav {
                 let combinedData = tableCPUMON.getData();
                 let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], checkHas(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
                 let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], checkHas(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
-                
-                const newPayload = { cpu: newCpu, nb: tableNB.getData().map(r => r.slice(0, -1)), mon: newMon, prn: tablePrn.getData().map(r => r.slice(0, -1)), spc: tableSpc.getData().map(r => r.slice(0, -1)), lastConfirmed: currentMonthStr };
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) });
-                
-                // 🌟 อัปเดต Cache หน้าเว็บ ให้จำการส่งรายงานทันที
+                let cpuMergeObj = tableCPUMON.options.mergeCells || {};
+
+                const newPayload = { 
+                    cpu: newCpu, 
+                    nb: tableNB.getData().map(r => r.slice(0, -1)), 
+                    mon: newMon, 
+                    prn: tablePrn.getData().map(r => r.slice(0, -1)), 
+                    spc: tableSpc.getData().map(r => r.slice(0, -1)), 
+                    cpuMerge: cpuMergeObj, 
+                    lastConfirmed: originalDbData.lastConfirmed 
+                };await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) });
+
                 if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
                 
                 originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
@@ -2078,13 +2093,16 @@ nav {
                 let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], isValidItem(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
                 let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], isValidItem(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
                 
+                let cpuMergeObj = tableCPUMON.options.mergeCells || {};
+
                 const newPayload = { 
                     cpu: newCpu, 
                     nb: tableNB.getData().map(r => r.slice(0, -1)), 
                     mon: newMon, 
                     prn: tablePrn.getData().map(r => r.slice(0, -1)), 
                     spc: tableSpc.getData().map(r => r.slice(0, -1)), 
-                    lastConfirmed: originalDbData.lastConfirmed 
+                    cpuMerge: cpuMergeObj,
+                    lastConfirmed: originalDbData.lastConfirmed
                 };
 
                 let response = await fetch(API_URL, { 
@@ -3659,6 +3677,89 @@ document.addEventListener('touchmove', (e) => {
         }
     }
 }, { passive: false });
+
+        // 🌟 ชุดฟังก์ชันสำหรับ ควบคุมการผสานเซลล์
+        window.mergeSelected = function(tableId) {
+            let table = document.getElementById(tableId).jexcel;
+            if (!table || !table.selectedCell) {
+                showToast("กรุณาลากคลุมดำเซลล์ที่ต้องการผสานก่อน", "error");
+                return;
+            }
+            
+            // อ่านค่าพื้นที่ที่ลากคลุม [x1, y1, x2, y2]
+            let [x1, y1, x2, y2] = table.selectedCell;
+            let startCol = Math.min(x1, x2);
+            let startRow = Math.min(y1, y2);
+            let endCol = Math.max(x1, x2);
+            let endRow = Math.max(y1, y2);
+
+            let colspan = endCol - startCol + 1;
+            let rowspan = endRow - startRow + 1;
+
+            if (colspan <= 1 && rowspan <= 1) {
+                showToast("กรุณาเลือกมากกว่า 1 ช่องเพื่อทำการผสาน", "error");
+                return;
+            }
+
+            // ฟังก์ชันแปลงตัวเลขคอลัมน์เป็น A, B, C...
+            const getColumnName = (colIndex) => {
+                let letter = '';
+                while (colIndex >= 0) {
+                    letter = String.fromCharCode((colIndex % 26) + 65) + letter;
+                    colIndex = Math.floor(colIndex / 26) - 1;
+                }
+                return letter;
+            };
+
+            let cellName = getColumnName(startCol) + (startRow + 1); // เช่น B2
+            table.setMerge(cellName, colspan, rowspan);
+            hasUnsavedDeletions = true; // เปิดแจ้งเตือนให้เซฟ
+            showToast("🔗 ผสานเซลล์สำเร็จ (อย่าลืมกดบันทึกเพื่อจัดเก็บรูปแบบ)");
+        }
+
+        window.unmergeSelected = function(tableId) {
+            let table = document.getElementById(tableId).jexcel;
+            if (!table || !table.selectedCell) {
+                showToast("กรุณาเลือกพื้นที่ที่มีการผสานเซลล์ไว้", "error");
+                return;
+            }
+            
+            let [x1, y1, x2, y2] = table.selectedCell;
+            let startCol = Math.min(x1, x2);
+            let startRow = Math.min(y1, y2);
+            let endCol = Math.max(x1, x2);
+            let endRow = Math.max(y1, y2);
+            
+            const getColumnName = (colIndex) => {
+                let letter = '';
+                while (colIndex >= 0) {
+                    letter = String.fromCharCode((colIndex % 26) + 65) + letter;
+                    colIndex = Math.floor(colIndex / 26) - 1;
+                }
+                return letter;
+            };
+
+            let unmerged = false;
+            let currentMerges = table.options.mergeCells || {};
+            
+            // วนลูปเพื่อหาว่าตรงที่คลุมมีช่องไหนที่โดนผสานไว้ แล้วสั่งลบออก
+            for(let c = startCol; c <= endCol; c++) {
+                for(let r = startRow; r <= endRow; r++) {
+                    let cellName = getColumnName(c) + (r + 1);
+                    if (currentMerges[cellName]) {
+                        table.removeMerge(cellName);
+                        unmerged = true;
+                    }
+                }
+            }
+            
+            if (unmerged) {
+                hasUnsavedDeletions = true;
+                showToast("⛓️ ยกเลิกผสานเซลล์สำเร็จ");
+            } else {
+                showToast("ไม่พบเซลล์ที่ถูกผสานในพื้นที่ที่เลือก", "error");
+            }
+        }
         
     </script>
 </body>
