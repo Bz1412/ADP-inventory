@@ -113,7 +113,21 @@
         .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
         .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, 4px); }
 
-        .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .jexcel_content { 
+            box-shadow: none !important; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 8px; 
+            padding-bottom: 140px !important;
+        }
+        
+        .jsuites-dropdown {
+            font-family: 'Prompt', sans-serif !important;
+            text-align: left !important;
+        }
+        
+        .jexcel tbody tr td.edition {
+            z-index: 9999 !important;
+        }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
         
@@ -1689,6 +1703,39 @@ nav {
             }
         };
 
+        const handleSelection = function(instance, x, y, x1, y1) {
+            let table = document.getElementById(instance.id).jexcel;
+            if (!table) return;
+            let colType = table.options.columns[x].type;
+
+            if (colType === 'dropdown') {
+                let cell = table.getCell(x, y);
+                if (cell && !cell.classList.contains('edition')) {
+                    setTimeout(() => { table.openEditor(cell, true); }, 10);
+                }
+            }
+        };
+
+        const handleCellChange = function(instance, cell, x, y, value) {
+            let table = document.getElementById(instance.id).jexcel;
+            let colType = table.options.columns[x].type;
+            
+            if (colType === 'dropdown') {
+                let options = table.options.columns[x].source;
+                if (value && !options.includes(value)) {
+                    options.push(value);
+                    
+                    let colTitle = table.options.columns[x].title;
+                    if (colTitle.includes('สถานะ') && !statusOptions.includes(value)) {
+                        statusOptions.push(value);
+                    }
+                    if (colTitle.includes('เชื่อมต่อ') && !connectionOptions.includes(value)) {
+                        connectionOptions.push(value);
+                    }
+                }
+            }
+        };
+
         function initSpreadsheets(data, isReadOnly = false) {
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
@@ -1736,9 +1783,12 @@ nav {
                 pagination: 5,
                 search: true, 
                 tableOverflow: true,
-                oneditionstart: isReadOnly ? null : handleSNEdit, 
+                oneditionstart: isReadOnly ? null : handleSNEdit,
+                onselection: isReadOnly ? null : handleSelection,
+                onchange: isReadOnly ? null : handleCellChange,
                 updateTable: customRenderTable
             };
+            
             let cpuMergeObj = data.cpuMerge || {};
 
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
