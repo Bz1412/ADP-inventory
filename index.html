@@ -1865,7 +1865,6 @@ nav {
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
                 ], minDimensions: [11, 3] 
             });
-        }
 
             tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { 
                 ...tableConfig, 
@@ -1883,6 +1882,7 @@ nav {
                     { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
                 ], minDimensions: [10, 3] 
             });
+        }
 
         async function openAuditLog() {
             document.getElementById('loadingText').innerText = 'โหลดประวัติทั้งหมด...'; 
