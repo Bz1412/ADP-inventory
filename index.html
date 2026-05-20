@@ -832,7 +832,7 @@ nav {
         const statusOptions = ['ปกติ', 'ชำรุด', 'สำรอง', 'ไม่มี', 'RCF']; 
         const connectionOptions = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone', 'Glaive', 'Sentinel', 'RCF'];
         let currentGroup = '', currentStation = ''; 
-        let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null; 
+        let tableCPUMON = null, tablePrn = null, tableSpc = null, tableNB = null;
         let originalDbData = { cpu: [], mon: [], prn: [], spc: [], nb: [], lastConfirmed: null };
         let pendingLogs = []; let rowToDelete = null; let myChart = null;
         let globalAllDataCache = null; let isEditingConfirmedReport = false; let hasUnsavedDeletions = false;
@@ -1905,54 +1905,48 @@ const countStItems = (arr, isPrn=false, isSpc=false) => {
         }
 
         function prepareSave() {
-    if (!tableCPUMON) return; 
+            if (!tableCPUMON) return; 
+            fillMissingSNs(); 
+            let diff = calculateDiff(); let h = ''; pendingLogs = [];
+            pendingWarehouseItems = diff.rawNewItems || []; 
 
-    let rawData = tableCPUMON.getData(); 
-
-    let newCpu = rawData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]);
-    let newMon = rawData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
-
-    fillMissingSNs(); 
-
-    let diff = calculateDiff(); 
-    let h = ''; 
-    pendingLogs = [];
-    pendingWarehouseItems = diff.rawNewItems || []; 
-
-    if (diff.added.length === 0 && diff.removed.length === 0 && diff.updated.length === 0) { 
-        h = `<div class="p-8 text-center text-slate-400 font-medium">ไม่พบการเปลี่ยนแปลง</div>`; 
-    } else {
-        if (diff.updated.length > 0) { 
-            h += `<div class="mb-4 bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-800/30"><p class="font-bold text-blue-700 dark:text-blue-400 mb-2 text-sm">การแก้ไขข้อมูล / สถานะ:</p><ul class="list-disc pl-5 text-blue-600 dark:text-blue-300 text-xs space-y-1">`; 
-            diff.updated.forEach(i => { 
-                h += `<li>${i.label}</li>`; 
-                let actionWord = i.isStatusChange ? (i.status === 'ชำรุด' ? 'แจ้งชำรุด' : 'เปลี่ยนสถานะ') : 'อัปเดตข้อมูล';
-                pendingLogs.push({ station: currentStation, action: actionWord, detail: i.label }); 
-            }); 
-            h += `</ul></div>`; 
+            if (diff.added.length === 0 && diff.removed.length === 0 && diff.updated.length === 0) { 
+                h = `<div class="p-8 text-center text-slate-400 font-medium">ไม่พบการเปลี่ยนแปลง</div>`; 
+            } else {
+                if (diff.updated.length > 0) { 
+                    h += `<div class="mb-4 bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-800/30"><p class="font-bold text-blue-700 dark:text-blue-400 mb-2 text-sm">การแก้ไขข้อมูล / สถานะ:</p><ul class="list-disc pl-5 text-blue-600 dark:text-blue-300 text-xs space-y-1">`; 
+                    diff.updated.forEach(i => { 
+                        h += `<li>${i.label}</li>`; 
+                        let actionWord = 'อัปเดตข้อมูล';
+                        if (i.isStatusChange) {
+                            if (i.status === 'ชำรุด') actionWord = 'แจ้งชำรุด';
+                            else actionWord = 'เปลี่ยนสถานะ';
+                        }
+                        pendingLogs.push({ station: currentStation, action: actionWord, detail: i.label }); 
+                    }); 
+                    h += `</ul></div>`; 
+                }
+                if (diff.added.length > 0) { 
+                    h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30"><p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเบิก / เพิ่มใหม่:</p><ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; 
+                    diff.added.forEach(i => { 
+                        h += `<li>${i}</li>`; 
+                        pendingLogs.push({ station: currentStation, action: 'เพิ่มอุปกรณ์', detail: i }); 
+                    }); 
+                    h += `</ul></div>`; 
+                }
+                if (diff.removed.length > 0) { 
+                    h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30"><p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง / คืนคลัง:</p><ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; 
+                    diff.removed.forEach(i => { 
+                        h += `<li>${i}</li>`; 
+                        pendingLogs.push({ station: currentStation, action: 'ลบอุปกรณ์', detail: i }); 
+                    }); 
+                    h += `</ul></div>`; 
+                }
+            }
+            document.getElementById('diffContent').innerHTML = h; 
+            document.getElementById('confirmModal').classList.remove('hidden'); 
+            document.getElementById('confirmModal').classList.add('flex');
         }
-        if (diff.added.length > 0) { 
-            h += `<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/30"><p class="font-bold text-emerald-700 dark:text-emerald-400 mb-2 text-sm">รายการเบิก / เพิ่มใหม่:</p><ul class="list-disc pl-5 text-emerald-600 dark:text-emerald-300 text-xs space-y-1">`; 
-            diff.added.forEach(i => { 
-                h += `<li>${i}</li>`; 
-                pendingLogs.push({ station: currentStation, action: 'เพิ่มอุปกรณ์', detail: i }); 
-            }); 
-            h += `</ul></div>`; 
-        }
-        if (diff.removed.length > 0) { 
-            h += `<div class="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30"><p class="font-bold text-red-700 dark:text-red-400 mb-2 text-sm">รายการที่ลบทิ้ง / คืนคลัง:</p><ul class="list-disc pl-5 text-red-600 dark:text-red-300 text-xs space-y-1">`; 
-            diff.removed.forEach(i => { 
-                h += `<li>${i}</li>`; 
-                pendingLogs.push({ station: currentStation, action: 'ลบอุปกรณ์', detail: i }); 
-            }); 
-            h += `</ul></div>`; 
-        }
-    }
-
-    document.getElementById('diffContent').innerHTML = h; 
-    document.getElementById('confirmModal').classList.remove('hidden'); 
-    document.getElementById('confirmModal').classList.add('flex');
-}
 
         function fillMissingSNs() {
             let d = new Date(); let todayYMD = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); let tempSnCounter = 1;
