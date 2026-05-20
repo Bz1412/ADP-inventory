@@ -113,39 +113,33 @@
         .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
         .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, 4px); }
 
-        /* 🌟 แก้ปัญหา Dropdown จมหายใต้ตารางล่างสุด 🌟 */
         .jexcel_content { 
             box-shadow: none !important; 
             border: 1px solid #e2e8f0; 
             border-radius: 8px; 
             max-height: none !important;
             overflow-y: hidden !important; 
-            
-            /* ดันพื้นที่ด้านล่างตารางเผื่อไว้ 220px เพื่อให้ Dropdown กางออกได้โดยไม่โดนกรอบตัด */
-            padding-bottom: 220px !important; 
+            overflow-x: auto !important;   
+            padding-bottom: 20px !important; 
         }
 
-        /* ยกกล่องเซลล์ที่กำลังคลิกแก้ไข ให้ลอยเหนือทุกสิ่งในหน้าเว็บ */
         .jexcel tbody tr td.edition {
             z-index: 99999 !important;
         }
 
-        /* ยกตัวเลือก Dropdown ให้ลอยอยู่หน้าสุด */
         .jsuites-dropdown {
             z-index: 99999 !important;
         }
 
-        /* จำกัดความยาวเมนูไม่ให้ยาวทะลุจอ และเพิ่มเงาให้ดูแยกลอยจากพื้นตารางชัดเจน */
         .jsuites-dropdown-list {
             z-index: 999999 !important;
-            max-height: 200px !important; /* ถ้าตัวเลือกยาวกว่า 200px จะมีแถบเลื่อน Scrollbar ให้อัตโนมัติ */
+            max-height: 200px !important;
             overflow-y: auto !important;
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
             border-radius: 8px !important;
             border: 1px solid #e2e8f0 !important;
         }
-        
-        /* สไตล์สำหรับโหมด Dark Mode (ถ้าเว็บมี Dark mode) */
+
         html.dark .jsuites-dropdown-list {
             background-color: #1e293b !important;
             border-color: #475569 !important;
