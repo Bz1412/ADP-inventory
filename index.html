@@ -2050,9 +2050,14 @@ nav {
         function closeMonthlyModal() { document.getElementById('monthlyConfirmModal').classList.add('hidden'); document.getElementById('monthlyConfirmModal').classList.remove('flex'); }
 
         async function executeConfirmMonth() {
-            closeMonthlyModal(); const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            closeMonthlyModal(); 
+            const now = new Date(); 
+            const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
             pendingLogs = isEditingConfirmedReport ? [{ station: currentStation, action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ station: currentStation, action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
-            document.getElementById('loadingText').innerText = 'บันทึกรายงาน...'; document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
+            document.getElementById('loadingText').innerText = 'บันทึกรายงาน...'; 
+            document.getElementById('loadingOverlay').classList.remove('hidden'); 
+            document.getElementById('loadingOverlay').classList.add('flex');
+            
             try {
                 const checkHas = (b, m, s) => { let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim(); return (bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-'); };
                 let combinedData = tableCPUMON.getData();
@@ -2067,15 +2072,30 @@ nav {
                     prn: tablePrn.getData().map(r => r.slice(0, -1)), 
                     spc: tableSpc.getData().map(r => r.slice(0, -1)), 
                     cpuMerge: cpuMergeObj, 
-                    lastConfirmed: originalDbData.lastConfirmed 
-                };await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) });
+                    lastConfirmed: currentMonthStr 
+                };
+
+                await fetch(API_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'SYNC_ASSETS', updates: [{ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload) }], logs: pendingLogs }) 
+                });
 
                 if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
                 
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
-                isEditingConfirmedReport = true; document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+                showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จ` : `ส่งรายงานสำเร็จ`); 
+                isEditingConfirmedReport = true; 
+
+                document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
+                document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
                 hasUnsavedDeletions = false; 
-            } catch (e) { console.error(e); showToast("ส่งรายงานล้มเหลว", "error"); } finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
+            } catch (e) { 
+                console.error(e); 
+                showToast("ส่งรายงานล้มเหลว", "error"); 
+            } finally { 
+                document.getElementById('loadingOverlay').classList.add('hidden'); 
+                document.getElementById('loadingOverlay').classList.remove('flex'); 
+            }
         }
 
         async function executeSaveData() {
