@@ -113,38 +113,7 @@
         .dark .has-tooltip::after { background-color: #f1f5f9; color: #0f172a; }
         .has-tooltip:hover::after { opacity: 1; visibility: visible; transform: translate(-50%, 4px); }
 
-        .jexcel_content { 
-            box-shadow: none !important; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            max-height: none !important;
-            overflow-y: hidden !important;
-            overflow-x: auto !important;
-            padding-bottom: 20px !important; 
-        }
-        
-        .jsuites-dropdown {
-            z-index: 99999 !important;
-        }
-
-        .jsuites-dropdown-list {
-            z-index: 999999 !important;
-            max-height: 200px !important;
-            overflow-y: auto !important;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
-            border-radius: 8px !important;
-            border: 1px solid #e2e8f0 !important;
-        }
-
-        html.dark .jsuites-dropdown-list {
-            background-color: #1e293b !important;
-            border-color: #475569 !important;
-            color: #f8fafc !important;
-        }
-        
-        .jexcel tbody tr td.edition {
-            z-index: 99999 !important;
-        }
+        .jexcel_content { box-shadow: none !important; border: 1px solid #e2e8f0; border-radius: 8px; }
         .jexcel > thead > tr > td { background-color: #f8fafc !important; color: #475569 !important; font-weight: 600 !important; font-family: 'Prompt', sans-serif; font-size: 13px; border-bottom: 2px solid #e2e8f0 !important; padding: 12px 4px !important; }
         .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
         
@@ -227,8 +196,8 @@ nav {
     </div>
 
     <div id="landingPage" class="fixed inset-0 top-16 bg-[#f8fafc] dark:bg-[#0f172a] z-[50] overflow-y-auto custom-scrollbar flex flex-col items-center py-10 px-4 sm:px-6 animate-fade-in transition-colors duration-300">
-    <div class="text-center pt-12 mb-8 w-full max-w-4xl animate-slide-up">
-        <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl cursor-default">A</div>
+        <div class="text-center mb-8 w-full max-w-4xl animate-slide-up">
+            <div class="w-20 h-20 bg-slate-900 dark:bg-white rounded-3xl mx-auto flex items-center justify-center text-white dark:text-slate-900 font-bold text-4xl mb-5 shadow-xl cursor-default">A</div>
             <h2 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">เลือกระบบสถานี/ชุด หรือแผนกของท่าน</h2>
             <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">กรุณาคลิกเลือกสถานี/ชุด หรือแผนกเพื่อตรวจเช็คสถานภาพ</p>
         </div>
@@ -1720,41 +1689,6 @@ nav {
             }
         };
 
-        const handleSelection = function(instance, x, y, x1, y1) {
-            let table = document.getElementById(instance.id).jexcel;
-            if (!table) return;
-            let colType = table.options.columns[x].type;
-
-            if (colType === 'dropdown') {
-                let cell = table.getCell(x, y);
-                if (cell && !cell.classList.contains('edition')) {
-                    setTimeout(() => { table.openEditor(cell, true); }, 10);
-                }
-            }
-        };
-
-        const handleCellChange = function(instance, cell, x, y, value) {
-            let table = document.getElementById(instance.id).jexcel;
-            if (!table) return;
-            
-            let colConfig = table.options.columns[x];
-
-            if (colConfig.type === 'dropdown') {
-                let options = colConfig.source;
-
-                if (value && !options.includes(value)) {
-                    options.push(value);
-                    
-                    let colTitle = colConfig.title;
-                    if (colTitle.includes('สถานะ') && typeof statusOptions !== 'undefined') {
-                        if (!statusOptions.includes(value)) {
-                            statusOptions.push(value);
-                        }
-                    }
-                }
-            }
-        };
-
         function initSpreadsheets(data, isReadOnly = false) {
             document.getElementById('spreadsheet-cpumon').innerHTML=''; 
             document.getElementById('spreadsheet-nb').innerHTML=''; 
@@ -1792,96 +1726,28 @@ nav {
             if (migratedSpc.length === 0) migratedSpc = [[]];
 
             const tableConfig = { 
-    tableWidth: "100%",
-    allowInsertRow: !isReadOnly, 
-    allowManualInsertRow: !isReadOnly, 
-    allowInsertColumn: false, 
-    allowDeleteRow: !isReadOnly, 
-    editable: !isReadOnly,       
-    wordWrap: true, 
-    pagination: 5,
-    search: true, 
-    tableOverflow: false,
-    oneditionstart: isReadOnly ? null : handleSNEdit,
-    onselection: isReadOnly ? null : handleSelection,
-    onchange: isReadOnly ? null : handleCellChange,
-    updateTable: customRenderTable
-};
-        
-            
+                tableWidth: "100%",
+                allowInsertRow: !isReadOnly, 
+                allowManualInsertRow: !isReadOnly, 
+                allowInsertColumn: false, 
+                allowDeleteRow: !isReadOnly, 
+                editable: !isReadOnly,       
+                wordWrap: true, 
+                pagination: 5,
+                search: true, 
+                tableOverflow: true,
+                oneditionstart: isReadOnly ? null : handleSNEdit, 
+                updateTable: customRenderTable
+            };
             let cpuMergeObj = data.cpuMerge || {};
 
             tableCPUMON = jspreadsheet(document.getElementById('spreadsheet-cpumon'), { 
                 ...tableConfig, 
                 data: cpumonData, 
                 mergeCells: cpuMergeObj,
-                columns: [ 
-                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, 
-                    { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, 
-                    { type: 'text', title: 'รุ่น CPU', width: 130 }, 
-                    { type: 'text', title: 'S/N CPU', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions }, 
-                    { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, 
-                    { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, 
-                    { type: 'text', title: 'S/N จอภาพ', width: 150 }, 
-                    { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
-                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
-                ], minDimensions: [13, 3] 
-            });
-
-            tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { 
-                ...tableConfig, 
-                data: (data.nb && Array.isArray(data.nb) && data.nb.length > 0) ? data.nb : [[]], 
-                columns: [ 
-                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
-                    { type: 'text', title: 'รุ่น', width: 150 }, 
-                    { type: 'text', title: 'S/N', width: 170 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 130, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 200 }, 
-                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
-                ], minDimensions: [9, 3] 
-            });
-
-            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { 
-                ...tableConfig, 
-                data: (data.prn && Array.isArray(data.prn) && data.prn.length > 0) ? data.prn : [[]], 
-                columns: [ 
-                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 110 }, 
-                    { type: 'text', title: 'รุ่น', width: 150 }, 
-                    { type: 'text', title: 'S/N', width: 170 }, 
-                    { type: 'text', title: 'ลักษณะสี', width: 100 }, 
-                    { type: 'text', title: 'Scanner', width: 100 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 130, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
-                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
-                ], minDimensions: [11, 3] 
-            });
-
-            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { 
-                ...tableConfig, 
-                data: migratedSpc, 
-                columns: [ 
-                    { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, 
-                    { type: 'text', title: 'ประเภท', width: 140 }, 
-                    { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, 
-                    { type: 'text', title: 'ยี่ห้อ', width: 120 }, 
-                    { type: 'text', title: 'รุ่น', width: 140 }, 
-                    { type: 'text', title: 'S/N', width: 160 }, 
-                    { type: 'dropdown', title: 'สถานะ', width: 130, source: statusOptions }, 
-                    { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions }, 
-                    { type: 'text', title: 'หมายเหตุ', width: 180 }, 
-                    { type: 'html', title: 'จัดการ', width: 130, readOnly: true } 
-                ], minDimensions: [10, 3] 
-            });
+                columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 160 }, { type: 'text', title: 'ยี่ห้อ CPU', width: 100 }, { type: 'text', title: 'รุ่น CPU', width: 130 }, { type: 'text', title: 'S/N CPU', width: 150 }, { type: 'dropdown', title: 'สถานะ CPU', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'ยี่ห้อ จอภาพ', width: 100 }, { type: 'text', title: 'รุ่น จอภาพ', width: 130 }, { type: 'text', title: 'S/N จอภาพ', width: 150 }, { type: 'dropdown', title: 'สถานะ จอภาพ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [13, 3] });tableNB = jspreadsheet(document.getElementById('spreadsheet-nb'), { ...tableConfig, data: (data.nb && Array.isArray(data.nb) && data.nb.length > 0) ? data.nb : [[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 200 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [9, 3] });
+            tablePrn = jspreadsheet(document.getElementById('spreadsheet-prn'), { ...tableConfig, data: (data.prn && Array.isArray(data.prn) && data.prn.length > 0) ? data.prn : [[]], columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ผู้ใช้งาน', width: 180 }, { type: 'text', title: 'ยี่ห้อ', width: 110 }, { type: 'text', title: 'รุ่น', width: 150 }, { type: 'text', title: 'S/N', width: 170 }, { type: 'text', title: 'ลักษณะสี', width: 100 }, { type: 'text', title: 'Scanner', width: 100 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [11, 3] });
+            tableSpc = jspreadsheet(document.getElementById('spreadsheet-spc'), { ...tableConfig, data: migratedSpc, columns: [ { type: 'numeric', title: 'ลำดับ', width: 50, readOnly: true }, { type: 'text', title: 'ประเภท', width: 140 }, { type: 'text', title: 'ผู้ใช้งาน', width: 150 }, { type: 'text', title: 'ยี่ห้อ', width: 120 }, { type: 'text', title: 'รุ่น', width: 140 }, { type: 'text', title: 'S/N', width: 160 }, { type: 'dropdown', title: 'สถานะ', width: 100, source: statusOptions, autocomplete: true, newOptions: true }, { type: 'dropdown', title: 'การเชื่อมต่อ', width: 120, source: connectionOptions, autocomplete: true, newOptions: true }, { type: 'text', title: 'หมายเหตุ', width: 180 }, { type: 'html', title: 'จัดการ', width: 130, readOnly: true } ], minDimensions: [10, 3] });
         }
 
         async function openAuditLog() {
