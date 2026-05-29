@@ -618,7 +618,11 @@ nav {
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> สถานะการส่งรายงานประจำเดือน</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ยอดสรุปสถานีประจำเดือน: <span id="currentReportMonth" class="font-bold text-indigo-600 dark:text-indigo-400">...</span></p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+    ยอดสรุปสถานี: 
+    <select id="monthSelector" onchange="changeReportMonth()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+    </select>
+</p>
                 </div>
                 <div class="flex items-center gap-4 text-sm font-medium bg-slate-50 dark:bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-100 dark:border-slate-700">
                     <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <span class="text-slate-600 dark:text-slate-300">ส่งแล้ว:</span> <span id="countReported" class="text-slate-900 dark:text-white font-bold">0</span></div>
@@ -876,6 +880,12 @@ nav {
         let currentUserRole = null; 
         let loginTarget = null;
 
+        let selectedReportMonth = null;
+        function changeReportMonth() {
+            selectedReportMonth = document.getElementById('monthSelector').value;
+            loadDashboardStats();
+        }
+
         function updateClock() {
             const now = new Date();
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -1081,10 +1091,21 @@ nav {
             setTimeout(() => { toast.classList.add('toast-exit'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        function getMonthBadge(lastConfirmedStr) {
-            const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'); const currentDay = now.getDate();
-            if (lastConfirmedStr === currentMonthStr) { return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-emerald-50 text-emerald-600 font-semibold w-max mx-auto border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">✅ ส่งแล้ว</span>'; } 
-            else { if (currentDay <= 5) return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-amber-50 text-amber-600 font-semibold w-max mx-auto border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">⚠️ รอส่ง</span>'; else return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-red-50 text-red-500 font-semibold w-max mx-auto border border-red-100 dark:bg-red-900/20 dark:border-red-800">❌ ค้างส่ง</span>'; }
+        function getMonthBadge(lastConfirmedStr, checkMonthStr = null) {
+            const now = new Date(); 
+            const actualCurrentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const targetMonth = checkMonthStr || actualCurrentMonth;
+            const currentDay = now.getDate();
+            
+            if (lastConfirmedStr === targetMonth) { 
+                return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-emerald-50 text-emerald-600 font-semibold w-max mx-auto border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">✅ ส่งแล้ว</span>'; 
+            } else { 
+                if (targetMonth < actualCurrentMonth) {
+                    return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-red-50 text-red-500 font-semibold w-max mx-auto border border-red-100 dark:bg-red-900/20 dark:border-red-800">❌ ค้างส่ง</span>';
+                }
+                if (currentDay <= 5) return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-amber-50 text-amber-600 font-semibold w-max mx-auto border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">⚠️ รอส่ง</span>'; 
+                else return '<span class="px-2.5 py-1 text-[10px] rounded-md bg-red-50 text-red-500 font-semibold w-max mx-auto border border-red-100 dark:bg-red-900/20 dark:border-red-800">❌ ค้างส่ง</span>'; 
+            }
         }
 
         const indexPage = document.getElementById('indexPage');
@@ -1112,13 +1133,26 @@ nav {
                 const response = await fetch(`${API_URL}?key=ALL_DATA`); const result = await response.json();
                 let totalCPU = 0, totalMon = 0, totalPrn = 0, totalSpc = 0, totalNB = 0; let statCounts = { 'ปกติ': 0, 'ชำรุด': 0, 'สำรอง': 0, 'RCF': 0 };
                 
-                const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                const now = new Date(); 
+                const actualCurrentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                if (!selectedReportMonth) selectedReportMonth = actualCurrentMonthStr;
                 const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-                document.getElementById('currentReportMonth').innerText = `${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
+                
+                let monthSelect = document.getElementById('monthSelector');
+                if (monthSelect && monthSelect.options.length === 0) {
+                    for (let i = 0; i < 12; i++) {
+                        let d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        let valStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                        let textStr = `${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
+                        monthSelect.add(new Option(textStr, valStr));
+                    }
+                    monthSelect.value = selectedReportMonth;
+                }
+                const currentMonthStr = selectedReportMonth;
 
                 let reportedStations = []; let pendingStations = []; let processedStations = new Set(); let allExpectedStations = [];
                 groupOrder.forEach(g => { inventoryGroups[g].forEach(s => { allExpectedStations.push(s); }); });
-                groupOrder.forEach(g => inventoryGroups[g].forEach(s => { const badge = document.getElementById(`badge_${g}_${s}`); if(badge) badge.outerHTML = getMonthBadge(null).replace('<span', `<span id="badge_${g}_${s}"`); }));
+                groupOrder.forEach(g => inventoryGroups[g].forEach(s => { const badge = document.getElementById(`badge_${g}_${s}`); if(badge) badge.outerHTML = getMonthBadge(null, currentMonthStr).replace('<span', `<span id="badge_${g}_${s}"`); }));
                 
                 if (result.value) {
                     globalAllDataCache = result.value;
@@ -1152,9 +1186,12 @@ nav {
 
                         if(parts.length >= 3) { 
                             const stGroup = parts[1]; const stName = parts[2]; processedStations.add(stName);
-                            if (dbData.lastConfirmed === currentMonthStr) { reportedStations.push(stName); } else { pendingStations.push(stName); }
+                            let confirmedList = dbData.confirmedMonths || (dbData.lastConfirmed ? [dbData.lastConfirmed] : []);
+                            let isConfirmed = confirmedList.includes(currentMonthStr);
+                            
+                            if (isConfirmed) { reportedStations.push(stName); } else { pendingStations.push(stName); }
                             const badge = document.getElementById(`badge_${stGroup}_${stName}`); 
-                            if(badge) badge.outerHTML = getMonthBadge(dbData.lastConfirmed).replace('<span', `<span id="badge_${stGroup}_${stName}"`); 
+                            if(badge) badge.outerHTML = getMonthBadge(isConfirmed ? currentMonthStr : null, currentMonthStr).replace('<span', `<span id="badge_${stGroup}_${stName}"`);
                             const countDiv = document.getElementById(`counts_${stGroup}_${stName}`);
                             if(countDiv) {
                                 countDiv.classList.remove('hidden');
@@ -1334,11 +1371,13 @@ nav {
                 dbData.spc = migratedSpc.length > 0 ? migratedSpc : [[]];
                 originalDbData = JSON.parse(JSON.stringify(dbData)); 
                 
-                const now = new Date(); const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                const now = new Date(); 
+                const currentMonthStr = selectedReportMonth || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
                 const btnConfirm = document.getElementById('btnConfirmMonth'); 
                 if (btnConfirm) btnConfirm.classList.remove('hidden'); 
                 
-                if (dbData.lastConfirmed === currentMonthStr) { 
+                let confirmedList = dbData.confirmedMonths || (dbData.lastConfirmed ? [dbData.lastConfirmed] : []);
+                if (confirmedList.includes(currentMonthStr)) {
                     isEditingConfirmedReport = true; 
                     if (btnConfirm) {
                         btnConfirm.className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
@@ -2085,7 +2124,9 @@ nav {
         async function executeConfirmMonth() {
             closeMonthlyModal(); 
             const now = new Date(); 
-            const currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+            const currentMonthStr = selectedReportMonth || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+            let confirmedList = originalDbData.confirmedMonths || (originalDbData.lastConfirmed ? [originalDbData.lastConfirmed] : []);
+            if (!confirmedList.includes(currentMonthStr)) confirmedList.push(currentMonthStr);
             pendingLogs = isEditingConfirmedReport ? [{ station: currentStation, action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ station: currentStation, action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
             document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; 
             document.getElementById('loadingOverlay').classList.remove('hidden'); 
@@ -2105,7 +2146,8 @@ nav {
                     prn: tablePrn.getData().map(r => r.slice(0, -1)), 
                     spc: tableSpc.getData().map(r => r.slice(0, -1)), 
                     cpuMerge: cpuMergeObj, 
-                    lastConfirmed: currentMonthStr
+                    lastConfirmed: currentMonthStr,
+                    confirmedMonths: confirmedList
                 };
 
                 let response = await fetch(API_URL, { 
@@ -2166,6 +2208,7 @@ nav {
                 let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], isValidItem(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
                 
                 let cpuMergeObj = tableCPUMON.options.mergeCells || {};
+                let confirmedList = originalDbData.confirmedMonths || (originalDbData.lastConfirmed ? [originalDbData.lastConfirmed] : []);
 
                 const newPayload = { 
                     cpu: newCpu, 
@@ -2174,7 +2217,8 @@ nav {
                     prn: tablePrn.getData().map(r => r.slice(0, -1)), 
                     spc: tableSpc.getData().map(r => r.slice(0, -1)), 
                     cpuMerge: cpuMergeObj,
-                    lastConfirmed: originalDbData.lastConfirmed
+                    lastConfirmed: originalDbData.lastConfirmed,
+                    confirmedMonths: confirmedList
                 };
 
                 let response = await fetch(API_URL, { 
