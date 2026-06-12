@@ -305,15 +305,30 @@
 
     <div class="w-full px-4 sm:px-6 lg:px-8 mt-6">
         
-        <div class="flex flex-wrap gap-2 mb-8 animate-slide-up bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 w-max">
-            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700">📊 แดชบอร์ดคลัง</button>
-            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📦 คลังส่วนกลาง (Stock)</button>
-            <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">⚙️ อะไหล่ & อุปกรณ์</button>
-            <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">🖨️ หมึกพิมพ์</button>
-            <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">📍 ข้อมูลการเบิกจ่าย</button>
+        <div class="flex flex-nowrap overflow-x-auto custom-scrollbar gap-2 mb-8 animate-slide-up bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 w-full" style="-webkit-overflow-scrolling: touch;">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn active px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 whitespace-nowrap shrink-0">📊 แดชบอร์ดคลัง</button>
+            <button onclick="switchTab('warehouse')" id="tab-warehouse" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">📦 คลังส่วนกลาง (Stock)</button>
+            <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">⚙️ อะไหล่ & อุปกรณ์</button>
+            <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">🖨️ หมึกพิมพ์</button>
+            <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">📍 ข้อมูลการเบิกจ่าย</button>
         </div>
 
         <div id="view-dashboard" class="animate-fade-in">
+            <div class="bg-gradient-to-br from-indigo-600 to-blue-700 p-5 sm:p-6 rounded-3xl shadow-lg border border-indigo-500 mb-6 animate-slide-up relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
+                <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2 mb-3 relative z-10">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    เช็คสต็อก อะไหล่ & หมึกพิมพ์
+                </h2>
+                <div class="relative w-full z-10 flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="dashStockSearchInput" onkeyup="if(event.key === 'Enter') executeDashStockSearch()" placeholder="พิมพ์รุ่นปริ้นเตอร์ (เพื่อหาหมึก), ชื่ออะไหล่..." class="w-full pl-4 pr-4 py-3.5 text-base sm:text-lg bg-white border-2 border-transparent text-slate-900 rounded-2xl outline-none focus:border-blue-300 focus:ring-4 focus:ring-blue-500/30 transition-all font-medium shadow-inner">
+                    </div>
+                    <button onclick="executeDashStockSearch()" class="bg-slate-900 text-white px-5 sm:px-8 py-3.5 rounded-2xl font-bold hover:bg-black active:scale-95 transition-transform whitespace-nowrap shadow-md">
+                        ค้นหา
+                    </button>
+                </div>
+            </div>
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
     <div>
         <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
@@ -2412,7 +2427,165 @@ async function commitScan() {
                 showToast('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'error');
             }
         }
+
+        // 🌟 ชุดคำสั่งสำหรับ "เช็คสต็อกด่วน (Quick Stock Lookup)"
+        let allStockLookupData = [];
+
+        function executeDashStockSearch() {
+            let query = document.getElementById('dashStockSearchInput').value.trim();
+            if (!query) { showToast("กรุณาพิมพ์คำค้นหาก่อน", "error"); return; }
+            openStockLookup(query);
+            document.getElementById('dashStockSearchInput').value = ''; // เคลียร์ช่องค้นหาหน้าหลัก
+        }
+
+        function openStockLookup(initialQuery = '') {
+            if (!whInkTable || !whAccTable || !whPartsTable) {
+                showToast("ระบบกำลังโหลดข้อมูล กรุณารอสักครู่...", "error");
+                return;
+            }
+            
+            allStockLookupData = [];
+            
+            // ฟังก์ชันดึงข้อมูลจากตารางมาแปลงเป็น Card
+            const extractData = (tableObj, categoryPrefix, isInk = false) => {
+                if(!tableObj) return;
+                let data = tableObj.getData();
+                data.forEach((r, rowIdx) => {
+                    let type = String(r[1] || '').trim();
+                    let specs = String(r[2] || '').trim(); 
+                    let sn = String(r[3] || '').trim();
+                    
+                    let qtyIdx = categoryPrefix === 'Acc' ? 4 : 3;
+                    let unitIdx = categoryPrefix === 'Acc' ? 5 : 4;
+                    let locIdx = categoryPrefix === 'Acc' ? 6 : 5;
+                    
+                    let qty = parseFloat(r[qtyIdx]);
+                    if (isNaN(qty)) return; // ข้ามแถวที่ไม่มีจำนวน
+
+                    let unit = String(r[unitIdx] || 'ชิ้น').trim();
+                    let loc = String(r[locIdx] || '-').trim();
+                    
+                    let catName = isInk ? 'หมึกพิมพ์' : type;
+                    let detailStr = isInk ? `รองรับปริ้นเตอร์: ${specs}` : specs;
+                    if(categoryPrefix === 'Acc' && sn && sn !== '-') detailStr += ` | S/N: ${sn}`;
+                    
+                    let searchString = `${catName} ${detailStr} ${type} ${loc}`.toLowerCase();
+                    
+                    allStockLookupData.push({
+                        category: isInk ? '🖨️ หมึกพิมพ์' : (categoryPrefix === 'Acc' ? '⌨️ อุปกรณ์คอมฯ' : '⚙️ อะไหล่คอมฯ'),
+                        name: isInk ? type : type, // ชื่อรุ่นหมึก หรือ ชื่อประเภทอะไหล่
+                        detail: detailStr,
+                        qty: qty,
+                        unit: unit,
+                        location: loc,
+                        searchString: searchString,
+                        tableId: isInk ? 'wh-ink' : (categoryPrefix === 'Acc' ? 'wh-acc' : 'wh-parts'),
+                        rowIdx: rowIdx
+                    });
+                });
+            };
+            
+            extractData(whInkTable, 'Ink', true);
+            extractData(whPartsTable, 'Parts', false);
+            extractData(whAccTable, 'Acc', false);
+
+            document.getElementById('stockLookupModal').classList.remove('hidden');
+            document.getElementById('stockLookupModal').classList.add('flex');
+            
+            document.getElementById('modalStockSearchInput').value = initialQuery;
+            performStockLookup(initialQuery);
+        }
+
+        function closeStockLookup() {
+            document.getElementById('stockLookupModal').classList.add('hidden');
+            document.getElementById('stockLookupModal').classList.remove('flex');
+        }
+
+        function performStockLookup(query) {
+            query = query.toLowerCase().trim();
+            document.getElementById('stockLookupQueryDisplay').innerText = query ? `คำค้นหา: "${query}"` : "แสดงทั้งหมด";
+            
+            let resultsContainer = document.getElementById('stockLookupResults');
+            let matches = allStockLookupData;
+            
+            if (query) {
+                // ตัดคำด้วยช่องว่าง เพื่อให้พิมพ์สลับตำแหน่งได้ เช่น "หมึก m201"
+                let keywords = query.split(/\s+/);
+                matches = allStockLookupData.filter(item => {
+                    return keywords.every(kw => item.searchString.includes(kw));
+                });
+            }
+            
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `<div class="p-10 flex flex-col items-center text-center"><div class="text-4xl mb-3 opacity-30">📦</div><p class="text-slate-500 font-bold text-lg dark:text-slate-400">ไม่พบของในคลัง</p><p class="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาให้สั้นลง เช่น พิมพ์แค่รุ่นปริ้นเตอร์</p></div>`;
+                return;
+            }
+            
+            // เรียงให้ของที่มีเหลือ (qty > 0) ขึ้นก่อนของหมดสต็อก
+            matches.sort((a, b) => b.qty - a.qty);
+            
+            let html = '';
+            matches.forEach(item => {
+                let isOut = item.qty <= 0;
+                let isLow = item.qty > 0 && item.qty <= 2;
+                
+                let borderColor = isOut ? 'border-red-200 dark:border-red-900/50' : (isLow ? 'border-amber-200 dark:border-amber-900/50' : 'border-slate-200 dark:border-slate-700');
+                let tagColor = isOut ? 'bg-red-500' : (isLow ? 'bg-amber-500' : 'bg-emerald-500');
+                
+                let qtyBadgeClass = isOut ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : (isLow ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100');
+                let qtyText = isOut ? '❌ หมดสต็อก' : `คงเหลือ ${item.qty} ${item.unit}`;
+                
+                html += `
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-2 border ${borderColor}">
+                    <div class="absolute top-0 left-0 w-1.5 h-full ${tagColor}"></div>
+                    <div class="flex justify-between items-start pl-2 gap-2">
+                        <div class="flex-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">${item.category}</span>
+                            <h4 class="font-bold text-slate-800 dark:text-white text-base md:text-lg leading-tight break-words">${item.name}</h4>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-black border shadow-sm ${qtyBadgeClass} block">${qtyText}</span>
+                        </div>
+                    </div>
+                    <div class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl mt-1 ml-2 border border-slate-100 dark:border-slate-700/50">
+                        ${item.detail}
+                    </div>
+                    <div class="flex justify-between items-center mt-2 pl-2">
+                        <span class="text-[10px] sm:text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1.5 rounded-lg flex items-center gap-1 shrink-0 max-w-[60%] truncate" title="สถานที่เก็บ">
+                            <svg class="w-3 h-3 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg> 
+                            ${item.location}
+                        </span>
+                        ${!isOut ? `<button onclick="closeStockLookup(); setTimeout(()=>openWithdrawModal('${item.tableId}', ${item.rowIdx}), 300)" class="text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl transition-transform active:scale-95 shadow-md flex items-center gap-1 shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> เบิกเลย</button>` : ''}
+                    </div>
+                </div>`;
+            });
+            resultsContainer.innerHTML = html;
+        }
     
     </script>
+
+    <div id="stockLookupModal" class="fixed inset-0 bg-slate-900/80 z-[900] hidden flex-col justify-end sm:justify-center items-center backdrop-blur-sm sm:p-4 no-print animate-fade-in" style="-webkit-overflow-scrolling: auto;">
+        <div class="bg-[#f8fafc] dark:bg-slate-800 w-full max-w-2xl flex flex-col overflow-hidden sm:rounded-3xl rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.2)] sm:shadow-2xl h-[85vh] sm:h-[80vh] animate-slide-up">
+            
+            <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800/80 sticky top-0 z-10">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🔎 ผลการค้นหาสต็อก</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5" id="stockLookupQueryDisplay">คำค้นหา: ...</p>
+                </div>
+                <button onclick="closeStockLookup()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full w-9 h-9 flex items-center justify-center font-bold transition-colors text-lg outline-none">&times;</button>
+            </div>
+
+            <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-10 shrink-0">
+                <div class="relative w-full">
+                    <input type="text" id="modalStockSearchInput" onkeyup="performStockLookup(this.value)" placeholder="พิมพ์ค้นหาเพิ่มเติมในนี้..." class="w-full pl-10 pr-4 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl outline-none focus:border-indigo-500 font-medium text-base transition-colors">
+                    <svg class="w-5 h-5 absolute left-3.5 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+            </div>
+
+            <div id="stockLookupResults" class="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-3" style="-webkit-overflow-scrolling: touch;">
+                </div>
+        </div>
+    </div>
+    
 </body>
 </html>
