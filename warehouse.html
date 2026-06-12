@@ -307,8 +307,14 @@
         <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">🚀 จัดการเบิกจ่ายด่วน (Quick Withdraw)</h2>
         <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">ค้นหาและเบิกอะไหล่ซ่อม/อุปกรณ์สิ้นเปลือง ตัดสต็อกทันที</p>
     </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+
+        <button onclick="openReportModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        รายงานสรุปสต็อก
+    </button>   
     
-    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
         <button onclick="openMultiScan()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
             
@@ -317,64 +323,6 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 
             ทำรายการเบิกจ่าย
         </button>
-    </div>
-                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-    
-    <button onclick="openReportModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        รายงานสรุปสต็อก
-    </button>
-    
-    <button onclick="openMultiScan()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-indigo-500/30 transition-transform active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap">
-        ```
-
----
-
-### 🟢 2. เพิ่มหน้าต่าง Modal สำหรับแสดงตารางรายงาน
-เลื่อนลงไปด้านล่างสุดของส่วน `<body>` (ก่อนแท็ก `<script>` อันแรก) แล้ววางหน้าต่าง Modal นี้ลงไปรวมกับพวกหน้าต่างสแกน/ลบข้อมูลครับ:
-
-```html
-    <div id="reportSummaryModal" class="fixed inset-0 bg-slate-900/80 z-[800] hidden flex-col p-3 sm:p-6 no-print animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full mx-auto h-[95vh] flex flex-col overflow-hidden shadow-2xl">
-            
-            <div class="p-4 sm:p-6 border-b dark:border-slate-700 flex flex-wrap justify-between items-center bg-slate-50 dark:bg-slate-800/50 gap-4">
-                <h3 class="font-bold text-lg sm:text-xl flex items-center gap-2">📊 รายงานสรุปสต็อกคงเหลือ</h3>
-                <button onclick="closeReportModal()" class="bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-bold transition-colors outline-none">ปิดหน้าต่าง</button>
-            </div>
-
-            <div class="p-4 sm:p-6 border-b dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div class="w-full sm:w-1/2">
-                    <label class="block text-xs font-bold text-slate-500 mb-1">เลือกหมวดหมู่ที่ต้องการสรุป:</label>
-                    <select id="reportFilterDropdown" onchange="generateSummaryTable(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-sm rounded-xl px-4 py-2.5 font-bold outline-none cursor-pointer text-slate-700 dark:text-slate-200">
-                        <option value="ALL">📦 รวมอุปกรณ์และอะไหล่ทั้งหมด</option>
-                        <option value="MAIN">💻 เฉพาะอุปกรณ์หลัก (คอมฯ, โน๊ตบุ๊ค, เครื่องพิมพ์, ฯลฯ)</option>
-                        <option value="PARTS">⚙️ เฉพาะอะไหล่ และ อุปกรณ์เสริมคอมพิวเตอร์</option>
-                        <option value="CONSUMABLES">🖨️ เฉพาะวัสดุสิ้นเปลือง (หมึกพิมพ์)</option>
-                    </select>
-                </div>
-                <button onclick="exportSummaryExcel()" class="w-full sm:w-auto px-8 bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 active:scale-95 transition-transform shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Export เป็น Excel (ส่งรายงาน)
-                </button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-0 sm:p-4 custom-scrollbar bg-slate-100/50 dark:bg-[#0f172a]">
-                <table class="w-full text-sm text-left border-collapse bg-white dark:bg-slate-800 sm:rounded-xl overflow-hidden shadow-sm">
-                    <thead class="sticky top-0 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs">
-                        <tr>
-                            <th class="p-3 w-16 text-center">ลำดับ</th>
-                            <th class="p-3 w-40">หมวดหมู่คลัง</th>
-                            <th class="p-3 w-48">ประเภทอุปกรณ์</th>
-                            <th class="p-3">ยี่ห้อ / รุ่น / สเปค / รายละเอียด</th>
-                            <th class="p-3 w-32 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">จำนวนคงเหลือ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportSummaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
-                        <tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium">กำลังคำนวณข้อมูล...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -626,6 +574,49 @@
         </div>
     </div>
 </div>
+
+        <div id="reportSummaryModal" class="fixed inset-0 bg-slate-900/80 z-[800] hidden flex-col p-3 sm:p-6 no-print animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full mx-auto h-[95vh] flex flex-col overflow-hidden shadow-2xl">
+            
+            <div class="p-4 sm:p-6 border-b dark:border-slate-700 flex flex-wrap justify-between items-center bg-slate-50 dark:bg-slate-800/50 gap-4">
+                <h3 class="font-bold text-lg sm:text-xl flex items-center gap-2">📊 รายงานสรุปสต็อกคงเหลือ</h3>
+                <button onclick="closeReportModal()" class="bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-bold transition-colors outline-none">ปิดหน้าต่าง</button>
+            </div>
+
+            <div class="p-4 sm:p-6 border-b dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="w-full sm:w-1/2">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">เลือกหมวดหมู่ที่ต้องการสรุป:</label>
+                    <select id="reportFilterDropdown" onchange="generateSummaryTable(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-sm rounded-xl px-4 py-2.5 font-bold outline-none cursor-pointer text-slate-700 dark:text-slate-200">
+                        <option value="ALL">📦 รวมอุปกรณ์และอะไหล่ทั้งหมด</option>
+                        <option value="MAIN">💻 เฉพาะอุปกรณ์หลัก (คอมฯ, โน๊ตบุ๊ค, เครื่องพิมพ์, ฯลฯ)</option>
+                        <option value="PARTS">⚙️ เฉพาะอะไหล่ และ อุปกรณ์เสริมคอมพิวเตอร์</option>
+                        <option value="CONSUMABLES">🖨️ เฉพาะวัสดุสิ้นเปลือง (หมึกพิมพ์)</option>
+                    </select>
+                </div>
+                <button onclick="exportSummaryExcel()" class="w-full sm:w-auto px-8 bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 active:scale-95 transition-transform shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Export เป็น Excel (ส่งรายงาน)
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-0 sm:p-4 custom-scrollbar bg-slate-100/50 dark:bg-[#0f172a]">
+                <table class="w-full text-sm text-left border-collapse bg-white dark:bg-slate-800 sm:rounded-xl overflow-hidden shadow-sm">
+                    <thead class="sticky top-0 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs">
+                        <tr>
+                            <th class="p-3 w-16 text-center">ลำดับ</th>
+                            <th class="p-3 w-40">หมวดหมู่คลัง</th>
+                            <th class="p-3 w-48">ประเภทอุปกรณ์</th>
+                            <th class="p-3">ยี่ห้อ / รุ่น / สเปค / รายละเอียด</th>
+                            <th class="p-3 w-32 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">จำนวนคงเหลือ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportSummaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
+                        <tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium">กำลังคำนวณข้อมูล...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec'; 
