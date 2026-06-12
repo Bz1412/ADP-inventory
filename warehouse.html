@@ -61,10 +61,12 @@
         .jexcel_content { 
             box-shadow: none !important; 
             border: 1px solid #e2e8f0; 
-            border-radius: 16px; 
-            padding-bottom: 140px !important; /* กัน Dropdown ตกขอบ */
-            max-height: none !important;      /* ปลดล็อคความสูง */
-            overflow-y: hidden !important;    /* ปิดแถบเลื่อนแนวตั้ง ภายในตาราง */
+            border-radius: 12px; 
+            padding-bottom: 120px !important; /* กัน Dropdown ตกขอบล่าง */
+            max-height: 65vh !important; /* จำกัดความสูงไม่ให้ตารางยาวทะลุจอมือถือ */
+            overflow-x: auto !important; /* บังคับให้เลื่อนซ้าย-ขวาได้เสมอ */
+            overflow-y: auto !important; /* เลื่อนขึ้น-ลงภายในตารางได้ */
+            -webkit-overflow-scrolling: touch; /* ทำให้การไถนิ้วบน iOS ลื่นไหลปรื๊ด */
         }
         .dark .jexcel_content { border-color: #334155; }
         
@@ -73,18 +75,28 @@
             color: #475569 !important; 
             font-weight: 600 !important; 
             font-family: 'Prompt', sans-serif; 
-            font-size: 13px; 
+            font-size: 14px; 
             border-bottom: 2px solid #e2e8f0 !important; 
-            padding: 12px 4px !important; 
+            padding: 14px 8px !important; 
+            white-space: nowrap; /* ไม่ให้หัวตารางตัดคำ */
         }
         .dark .jexcel > thead > tr > td { background-color: #0f172a !important; color: #94a3b8 !important; border-bottom-color: #334155 !important; }
         
-        .jexcel > tbody > tr > td { font-family: 'Prompt', sans-serif; font-size: 13px; padding: 8px 4px !important; }
+        .jexcel > tbody > tr > td { 
+            font-family: 'Prompt', sans-serif; 
+            font-size: 14px; /* ปรับเป็น 14px เพื่อไม่ให้ iOS เด้งซูม */
+            padding: 10px 6px !important; 
+        }
         .dark .jexcel > tbody > tr > td { background-color: #1e293b; color: #e2e8f0; }
 
-        /* 🌟 Z-index แก้ปัญหา Dropdown โดนบัง */
+        /* 🌟 แก้ปัญหาปุ่ม/Dropdown บังกันเอง */
         .jsuites-dropdown { font-family: 'Prompt', sans-serif !important; text-align: left !important; }
         .jexcel tbody tr td.edition { z-index: 9999 !important; }
+        
+        /* 🌟 ซ่อนปุ่ม Zoom ด้านซ้ายล่าง เมื่อหน้าจอเล็กกว่า 768px (มือถือ) */
+        @media (max-width: 768px) {
+            .fixed.bottom-6.left-6 { display: none !important; }
+        }
 
         /* 🌟 แก้ไขช่องค้นหาให้แสดงผลสวยงาม และซ่อนเฉพาะฟิลเตอร์ที่ไม่จำเป็น */
         .jexcel_search { display: flex !important; align-items: center !important; margin-bottom: 15px !important; }
@@ -1269,8 +1281,19 @@
                 }
             };
             
-            // 🌟 เพิ่ม pagination: 50 หน้าละ 50 อัน พร้อมระบบค้นหา
-            const tableConfig = { tableWidth: "100%", allowInsertRow: true, allowInsertColumn: false, wordWrap: true, pagination: 50, search: true, onchange: autoFillDate, updateTable: customWhRender };
+            // 🌟 ปรับ Config ให้ลื่นไหลบนมือถือที่สุด
+            const tableConfig = { 
+                tableWidth: "100%", 
+                allowInsertRow: true, 
+                allowColumnResize: true, // ยอมให้ผู้ใช้ลากขยายคอลัมน์ได้เอง
+                allowInsertColumn: false, 
+                wordWrap: true, 
+                pagination: 20, // ลดเหลือ 20 เพื่อไม่ให้มือถือค้างตอนเรนเดอร์
+                search: true, 
+                // tableOverflow: true,  <-- ❌ ลบบรรทัดนี้ทิ้ง! มันคือตัวการที่ทำให้เลื่อนตารางยากในบางรุ่น
+                onchange: autoFillDate, 
+                updateTable: customWhRender 
+            };
 
             whMainTable = jspreadsheet(document.getElementById('wh-main'), { 
                 ...tableConfig, data: data.main || [[]], 
