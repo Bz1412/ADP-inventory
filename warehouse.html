@@ -2535,6 +2535,7 @@ async function commitScan() {
                 let qtyBadgeClass = isOut ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : (isLow ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100');
                 let qtyText = isOut ? '❌ หมดสต็อก' : `คงเหลือ ${item.qty} ${item.unit}`;
                 
+                // 🌟 อัปเดต HTML ของการ์ด ให้มี 2 ปุ่ม (เติมสต็อก กับ เบิกเลย)
                 html += `
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-2 border ${borderColor}">
                     <div class="absolute top-0 left-0 w-1.5 h-full ${tagColor}"></div>
@@ -2551,15 +2552,29 @@ async function commitScan() {
                         ${item.detail}
                     </div>
                     <div class="flex justify-between items-center mt-2 pl-2">
-                        <span class="text-[10px] sm:text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1.5 rounded-lg flex items-center gap-1 shrink-0 max-w-[60%] truncate" title="สถานที่เก็บ">
+                        <span class="text-[10px] sm:text-xs font-medium text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-1.5 rounded-lg flex items-center gap-1 shrink-0 max-w-[50%] truncate" title="สถานที่เก็บ">
                             <svg class="w-3 h-3 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg> 
                             ${item.location}
                         </span>
-                        ${!isOut ? `<button onclick="closeStockLookup(); setTimeout(()=>openWithdrawModal('${item.tableId}', ${item.rowIdx}), 300)" class="text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl transition-transform active:scale-95 shadow-md flex items-center gap-1 shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> เบิกเลย</button>` : ''}
+                        
+                        <div class="flex gap-2">
+                            <button onclick="quickRefillItem('${item.tableId}', ${item.rowIdx})" class="text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 px-3 py-2 rounded-xl transition-transform active:scale-95 shadow-sm flex items-center gap-1 shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> เพิ่ม
+                            </button>
+                            ${!isOut ? `<button onclick="closeStockLookup(); setTimeout(()=>openWithdrawModal('${item.tableId}', ${item.rowIdx}), 300)" class="text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-xl transition-transform active:scale-95 shadow-md flex items-center gap-1 shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> เบิกเลย</button>` : ''}
+                        </div>
                     </div>
                 </div>`;
             });
             resultsContainer.innerHTML = html;
+        }
+
+        function quickRefillItem(tableId, rowIdx) {
+            closeStockLookup();
+            setTimeout(() => {
+                openRefillModal(); 
+                selectRefillItem(tableId, rowIdx); 
+            }, 300);
         }
     
     </script>
