@@ -576,26 +576,27 @@
 </div>
 
         <div id="reportSummaryModal" class="fixed inset-0 bg-slate-900/80 z-[800] hidden flex-col p-3 sm:p-6 no-print animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-5xl w-full mx-auto h-[95vh] flex flex-col overflow-hidden shadow-2xl">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-6xl w-full mx-auto h-[95vh] flex flex-col overflow-hidden shadow-2xl">
             
             <div class="p-4 sm:p-6 border-b dark:border-slate-700 flex flex-wrap justify-between items-center bg-slate-50 dark:bg-slate-800/50 gap-4">
-                <h3 class="font-bold text-lg sm:text-xl flex items-center gap-2">📊 รายงานสรุปสต็อกคงเหลือ</h3>
+                <h3 class="font-bold text-lg sm:text-xl flex items-center gap-2">📊 รายงานสรุปสต็อก & แจ้งเตือนสั่งซื้อ</h3>
                 <button onclick="closeReportModal()" class="bg-red-50 text-red-500 hover:bg-red-100 px-4 py-2 rounded-xl font-bold transition-colors outline-none">ปิดหน้าต่าง</button>
             </div>
 
             <div class="p-4 sm:p-6 border-b dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div class="w-full sm:w-1/2">
-                    <label class="block text-xs font-bold text-slate-500 mb-1">เลือกหมวดหมู่ที่ต้องการสรุป:</label>
-                    <select id="reportFilterDropdown" onchange="generateSummaryTable(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-sm rounded-xl px-4 py-2.5 font-bold outline-none cursor-pointer text-slate-700 dark:text-slate-200">
+                <div class="w-full sm:w-2/3">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">เลือกหมวดหมู่ข้อมูล:</label>
+                    <select id="reportFilterDropdown" onchange="generateSummaryTable(this.value)" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-sm rounded-xl px-4 py-3 font-bold outline-none cursor-pointer text-slate-700 dark:text-slate-200 shadow-inner">
                         <option value="ALL">📦 รวมอุปกรณ์และอะไหล่ทั้งหมด</option>
+                        <option value="LOW_STOCK" class="text-red-600 font-black bg-red-50">🚨 รายการที่ใกล้หมด / ต้องสั่งซื้อเพิ่ม (Low Stock)</option>
                         <option value="MAIN">💻 เฉพาะอุปกรณ์หลัก (คอมฯ, โน๊ตบุ๊ค, เครื่องพิมพ์, ฯลฯ)</option>
                         <option value="PARTS">⚙️ เฉพาะอะไหล่ และ อุปกรณ์เสริมคอมพิวเตอร์</option>
                         <option value="CONSUMABLES">🖨️ เฉพาะวัสดุสิ้นเปลือง (หมึกพิมพ์)</option>
                     </select>
                 </div>
-                <button onclick="exportSummaryExcel()" class="w-full sm:w-auto px-8 bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-700 active:scale-95 transition-transform shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
+                <button onclick="exportSummaryExcel()" class="w-full sm:w-auto px-8 bg-emerald-600 text-white font-bold py-3.5 rounded-xl hover:bg-emerald-700 active:scale-95 transition-transform shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 whitespace-nowrap mt-2 sm:mt-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Export เป็น Excel (ส่งรายงาน)
+                    ดาวน์โหลด Excel (ส่งหัวหน้า)
                 </button>
             </div>
 
@@ -607,11 +608,12 @@
                             <th class="p-3 w-40">หมวดหมู่คลัง</th>
                             <th class="p-3 w-48">ประเภทอุปกรณ์</th>
                             <th class="p-3">ยี่ห้อ / รุ่น / สเปค / รายละเอียด</th>
-                            <th class="p-3 w-32 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400">จำนวนคงเหลือ</th>
+                            <th class="p-3 w-32 text-center bg-slate-100 dark:bg-slate-900">จำนวนคงเหลือ</th>
+                            <th class="p-3 w-28 text-center">คำแนะนำ</th>
                         </tr>
                     </thead>
                     <tbody id="reportSummaryTableBody" class="divide-y divide-slate-100 dark:divide-slate-700">
-                        <tr><td colspan="5" class="p-10 text-center text-slate-400 font-medium">กำลังคำนวณข้อมูล...</td></tr>
+                        <tr><td colspan="6" class="p-10 text-center text-slate-400 font-medium">กำลังคำนวณข้อมูล...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2211,8 +2213,8 @@ async function commitScan() {
         function generateSummaryTable(filter) {
             summaryReportData = [];
             
-            // 1. ดึงข้อมูล "อุปกรณ์หลัก" (นับเฉพาะที่สถานะ "ว่าง (พร้อมจ่าย)")
-            if (filter === 'ALL' || filter === 'MAIN') {
+            // 1. ดึงข้อมูล "อุปกรณ์หลัก" (นับรวมตัวที่หมดสต็อกแล้วเพื่อให้โชว์ในรายงานสั่งซื้อได้)
+            if (filter === 'ALL' || filter === 'MAIN' || filter === 'LOW_STOCK') {
                 let groups = {};
                 whMainTable.getData().forEach(r => {
                     let type = String(r[1] || 'ไม่ระบุ').trim();
@@ -2220,11 +2222,11 @@ async function commitScan() {
                     let model = String(r[3] || '').trim();
                     let status = String(r[5] || '').trim();
                     
+                    let key = `${type}|${brand}|${model}`;
+                    if (!groups[key]) {
+                        groups[key] = { category: '💻 อุปกรณ์หลัก (Main)', type: type, detail: `${brand} ${model}`.trim() || 'ไม่ได้ระบุรุ่น', qty: 0, unit: 'เครื่อง' };
+                    }
                     if (status.includes('ว่าง') || status.includes('พร้อมจ่าย')) {
-                        let key = `${type}|${brand}|${model}`;
-                        if (!groups[key]) {
-                            groups[key] = { category: '💻 อุปกรณ์หลัก (Main)', type: type, detail: `${brand} ${model}`.trim() || 'ไม่ได้ระบุรุ่น', qty: 0, unit: 'เครื่อง' };
-                        }
                         groups[key].qty++;
                     }
                 });
@@ -2232,7 +2234,7 @@ async function commitScan() {
             }
 
             // 2. ดึงข้อมูล "อะไหล่ & อุปกรณ์เสริม"
-            if (filter === 'ALL' || filter === 'PARTS') {
+            if (filter === 'ALL' || filter === 'PARTS' || filter === 'LOW_STOCK') {
                 const extractParts = (table, catLabel, qtyIndex, unitIndex) => {
                     if (!table) return;
                     table.getData().forEach(r => {
@@ -2241,50 +2243,71 @@ async function commitScan() {
                         let qty = parseFloat(r[qtyIndex]);
                         let unit = String(r[unitIndex] || 'ชิ้น').trim();
                         
-                        if (!isNaN(qty) && qty > 0) {
+                        if (!isNaN(qty)) { // เปลี่ยนเป็นเช็คแค่ตัวเลข (ยอมดึงค่า 0 มาด้วย)
                             summaryReportData.push({ category: catLabel, type: type, detail: spec, qty: qty, unit: unit });
                         }
                     });
                 };
                 extractParts(whPartsTable, '⚙️ อะไหล่คอมพิวเตอร์', 3, 4);
-                extractParts(whAccTable, '⌨️ อุปกรณ์คอมพิวเตอร์', 4, 5); // ตาราง Acc มีคอลัมน์ S/N คั่น Qty เลยอยู่ index 4
+                extractParts(whAccTable, '⌨️ อุปกรณ์คอมพิวเตอร์', 4, 5); 
             }
 
             // 3. ดึงข้อมูล "วัสดุสิ้นเปลือง (หมึกพิมพ์)"
-            if (filter === 'ALL' || filter === 'CONSUMABLES') {
+            if (filter === 'ALL' || filter === 'CONSUMABLES' || filter === 'LOW_STOCK') {
                 if (whInkTable) {
                     whInkTable.getData().forEach(r => {
-                        let type = String(r[1] || 'หมึกพิมพ์').trim(); // ช่องรุ่นหมึก
-                        let spec = String(r[2] || '').trim(); // เครื่องที่รองรับ
+                        let type = String(r[1] || 'หมึกพิมพ์').trim(); 
+                        let spec = String(r[2] || '').trim(); 
                         let qty = parseFloat(r[3]);
                         let unit = String(r[4] || 'ตลับ').trim();
                         
-                        if (!isNaN(qty) && qty > 0) {
+                        if (!isNaN(qty)) { // ยอมดึงค่า 0
                             summaryReportData.push({ category: '🖨️ วัสดุสิ้นเปลือง', type: type, detail: `ใช้กับ: ${spec}`, qty: qty, unit: unit });
                         }
                     });
                 }
             }
 
-            // --- เรียงลำดับและแสดงผล ---
+            // --- 🚨 กรองข้อมูลกรณีเลือก "ต้องสั่งซื้อเพิ่ม (LOW_STOCK)" ---
+            if (filter === 'LOW_STOCK') {
+                // เก็บเฉพาะที่เหลือน้อยกว่าหรือเท่ากับ 5 ชิ้น (หรือ 0)
+                summaryReportData = summaryReportData.filter(item => item.qty <= 5);
+                // เรียงจากของที่เหลือน้อยสุด (ฉุกเฉินสุด) ขึ้นก่อน
+                summaryReportData.sort((a, b) => a.qty - b.qty);
+            } else {
+                // โหมดปกติ เรียงตามหมวดหมู่
+                summaryReportData.sort((a, b) => a.category.localeCompare(b.category) || a.type.localeCompare(b.type) || a.detail.localeCompare(b.detail));
+            }
+
+            // --- นำข้อมูลวาดลงตาราง ---
             let tbody = document.getElementById('reportSummaryTableBody');
             if (summaryReportData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 font-bold text-lg">❌ ไม่มีอุปกรณ์พร้อมจ่ายในหมวดหมู่ที่เลือก</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold text-lg">✨ ไม่พบข้อมูลในหมวดหมู่นี้</td></tr>`;
                 return;
             }
 
-            // จัดเรียงตามหมวดหมู่ -> ประเภท -> ชื่อรุ่น
-            summaryReportData.sort((a, b) => a.category.localeCompare(b.category) || a.type.localeCompare(b.type) || a.detail.localeCompare(b.detail));
-
             let html = '';
             summaryReportData.forEach((item, idx) => {
+                let qtyClass = "text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10";
+                let statusBadge = `<span class="bg-emerald-100 text-emerald-600 px-2 py-1 rounded text-[10px] font-bold shadow-sm">ปกติ</span>`;
+                
+                // ตรวจสอบสถานะสต็อก
+                if (item.qty === 0) {
+                    qtyClass = "text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-900/10 animate-pulse";
+                    statusBadge = `<span class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-bold shadow-sm border border-red-200">หมดสต็อก (ต้องซื้อ)</span>`;
+                } else if (item.qty <= 5) {
+                    qtyClass = "text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-900/10";
+                    statusBadge = `<span class="bg-amber-100 text-amber-600 px-2 py-1 rounded text-[10px] font-bold shadow-sm border border-amber-200">ใกล้หมด (ควรซื้อ)</span>`;
+                }
+
                 html += `
                 <tr class="border-b dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                     <td class="p-3 text-center text-slate-500 font-bold">${idx + 1}</td>
                     <td class="p-3 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">${item.category}</td>
                     <td class="p-3 text-indigo-600 dark:text-indigo-400 font-bold whitespace-nowrap">${item.type}</td>
                     <td class="p-3 text-slate-600 dark:text-slate-400 text-xs sm:text-sm">${item.detail}</td>
-                    <td class="p-3 text-center font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10 text-lg">${item.qty} <span class="text-xs font-medium text-slate-500">${item.unit}</span></td>
+                    <td class="p-3 text-center font-black ${qtyClass} text-lg border-x border-slate-100 dark:border-slate-700">${item.qty} <span class="text-xs font-medium text-slate-500">${item.unit}</span></td>
+                    <td class="p-3 text-center">${statusBadge}</td>
                 </tr>`;
             });
             tbody.innerHTML = html;
@@ -2296,19 +2319,25 @@ async function commitScan() {
             showToast("กำลังประมวลผลไฟล์ Excel...");
             try {
                 const wb = new ExcelJS.Workbook();
-                const ws = wb.addWorksheet('Stock Summary');
+                const ws = wb.addWorksheet('Stock Summary Report');
                 
-                // ตั้งค่าหัวตาราง
-                let filterType = document.getElementById('reportFilterDropdown').options[document.getElementById('reportFilterDropdown').selectedIndex].text;
-                ws.addRow([`รายงานสรุปสต็อกคงเหลือ (${filterType})`]);
-                ws.mergeCells('A1:F1');
+                // ตั้งค่าหัวตาราง (Title)
+                let filterDropdown = document.getElementById('reportFilterDropdown');
+                let filterType = filterDropdown.options[filterDropdown.selectedIndex].text;
+                
+                ws.addRow([`รายงานสรุปสต็อกคงเหลือ - ${filterType}`]);
+                ws.mergeCells('A1:G1');
                 ws.getRow(1).font = { size: 16, bold: true };
                 ws.getRow(1).alignment = { horizontal: 'center' };
+                
+                ws.addRow([`วันที่ประมวลผล: ${new Date().toLocaleString('th-TH')}`]);
+                ws.mergeCells('A2:G2');
+                ws.getRow(2).alignment = { horizontal: 'right' };
                 ws.addRow([]); // บรรทัดว่าง
 
                 // หัวตารางข้อมูล
-                ws.addRow(['ลำดับ', 'หมวดหมู่คลัง', 'ประเภทอุปกรณ์', 'รายละเอียด / ยี่ห้อ / รุ่น', 'จำนวนคงเหลือ', 'หน่วย']);
-                let headerRow = ws.getRow(3);
+                ws.addRow(['ลำดับ', 'หมวดหมู่คลัง', 'ประเภทอุปกรณ์', 'รายละเอียด / ยี่ห้อ / รุ่น', 'จำนวนคงเหลือ', 'หน่วย', 'สถานะ (คำแนะนำ)']);
+                let headerRow = ws.getRow(4);
                 headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
                 headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
                 headerRow.eachCell(c => {
@@ -2318,24 +2347,40 @@ async function commitScan() {
 
                 // ใส่ข้อมูล
                 summaryReportData.forEach((item, i) => {
-                    let row = ws.addRow([i + 1, item.category.replace(/[^ก-๙a-zA-Z0-9\s()]/g, '').trim(), item.type, item.detail, item.qty, item.unit]);
+                    let statusText = item.qty === 0 ? 'หมดสต็อก (ต้องซื้อ)' : (item.qty <= 5 ? 'ใกล้หมด (ควรซื้อ)' : 'ปกติ');
+                    let row = ws.addRow([i + 1, item.category.replace(/[^ก-๙a-zA-Z0-9\s()]/g, '').trim(), item.type, item.detail, item.qty, item.unit, statusText]);
+                    
                     row.eachCell(c => {
                         c.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
                         c.alignment = { vertical: 'middle' };
                     });
+                    
                     row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
                     row.getCell(5).alignment = { horizontal: 'center', vertical: 'middle' };
-                    row.getCell(5).font = { bold: true, color: { argb: 'FF059669' } }; // สีเขียว
                     row.getCell(6).alignment = { horizontal: 'center', vertical: 'middle' };
+                    row.getCell(7).alignment = { horizontal: 'center', vertical: 'middle' };
+
+                    // ลงสีช่องสถานะใน Excel ให้เห็นชัดเจนว่าอันไหนต้องสั่งซื้อ
+                    if (item.qty === 0) {
+                        row.getCell(5).font = { bold: true, color: { argb: 'FFDC2626' } }; // สีแดง
+                        row.getCell(7).font = { bold: true, color: { argb: 'FFDC2626' } };
+                        row.getCell(7).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+                    } else if (item.qty <= 5) {
+                        row.getCell(5).font = { bold: true, color: { argb: 'FFD97706' } }; // สีส้ม
+                        row.getCell(7).font = { bold: true, color: { argb: 'FFD97706' } };
+                        row.getCell(7).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+                    } else {
+                        row.getCell(5).font = { bold: true, color: { argb: 'FF059669' } }; // สีเขียว
+                    }
                 });
 
-                ws.columns = [ {width: 8}, {width: 25}, {width: 20}, {width: 50}, {width: 15}, {width: 10} ];
+                ws.columns = [ {width: 8}, {width: 25}, {width: 20}, {width: 50}, {width: 15}, {width: 10}, {width: 22} ];
                 
                 const buffer = await wb.xlsx.writeBuffer();
                 let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }).replace(/\s/g, '_');
                 saveAs(new Blob([buffer]), `ADP_Stock_Summary_${dateStr}.xlsx`);
                 
-                showToast('ดาวน์โหลดรายงานสรุปสำเร็จ! 🎉');
+                showToast('ดาวน์โหลดรายงานสำเร็จ! ส่งให้หัวหน้าได้เลย 🚀');
             } catch (err) {
                 console.error(err);
                 showToast('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel', 'error');
