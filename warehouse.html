@@ -2213,8 +2213,9 @@ async function commitScan() {
         function generateSummaryTable(filter) {
             summaryReportData = [];
             
-            // 1. ดึงข้อมูล "อุปกรณ์หลัก" (นับรวมตัวที่หมดสต็อกแล้วเพื่อให้โชว์ในรายงานสั่งซื้อได้)
-            if (filter === 'ALL' || filter === 'MAIN' || filter === 'LOW_STOCK') {
+            // 1. ดึงข้อมูล "อุปกรณ์หลัก" 
+            // 🌟 แก้ไข: ลบเงื่อนไข filter === 'LOW_STOCK' ออก เพื่อไม่ให้ดึงคอมฯ/จอ มาโชว์ตอนดูของใกล้หมด
+            if (filter === 'ALL' || filter === 'MAIN') {
                 let groups = {};
                 whMainTable.getData().forEach(r => {
                     let type = String(r[1] || 'ไม่ระบุ').trim();
@@ -2234,6 +2235,7 @@ async function commitScan() {
             }
 
             // 2. ดึงข้อมูล "อะไหล่ & อุปกรณ์เสริม"
+            // 🌟 คงเงื่อนไข LOW_STOCK ไว้
             if (filter === 'ALL' || filter === 'PARTS' || filter === 'LOW_STOCK') {
                 const extractParts = (table, catLabel, qtyIndex, unitIndex) => {
                     if (!table) return;
@@ -2243,7 +2245,7 @@ async function commitScan() {
                         let qty = parseFloat(r[qtyIndex]);
                         let unit = String(r[unitIndex] || 'ชิ้น').trim();
                         
-                        if (!isNaN(qty)) { // เปลี่ยนเป็นเช็คแค่ตัวเลข (ยอมดึงค่า 0 มาด้วย)
+                        if (!isNaN(qty)) { // ดึงมาให้หมด (รวมถึงที่เหลือ 0)
                             summaryReportData.push({ category: catLabel, type: type, detail: spec, qty: qty, unit: unit });
                         }
                     });
@@ -2253,6 +2255,7 @@ async function commitScan() {
             }
 
             // 3. ดึงข้อมูล "วัสดุสิ้นเปลือง (หมึกพิมพ์)"
+            // 🌟 คงเงื่อนไข LOW_STOCK ไว้
             if (filter === 'ALL' || filter === 'CONSUMABLES' || filter === 'LOW_STOCK') {
                 if (whInkTable) {
                     whInkTable.getData().forEach(r => {
@@ -2261,7 +2264,7 @@ async function commitScan() {
                         let qty = parseFloat(r[3]);
                         let unit = String(r[4] || 'ตลับ').trim();
                         
-                        if (!isNaN(qty)) { // ยอมดึงค่า 0
+                        if (!isNaN(qty)) { // ดึงมาให้หมด (รวมถึงที่เหลือ 0)
                             summaryReportData.push({ category: '🖨️ วัสดุสิ้นเปลือง', type: type, detail: `ใช้กับ: ${spec}`, qty: qty, unit: unit });
                         }
                     });
@@ -2282,7 +2285,7 @@ async function commitScan() {
             // --- นำข้อมูลวาดลงตาราง ---
             let tbody = document.getElementById('reportSummaryTableBody');
             if (summaryReportData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold text-lg">✨ ไม่พบข้อมูลในหมวดหมู่นี้</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400 font-bold text-lg">✨ ไม่พบข้อมูลในหมวดหมู่นี้ หรือ สต็อกยังแน่นอยู่</td></tr>`;
                 return;
             }
 
