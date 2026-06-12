@@ -667,6 +667,14 @@
         const whMainTypes = ['PC', 'Notebook', 'Monitor', 'Printer', 'UPS', 'Server', 'Switch', 'RCF', 'เครื่องมือพิเศษ', 'อื่นๆ'];
         const whAccTypes = ['เมาส์', 'คีย์บอร์ด', 'สายไฟ', 'สายจอ', 'แฟลชไดร์ฟ', 'อื่นๆ'];
         const whPartsTypes = ['RAM', 'SSD', 'HDD', 'Mainboard', 'Power Supply', 'VGA', 'อะไหล่อื่นๆ'];
+        const modalIds = [
+            'loginModal', 'imageViewerModal', 'snHistoryModal', 'auditLogModal',
+            'helpModal', 'snSearchModal', 'saveFirstModal', 'deleteConfirmModal',
+            'confirmModal', 'monthlyConfirmModal', 'qrPreviewModal', 'exportModal',
+            // 🌟 เพิ่ม Modal ใหม่ของระบบคลัง เพื่อให้มือถืออนุญาตให้ Scroll ได้
+            'cardDetailModal', 'withdrawModal', 'quickWithdrawModal', 'refillModal', 
+            'addItemModal', 'reportSummaryModal', 'stockLookupModal'
+        ];
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer'); const toast = document.createElement('div');
@@ -2509,7 +2517,6 @@ async function commitScan() {
             let matches = allStockLookupData;
             
             if (query) {
-                // ตัดคำด้วยช่องว่าง เพื่อให้พิมพ์สลับตำแหน่งได้ เช่น "หมึก m201"
                 let keywords = query.split(/\s+/);
                 matches = allStockLookupData.filter(item => {
                     return keywords.every(kw => item.searchString.includes(kw));
@@ -2521,7 +2528,6 @@ async function commitScan() {
                 return;
             }
             
-            // เรียงให้ของที่มีเหลือ (qty > 0) ขึ้นก่อนของหมดสต็อก
             matches.sort((a, b) => b.qty - a.qty);
             
             let html = '';
@@ -2535,9 +2541,9 @@ async function commitScan() {
                 let qtyBadgeClass = isOut ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' : (isLow ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100');
                 let qtyText = isOut ? '❌ หมดสต็อก' : `คงเหลือ ${item.qty} ${item.unit}`;
                 
-                // 🌟 อัปเดต HTML ของการ์ด ให้มี 2 ปุ่ม (เติมสต็อก กับ เบิกเลย)
+                // 🌟 สิ่งที่แก้: เพิ่มคลาส shrink-0 ตรง div บรรทัดด้านล่างนี้ เพื่อไม่ให้การ์ดโดนบีบอัดจนเละ
                 html += `
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-2 border ${borderColor}">
+                <div class="shrink-0 bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-2 border ${borderColor}">
                     <div class="absolute top-0 left-0 w-1.5 h-full ${tagColor}"></div>
                     <div class="flex justify-between items-start pl-2 gap-2">
                         <div class="flex-1">
