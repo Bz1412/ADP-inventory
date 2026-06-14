@@ -1,567 +1,620 @@
 <!DOCTYPE html>
-<html lang="th" class="dark">
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADP AI Office HQ</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIXEL AGENTS - ADP Office</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pixel-border: 4px solid #000;
+      --bg-color: #1a1c2c;
+      --panel-bg: #333c57;
+      --room-bg: #5f574f;
+      --accent-green: #38b764;
+      --accent-purple: #5d275d;
+      --accent-blue: #29adff;
+      --accent-yellow: #ffcd75;
+      --terminal-bg: #1d2b53;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+    body { 
+      font-family: 'Press Start 2P', cursive; 
+      background-color: var(--bg-color); 
+      color: #fff; 
+      image-rendering: pixelated;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      background-color: var(--panel-bg);
+      border-bottom: var(--pixel-border);
+      padding: 15px;
+      text-align: center;
+      font-size: 18px;
+      color: var(--accent-yellow);
+      text-shadow: 3px 3px 0px #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+    }
+    .header span { color: var(--accent-blue); }
+
+    /* Main Layout */
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Office Room (Grid) */
+    .office-room {
+      flex: 3;
+      background-color: var(--room-bg);
+      position: relative;
+      overflow: hidden;
+      border-right: var(--pixel-border);
+      cursor: default;
+    }
+
+    /* พื้นห้องแบบ Grid Tile */
+    .room-tile {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      background-image: 
+        linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* กล่องข้อความระหว่างวางของ */
+    .placing-indicator {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent-purple);
+      padding: 8px 15px;
+      font-size: 10px;
+      border: var(--pixel-border);
+      box-shadow: 4px 4px 0px #000;
+      z-index: 100;
+      display: none;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink { 50% { opacity: 0.7; } }
+
+    /* Pixel Items & Agents */
+    .pixel-entity {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .sprite-box {
+      width: 40px;
+      height: 40px;
+      background: rgba(0,0,0,0.2);
+      border: 2px solid rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+    }
+
+    .entity-name {
+      font-size: 6px;
+      background: #000;
+      color: #fff;
+      padding: 2px;
+      width: 100%;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: -2px;
+    }
+
+    .pixel-entity.agent .sprite-box {
+      border-color: var(--accent-green);
+      background: rgba(56, 183, 100, 0.2);
+    }
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    .pixel-entity.agent .sprite-box {
+      animation: idle-bounce 1s infinite alternate;
+    }
 
-    <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Prompt', 'sans-serif'], mono: ['VT323', 'monospace'] } } } }
-    </script>
+    @keyframes idle-bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-2px); }
+    }
 
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #020617; color: white; user-select: none; }
-        
-        /* 🌟 Map Container & Isometric Grid */
-        .world-grid {
-            background-color: #0f172a;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 50px 50px;
-            position: relative;
-        }
+    /* Side Panel */
+    .side-panel {
+      flex: 1;
+      background-color: var(--panel-bg);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
 
-        .zone-office { background: #7c2d12/20; border: 4px solid #7c2d12; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
-        .zone-warehouse { background: #334155/30; border: 4px solid #334155; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
+    .panel-section {
+      padding: 15px;
+      border-bottom: var(--pixel-border);
+    }
 
-        .desk-block { background: #b45309; border: 2px solid #78350f; box-shadow: 0 8px 0 #451a03, 0 15px 20px rgba(0,0,0,0.5); border-radius: 8px; }
-        .rack-block { background: #475569; border: 2px solid #1e293b; box-shadow: 0 10px 0 #1e293b, 0 20px 25px rgba(0,0,0,0.6); border-radius: 4px; }
+    .panel-title {
+      font-size: 10px;
+      color: var(--accent-yellow);
+      margin-bottom: 15px;
+      text-align: center;
+      text-shadow: 2px 2px 0px #000;
+    }
 
-        /* 🌟 ตัวละคร 2D Pixel Custom Generator (CSS Pure) */
-        .agent-avatar { position: absolute; width: 40px; height: 50px; transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 50; cursor: pointer; }
-        .pixel-body { position: absolute; bottom: 12px; left: 10px; width: 20px; height: 20px; border: 2px solid #000; border-radius: 4px; }
-        .pixel-head { position: absolute; top: -14px; left: 0; width: 16px; height: 16px; background: #ffdb99; border: 2px solid #000; border-radius: 3px; }
-        .pixel-eyes { position: absolute; top: 5px; left: 3px; width: 2px; height: 2px; background: #000; box-shadow: 6px 0 0 #000; }
-        
-        .hair-MALE { position: absolute; top: -18px; left: -2px; width: 20px; height: 6px; background: #2d1e18; border: 2px solid #000; border-radius: 4px 4px 0 0; }
-        .hair-FEMALE { position: absolute; top: -18px; left: -2px; width: 20px; height: 20px; background: #451a03; border: 2px solid #000; border-radius: 4px 4px 2px 2px; }
-        
-        .outfit-SUIT .pixel-body { background: #1e293b; }
-        .outfit-SUIT::after { content: '👔'; position: absolute; bottom: 16px; left: 15px; font-size: 8px; }
-        .outfit-WORK .pixel-body { background: #2563eb; }
-        .outfit-CASUAL .pixel-body { background: #16a34a; }
-        
-        .pixel-legs { position: absolute; bottom: 2px; left: 14px; width: 12px; height: 10px; background: #0f172a; border: 2px solid #000; border-top: none; }
-        
-        .agent-avatar.walking { animation: walkBounce 0.2s infinite alternate; }
-        @keyframes walkBounce { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
+    /* Shop Items Grid */
+    .shop-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
 
-        .select-ring { position: absolute; bottom: -2px; left: 6px; width: 28px; height: 8px; background: rgba(16,185,129,0.3); border: 2px solid #10b981; border-radius: 50%; opacity: 0; transition: opacity 0.2s; }
-        .agent-avatar.selected .select-ring { opacity: 1; }
+    .shop-item {
+      background: #262b40;
+      border: var(--pixel-border);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px #000;
+      transition: transform 0.1s;
+    }
+    .shop-item:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0px #000; }
+    .shop-item.active { border-color: var(--accent-green); background: rgba(56, 183, 100, 0.2); }
+    .shop-item .icon { font-size: 20px; margin-bottom: 5px; }
+    .shop-item .name { font-size: 7px; text-align: center; }
 
-        .bot-popup { position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 8px; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .agent-avatar.busy .bot-popup { opacity: 1; }
+    /* Agent Creator */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { 
+      font-size: 8px; 
+      display: block; 
+      margin-bottom: 6px; 
+      color: var(--accent-blue);
+    }
+    .form-input {
+      width: 100%;
+      padding: 8px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 8px;
+      background: #1a1c2c;
+      color: #fff;
+      border: var(--pixel-border);
+      box-shadow: inset 2px 2px 0px #000;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent-blue); }
 
-        .terminal-scroll::-webkit-scrollbar { width: 6px; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .scanline { width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.05) 50%, rgba(0,0,0,0) 100%); position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 6s linear infinite; }
-        @keyframes scan { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
-    </style>
+    .pixel-btn {
+      width: 100%;
+      background-color: var(--accent-purple);
+      color: #fff;
+      border: var(--pixel-border);
+      padding: 10px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 9px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px #000;
+      transition: transform 0.1s;
+      text-shadow: 1px 1px 0px #000;
+    }
+    .pixel-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+    .pixel-btn.green { background-color: var(--accent-green); }
+
+    /* Terminal Bottom Bar */
+    .terminal-bar {
+      height: 150px;
+      background-color: var(--terminal-bg);
+      border-top: var(--pixel-border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .terminal-header {
+      background: #000;
+      color: var(--accent-green);
+      padding: 5px 15px;
+      font-size: 8px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #333;
+    }
+
+    .terminal-content {
+      flex: 1;
+      padding: 10px 15px;
+      color: var(--accent-green);
+      font-size: 8px;
+      overflow-y: auto;
+      line-height: 1.6;
+    }
+
+    .terminal-content .log-agent { color: var(--accent-yellow); }
+    .terminal-content .log-system { color: var(--accent-blue); }
+    .terminal-content .log-error { color: #ff004d; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1a1c2c; }
+    ::-webkit-scrollbar-thumb { background: #333c57; border: 1px solid #000; }
+
+    .placing-mode { cursor: crosshair !important; }
+  </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden">
+<body>
 
-    <div class="flex-1 relative flex flex-col bg-[#0b0f19] p-6 justify-center items-center overflow-auto">
-        <div class="w-[900px] h-[550px] world-grid rounded-3xl border border-slate-700 p-6 relative shadow-2xl">
-            
-            <div class="absolute top-6 left-6 w-[450px] h-[490px] zone-office rounded-2xl p-4">
-                <div class="text-xs font-bold text-orange-400 tracking-widest uppercase mb-4">💻 แผนกบริหาร AI Agents</div>
-                <div class="desk-block w-24 h-14 absolute top-16 left-10 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 1</div>
-                <div class="desk-block w-24 h-14 absolute top-16 left-280 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 2</div>
-                <div class="desk-block w-24 h-14 absolute bottom-16 left-10 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 3</div>
-                <div class="desk-block w-24 h-14 absolute bottom-16 left-280 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 4</div>
-            </div>
+  <div class="header">
+    PIXEL <span>AGENTS</span> OFFICE
+  </div>
 
-            <div class="absolute top-6 right-6 w-[380px] h-[490px] zone-warehouse rounded-2xl p-4 flex flex-col justify-between">
-                <div class="text-xs font-bold text-blue-400 tracking-widest uppercase">📦 คลังสินค้าส่วนกลาง</div>
-                <div class="flex justify-between w-full">
-                    <div id="rack-main" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE A: อุปกรณ์หลัก</div>
-                    <div id="rack-parts" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE B: อะไหล่คอมฯ</div>
-                </div>
-                <div class="flex justify-between w-full">
-                    <div id="rack-ink" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE C: หมึกพิมพ์</div>
-                    <div id="rack-acc" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE D: อุปกรณ์เสริม</div>
-                </div>
-            </div>
+  <div class="main-container">
+    <div class="workspace">
+      
+      <!-- Office Room -->
+      <div class="office-room" id="officeRoom" onclick="placeEntity(event)">
+        <div class="room-tile"></div>
+        <div class="placing-indicator" id="placingIndicator">กำลังวาง: คลิกที่พื้นห้อง...</div>
+      </div>
 
-            <div id="characterLayer" class="absolute inset-0 pointer-events-none"></div>
-        </div>
-
-        <div class="absolute bottom-6 left-8 flex gap-3">
-            <button onclick="openHireModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3.5 rounded-2xl shadow-xl transition-transform active:scale-95 flex items-center gap-2 border border-indigo-400">
-                ✨ สร้าง & จ้าง Agent ทำงาน
-            </button>
-            <button onclick="window.location.href='warehouse.html'" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-6 py-3.5 rounded-2xl shadow-xl transition-transform active:scale-95 border border-slate-600">
-                กลับคลังหลัก
-            </button>
-        </div>
-    </div>
-
-    <div class="w-[420px] bg-[#020617] border-l border-slate-800 h-full flex flex-col font-mono relative shadow-2xl shrink-0">
-        <div class="scanline"></div>
+      <!-- Side Panel -->
+      <div class="side-panel">
         
-        <div class="h-12 bg-slate-900 flex items-center px-4 border-b border-slate-800 gap-2 shrink-0">
-            <div class="w-3 h-3 rounded-full bg-red-500"></div>
-            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-            <span class="text-slate-400 text-xs font-bold tracking-widest ml-2" id="consoleHeader">AGENT_CONSOLE.EXE</span>
-            <span id="loadStatus" class="ml-auto text-amber-400 text-xs font-bold animate-pulse">CONNECTING</span>
+        <!-- ร้านของตกแต่ง -->
+        <div class="panel-section">
+          <div class="panel-title">🛒 ร้านของตกแต่ง</div>
+          <div class="shop-grid" id="shopGrid">
+            <!-- Items will be injected by JS -->
+          </div>
         </div>
 
-        <div id="terminalLogs" class="flex-1 overflow-y-auto terminal-scroll p-4 text-emerald-400 text-xs leading-relaxed flex flex-col gap-2">
-            <div class="text-slate-500">[SYSTEM] Booting HQ Command Network...</div>
+        <!-- สร้าง Agent -->
+        <div class="panel-section">
+          <div class="panel-title">🤖 สร้าง AI Agent</div>
+          <div class="form-group">
+            <label>NAME</label>
+            <input type="text" id="agentName" class="form-input" placeholder="ชื่อ Agent">
+          </div>
+          <div class="form-group">
+            <label>CLASS / ROLE</label>
+            <select id="agentRole" class="form-input">
+              <option value="monitor">🕵️ ตรวจสอบสต็อก</option>
+              <option value="report">🧙 ทำรายงานเดือน</option>
+              <option value="fix">🔧 แจ้งเตือนชำรุด</option>
+            </select>
+          </div>
+          <button class="pixel-btn green" onclick="hireAgent()">DEPLOY AGENT</button>
         </div>
 
-        <div id="actionPanel" class="bg-slate-900 border-t border-slate-800 p-5 min-h-[260px] flex flex-col justify-center font-sans">
-            <div class="text-center text-slate-500 font-bold uppercase tracking-widest text-xs animate-pulse">
-                โปรดเลือกตัวละคร Agent บนแผนผังเพื่อสั่งงาน
-            </div>
+        <!-- Action Buttons -->
+        <div class="panel-section" style="border-bottom: none; margin-top: auto;">
+          <button class="pixel-btn" onclick="saveOfficeState()" style="margin-bottom: 10px;">💾 SYNC TO CLOUD</button>
+          <button class="pixel-btn" onclick="clearRoom()" style="background-color: #ff004d;">🗑️ RESET ROOM</button>
         </div>
+
+      </div>
     </div>
 
-    <div id="hireModal" class="fixed inset-0 bg-slate-950/80 z-[900] hidden items-center justify-center backdrop-blur-sm p-4 font-sans">
-        <div class="bg-slate-800 border-2 border-indigo-500/30 rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col sm:flex-row gap-6">
-            
-            <div class="w-full sm:w-1/3 bg-slate-950 rounded-2xl border border-slate-700 p-4 flex flex-col items-center justify-center">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Avatar Preview</span>
-                <div class="w-10 h-16 relative scale-[2] my-4">
-                    <div id="previewChar" class="agent-avatar gender-MALE outfit-SUIT left-0 top-0">
-                        <div class="pixel-body">
-                            <div class="pixel-head"><div class="hair-MALE"></div><div class="hair-FEMALE"></div><div class="pixel-eyes"></div></div>
-                        </div>
-                        <div class="pixel-legs"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="w-full sm:w-2/3 space-y-4">
-                <h3 class="text-white font-bold text-lg border-b border-slate-700 pb-2">📋 ลงทะเบียนสร้าง Agent ประจำหน่วย</h3>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อบอท (Agent Name)</label>
-                    <input type="text" id="inputName" placeholder="เช่น น้องมันนี่, บอทคลัง-01" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-2.5 text-white outline-none focus:border-indigo-500 text-sm">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs font-bold text-slate-400 mb-1 block">เพศ / ทรงผม</label>
-                        <select id="inputGender" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-white outline-none text-sm cursor-pointer">
-                            <option value="MALE">👨‍💼 ชาย (ผมสั้น)</option>
-                            <option value="FEMALE">👩‍💼 หญิง (ผมยาว)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-slate-400 mb-1 block">ชุดแต่งกาย</label>
-                        <select id="inputOutfit" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-white outline-none text-sm cursor-pointer">
-                            <option value="SUIT">🤵 สูททำงาน (สีดำ)</option>
-                            <option value="WORK">👕 เสื้อช่าง (สีฟ้า)</option>
-                            <option value="CASUAL">🟢 เสื้อลำลอง (สีเขียว)</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">เลือกฟังก์ชันหน้าที่ (Role)</label>
-                    <select id="inputRole" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-2.5 text-white outline-none text-sm cursor-pointer">
-                        <option value="CHECKER">🔍 Checker Bot (ตรวจเช็คและค้นหาพัสดุ)</option>
-                        <option value="RUNNER">🏃‍♂️ Runner Bot (เดินงานเบิกจ่ายตัดสต็อกจริง)</option>
-                        <option value="REPORTER">📊 Reporter Bot (สรุปยอดและออกรายงาน Excel)</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 pt-2">
-                    <button onclick="closeHireModal()" class="flex-1 bg-slate-700 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-slate-600">ยกเลิก</button>
-                    <button onclick="hireAgent()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-indigo-500 shadow-lg">ยืนยันการจ้าง</button>
-                </div>
-            </div>
-        </div>
+    <!-- Terminal Log -->
+    <div class="terminal-bar">
+      <div class="terminal-header">
+        <span>CLAUDE CODE TERMINAL v1.0</span>
+        <span id="agentCount">AGENTS: 0</span>
+      </div>
+      <div class="terminal-content" id="terminalLog">
+        > System Initialized...<br>
+        > Connecting to ADP Backend...<br>
+        <span class="log-system">> [STATUS] Office Ready for customization.</span><br>
+      </div>
     </div>
+  </div>
 
-    <div id="withdrawModal" class="fixed inset-0 bg-slate-950/80 z-[1000] hidden items-center justify-center backdrop-blur-sm p-4 font-sans">
-        <div class="bg-slate-800 border-2 border-amber-500/50 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-slide-up">
-            <h3 class="text-amber-400 font-bold text-lg mb-3">📤 คำสั่งเบิกพัสดุออกจากคลัง</h3>
-            <p id="wdItemName" class="font-bold text-white text-base truncate mb-1">-</p>
-            <p class="text-xs text-slate-400 border-b border-slate-700 pb-3 mb-4">ยอดในคลัง: <span id="wdMaxQty" class="text-emerald-400 font-bold">0</span></p>
-            <div class="space-y-4 mb-6">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 block mb-1">ระบุจำนวนที่ต้องการเบิก</label>
-                    <input type="number" id="wdQtyInput" min="1" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-2.5 text-white font-bold text-lg outline-none focus:border-amber-500 font-mono">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 block mb-1">ชื่อหน่วยงาน / ชื่อคนรับของ</label>
-                    <input type="text" id="wdUserInput" placeholder="ระบุปลายทาง..." class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-medium">
-                </div>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="closeWithdrawModal()" class="flex-1 bg-slate-700 text-white font-bold py-2.5 rounded-xl text-sm">ยกเลิก</button>
-                <button onclick="executeAgentWithdraw()" class="flex-1 bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-amber-500">สั่งให้บอทเดินไปหยิบ</button>
-            </div>
-        </div>
-    </div>
+  <script>
+    // ==========================================
+    // CONFIG & STATE
+    // ==========================================
+    const BACKEND_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL'; // ใส่ URL ของคุณที่นี่
+    
+    let officeState = { items: [], agents: [] };
+    let isPlacing = false;
+    let currentTool = null;
 
-    <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[2000] hidden flex-col items-center justify-center backdrop-blur-md">
-        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="font-mono text-indigo-400 text-base font-bold tracking-widest" id="overlayText">AGENT PROCESSING...</p>
-    </div>
+    // รายการของตกแต่งในร้าน
+    const shopItems = [
+      { id: 'desk', sprite: '🖥️', name: 'โต๊ะ+จอ' },
+      { id: 'plant', sprite: '🪴', name: 'ต้นไม้' },
+      { id: 'coffee', sprite: '☕', name: 'กาแฟ' },
+      { id: 'shelf', sprite: '📚', name: 'ชั้นหนังสือ' },
+      { id: 'cabinet', sprite: '🗄️', name: 'ตู้เอกสาร' },
+      { id: 'server', sprite: '💽', name: 'แม่ข่าย' },
+    ];
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec';
-        const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
-        const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES';
+    const agentSprites = {
+      monitor: '🕵️',
+      report: '🧙',
+      fix: '🔧'
+    };
 
-        const deskPositions = [
-            { id: 1, x: 80, y: 150, occupied: false },
-            { id: 2, x: 260, y: 150, occupied: false },
-            { id: 3, x: 80, y: 380, occupied: false },
-            { id: 4, x: 260, y: 380, occupied: false }
-        ];
+    // ==========================================
+    // INITIALIZATION
+    // ==========================================
+    window.onload = () => {
+      renderShop();
+      // loadOfficeState(); // เปิดใช้เมื่อใส่ URL แล้ว
+    };
 
-        let dbMain = { main: [], withdrawals: [] };
-        let dbSup = { ink: [], accessories: [], parts: [] };
-        let allItems = [];
-        let agents = [];
-        let selectedAgentId = null;
-        let activeWithdrawItem = null;
+    function renderShop() {
+      const grid = document.getElementById('shopGrid');
+      grid.innerHTML = '';
+      shopItems.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'shop-item';
+        el.id = 'shop_' + item.id;
+        el.onclick = () => selectTool(item);
+        el.innerHTML = `
+          <div class="icon">${item.sprite}</div>
+          <div class="name">${item.name}</div>
+        `;
+        grid.appendChild(el);
+      });
+    }
 
-        const logContainer = document.getElementById('terminalLogs');
-        const actionPanel = document.getElementById('actionPanel');
+    // ==========================================
+    // OFFICE ROOM LOGIC (PLACEMENT)
+    // ==========================================
+    function selectTool(item) {
+      // ถ้ากดซ้ำให้ยกเลิก
+      if (currentTool && currentTool.id === item.id) {
+        cancelPlacement();
+        return;
+      }
 
-        function addLog(text, type = 'info') {
-            const div = document.createElement('div');
-            let color = 'text-emerald-400';
-            if (type === 'error') color = 'text-red-400 font-bold';
-            if (type === 'system') color = 'text-blue-400';
-            if (type === 'bot') color = 'text-white bg-slate-800/80 p-3 rounded-xl border border-slate-700 shadow font-sans text-xs';
-            
-            div.className = `log-entry ${color}`;
-            if(type === 'bot') div.innerHTML = text;
-            else div.innerHTML = `> [${new Date().toLocaleTimeString('th-TH', {hour12:false})}] ${text}`;
-            
-            logContainer.appendChild(div);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
+      isPlacing = true;
+      currentTool = item;
+      
+      document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('shop_' + item.id).classList.add('active');
+      document.getElementById('officeRoom').classList.add('placing-mode');
+      document.getElementById('placingIndicator').style.display = 'block';
+      document.getElementById('placingIndicator').innerText = `กำลังวาง: ${item.name}`;
+    }
 
-        function showOverlay(txt) { document.getElementById('overlayText').innerText = txt; document.getElementById('overlay').classList.remove('hidden'); document.getElementById('overlay').classList.add('flex'); }
-        function hideOverlay() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('overlay').classList.remove('flex'); }
+    function cancelPlacement() {
+      isPlacing = false;
+      currentTool = null;
+      document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('active'));
+      document.getElementById('officeRoom').classList.remove('placing-mode');
+      document.getElementById('placingIndicator').style.display = 'none';
+    }
 
-        function openHireModal() { updatePreview(); document.getElementById('hireModal').style.display = 'flex'; }
-        function closeHireModal() { document.getElementById('hireModal').style.display = 'none'; }
-        
-        function updatePreview() {
-            let gender = document.getElementById('inputGender').value;
-            let outfit = document.getElementById('inputOutfit').value;
-            document.getElementById('previewChar').className = `agent-avatar gender-${gender} outfit-${outfit} left-0 top-0`;
-        }
+    function placeEntity(event) {
+      if (!isPlacing || !currentTool) return;
 
-        window.onload = async function() {
-            try {
-                const res = await fetch(`${API_URL}?key=ALL_DATA`);
-                const result = await res.json();
-                if (result.value) {
-                    if(result.value[WAREHOUSE_KEY]) dbMain = JSON.parse(result.value[WAREHOUSE_KEY]);
-                    if(result.value[WAREHOUSE_SUPPLIES_KEY]) dbSup = JSON.parse(result.value[WAREHOUSE_SUPPLIES_KEY]);
-                    if(result.value['ADP_AGENTS_DB']) {
-                        agents = JSON.parse(result.value['ADP_AGENTS_DB']);
-                        agents.forEach(a => {
-                            let desk = deskPositions.find(d => d.id === a.deskId);
-                            if(desk) desk.occupied = true; 
-                            renderAgent(a); 
-                        });
-                        addLog(`Loaded ${agents.length} agents from database.`, 'system');
-                    }
-                    buildIndex();
-                }
-                document.getElementById('loadStatus').className = 'text-emerald-400 font-bold ml-auto';
-                document.getElementById('loadStatus').innerText = 'READY';
-                addLog('Command Center online. All Agent slots ready.', 'system');
-            } catch(e) {
-                document.getElementById('loadStatus').className = 'text-red-500 font-bold ml-auto';
-                document.getElementById('loadStatus').innerText = 'FAILED';
-                addLog('CRITICAL ERROR: Failed to fetch Warehouse database.', 'error');
-            }
+      const room = document.getElementById('officeRoom');
+      const rect = room.getBoundingClientRect();
+      
+      // คำนวณตำแหน่งแบบ Grid (48x48 px)
+      const x = Math.floor((event.clientX - rect.left) / 48) * 48;
+      const y = Math.floor((event.clientY - rect.top) / 48) * 48;
+
+      // ป้องกันการวางซ้อนที่เดิม
+      const isOccupied = officeState.items.some(i => i.x === x && i.y === y) || 
+                         officeState.agents.some(a => a.x === x && a.y === y);
+      if (isOccupied) {
+        addLog(`> <span class="log-error">[ERROR] ช่องนี้มีของอยู่แล้ว!</span>`);
+        return;
+      }
+
+      const newId = 'item_' + Date.now();
+      const newItem = {
+        id: newId,
+        type: currentTool.id,
+        sprite: currentTool.sprite,
+        name: currentTool.name,
+        x: x,
+        y: y
+      };
+
+      officeState.items.push(newItem);
+      renderEntity(newItem, false);
+      
+      addLog(`> <span class="log-system">[SYSTEM] วาง ${currentTool.name} ที่พิกัด [${x/48}, ${y/48}]</span>`);
+      cancelPlacement();
+    }
+
+    function renderEntity(data, isAgent) {
+      const room = document.getElementById('officeRoom');
+      const el = document.createElement('div');
+      el.className = `pixel-entity ${isAgent ? 'agent' : ''}`;
+      el.style.left = data.x + 'px';
+      el.style.top = data.y + 'px';
+      el.dataset.id = data.id;
+      el.innerHTML = `
+        <div class="sprite-box">${data.sprite}</div>
+        <div class="entity-name">${data.name}</div>
+      `;
+      
+      // ถ้าเป็น Agent ให้สามารถคลิกเพื่อสั่งงานได้
+      if (isAgent) {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          commandAgent(data);
         };
+      }
 
-        function buildIndex() {
-            allItems = [];
-            if(dbMain.main) dbMain.main.forEach((r, idx) => { let sn = r[4]||''; if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type: r[1]||'', name: `${r[2]||''} ${r[3]||''}`.trim(), sn, status: r[5]||'', qty: 1, unit: 'เครื่อง', targetRack: 'rack-main' }); });
-            if(dbSup.parts) dbSup.parts.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'', targetRack: 'rack-parts' }); });
-            if(dbSup.accessories) dbSup.accessories.forEach((r, idx) => { let qty = parseFloat(r[4]); if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: r[3]||'-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[5]||'', targetRack: 'rack-acc' }); });
-            if(dbSup.ink) dbSup.ink.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${r[1]||''} (ใช้กับ: ${r[2]||''})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'', targetRack: 'rack-ink' }); });
+      room.appendChild(el);
+    }
+
+    // ==========================================
+    // AGENT LOGIC
+    // ==========================================
+    function hireAgent() {
+      const nameInput = document.getElementById('agentName');
+      const roleSelect = document.getElementById('agentRole');
+
+      const name = nameInput.value.trim() || 'Agent-X';
+      const role = roleSelect.value;
+      const sprite = agentSprites[role];
+
+      // หาจุดว่างให้ Agent (มุมขวาล่าง)
+      const room = document.getElementById('officeRoom');
+      let x = 96;
+      let y = 96;
+      
+      // พยายามหาช่องว่างแบบง่ายๆ
+      while (officeState.agents.some(a => a.x === x && a.y === y)) {
+        x += 48;
+        if (x > room.clientWidth - 48) {
+          x = 48;
+          y += 48;
         }
+      }
 
-        async function hireAgent() {
-            let nameEl = document.getElementById('inputName');
-            let name = (nameEl ? nameEl.value.trim() : '') || 'Agent-' + (agents.length + 1);
-            let role = document.getElementById('inputRole').value;
-            let gender = document.getElementById('inputGender').value;
-            let outfit = document.getElementById('inputOutfit').value;
+      const agentId = 'agent_' + Date.now();
+      const newAgent = {
+        id: agentId,
+        name: name,
+        role: role,
+        sprite: sprite,
+        x: x,
+        y: y
+      };
 
-            let desk = deskPositions.find(d => !d.occupied);
-            if(!desk) { alert("ที่นั่งออฟฟิศเต็มแล้วค่ะ!"); closeHireModal(); return; }
+      officeState.agents.push(newAgent);
+      renderEntity(newAgent, true);
+      
+      document.getElementById('agentCount').innerText = `AGENTS: ${officeState.agents.length}`;
+      addLog(`> <span class="log-agent">[AGENT DEPLOYED] ${name} (Class: ${role}) ประจำการแล้ว!</span>`);
+      
+      nameInput.value = '';
 
-            desk.occupied = true;
-            let id = Date.now();
-            let agentObj = { id, name, role, gender, outfit, deskId: desk.id, homeX: desk.x, intentX: desk.x, homeY: desk.y, intentY: desk.y };
-            agents.push(agentObj);
+      // จำลองการทำงานอัตโนมัติครั้งแรก
+      setTimeout(() => simulateAgentTask(newAgent), 2000);
+    }
 
-            renderAgent(agentObj);
-            closeHireModal();
-            addLog(`Hired new agent: "${name}" assigned to department.`, 'system');
+    function commandAgent(agent) {
+      addLog(`> <span class="log-agent">[COMMAND] สั่งงาน ${agent.name}...</span>`);
+      simulateAgentTask(agent);
+    }
 
-            moveAgent(id, desk.x + 28, desk.y - 15);
-            if (nameEl) nameEl.value = '';
-            selectAgent(id);
+    function simulateAgentTask(agent) {
+      let taskDetail = "";
+      let logClass = "log-agent";
 
-            try {
-                let updates = [{ key: 'ADP_AGENTS_DB', value: JSON.stringify(agents) }];
-                let logs = [{ station: 'ระบบจัดการ AI', action: 'เพิ่ม Agent', detail: `จ้างบอทใหม่ชื่อ ${agentObj.name} (ตำแหน่ง: ${agentObj.role}) เข้าสู่ออฟฟิศ` }];
-                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: logs }) });
-            } catch(e) { console.error("Save agent failed"); }
+      if(agent.role === 'monitor') {
+        taskDetail = "กำลังสแกน S/N อุปกรณ์ในคลัง... พบของว่าง 12 รายการ";
+      } else if(agent.role === 'report') {
+        taskDetail = "กำลังรวบรวมข้อมูลสถานีเพื่อทำรายงานประจำเดือน...";
+      } else if(agent.role === 'fix') {
+        taskDetail = "ตรวจพบจอมอนิเตอร์ชำรุด 1 รายการ กำลังบันทึกเพื่อแจ้งซ่อม!";
+        logClass = "log-error"; // ให้ขึ้นสีแดงเด่นๆ
+      }
+
+      addLog(`> <span class="${logClass}">[${agent.name}] ${taskDetail}</span>`);
+    }
+
+    // ==========================================
+    // BACKEND INTEGRATION
+    // ==========================================
+    async function saveOfficeState() {
+      addLog(`> <span class="log-system">[SYSTEM] กำลังเชื่อมต่อ Backend เพื่อบันทึก...</span>`);
+      
+      // เตรียม Log สำหรับส่งไป Telegram ผ่าน Apps Script
+      const logs = officeState.agents.map(a => ({
+        station: "AI Office",
+        action: "Agent Active",
+        detail: `Agent ${a.name} (Role: ${a.role}) ประจำการอยู่`
+      }));
+
+      try {
+        const response = await fetch(BACKEND_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'SAVE_OFFICE_STATE',
+            value: JSON.stringify(officeState),
+            logs: logs
+          })
+        });
+        const result = await response.json();
+        
+        if(result.status === 'success') {
+          addLog(`> <span class="log-system">[SYSTEM] ✅ บันทึกสถานะสำนักงานสำเร็จ!</span>`);
+        } else {
+          addLog(`> <span class="log-error">[ERROR] Backend error: ${result.message}</span>`);
         }
+      } catch (error) {
+        addLog(`> <span class="log-error">[NETWORK ERROR] ไม่สามารถเชื่อมต่อ Backend ได้</span>`);
+      }
+    }
 
-        function renderAgent(agent) {
-            const layer = document.getElementById('characterLayer');
-            if (!layer) return;
-            let zIndex = agent.y + 10; 
-            let color = agent.role === 'CHECKER' ? '#3b82f6' : (agent.role === 'RUNNER' ? '#f59e0b' : '#ec4899');
-
-            let pixelHtml = `
-                <div class="pixel-char gender-${agent.gender} outfit-${agent.outfit}">
-                    <div class="p-head"><div class="hair-${agent.gender}"></div><div class="pixel-eyes"></div></div>
-                    <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
-                    <div class="p-legs"><div class="p-legs-gap"></div></div>
-                </div>
-            `;
-
-            let charHtml = `
-            <div id="agent-${agent.id}" class="agent-avatar walking" style="left: 0px; top: 100px; pointer-events: auto; z-index: ${zIndex};" onclick="selectAgent(${agent.id}); event.stopPropagation();">
-                <div class="select-ring"></div>
-                <div class="bot-popup" id="pop-${agent.id}">Working...</div>
-                ${pixelHtml}
-                <div class="agent-label" style="border-color: ${color}; color: ${color};">${agent.name}</div>
-            </div>`;
-            layer.insertAdjacentHTML('beforeend', charHtml);
+    async function loadOfficeState() {
+      try {
+        const response = await fetch(`${BACKEND_URL}?action=GET_OFFICE_STATE`);
+        const result = await response.json();
+        
+        if(result.value) {
+          officeState = JSON.parse(result.value);
+          
+          // ล้างห้องเดิมก่อนแล้ววาดใหม่
+          document.querySelectorAll('.pixel-entity').forEach(el => el.remove());
+          
+          officeState.items.forEach(item => renderEntity(item, false));
+          officeState.agents.forEach(agent => renderEntity(agent, true));
+          
+          document.getElementById('agentCount').innerText = `AGENTS: ${officeState.agents.length}`;
+          addLog(`> <span class="log-system">[SYSTEM] ✅ โหลดสถานะสำนักงานล่าสุดสำเร็จ!</span>`);
         }
+      } catch (error) {
+        addLog(`> <span class="log-error">[LOAD ERROR] ไม่สามารถโหลดข้อมูลเดิมได้</span>`);
+      }
+    }
 
-        function moveAgent(id, targetX, targetY, callback = null) {
-            let el = document.getElementById(`agent-${id}`);
-            if(!el) return;
-            el.classList.add('walking');
-            el.style.left = targetX + 'px'; el.style.top = targetY + 'px';
-            setTimeout(() => { el.classList.remove('walking'); if(callback) callback(); }, 1000);
-        }
+    function clearRoom() {
+      if(confirm('ต้องการล้างข้อมูลห้องทั้งหมดหรือไม่?')) {
+        officeState = { items: [], agents: [] };
+        document.querySelectorAll('.pixel-entity').forEach(el => el.remove());
+        document.getElementById('agentCount').innerText = `AGENTS: 0`;
+        addLog(`> <span class="log-error">[SYSTEM] รีเซ็ตห้องทำงานแล้ว</span>`);
+      }
+    }
 
-        function selectAgent(id) {
-            selectedAgentId = id;
-            let agent = agents.find(a => a.id === id);
-            document.querySelectorAll('.agent-avatar').forEach(el => el.classList.remove('selected'));
-            document.getElementById(`agent-${id}`).classList.add('selected');
-            document.getElementById('consoleHeader').innerText = `HQ_CONSOLE // ${agent.name.toUpperCase()}`;
-            
-            let roleTh = agent.role === 'CHECKER' ? 'แผนกเช็คยอด' : (agent.role === 'RUNNER' ? 'แผนกเบิกจ่าย' : 'แผนกรายงาน');
-            addLog(`<b class="text-indigo-400">🤖 [${roleTh}] ${agent.name}:</b> พร้อมรับคำสั่งประจำจุดแล้วค่ะเจ้านาย!`, 'bot', true);
-            buildTerminalForm(agent.role);
-        }
-
-        function buildTerminalForm(role) {
-            if (role === 'CHECKER') {
-                actionPanel.innerHTML = `
-                    <label class="text-xs text-blue-400 font-bold block uppercase tracking-wider mb-2">🔍 สั่งระบบหาสินค้าด่วน (Search)</label>
-                    <input type="text" id="b1Q" placeholder="พิมพ์ชื่อสเปค, S/N, หรือหมวดพัสดุ..." class="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-mono rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-3" onkeypress="if(event.key==='Enter') runCheckerTask()">
-                    <button onclick="runCheckerTask()" class="w-full bg-blue-900/40 border border-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition-colors text-sm">EXECUTE STOCK CHECK</button>
-                `;
-                setTimeout(() => document.getElementById('b1Q').focus(), 100);
-            } 
-            else if (role === 'RUNNER') {
-                actionPanel.innerHTML = `
-                    <label class="text-xs text-amber-500 font-bold block uppercase tracking-wider mb-2">🏃‍♂️ สั่งเบิกพัสดุออกจากคลัง (Withdraw)</label>
-                    <input type="text" id="b2Q" placeholder="พิมพ์หาของที่จะเบิกจ่าย..." class="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-mono rounded-xl p-3 text-sm outline-none focus:border-amber-500 mb-2" oninput="runRunnerFilter()">
-                    <div id="b2FormList" class="max-h-[110px] overflow-y-auto custom-scrollbar bg-slate-950 border border-slate-800 p-1 rounded-xl flex flex-col gap-1"></div>
-                `;
-                runRunnerFilter();
-            }
-            else if (role === 'REPORTER') {
-                actionPanel.innerHTML = `
-                    <label class="text-xs text-pink-400 font-bold block uppercase tracking-wider mb-2">📊 สั่งสรุปยอดพัสดุออก Excel</label>
-                    <select id="b3Q" class="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-mono rounded-xl p-3 text-sm outline-none focus:border-pink-500 mb-4 cursor-pointer">
-                        <option value="ALL">สรุปพัสดุพร้อมจ่ายทั้งหมดในคลัง</option>
-                        <option value="LOW">สรุปแจ้งเตือนของขาดคลัง (ต่ำกว่า 5)</option>
-                        <option value="MAIN">สรุปเฉพาะหมวดอุปกรณ์หลัก</option>
-                        <option value="SUP">สรุปหมวดอะไหล่และหมึกพิมพ์</option>
-                    </select>
-                    <button onclick="runReporterTask()" class="w-full bg-pink-900/40 border border-pink-600 text-white font-bold py-3 rounded-xl hover:bg-pink-600 transition-colors text-sm flex justify-center items-center gap-2">
-                        💾 GENERATE EXCEL REPORT
-                    </button>
-                `;
-            }
-        }
-
-        function runCheckerTask() {
-            let q = document.getElementById('b1Q').value.toLowerCase().trim();
-            if(!q) return;
-
-            let agent = window.agents.find(a => a.id === selectedAgentId);
-            document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังหาข้อมูล..";
-            document.getElementById(`agent-${selectedAgentId}`).classList.add('busy');
-            addLog(`Checker Agent is checking rack memory for: "${q}"...`, 'system');
-
-            let matches = allItems.filter(i => i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q));
-            let targetRackId = (matches.length > 0) ? matches[0].targetRack : 'rack-main';
-            let rackEl = document.getElementById(targetRackId);
-            
-            moveAgent(selectedAgentId, rackEl.offsetLeft + 40, rackEl.offsetTop + 40, () => {
-                setTimeout(() => {
-                    document.getElementById(`agent-${selectedAgentId}`).classList.remove('busy');
-                    if (matches.length === 0) {
-                        addLog(`<b class="text-blue-300">👩🏻‍💻 [Checker] ${agent.name}:</b> หนูเดินไปส่องดูที่ชั้นวางแล้ว ไม่เจอพัสดุชื่อ <b>"${q}"</b> เลยค่ะเจ้านาย`, 'bot');
-                    } else {
-                        let rowHtml = `<div class="mb-2 text-blue-300">👩🏻‍💻 เดินไปนับสต็อกที่ชั้นมาให้แล้วค่ะ เจอรุ่นที่ตรงกันตามนี้:</div><div class="space-y-1.5 max-h-[180px] overflow-y-auto custom-scrollbar pr-1">`;
-                        matches.slice(0, 10).forEach(m => {
-                            let cl = m.qty <= 0 ? 'text-red-400 font-bold' : (m.qty <= 5 ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold');
-                            rowHtml += `<div class="bg-slate-900 p-2 rounded-lg border border-slate-700 text-xs flex justify-between"><span><span class="text-slate-500">[${m.type}]</span> ${m.name}</span><span class="${cl}">${m.qty} ${m.unit}</span></div>`;
-                        });
-                        rowHtml += `</div>`;
-                        addLog(rowHtml, 'bot');
-                    }
-                    moveAgent(selectedAgentId, agent.homeX + 28, agent.homeY - 15);
-                }, 800);
-            });
-            document.getElementById('b1Q').value = '';
-        }
-
-        function runRunnerFilter() {
-            let q = document.getElementById('b2Q').value.toLowerCase().trim();
-            let box = document.getElementById('b2FormList');
-            if(!q) { box.innerHTML = '<div class="text-slate-500 text-center text-xs mt-3">พิมพ์ค้นหารุ่นอุปกรณ์...</div>'; return; }
-
-            let matches = allItems.filter(i => i.qty > 0 && (i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q)));
-            if(matches.length === 0) { box.innerHTML = '<div class="text-red-400 text-center text-xs mt-3">❌ ไม่พบของที่เบิกได้</div>'; return; }
-
-            let html = '';
-            matches.slice(0, 10).forEach(m => {
-                let sName = String(m.name).replace(/'/g, "\\'");
-                html += `
-                <div class="bg-slate-900 hover:bg-slate-800 p-2 rounded-lg border border-slate-700 flex justify-between items-center text-xs cursor-pointer"
-                     onclick="triggerAgentWithdrawForm('${m.ref}', ${m.idx}, '${sName}', ${m.qty}, '${m.unit}', '${m.targetRack}')">
-                     <div><div class="text-white font-bold truncate max-w-[200px]">${m.name}</div><div class="text-[10px] text-slate-500">S/N: ${m.sn}</div></div>
-                     <span class="text-amber-500 font-mono font-bold">มี ${m.qty}</span>
-                </div>`;
-            });
-            box.innerHTML = html;
-        }
-
-        function triggerAgentWithdrawForm(ref, idx, name, maxQty, unit, targetRack) {
-            activeWithdrawItem = { ref, idx, name, maxQty, unit, targetRack };
-            document.getElementById('wdItemName').innerText = name;
-            document.getElementById('wdMaxQty').innerText = `${maxQty} ${unit}`;
-            document.getElementById('wdQtyInput').value = 1; document.getElementById('wdQtyInput').max = maxQty;
-            document.getElementById('wdUserInput').value = '';
-            document.getElementById('withdrawModal').classList.remove('hidden'); document.getElementById('withdrawModal').classList.add('flex');
-        }
-        function closeWithdrawModal() { document.getElementById('withdrawModal').classList.add('hidden'); document.getElementById('withdrawModal').classList.remove('flex'); activeWithdrawItem = null; }
-
-        async function executeAgentWithdraw() {
-            if(!activeWithdrawItem) return;
-            let qty = parseFloat(document.getElementById('wdQtyInput').value);
-            let user = document.getElementById('wdUserInput').value.trim();
-
-            if(!qty || qty <= 0 || qty > activeWithdrawItem.maxQty) { alert('ระบุจำนวนไม่ถูกต้อง'); return; }
-            if(!user) { alert('กรุณาพิมพ์ชื่อคนรับพัสดุ'); return; }
-
-            closeWithdrawModal();
-            let agent = window.agents.find(a => a.id === selectedAgentId);
-            
-            document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังไปหยิบของ..";
-            document.getElementById(`agent-${selectedAgentId}`).classList.add('busy');
-            addLog(`Runner Agent moving to ${activeWithdrawItem.targetRack}...`, 'system');
-
-            let rackEl = document.getElementById(activeWithdrawItem.targetRack);
-            moveAgent(selectedAgentId, rackEl.offsetLeft + 40, rackEl.offsetTop + 40, async () => {
-                showOverlay('SAVING DEDUCTION...');
-                try {
-                    let ref = activeWithdrawItem.ref; let idx = activeWithdrawItem.idx; let newQty = activeWithdrawItem.maxQty - qty;
-
-                    if(ref === 'MAIN') { dbMain.main[idx][5] = 'จ่ายแล้ว'; dbMain.main[idx][7] = String(dbMain.main[idx][7]||'').replace(/\[จ่ายให้:.*?\]/g, "").trim() + ` [จ่ายให้: ${user}]`; }
-                    else if (ref === 'PARTS') dbSup.parts[idx][3] = newQty; else if (ref === 'ACC') dbSup.accessories[idx][4] = newQty; else if (ref === 'INK') dbSup.ink[idx][3] = newQty;
-
-                    let todayStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                    dbMain.withdrawals = dbMain.withdrawals || [];
-                    dbMain.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: ref, specs: activeWithdrawItem.name, user: user, qty: qty, unit: activeWithdrawItem.unit, sn: ref==='MAIN'?dbMain.main[idx][4]:null });
-
-                    let updates = (ref === 'MAIN') ? [{ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }] : [{ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }];
-                    let apiLogs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(เกม)', detail: `บอท ${agent.name} หยิบเบิก ${activeWithdrawItem.name} จำนวน ${qty} จ่ายให้ ${user}` }];
-
-                    let response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: apiLogs }) });
-                    let resJson = await response.json();
-                    if(resJson.status !== 'success') throw new Error("API error");
-
-                    buildIndex(); runRunnerFilter(); 
-                    hideOverlay();
-                    document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังนำไปส่ง..";
-
-                    moveAgent(selectedAgentId, 220, 480, () => {
-                        addLog(`<b class="text-amber-400">🏃‍♂️ [Runner] ${agent.name}:</b> ลูกพี่! ผมหิ้ว <b>${activeWithdrawItem.name}</b> จำนวน ${qty} ไปส่งให้คุณ ${user} เรียบร้อยแล้ว สต็อกถูกตัดทอนเรียบร้อย!`, 'bot');
-                        document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected';
-                        moveAgent(selectedAgentId, agent.homeX + 28, agent.homeY - 15);
-                    });
-
-                } catch(err) {
-                    hideOverlay(); document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected';
-                    moveAgent(selectedAgentId, agent.homeX + 28, agent.homeY - 15);
-                    addLog('❌ การเบิกจ่ายผ่านบอทล้มเหลว เซิร์ฟเวอร์ขาดการติดต่อ', 'error');
-                }
-            });
-            document.getElementById('b2Q').value = '';
-        }
-
-        async function runReporterTask() {
-            let filter = document.getElementById('b3Q').value;
-            let agent = window.agents.find(a => a.id === selectedAgentId);
-            
-            document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังรวบรวมข้อมูล..";
-            document.getElementById(`agent-${selectedAgentId}`).classList.add('busy');
-            showOverlay('COMPILING EXCEL...');
-            addLog(`Reporter Agent is formatting Excel spreadsheets [Type: ${filter}]...`, 'system');
-
-            try {
-                let reportData = [];
-                if (filter === 'ALL' || filter === 'MAIN' || filter === 'LOW') {
-                    let groups = {};
-                    if(dbMain.main) dbMain.main.forEach(r => {
-                        let type = String(r[1]||'').trim(); let key = `${type}|${String(r[2]||'').trim()}|${String(r[3]||'').trim()}`;
-                        if (!groups[key]) groups[key] = { cat: 'MAIN', type: type, detail: `${r[2]||''} ${r[3]||''}`.trim(), qty: 0, unit: 'เครื่อง' };
-                        if (String(r[5]||'').includes('ว่าง')) groups[key].qty++;
-                    });
-                    reportData.push(...Object.values(groups));
-                }
-                if (filter === 'ALL' || filter === 'SUP' || filter === 'LOW') {
-                    if(dbSup.parts) dbSup.parts.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'PARTS', type: r[1]||'-', detail: r[2]||'-', qty, unit: r[4]||'ชิ้น' }); });
-                    if(dbSup.accessories) dbSup.accessories.forEach(r => { let qty = parseFloat(r[4]); if(!isNaN(qty)) reportData.push({ cat: 'ACC', type: r[1]||'-', detail: r[2]||'-', qty, unit: r[5]||'ชิ้น' }); });
-                    if(dbSup.ink) dbSup.ink.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'INK', type: r[1]||'-', detail: `รองรับ: ${r[2]||'-'}`, qty, unit: r[4]||'ตลับ' }); });
-                }
-
-                if (filter === 'LOW') reportData = reportData.filter(i => i.qty <= 5).sort((a,b)=>a.qty-b.qty);
-                else reportData.sort((a,b) => a.cat.localeCompare(b.cat) || a.type.localeCompare(b.type));
-
-                if(reportData.length === 0) { hideOverlay(); document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected'; addLog('ไม่พบข้อมูลตามเงื่อนไขที่สั่งงาน', 'error'); return; }
-
-                const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Stock_Summary');
-                ws.addRow([`รายงานสรุปยอดพัสดุคงเหลือในโกดังส่วนกลาง`]); ws.addRow([`จัดทำโดย Agent: ${agent.name} | ดึงข้อมูล ณ วันที่: ${new Date().toLocaleString('th-TH')}`]); ws.addRow([]);
-                ws.addRow(['ลำดับ', 'หมวดหมู่', 'ประเภทพัสดุ', 'ยี่ห้อ/รุ่น/รายละเอียด', 'จำนวนคงเหลือ', 'หน่วยนับ']);
-                let hRow = ws.getRow(4); hRow.font = { bold: true, color: {argb:'FFFFFFFF'} }; hRow.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF1E293B'} };
-
-                reportData.forEach((item, i) => { let r = ws.addRow([i+1, item.cat, item.type, item.detail, item.qty, item.unit]); r.getCell(5).font = { bold: true, color: { argb: item.qty<=2 ? 'FFDC2626' : 'FF059669' } }; });
-                ws.columns = [ {width: 8}, {width: 15}, {width: 20}, {width: 45}, {width: 15}, {width: 10} ];
-                
-                const buffer = await wb.xlsx.writeBuffer(); saveAs(new Blob([buffer]), `Report_By_${agent.name}_${new Date().getTime()}.xlsx`);
-                hideOverlay(); document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected';
-                addLog(`<b class="text-pink-400 font-bold">👨🏻‍💼 [Reporter] ${agent.name}:</b> จัดทำตารางสรุปแบบเสร็จสมบูรณ์เรียบร้อยแล้วครับเจ้านาย! ไฟล์รายงานดาวน์โหลดเข้าเครื่องสำเร็จแล้วครับผม 📉📊`, 'bot');
-            } catch(e) { hideOverlay(); document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected'; addLog('❌ ระบบประมวลผล Excel พังขัดข้อง', 'error'); }
-        }
-    </script>
+    // ==========================================
+    // UI HELPER
+    // ==========================================
+    function addLog(htmlContent) {
+      const terminal = document.getElementById('terminalLog');
+      terminal.innerHTML += htmlContent + '<br>';
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+  </script>
 </body>
 </html>
