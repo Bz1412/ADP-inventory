@@ -184,7 +184,7 @@
                 <h3 class="text-white font-bold text-lg mb-2 border-b border-slate-700 pb-2">🛠️ สร้าง Agent ใหม่</h3>
                 <div>
                     <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อบอท (Name)</label>
-                    <input type="text" id="agentName" placeholder="เช่น น้องสมหมาย" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm">
+                    <input type="text" id="agentName" placeholder="เช่น น้องมันนี่, Bot-01" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -328,21 +328,16 @@
             if(dbSup.ink) dbSup.ink.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${r[1]||''} (ใช้กับ: ${r[2]||''})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'' }); });
         }
 
-        // ==========================================
-        // 🌟 Agent Character System
-        // ==========================================
-        function updatePreview() {
-            let gender = document.getElementById('agentGender').value;
-            let outfit = document.getElementById('agentOutfit').value;
-            let preview = document.getElementById('previewChar');
-            // รีเซ็ตคลาส แล้วใส่ใหม่
-            preview.className = `pixel-char gender-${gender} outfit-${outfit}`;
-        }
-
         // ===================================================
         // 🌟 AGENT ENGINE (ระบบจ้างงาน เดิน และสั่งการ)
         // ===================================================
         
+        function updatePreview() {
+            let gender = document.getElementById('agentGender').value;
+            let outfit = document.getElementById('agentOutfit').value;
+            document.getElementById('previewChar').className = `pixel-char gender-${gender} outfit-${outfit}`;
+        }
+
         function openHireModal() { 
             updatePreview(); 
             document.getElementById('hireModal').classList.remove('hidden');
@@ -355,10 +350,13 @@
         }
 
         async function hireAgent() {
-            let name = document.getElementById('inputName').value.trim() || 'Agent-' + (agents.length + 1);
-            let role = document.getElementById('inputRole').value;
-            let gender = document.getElementById('inputGender').value;
-            let outfit = document.getElementById('inputOutfit').value;
+            // ดึงค่าให้ตรงกับ ID ในฟอร์ม
+            let nameEl = document.getElementById('agentName');
+            let name = (nameEl ? nameEl.value.trim() : '') || 'Agent-' + (agents.length + 1);
+            
+            let role = document.getElementById('agentRole').value;
+            let gender = document.getElementById('agentGender').value;
+            let outfit = document.getElementById('agentOutfit').value;
 
             let desk = deskPositions.find(d => !d.occupied);
             if(!desk) { alert("ที่นั่งออฟฟิศเต็มแล้วค่ะ!"); closeHireModal(); return; }
@@ -373,12 +371,14 @@
             closeHireModal();
             addLog(`Hired new agent: "${name}" assigned to department.`, 'system');
 
-            // สั่งให้เดินเข้าโต๊ะทำงาน (จุดเกิดคือ x: 0, y: 100 เหมือนเดินเข้ามาจากประตู)
+            // สั่งให้เดินเข้าโต๊ะทำงาน (จุดเกิดคือเดินเข้ามาจากประตู ซ้ายสุด)
             moveAgent(id, desk.x + 28, desk.y - 15);
-            document.getElementById('inputName').value = '';
+            
+            // เคลียร์ค่า
+            if (nameEl) nameEl.value = '';
             selectAgent(id);
 
-            // 🌟 สั่งเซฟข้อมูล Agents ลง Google Sheet
+            // 🌟 สั่งเซฟข้อมูล Agents ลง Google Sheet ทันทีที่จ้าง
             try {
                 let updates = [{ key: 'ADP_AGENTS_DB', value: JSON.stringify(agents) }];
                 let logs = [{ station: 'ระบบจัดการ AI', action: 'เพิ่ม Agent', detail: `จ้างบอทใหม่ชื่อ ${agentObj.name} (ตำแหน่ง: ${agentObj.role}) เข้าสู่ออฟฟิศ` }];
@@ -388,26 +388,35 @@
             }
         }
 
-        // 🌟 ฟังก์ชันวาดตัวละคร (ที่ตกหล่นไป)
+        // 🌟 ฟังก์ชันวาดตัวละครลงบนแผนผังออฟฟิศ
         function renderAgent(agent) {
             const layer = document.getElementById('characterLayer');
             if (!layer) return;
 
+            // คำนวณ Z-index จากพิกัด Y ให้ตัวที่อยู่ล่างบังตัวที่อยู่ด้านบน
+            let zIndex = agent.y + 10; 
+            let color = agent.role === 'CHECKER' ? '#3b82f6' : (agent.role === 'RUNNER' ? '#f59e0b' : '#ec4899');
+
+            let pixelHtml = `
+                <div class="pixel-char gender-${agent.gender} outfit-${agent.outfit}">
+                    <div class="p-head"><div class="p-hair-m"></div><div class="p-hair-f"></div><div class="p-eyes"></div></div>
+                    <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
+                    <div class="p-legs"><div class="p-legs-gap"></div></div>
+                </div>
+            `;
+
             let charHtml = `
-            <div id="agent-${agent.id}" class="agent-avatar gender-${agent.gender} outfit-${agent.outfit} walking" style="left: 0px; top: 100px; pointer-events: auto;" onclick="selectAgent(${agent.id}); event.stopPropagation();">
+            <div id="agent-${agent.id}" class="agent-avatar walking" style="left: 0px; top: 100px; pointer-events: auto; z-index: ${zIndex};" onclick="selectAgent(${agent.id}); event.stopPropagation();">
                 <div class="select-ring"></div>
                 <div class="bot-popup" id="pop-${agent.id}">Working...</div>
-                <div class="pixel-body">
-                    <div class="pixel-head"><div class="hair-${agent.gender}"></div><div class="hair-${agent.gender}"></div><div class="pixel-eyes"></div></div>
-                </div>
-                <div class="pixel-legs"></div>
-                <span class="absolute top-[52px] left-1/2 -translate-x-1/2 text-[9px] font-bold bg-slate-900/80 border border-slate-700 px-1.5 py-0.5 rounded shadow whitespace-nowrap text-slate-200">${agent.name}</span>
+                ${pixelHtml}
+                <div class="agent-label" style="border-color: ${color}; color: ${color};">${agent.name}</div>
             </div>`;
             
             layer.insertAdjacentHTML('beforeend', charHtml);
         }
 
-        // ฟังก์ชันสั่งให้ตัวละครขยับพิกัดเดินดุ๊กดิ๊ก
+        // 🌟 ฟังก์ชันสั่งให้ตัวละครขยับพิกัดเดินดุ๊กดิ๊กไปทำงาน
         function moveAgent(id, targetX, targetY, callback = null) {
             let el = document.getElementById(`agent-${id}`);
             let agent = agents.find(a => a.id === id);
@@ -420,7 +429,7 @@
             setTimeout(() => {
                 el.classList.remove('walking');
                 if(callback) callback();
-            }, 1000); // 1 วินาทีตามสปีดการเดิน CSS transition
+            }, 1000); // 1 วินาทีคือความเร็วในการเดิน
         }
 
         function activateAgent(id) {
