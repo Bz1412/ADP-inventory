@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADP AI Office HQ</title>
+    <title>ADP Pixel Agents</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- ใช้ Prompt สำหรับ UI และ VT323 สำหรับ Terminal -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=VT323&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,221 +21,239 @@
     <style>
         body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; user-select: none; }
         
-        /* 🌟 แผนผังห้อง 2D (Top-down) */
-        .world-bg { 
-            background-color: #1e293b;
+        /* 🌟 CSS ISOMETRIC ENGINE */
+        .iso-container {
+            perspective: 1500px;
+            overflow: auto; /* ให้เลื่อนดูแผนที่ได้ */
+            cursor: grab;
+        }
+        .iso-container:active { cursor: grabbing; }
+
+        .iso-world {
+            position: relative;
+            width: 800px; height: 800px;
+            margin: 100px auto;
+            transform-style: preserve-3d;
+            transform: rotateX(60deg) rotateZ(-45deg); /* มุมมอง Isometric 2.5D */
+            transition: transform 0.5s ease;
+        }
+
+        /* พื้นห้อง (Floor) */
+        .iso-floor {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #8b5a2b; /* สีพื้นไม้ */
             background-image: 
-                linear-gradient(rgba(255,255,255,0.03) 2px, transparent 2px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 2px, transparent 2px);
-            background-size: 40px 40px;
-        }
-        
-        /* พื้นห้องออฟฟิศ (ไม้) */
-        .room-office { 
-            background: #8b5a2b; 
-            background-image: repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(0,0,0,0.1) 20px); 
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.6); 
-            border: 8px solid #4a3018; 
-            border-right: 4px solid #4a3018;
-        }
-        
-        /* พื้นห้องคลัง (คอนกรีต) */
-        .room-warehouse { 
-            background: #64748b; 
-            background-image: radial-gradient(#475569 2px, transparent 2px); 
-            background-size: 20px 20px; 
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.4); 
-            border: 8px solid #334155; 
-            border-left: 4px solid #334155;
+                linear-gradient(rgba(0,0,0,0.1) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(0,0,0,0.1) 2px, transparent 2px);
+            background-size: 80px 80px; /* ขนาดตาราง Grid */
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 20px 20px 50px rgba(0,0,0,0.5);
+            border: 4px solid #5c3a21;
         }
 
-        /* ของตกแต่งในห้อง */
-        .desk { background: #d97706; box-shadow: 4px 4px 0px rgba(0,0,0,0.4), inset -2px -2px 0px rgba(0,0,0,0.2); border-radius: 4px; position: relative; }
-        .pc-monitor { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 24px; height: 8px; background: #1e293b; border: 2px solid #0f172a; border-radius: 2px; }
-        .plant { filter: drop-shadow(4px 4px 2px rgba(0,0,0,0.5)); font-size: 2rem; }
-        
-        /* โซนเก็บของในคลัง */
-        .rack { background: #334155; border: 2px solid #0f172a; box-shadow: 4px 4px 0px rgba(0,0,0,0.4); }
-        .box { background: #ca8a04; border: 1px solid #854d0e; box-shadow: 1px 1px 0px rgba(0,0,0,0.4); }
-
-        /* แอนิเมชันของน้อง Bot */
-        @keyframes idleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-        @keyframes runLeftRight { 0%, 100% { transform: translateX(0) scaleX(1); } 50% { transform: translateX(30px) scaleX(-1); } }
-        
-        .bot-char { 
-            font-size: 2.5rem; filter: drop-shadow(0px 8px 4px rgba(0,0,0,0.5)); 
-            animation: idleBounce 2s infinite ease-in-out; 
-            cursor: pointer; transition: all 0.3s; z-index: 20; 
+        /* กำแพง (Walls) */
+        .iso-wall-left {
+            position: absolute; top: 0; left: -20px; width: 20px; height: 100%;
+            background-color: #94a3b8; transform-origin: right center; transform: rotateY(-90deg);
+            border: 2px solid #475569;
         }
-        .bot-char:hover { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0px 0px 15px rgba(99,102,241,0.8)); }
+        .iso-wall-top {
+            position: absolute; top: -20px; left: 0; width: 100%; height: 20px;
+            background-color: #cbd5e1; transform-origin: bottom center; transform: rotateX(90deg);
+            border: 2px solid #64748b;
+        }
+
+        /* 🌟 CSS 2D Sprites (ตั้งขึ้นมาหาคนดู) */
+        .sprite-upright {
+            position: absolute;
+            transform-style: preserve-3d;
+            /* แก้ความเอียงของพื้น ให้หันหน้าตรงเข้ากล้อง */
+            transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg);
+            transform-origin: bottom center;
+            transition: all 0.3s ease;
+        }
+
+        /* โต๊ะทำงาน (Desk) */
+        .prop-desk { width: 100px; height: 80px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80"><rect y="40" width="100" height="40" fill="%23b45309" rx="4"/><rect x="10" y="20" width="80" height="40" fill="%23fcd34d" rx="2"/><rect x="30" y="10" width="40" height="25" fill="%231e293b" rx="2" stroke="%230f172a" stroke-width="2"/><rect x="45" y="35" width="10" height="10" fill="%2394a3b8"/></svg>') no-repeat bottom center; background-size: contain; filter: drop-shadow(10px 20px 10px rgba(0,0,0,0.5)); margin-left: -50px; margin-top: -80px;}
         
-        /* วงแหวนเมื่อเลือก Bot */
-        .bot-aura { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) rotateX(60deg); width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; transition: all 0.3s; }
-        .bot-char.active .bot-aura { border-color: #10b981; box-shadow: 0 0 15px #10b981, inset 0 0 10px #10b981; animation: spin 3s linear infinite; }
-        @keyframes spin { 100% { transform: translateX(-50%) rotateX(60deg) rotateZ(360deg); } }
+        /* ชั้นวางคลังสินค้า (Rack) */
+        .prop-rack { width: 120px; height: 140px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140"><rect x="10" y="10" width="100" height="130" fill="%23475569" stroke="%231e293b" stroke-width="4"/><rect x="20" y="30" width="80" height="20" fill="%23ca8a04"/><rect x="20" y="70" width="35" height="20" fill="%233b82f6"/><rect x="65" y="70" width="35" height="20" fill="%23ef4444"/><rect x="20" y="110" width="80" height="20" fill="%2310b981"/></svg>') no-repeat bottom center; background-size: contain; filter: drop-shadow(15px 25px 15px rgba(0,0,0,0.6)); margin-left: -60px; margin-top: -140px;}
+
+        /* ตัวละคร (Agent Bot) */
+        .agent-bot {
+            width: 50px; height: 70px;
+            margin-left: -25px; margin-top: -80px; /* ขยับให้ยืนอยู่หลังโต๊ะพอดี */
+            cursor: pointer;
+            filter: drop-shadow(5px 10px 5px rgba(0,0,0,0.4));
+            animation: idle 2s infinite alternate;
+        }
+        .agent-bot:hover { filter: drop-shadow(0 0 15px rgba(99,102,241,0.8)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); }
+        .agent-bot.active { filter: drop-shadow(0 0 20px rgba(16,185,129,1)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); }
+
+        @keyframes idle { 0% { transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(0); } 100% { transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(-5px); } }
+
+        /* ป้ายชื่อและสถานะ */
+        .agent-label {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            background: rgba(15,23,42,0.8); border: 1px solid #475569;
+            color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;
+            white-space: nowrap; pointer-events: none; font-weight: bold;
+        }
+        .agent-bubble {
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+            background: white; color: #0f172a; font-size: 12px; padding: 4px 8px; border-radius: 8px;
+            white-space: nowrap; font-weight: bold; font-family: 'Prompt';
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .agent-bubble::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); border-width: 5px 5px 0; border-style: solid; border-color: white transparent transparent transparent; }
+        .agent-bot.working .agent-bubble { opacity: 1; animation: bounce 1s infinite; }
+
+        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
 
         /* 🌟 Terminal CSS */
-        .terminal-scroll::-webkit-scrollbar { width: 6px; }
-        .terminal-scroll::-webkit-scrollbar-track { background: #0f172a; }
+        .terminal-scroll::-webkit-scrollbar { width: 8px; }
+        .terminal-scroll::-webkit-scrollbar-track { background: #020617; }
         .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
-        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        
         .scanline {
-            width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(0, 0, 0, 0) 100%);
-            opacity: 0.1; position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 6s linear infinite;
+            width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.1) 50%, rgba(0,0,0,0) 100%);
+            position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 8s linear infinite; z-index: 50;
         }
         @keyframes scan { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
+
+        .log-entry { animation: fadeIn 0.3s ease-out forwards; border-left: 2px solid #10b981; padding-left: 8px; margin-bottom: 8px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Grid System สำหรับวางของ */
+        /* Grid ขนาด 80x80 (10x10 ช่อง) */
     </style>
 </head>
-<body class="flex flex-col h-screen w-screen">
+<body class="flex h-screen w-screen overflow-hidden text-sm">
 
-    <nav class="h-14 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-6 shrink-0 shadow-lg relative z-50">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_10px_rgba(79,70,229,0.5)]">AI</div>
-            <h1 class="font-bold text-white tracking-widest text-lg">ADP <span class="text-indigo-400 font-light">Office HQ</span></h1>
-        </div>
-        <div class="flex items-center gap-4">
-            <span id="sysStatus" class="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse"><span class="w-2 h-2 rounded-full bg-amber-400"></span> CONNECTING...</span>
-            <button onclick="window.location.href='warehouse.html'" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold border border-slate-600 transition-colors">ย้อนกลับคลังหลัก</button>
-        </div>
-    </nav>
-
-    <div class="flex flex-1 overflow-hidden relative">
+    <!-- 🌟 LEFT SIDE: 2D Isometric World -->
+    <div class="flex-1 relative flex flex-col bg-[#0f172a] shadow-[inset_-30px_0_50px_rgba(0,0,0,0.8)] z-10">
         
-        <div class="flex-1 world-bg relative flex flex-col justify-center items-center p-4 shadow-[inset_-20px_0_50px_rgba(0,0,0,0.5)] z-10">
-            <h2 class="absolute top-6 left-8 text-slate-500 font-bold tracking-[0.2em] opacity-50 text-2xl">2D VIRTUAL HQ</h2>
-            
-            <div class="w-full max-w-5xl aspect-video flex rounded-2xl shadow-2xl overflow-hidden transform perspective-1000 rotateX-12">
+        <!-- Top Toolbar -->
+        <div class="h-14 bg-slate-900/80 backdrop-blur border-b border-slate-700 flex items-center justify-between px-6 shrink-0 relative z-50">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(99,102,241,0.6)]">PIXEL</div>
+                <h1 class="font-bold text-white tracking-widest text-lg">AGENTS <span class="text-slate-500 font-light text-sm">v1.0</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="sysStatus" class="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse"><span class="w-2 h-2 rounded-full bg-amber-400"></span> DB CONNECTING...</span>
+                <button onclick="window.location.href='warehouse.html'" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold border border-slate-600 transition-colors">ย้อนกลับ</button>
+            </div>
+        </div>
+
+        <!-- The Isometric Canvas -->
+        <div class="flex-1 iso-container relative" id="dragContainer">
+            <div class="iso-world" id="isoWorld">
+                <div class="iso-floor"></div>
+                <div class="iso-wall-left"></div>
+                <div class="iso-wall-top"></div>
                 
-                <div class="flex-1 room-office relative p-6 flex flex-col justify-between">
-                    <div class="absolute top-0 left-4 bg-black/50 text-emerald-400 text-[10px] px-3 py-1 font-bold rounded-b-lg tracking-widest">OFFICE ZONE</div>
-                    
-                    <div class="plant absolute top-4 right-4">🪴</div>
-                    <div class="plant absolute bottom-4 right-4">🌴</div>
-                    
-                    <div class="relative w-max mx-auto mt-8 flex flex-col items-center group">
-                        <div class="bot-char relative" id="bot1" onclick="activateBot(1)">
-                            <div class="bot-aura"></div>
-                            👩🏻‍💻
-                            <div class="absolute -top-3 -right-3 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">เช็คยอด!</div>
-                        </div>
-                        <div class="desk w-20 h-10 mt-1"><div class="pc-monitor"></div></div>
-                        <span class="mt-2 bg-slate-900/80 text-blue-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Bot 1: Checker</span>
-                    </div>
+                <!-- 📦 คลังสินค้า (วาง Rack แบบ Fix) -->
+                <!-- x, y คือพิกัด Grid (ช่องละ 80px) -->
+                <div class="sprite-upright prop-rack" style="left: 640px; top: 80px; z-index: 720;"></div>
+                <div class="sprite-upright prop-rack" style="left: 640px; top: 240px; z-index: 880;"></div>
+                <div class="sprite-upright prop-rack" style="left: 640px; top: 400px; z-index: 1040;"></div>
+                <div class="sprite-upright prop-rack" style="left: 640px; top: 560px; z-index: 1200;"></div>
+                
+                <!-- พรมแบ่งโซนออฟฟิศ -->
+                <div class="absolute" style="left: 80px; top: 80px; width: 400px; height: 640px; background: rgba(59,130,246,0.2); border: 2px dashed rgba(59,130,246,0.5);"></div>
+                <div class="sprite-upright text-4xl" style="left: 120px; top: 120px; z-index: 240; filter: drop-shadow(5px 5px 5px rgba(0,0,0,0.5)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(-20px);">🪴</div>
 
-                    <div class="flex justify-between w-full px-8 mb-4">
-                        <div class="relative flex flex-col items-center group">
-                            <div class="bot-char relative" id="bot2" onclick="activateBot(2)" style="animation-duration: 2.2s;">
-                                <div class="bot-aura"></div>
-                                🏃‍♂️
-                                <div class="absolute -top-3 -right-3 bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">เบิกของ!</div>
-                            </div>
-                            <div class="desk w-20 h-10 mt-1"><div class="pc-monitor"></div></div>
-                            <span class="mt-2 bg-slate-900/80 text-amber-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Bot 2: Runner</span>
-                        </div>
+                <!-- 💻 โต๊ะทำงาน (Desks) วางเตรียมไว้ 4 ตัว -->
+                <div class="sprite-upright prop-desk" id="desk-1" style="left: 200px; top: 200px; z-index: 400;"></div>
+                <div class="sprite-upright prop-desk" id="desk-2" style="left: 400px; top: 200px; z-index: 600;"></div>
+                <div class="sprite-upright prop-desk" id="desk-3" style="left: 200px; top: 500px; z-index: 700;"></div>
+                <div class="sprite-upright prop-desk" id="desk-4" style="left: 400px; top: 500px; z-index: 900;"></div>
 
-                        <div class="relative flex flex-col items-center group">
-                            <div class="bot-char relative" id="bot3" onclick="activateBot(3)" style="animation-duration: 1.8s;">
-                                <div class="bot-aura"></div>
-                                👨🏻‍💼
-                                <div class="absolute -top-3 -right-3 bg-pink-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">ออกรายงาน!</div>
-                            </div>
-                            <div class="desk w-20 h-10 mt-1"><div class="pc-monitor"></div></div>
-                            <span class="mt-2 bg-slate-900/80 text-pink-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Bot 3: Reporter</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="w-1/2 room-warehouse relative grid grid-cols-2 grid-rows-2 gap-4 p-6">
-                    <div class="absolute top-0 right-4 bg-black/50 text-blue-400 text-[10px] px-3 py-1 font-bold rounded-b-lg tracking-widest z-10">STORAGE ZONE</div>
-                    
-                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
-                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">MAIN (อุปกรณ์หลัก)</span>
-                        <div class="flex gap-2 group-hover:scale-110 transition-transform">
-                            <div class="rack w-8 h-16 rounded-sm bg-slate-700 flex flex-col gap-1 p-1"><div class="h-2 bg-slate-900 w-full"></div><div class="h-2 bg-slate-900 w-full"></div><div class="h-2 bg-slate-900 w-full"></div></div>
-                            <div class="rack w-8 h-16 rounded-sm bg-slate-700 flex flex-col gap-1 p-1"><div class="h-2 bg-slate-900 w-full"></div><div class="h-2 bg-blue-500/50 w-full"></div><div class="h-2 bg-slate-900 w-full"></div></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
-                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">PARTS (อะไหล่)</span>
-                        <div class="flex flex-wrap gap-1 justify-center w-16 group-hover:scale-110 transition-transform">
-                            <div class="box w-5 h-5"></div><div class="box w-5 h-5 bg-amber-600"></div><div class="box w-5 h-5"></div>
-                            <div class="box w-5 h-5 bg-amber-700"></div><div class="box w-5 h-5"></div><div class="box w-5 h-5 bg-amber-600"></div>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
-                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">INK (หมึกพิมพ์)</span>
-                        <div class="text-4xl filter drop-shadow-lg group-hover:scale-110 transition-transform">🖨️</div>
-                    </div>
-
-                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
-                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">ACCESSORIES (อุปกรณ์)</span>
-                        <div class="text-3xl filter drop-shadow-lg group-hover:scale-110 transition-transform">⌨️🖱️</div>
-                    </div>
-                </div>
+                <!-- Agents จะถูก Render แทรกตรงนี้ผ่าน JS -->
+                <div id="agentsLayer"></div>
             </div>
-            
-            <p class="mt-6 text-slate-500 font-bold text-sm bg-slate-900/50 px-6 py-2 rounded-full backdrop-blur-sm border border-slate-700">👈 คลิกที่ตัว Bot เพื่อเรียกใช้งานแต่ละแผนก</p>
         </div>
 
-        <div class="w-full lg:w-[450px] bg-[#020617] border-l border-slate-700 flex flex-col shadow-2xl relative z-20">
-            <div class="scanline"></div>
-            
-            <div class="h-12 bg-slate-900 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
-                <div class="flex gap-2">
-                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                </div>
-                <div class="font-mono text-emerald-500 text-xs font-bold tracking-widest">AI_TERMINAL.EXE</div>
-            </div>
+        <!-- 🌟 Action Bar (ปุ่มสร้าง Agent ล่างซ้าย) -->
+        <div class="absolute bottom-6 left-6 z-50 flex gap-3">
+            <button onclick="openHireModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_10px_20px_rgba(16,185,129,0.4)] transition-transform active:scale-95 flex items-center gap-2 border border-emerald-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                Hire Agent
+            </button>
+            <button onclick="resetCamera()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl font-bold shadow-lg transition-transform active:scale-95 border border-slate-600">
+                🎯 Reset View
+            </button>
+        </div>
+    </div>
 
-            <div id="terminalOutput" class="flex-1 overflow-y-auto terminal-scroll p-5 flex flex-col gap-3 font-mono text-emerald-400 text-sm leading-relaxed pb-8">
-                <div class="text-slate-400 mb-2 border-b border-slate-800 pb-2">
-                    System Booting...<br>
-                    Loading Warehouse API... <span id="loadPct" class="text-blue-400">0%</span>
-                </div>
-            </div>
+    <!-- 🌟 RIGHT SIDE: Terminal Console -->
+    <div class="w-full lg:w-[450px] bg-[#020617] border-l border-slate-800 flex flex-col relative z-20">
+        <div class="scanline"></div>
+        
+        <!-- Terminal Tab -->
+        <div class="h-10 bg-[#0f172a] flex items-center px-4 border-b border-slate-800 shrink-0 gap-2">
+            <span class="text-slate-400 font-mono text-xs font-bold tracking-widest">TERMINAL</span>
+            <span class="text-slate-600 text-xs">/</span>
+            <span id="activeAgentName" class="text-indigo-400 font-mono text-xs font-bold">NO_AGENT_SELECTED</span>
+        </div>
 
-            <div id="terminalAction" class="bg-slate-900 border-t border-slate-700 p-5 shrink-0 min-h-[220px] flex flex-col justify-center">
-                <div class="text-center text-slate-500 font-bold animate-pulse uppercase tracking-widest text-sm">
-                    Waiting for Bot selection...
-                </div>
+        <!-- Console Output -->
+        <div id="terminalOutput" class="flex-1 overflow-y-auto terminal-scroll p-4 font-mono text-[13px] leading-relaxed pb-8">
+            <div class="text-slate-500 mb-4">
+                [SYSTEM] Initializing Claude Code Engine v2.1.49...<br>
+                [SYSTEM] Welcome to Pixel Agents Workspace.
+            </div>
+        </div>
+
+        <!-- Interaction Form (Dynamic) -->
+        <div id="terminalAction" class="bg-[#0f172a] border-t border-slate-800 p-5 shrink-0 min-h-[250px] flex flex-col justify-center transition-all">
+            <div class="text-center text-slate-500 font-mono animate-pulse uppercase tracking-widest text-sm flex flex-col items-center gap-2">
+                <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                Select an agent to assign tasks.
             </div>
         </div>
     </div>
 
-    <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[999] hidden flex-col items-center justify-center backdrop-blur-md">
-        <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animation-spin mb-4" style="animation: spin 1s linear infinite;"></div>
-        <p class="font-mono text-emerald-400 text-xl tracking-widest font-bold" id="overlayText">CONNECTING DB...</p>
-    </div>
-
-    <div id="actionModal" class="fixed inset-0 bg-slate-900/80 z-[1000] hidden flex-col items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-slate-800 border-2 border-amber-500 rounded-2xl w-full max-w-sm p-6 shadow-[0_0_30px_rgba(245,158,11,0.3)] animate-fadeIn">
-            <h3 class="text-amber-400 font-bold text-lg mb-4 flex items-center gap-2">⚠️ ยืนยันการเบิกตัดสต็อก</h3>
-            <p id="modalItemName" class="font-bold text-white text-base mb-1 truncate">-</p>
-            <p class="text-slate-400 text-xs mb-4 border-b border-slate-600 pb-4">คงเหลือในคลัง: <span id="modalMaxQty" class="text-emerald-400 font-bold">0</span></p>
+    <!-- 🌟 Modal: จ้าง Agent ใหม่ -->
+    <div id="hireModal" class="fixed inset-0 bg-slate-900/80 z-[1000] hidden flex-col items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fadeIn font-sans">
+            <h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">🧑‍💻 Hire New Agent</h3>
             
             <div class="space-y-4 mb-6">
                 <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">จำนวนที่ต้องการเบิก</label>
-                    <input type="number" id="modalInputQty" min="1" value="1" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-amber-500 font-bold font-mono">
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">Agent Name</label>
+                    <input type="text" id="agentName" placeholder="e.g. สมชาย, Bot-01" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-indigo-500">
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อผู้เบิก / ปลายทาง</label>
-                    <input type="text" id="modalInputUser" placeholder="ระบุชื่อ..." class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-amber-500 font-medium">
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">Assign Role (หน้าที่)</label>
+                    <select id="agentRole" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-indigo-500 cursor-pointer">
+                        <option value="CHECKER">🔍 Checker (ตรวจเช็คสต็อก)</option>
+                        <option value="RUNNER">🏃‍♂️ Runner (วิ่งเบิกจ่ายตัดสต็อก)</option>
+                        <option value="REPORTER">📊 Reporter (สรุปรายงาน Excel)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">Avatar (อิโมจิ)</label>
+                    <div class="flex gap-2 justify-center text-3xl bg-slate-900 p-2 rounded-lg border border-slate-600">
+                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('👨‍💻')">👨‍💻</div>
+                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('👩‍💻')">👩‍💻</div>
+                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('🤖')">🤖</div>
+                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('👾')">👾</div>
+                        <input type="hidden" id="agentAvatar" value="👨‍💻">
+                    </div>
                 </div>
             </div>
             
             <div class="flex gap-3">
-                <button onclick="closeActionModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition-colors">ยกเลิก</button>
-                <button onclick="confirmWithdrawAction()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">ยืนยันเบิก</button>
+                <button onclick="closeHireModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition-colors">Cancel</button>
+                <button onclick="hireAgent()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">Hire Agent</button>
             </div>
         </div>
+    </div>
+
+    <!-- 🌟 Overlay โหลดข้อมูล/ทำงาน -->
+    <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[1500] hidden flex-col items-center justify-center backdrop-blur-md">
+        <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full mb-4 animate-spin"></div>
+        <p class="font-mono text-emerald-400 text-lg tracking-widest font-bold animate-pulse" id="overlayText">WORKING...</p>
     </div>
 
     <script>
@@ -242,40 +261,65 @@
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
         const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES';
 
+        // 🌟 State Management
         let dbMain = { main: [], withdrawals: [] };
         let dbSup = { ink: [], accessories: [], parts: [] };
         let allItems = []; 
-        let activeBotId = 0;
-        let withdrawTarget = null; // เก็บข้อมูลชิ้นที่จะเบิก
+        let withdrawTarget = null;
+
+        // 🌟 Agent System
+        const availableDesks = [
+            { id: 1, x: 200, y: 200, occupied: false },
+            { id: 2, x: 400, y: 200, occupied: false },
+            { id: 3, x: 200, y: 500, occupied: false },
+            { id: 4, x: 400, y: 500, occupied: false }
+        ];
+        let agents = [];
+        let activeAgentId = null;
 
         const terminalOut = document.getElementById('terminalOutput');
         const terminalAction = document.getElementById('terminalAction');
 
-        // ฟังก์ชันปริ้นท์ข้อความลงจอ
-        function printLog(msg, colorClass = 'text-emerald-400', isChat = false) {
+        // ==========================================
+        // 🌟 UI Functions
+        // ==========================================
+        function printLog(msg, type = 'info') {
             const div = document.createElement('div');
-            div.className = `fade-in ${colorClass} ${isChat ? 'bg-slate-800/80 p-3 rounded-xl border border-slate-600 shadow-md font-sans' : 'font-mono'}`;
-            if(isChat) div.innerHTML = msg;
-            else div.innerHTML = `> ${msg}`;
+            let color = 'text-emerald-400';
+            if (type === 'error') color = 'text-red-400';
+            if (type === 'system') color = 'text-blue-400';
+            if (type === 'bot') color = 'text-white';
+            
+            div.className = `log-entry ${color}`;
+            div.innerHTML = type === 'bot' ? `[AGENT] ${msg}` : `<span class="opacity-50">${new Date().toLocaleTimeString('en-US', {hour12:false})}</span> ${msg}`;
+            
             terminalOut.appendChild(div);
             terminalOut.scrollTop = terminalOut.scrollHeight;
         }
 
-        function showOverlay(text) {
-            document.getElementById('overlayText').innerText = text;
-            document.getElementById('overlay').classList.remove('hidden'); document.getElementById('overlay').classList.add('flex');
-        }
-        function hideOverlay() {
-            document.getElementById('overlay').classList.add('hidden'); document.getElementById('overlay').classList.remove('flex');
-        }
+        function showOverlay(text) { document.getElementById('overlayText').innerText = text; document.getElementById('overlay').classList.remove('hidden'); document.getElementById('overlay').classList.add('flex'); }
+        function hideOverlay() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('overlay').classList.remove('flex'); }
 
-        // 🌟 โหลดข้อมูลจาก Google Sheet เมื่อเปิดเว็บ
+        // ==========================================
+        // 🌟 Drag Map Logic
+        // ==========================================
+        let isDragging = false, startX, startY, scrollLeft, scrollTop;
+        const slider = document.getElementById('dragContainer');
+        slider.addEventListener('mousedown', (e) => { isDragging = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop; scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop; });
+        slider.addEventListener('mouseleave', () => { isDragging = false; });
+        slider.addEventListener('mouseup', () => { isDragging = false; });
+        slider.addEventListener('mousemove', (e) => { if (!isDragging) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX); slider.scrollTop = scrollTop - (y - startY); });
+        
+        function resetCamera() { slider.scrollTo({ top: 300, left: 300, behavior: 'smooth' }); }
+
+        // ==========================================
+        // 🌟 Database Logic
+        // ==========================================
         window.onload = async function() {
+            setTimeout(resetCamera, 500); // ตั้งกล้องตรงกลางเมื่อโหลดเสร็จ
             try {
-                document.getElementById('loadPct').innerText = '25%';
                 const res = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await res.json();
-                document.getElementById('loadPct').innerText = '75%';
                 
                 if (result.value) {
                     if(result.value[WAREHOUSE_KEY]) dbMain = JSON.parse(result.value[WAREHOUSE_KEY]);
@@ -283,331 +327,299 @@
                     buildIndex();
                 }
                 
-                document.getElementById('loadPct').innerText = '100%';
-                
                 let sysStatus = document.getElementById('sysStatus');
                 sysStatus.className = "flex items-center gap-2 text-xs font-bold text-emerald-400";
                 sysStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> DB CONNECTED';
-                
-                printLog('Database synced successfully.', 'text-white');
-                printLog('Please select a Bot from the map to begin.', 'text-slate-400');
+                printLog('Warehouse Database synchronized.', 'system');
                 
             } catch (e) {
                 document.getElementById('sysStatus').className = "flex items-center gap-2 text-xs font-bold text-red-500";
                 document.getElementById('sysStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> OFFLINE';
-                printLog('ERROR: Connection failed!', 'text-red-500');
+                printLog('Database connection failed!', 'error');
             }
         };
 
-        // 🌟 สร้าง Index เพื่อให้บอทค้นหาของง่ายขึ้น
         function buildIndex() {
             allItems = [];
-            // ดึงอุปกรณ์หลัก
-            if(dbMain.main) {
-                dbMain.main.forEach((r, idx) => {
-                    let type = r[1]||''; let brand = r[2]||''; let model = r[3]||''; let sn = r[4]||''; let status = r[5]||'';
-                    if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type, name: `${brand} ${model}`.trim(), sn, status, qty: 1, unit: 'เครื่อง' });
-                });
-            }
-            // ดึงอะไหล่
-            if(dbSup.parts) {
-                dbSup.parts.forEach((r, idx) => {
-                    let type = r[1]||''; let spec = r[2]||''; let qty = parseFloat(r[3]); let unit = r[4]||'';
-                    if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${type} ${spec}`.trim(), sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
-                });
-            }
-            // ดึงอุปกรณ์ (Acc)
-            if(dbSup.accessories) {
-                dbSup.accessories.forEach((r, idx) => {
-                    let type = r[1]||''; let spec = r[2]||''; let sn = r[3]||'-'; let qty = parseFloat(r[4]); let unit = r[5]||'';
-                    if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์คอมฯ', name: `${type} ${spec}`.trim(), sn, status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
-                });
-            }
-            // ดึงหมึกพิมพ์
-            if(dbSup.ink) {
-                dbSup.ink.forEach((r, idx) => {
-                    let type = r[1]||''; let spec = r[2]||''; let qty = parseFloat(r[3]); let unit = r[4]||'';
-                    if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${type} (รองรับ ${spec})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
-                });
+            if(dbMain.main) dbMain.main.forEach((r, idx) => { let sn = r[4]||''; if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type: r[1]||'', name: `${r[2]||''} ${r[3]||''}`.trim(), sn, status: r[5]||'', qty: 1, unit: 'เครื่อง' }); });
+            if(dbSup.parts) dbSup.parts.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'' }); });
+            if(dbSup.accessories) dbSup.accessories.forEach((r, idx) => { let qty = parseFloat(r[4]); if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: r[3]||'-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[5]||'' }); });
+            if(dbSup.ink) dbSup.ink.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${r[1]||''} (ใช้กับ: ${r[2]||''})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'' }); });
+        }
+
+        // ==========================================
+        // 🌟 Agent System Logic
+        // ==========================================
+        function openHireModal() { document.getElementById('hireModal').classList.remove('hidden'); document.getElementById('hireModal').classList.add('flex'); }
+        function closeHireModal() { document.getElementById('hireModal').classList.add('hidden'); document.getElementById('hireModal').classList.remove('flex'); }
+        function selectAvatar(emoji) { document.getElementById('agentAvatar').value = emoji; }
+
+        function hireAgent() {
+            let name = document.getElementById('agentName').value.trim() || 'Agent-' + (agents.length + 1);
+            let role = document.getElementById('agentRole').value;
+            let avatar = document.getElementById('agentAvatar').value;
+
+            // หาโต๊ะว่าง
+            let desk = availableDesks.find(d => !d.occupied);
+            if (!desk) { alert("ไม่มีโต๊ะทำงานว่างแล้ว!"); closeHireModal(); return; }
+            
+            desk.occupied = true;
+            let newId = Date.now();
+            
+            let agentObj = { id: newId, name: name, role: role, avatar: avatar, deskId: desk.id, x: desk.x, y: desk.y };
+            agents.push(agentObj);
+            
+            renderAgent(agentObj);
+            printLog(`New agent hired: ${name} [${role}]`, 'system');
+            closeHireModal();
+            
+            // Auto active
+            activateAgent(newId);
+        }
+
+        function renderAgent(agent) {
+            const layer = document.getElementById('agentsLayer');
+            // Z-index คำนวณจากพิกัด Y ให้ตัวที่อยู่ล่างบังตัวที่อยู่บน
+            let zIndex = agent.y + 10; 
+            
+            let color = agent.role === 'CHECKER' ? '#3b82f6' : (agent.role === 'RUNNER' ? '#f59e0b' : '#ec4899');
+
+            let html = `
+            <div id="agent-${agent.id}" class="sprite-upright agent-bot" style="left: ${agent.x}px; top: ${agent.y}px; z-index: ${zIndex};" onclick="activateAgent(${agent.id})">
+                <div class="bot-aura" style="border-color: transparent;"></div>
+                <div class="agent-bubble">Working...</div>
+                ${agent.avatar}
+                <div class="agent-label" style="border-color: ${color}; color: ${color};">${agent.name}</div>
+            </div>`;
+            layer.insertAdjacentHTML('beforeend', html);
+        }
+
+        function activateAgent(id) {
+            activeAgentId = id;
+            let agent = agents.find(a => a.id === id);
+            
+            // อัปเดตกราฟิกตัวที่ถูกเลือก
+            document.querySelectorAll('.agent-bot').forEach(b => b.classList.remove('active'));
+            let el = document.getElementById(`agent-${id}`);
+            if(el) el.classList.add('active');
+
+            // อัปเดต Terminal Header
+            document.getElementById('activeAgentName').innerText = `${agent.name} [${agent.role}]`;
+            document.getElementById('activeAgentName').className = `font-mono text-xs font-bold ${agent.role === 'CHECKER' ? 'text-blue-400' : (agent.role === 'RUNNER' ? 'text-amber-400' : 'text-pink-400')}`;
+
+            printLog(`Hi! I'm ${agent.name}. Ready for task.`, 'bot');
+
+            // เปลี่ยนหน้าจอ Terminal Action ตาม Role
+            buildTerminalUI(agent.role);
+        }
+
+        function triggerAgentAnim(text) {
+            if(!activeAgentId) return;
+            let el = document.getElementById(`agent-${activeAgentId}`);
+            if(el) {
+                let bubble = el.querySelector('.agent-bubble');
+                bubble.innerText = text;
+                el.classList.add('working');
+                setTimeout(() => el.classList.remove('working'), 3000);
             }
         }
 
-        // 🌟 เปลี่ยนโหมดการทำงานเมื่อคลิกเลือก Bot
-        function activateBot(botNum) {
-            document.querySelectorAll('.bot-char').forEach(b => b.classList.remove('active'));
-            document.getElementById('bot' + botNum).classList.add('active');
-            activeBotId = botNum;
-
-            if (botNum === 1) {
-                printLog('<b class="text-blue-300">👩🏻‍💻 Checker Bot:</b><br>สวัสดีค่ะ! ต้องการให้หนูเช็คยอดสต็อกของชิ้นไหน พิมพ์ค้นหาได้เลยค่ะ!', 'text-white', true);
+        // ==========================================
+        // 🌟 Terminal UI & Tasks
+        // ==========================================
+        function buildTerminalUI(role) {
+            if (role === 'CHECKER') {
                 terminalAction.innerHTML = `
-                    <div class="font-sans">
-                        <label class="text-xs text-blue-400 font-bold mb-2 block uppercase tracking-widest">🔍 เช็คสต็อก (Search)</label>
-                        <input type="text" id="b1Input" placeholder="พิมพ์ชื่ออุปกรณ์, S/N, หรือหมวดหมู่..." class="w-full bg-slate-950 border-2 border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-3 transition-colors" onkeypress="if(event.key==='Enter') execBot1()">
-                        <button onclick="execBot1()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 text-sm">สั่งค้นหา</button>
-                    </div>
+                    <div class="flex items-center gap-2 text-blue-400 mb-3"><span class="w-2 h-2 bg-blue-500 rounded-sm"></span> <span class="text-xs font-bold font-mono">STOCK CHECK SYSTEM</span></div>
+                    <input type="text" id="termSearch" placeholder="Enter keyword or S/N..." class="w-full bg-[#020617] border border-blue-900/50 text-emerald-400 rounded p-3 text-sm outline-none focus:border-blue-500 font-mono mb-3" onkeypress="if(event.key==='Enter') taskSearch()">
+                    <button onclick="taskSearch()" class="w-full bg-blue-900/40 hover:bg-blue-600 text-blue-200 font-mono py-2 border border-blue-800 rounded transition-colors text-sm">EXECUTE SEARCH</button>
                 `;
-                setTimeout(() => document.getElementById('b1Input').focus(), 100);
+                setTimeout(() => document.getElementById('termSearch').focus(), 100);
             } 
-            else if (botNum === 2) {
-                printLog('<b class="text-amber-300">🏃‍♂️ Runner Bot:</b><br>พร้อมวิ่งแล้วลูกพี่! หาของที่จะเบิกแล้วกดตัดสต็อกมาได้เลย เดี๋ยวผมวิ่งไปหยิบให้!', 'text-white', true);
+            else if (role === 'RUNNER') {
                 terminalAction.innerHTML = `
-                    <div class="font-sans h-full flex flex-col">
-                        <label class="text-xs text-amber-400 font-bold mb-2 block uppercase tracking-widest">📤 เบิกจ่ายตัดสต็อก (Withdraw)</label>
-                        <input type="text" id="b2Input" placeholder="ค้นหาของที่ต้องการเบิก..." class="w-full bg-slate-950 border-2 border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-amber-500 mb-3 transition-colors" oninput="execBot2Filter()">
-                        <div id="b2Results" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 p-1">
-                            <div class="text-center text-slate-500 text-xs mt-4">กรุณาพิมพ์ค้นหาด้านบน...</div>
-                        </div>
-                    </div>
+                    <div class="flex items-center gap-2 text-amber-400 mb-2"><span class="w-2 h-2 bg-amber-500 rounded-sm"></span> <span class="text-xs font-bold font-mono">WITHDRAW PROTOCOL</span></div>
+                    <input type="text" id="termFilter" placeholder="Search item to withdraw..." class="w-full bg-[#020617] border border-amber-900/50 text-emerald-400 rounded p-2 text-sm outline-none focus:border-amber-500 font-mono mb-2" oninput="taskFilter()">
+                    <div id="termList" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 mb-2 max-h-[100px] border border-slate-800 bg-[#020617] p-1 rounded"></div>
                 `;
-                setTimeout(() => document.getElementById('b2Input').focus(), 100);
+                taskFilter(); // Load all initial
             }
-            else if (botNum === 3) {
-                printLog('<b class="text-pink-300">👨🏻‍💼 Reporter Bot:</b><br>ต้องการข้อมูลสรุปใช่ไหมครับ? เลือกหมวดหมู่ที่ต้องการแล้วผมจะออกเป็นไฟล์ Excel ให้ทันทีครับ', 'text-white', true);
+            else if (role === 'REPORTER') {
                 terminalAction.innerHTML = `
-                    <div class="font-sans">
-                        <label class="text-xs text-pink-400 font-bold mb-2 block uppercase tracking-widest">📊 ออกรายงาน (Export Excel)</label>
-                        <select id="b3Select" class="w-full bg-slate-950 border-2 border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-pink-500 mb-4 cursor-pointer">
-                            <option value="ALL">📦 รวมอุปกรณ์และอะไหล่ทั้งหมด</option>
-                            <option value="LOW">🚨 ของใกล้หมด (น้อยกว่า 5 ชิ้น)</option>
-                            <option value="MAIN">💻 เฉพาะอุปกรณ์หลัก</option>
-                            <option value="PARTS">⚙️ เฉพาะอะไหล่และอุปกรณ์เสริม</option>
-                            <option value="INK">🖨️ เฉพาะหมึกพิมพ์</option>
-                        </select>
-                        <button onclick="execBot3()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex justify-center items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> ดาวน์โหลดไฟล์
-                        </button>
-                    </div>
+                    <div class="flex items-center gap-2 text-pink-400 mb-3"><span class="w-2 h-2 bg-pink-500 rounded-sm"></span> <span class="text-xs font-bold font-mono">DATA EXPORT ROUTINE</span></div>
+                    <select id="termCat" class="w-full bg-[#020617] border border-pink-900/50 text-emerald-400 rounded p-3 text-sm outline-none focus:border-pink-500 font-mono mb-4 cursor-pointer">
+                        <option value="ALL">EXPORT_ALL_DATA</option>
+                        <option value="LOW">EXPORT_LOW_STOCK_WARNING</option>
+                        <option value="MAIN">EXPORT_MAIN_EQUIPMENT</option>
+                        <option value="PARTS">EXPORT_PARTS_AND_ACC</option>
+                    </select>
+                    <button onclick="taskExport()" class="w-full bg-pink-900/40 hover:bg-pink-600 text-pink-200 font-mono py-3 border border-pink-800 rounded transition-colors text-sm">GENERATE EXCEL</button>
                 `;
             }
         }
 
-        // =====================================
-        // ฟังก์ชันการทำงานของ BOT 1
-        // =====================================
-        function execBot1() {
-            let q = document.getElementById('b1Input').value.toLowerCase().trim();
+        // --- Role: Checker ---
+        function taskSearch() {
+            let q = document.getElementById('termSearch').value.toLowerCase().trim();
             if(!q) return;
-            printLog(`> Checker is searching for: "${q}"...`, 'text-slate-400');
+            triggerAgentAnim('Checking...');
+            printLog(`Processing query: "${q}"...`, 'system');
             
             let matches = allItems.filter(i => i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q) || i.type.toLowerCase().includes(q));
             
             if(matches.length === 0) {
-                printLog(`👩🏻‍💻 หา <b>"${q}"</b> ไม่เจอเลยค่ะ น่าจะไม่มีในคลังนะคะ`, 'text-slate-300', true);
+                printLog(`No records found for "${q}".`, 'bot');
             } else {
-                matches.sort((a,b) => b.qty - a.qty); // เรียงของเยอะขึ้นก่อน
-                let html = `<div class="mb-2 text-blue-200">🔍 เจอทั้งหมด <b>${matches.length}</b> รายการค่ะ:</div><div class="space-y-2">`;
-                matches.slice(0, 15).forEach(m => {
-                    let color = m.qty <= 0 ? 'text-red-400 font-bold' : (m.qty <= 5 ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold');
-                    html += `
-                        <div class="bg-slate-900 p-2 rounded border border-slate-700 text-xs">
-                            <div class="flex justify-between items-start">
-                                <span class="text-white font-medium break-words pr-2">${m.name}</span>
-                                <span class="${color} shrink-0 whitespace-nowrap">${m.qty} ${m.unit}</span>
-                            </div>
-                            <div class="text-[10px] text-slate-500 mt-1 flex justify-between">
-                                <span>[${m.type}]</span> <span>${m.sn !== '-' ? 'S/N: '+m.sn : m.status}</span>
-                            </div>
-                        </div>`;
+                matches.sort((a,b) => b.qty - a.qty);
+                let html = `Found ${matches.length} records:<br>`;
+                matches.slice(0, 10).forEach(m => {
+                    let color = m.qty <= 0 ? 'text-red-500' : 'text-emerald-500';
+                    html += `<span class="text-blue-400">[${m.type}]</span> ${m.name} | S/N: ${m.sn} | QTY: <span class="${color}">${m.qty}</span><br>`;
                 });
-                if(matches.length > 15) html += `<div class="text-xs text-slate-500 text-center mt-2">...มีอีก ${matches.length - 15} รายการ (พิมพ์ให้แคบลง)</div>`;
-                html += `</div>`;
-                printLog(html, 'text-slate-200', true);
+                if(matches.length > 10) html += `...and ${matches.length - 10} more.`;
+                printLog(html, 'bot');
             }
-            document.getElementById('b1Input').value = '';
+            document.getElementById('termSearch').value = '';
         }
 
-        // =====================================
-        // ฟังก์ชันการทำงานของ BOT 2
-        // =====================================
-        function execBot2Filter() {
-            let q = document.getElementById('b2Input').value.toLowerCase().trim();
-            let list = document.getElementById('b2Results');
-            if(!q) { list.innerHTML = '<div class="text-slate-500 text-center text-xs mt-4">พิมพ์ค้นหาด้านบน...</div>'; return; }
-
-            // กรองเอาที่ว่าง (พร้อมจ่าย) หรือ มีจำนวน > 0
-            let matches = allItems.filter(i => (i.qty > 0 || i.status.includes('ว่าง')) && (i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q)));
+        // --- Role: Runner ---
+        function taskFilter() {
+            let q = document.getElementById('termFilter').value.toLowerCase().trim();
+            let list = document.getElementById('termList');
+            let matches = allItems.filter(i => i.qty > 0 && (i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q)));
             
-            if(matches.length === 0) { list.innerHTML = '<div class="text-red-400 text-center text-xs mt-4">❌ ไม่พบของที่เบิกได้</div>'; return; }
+            if(matches.length === 0) { list.innerHTML = '<div class="text-slate-600 text-center text-xs mt-2 font-mono">NO ITEMS MATCHED</div>'; return; }
 
             let html = '';
-            matches.slice(0, 10).forEach(m => {
+            matches.slice(0, 15).forEach(m => {
                 let safeName = String(m.name).replace(/'/g, "\\'");
                 html += `
-                <div class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl cursor-pointer border border-slate-600 transition-colors flex justify-between items-center group" 
-                     onclick="openActionModal('${m.ref}', ${m.idx}, '${safeName}', ${m.qty}, '${m.unit}')">
-                    <div class="pr-2 overflow-hidden">
-                        <div class="text-white text-xs font-bold truncate group-hover:text-amber-400 transition-colors">${m.name}</div>
-                        <div class="text-[10px] text-slate-400 truncate">${m.type} ${m.sn !== '-' ? ' | S/N: '+m.sn : ''}</div>
-                    </div>
-                    <div class="shrink-0 flex flex-col items-end">
-                        <span class="text-emerald-400 text-xs font-bold">${m.qty} ${m.unit}</span>
-                        <span class="text-[9px] bg-amber-500 text-black px-1.5 py-0.5 rounded mt-1 font-bold opacity-0 group-hover:opacity-100 transition-opacity">เบิก</span>
-                    </div>
+                <div class="bg-slate-800/50 hover:bg-amber-900/30 p-2 rounded cursor-pointer border border-slate-700/50 flex justify-between items-center text-xs font-mono" 
+                     onclick="openWithdrawForm('${m.ref}', ${m.idx}, '${safeName}', ${m.qty}, '${m.unit}')">
+                    <div class="truncate text-slate-300 w-3/4">${m.name}</div>
+                    <div class="text-amber-400 shrink-0">QTY: ${m.qty}</div>
                 </div>`;
             });
             list.innerHTML = html;
         }
 
-        function openActionModal(ref, idx, name, maxQty, unit) {
-            withdrawTarget = { ref, idx, name, maxQty, unit };
-            document.getElementById('modalItemName').innerText = name;
-            document.getElementById('modalMaxQty').innerText = `${maxQty} ${unit}`;
-            document.getElementById('modalInputQty').value = 1;
-            document.getElementById('modalInputQty').max = maxQty;
-            document.getElementById('modalInputUser').value = '';
-            
-            document.getElementById('actionModal').classList.remove('hidden');
-            document.getElementById('actionModal').classList.add('flex');
-            setTimeout(() => document.getElementById('modalInputUser').focus(), 100);
+        function openWithdrawForm(ref, idx, name, maxQty, unit) {
+            terminalAction.innerHTML = `
+                <div class="flex items-center justify-between mb-2 text-amber-400 font-mono text-xs font-bold border-b border-amber-900/50 pb-1">
+                    <span>> TARGET: ${name.substring(0,20)}...</span>
+                    <button onclick="buildTerminalUI('RUNNER')" class="text-slate-500 hover:text-white">[CANCEL]</button>
+                </div>
+                <div class="flex gap-2 mb-2 font-mono text-xs">
+                    <div class="w-1/3 text-slate-400">QTY (Max ${maxQty}):</div>
+                    <input type="number" id="wQty" min="1" max="${maxQty}" value="1" class="w-2/3 bg-[#020617] border border-slate-700 text-white rounded p-1 outline-none text-center">
+                </div>
+                <div class="flex gap-2 mb-3 font-mono text-xs">
+                    <div class="w-1/3 text-slate-400">RECEIVER:</div>
+                    <input type="text" id="wUser" placeholder="Enter name..." class="w-2/3 bg-[#020617] border border-slate-700 text-emerald-400 rounded p-1 outline-none">
+                </div>
+                <button onclick="submitWithdraw('${ref}', ${idx}, '${name}', ${maxQty}, '${unit}')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-mono font-bold py-2 rounded shadow text-sm">CONFIRM DEDUCT</button>
+            `;
         }
 
-        function closeActionModal() {
-            document.getElementById('actionModal').classList.add('hidden');
-            document.getElementById('actionModal').classList.remove('flex');
-            withdrawTarget = null;
-        }
+        async function submitWithdraw(ref, idx, name, maxQty, unit) {
+            let qty = parseFloat(document.getElementById('wQty').value);
+            let user = document.getElementById('wUser').value.trim();
 
-        async function confirmWithdrawAction() {
-            if(!withdrawTarget) return;
-            let qty = parseFloat(document.getElementById('modalInputQty').value);
-            let user = document.getElementById('modalInputUser').value.trim();
+            if(!qty || qty <= 0 || qty > maxQty) { printLog('ERR: Invalid Quantity.', 'error'); return; }
+            if(!user) { printLog('ERR: Receiver name required.', 'error'); return; }
 
-            if(!qty || qty <= 0 || qty > withdrawTarget.maxQty) { showToast("จำนวนเบิกไม่ถูกต้อง", "error"); return; }
-            if(!user) { showToast("โปรดระบุผู้เบิก", "error"); return; }
-
-            closeActionModal();
-            showOverlay('RUNNING TO WAREHOUSE...');
-            printLog(`> Runner is moving ${qty}x [${withdrawTarget.name}] for ${user}...`, 'text-amber-300');
+            triggerAgentAnim('Running!');
+            showOverlay('SYNCING DATABASE...');
+            printLog(`Executing withdraw protocol...`, 'system');
 
             try {
-                let ref = withdrawTarget.ref; let idx = withdrawTarget.idx;
-                let newQty = withdrawTarget.maxQty - qty;
-                let snRecord = null;
-
-                // อัปเดต Data ໃນตัวแปร
+                let newQty = maxQty - qty;
                 if (ref === 'MAIN') {
                     dbMain.main[idx][5] = 'จ่ายแล้ว';
-                    let cRmk = String(dbMain.main[idx][7]||'').replace(/\[จ่ายให้:.*?\]/g, "").trim();
-                    dbMain.main[idx][7] = cRmk + (cRmk?" ":"") + `[จ่ายให้: ${user}]`;
-                    snRecord = dbMain.main[idx][4];
+                    dbMain.main[idx][7] = String(dbMain.main[idx][7]||'') + ` [จ่ายให้: ${user}]`;
                 } else if (ref === 'PARTS') { dbSup.parts[idx][3] = newQty; }
-                else if (ref === 'ACC') { dbSup.accessories[idx][4] = newQty; snRecord = dbSup.accessories[idx][3]; }
+                else if (ref === 'ACC') { dbSup.accessories[idx][4] = newQty; }
                 else if (ref === 'INK') { dbSup.ink[idx][3] = newQty; }
 
-                // บันทึก Log การเบิก
                 let todayStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
                 dbMain.withdrawals = dbMain.withdrawals || [];
-                dbMain.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: ref, specs: withdrawTarget.name, user: user, qty: qty, unit: withdrawTarget.unit, sn: snRecord });
+                dbMain.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: ref, specs: name, user: user, qty: qty, unit: unit, sn: ref==='MAIN'?dbMain.main[idx][4]:null });
 
-                // เตรียมยิง API
                 let updates = [];
-                if (ref === 'MAIN') {
-                    updates.push({ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
-                } else {
-                    updates.push({ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }); 
-                }
+                if (ref === 'MAIN') updates.push({ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
+                else updates.push({ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
 
-                let apiLogs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(AI)', detail: `[เบิก] ${withdrawTarget.name} จำนวน ${qty}${withdrawTarget.unit} โดย ${user}` }];
+                let logs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(Agent)', detail: `[เบิก] ${name} จำนวน ${qty} โดย ${user}` }];
 
-                let response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: apiLogs }) });
+                let response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: logs }) });
                 let resJson = await response.json();
                 if(resJson.status !== 'success') throw new Error("API Error");
 
-                buildIndex(); // รีเฟรช Index ใหม่
-                execBot2Filter(); // รีเฟรชช่องค้นหา
-                
+                buildIndex(); 
                 hideOverlay();
-                printLog(`🏃‍♂️ ฮึบ! หยิบของให้แล้วครับลูกพี่ ตัดสต็อกเหลือ <b>${newQty} ${withdrawTarget.unit}</b> เรียบร้อย!`, 'text-slate-200', true);
+                printLog(`Success. ${qty}x ${name} deducted. Remaining: ${newQty}.`, 'bot');
+                buildTerminalUI('RUNNER');
 
             } catch (e) {
                 hideOverlay();
-                printLog(`❌ โอ๊ะ! ผมสะดุดล้ม ระบบบันทึกไม่สำเร็จครับ ลองอีกทีนะครับ`, 'text-red-500', true);
+                printLog(`TRANSACTION FAILED. Connection error.`, 'error');
             }
         }
 
-        // =====================================
-        // BOT 3: REPORTER (Export Excel)
-        // =====================================
-        async function execBot3() {
-            let filter = document.getElementById('b3Select').value;
-            printLog(`> Reporter is generating Excel [Mode: ${filter}]...`, 'text-pink-300');
-            showOverlay('COMPILING REPORT...');
+        // --- Role: Reporter ---
+        async function taskExport() {
+            let filter = document.getElementById('termCat').value;
+            triggerAgentAnim('Compiling...');
+            printLog(`Compiling Data Matrix [${filter}]...`, 'system');
+            showOverlay('GENERATING EXCEL...');
 
             try {
                 let reportData = [];
-                
+
                 if (filter === 'ALL' || filter === 'MAIN' || filter === 'LOW') {
                     let groups = {};
                     if(dbMain.main) dbMain.main.forEach(r => {
                         let type = String(r[1]||'').trim(); let brand = String(r[2]||'').trim(); let model = String(r[3]||'').trim(); let status = String(r[5]||'').trim();
                         let key = `${type}|${brand}|${model}`;
-                        if (!groups[key]) groups[key] = { cat: '💻 อุปกรณ์หลัก (Main)', type: type, detail: `${brand} ${model}`.trim() || '-', qty: 0, unit: 'เครื่อง' };
+                        if (!groups[key]) groups[key] = { cat: 'MAIN', type: type, detail: `${brand} ${model}`.trim() || '-', qty: 0, unit: 'EA' };
                         if (status.includes('ว่าง') || status.includes('พร้อมจ่าย')) groups[key].qty++;
                     });
                     reportData.push(...Object.values(groups));
                 }
 
                 if (filter === 'ALL' || filter === 'PARTS' || filter === 'LOW') {
-                    if(dbSup.parts) dbSup.parts.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: '⚙️ อะไหล่', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[4]||'ชิ้น' }); });
-                    if(dbSup.accessories) dbSup.accessories.forEach(r => { let qty = parseFloat(r[4]); if(!isNaN(qty)) reportData.push({ cat: '⌨️ อุปกรณ์', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[5]||'ชิ้น' }); });
+                    if(dbSup.parts) dbSup.parts.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'PARTS', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[4]||'EA' }); });
+                    if(dbSup.accessories) dbSup.accessories.forEach(r => { let qty = parseFloat(r[4]); if(!isNaN(qty)) reportData.push({ cat: 'ACCESSORY', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[5]||'EA' }); });
                 }
 
                 if (filter === 'ALL' || filter === 'INK' || filter === 'LOW') {
-                    if(dbSup.ink) dbSup.ink.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: '🖨️ หมึกพิมพ์', type: r[1]||'-', detail: `ใช้กับ: ${r[2]||'-'}`, qty: qty, unit: r[4]||'ตลับ' }); });
+                    if(dbSup.ink) dbSup.ink.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'INK', type: r[1]||'-', detail: `For: ${r[2]||'-'}`, qty: qty, unit: r[4]||'EA' }); });
                 }
 
-                if (filter === 'LOW') {
-                    reportData = reportData.filter(i => i.qty <= 5).sort((a, b) => a.qty - b.qty);
-                } else {
-                    reportData.sort((a, b) => a.cat.localeCompare(b.cat) || a.type.localeCompare(b.type));
-                }
+                if (filter === 'LOW') reportData = reportData.filter(i => i.qty <= 5).sort((a, b) => a.qty - b.qty);
+                else reportData.sort((a, b) => a.cat.localeCompare(b.cat) || a.type.localeCompare(b.type));
 
                 if(reportData.length === 0) {
-                    hideOverlay();
-                    printLog(`👨🏻‍💼 ไม่พบข้อมูลในหมวดที่เลือกเลยครับ หรือของอาจจะยังเต็มสต็อกอยู่ครับ`, 'text-slate-300', true);
-                    return;
+                    hideOverlay(); printLog(`Query returned 0 results.`, 'bot'); return;
                 }
 
-                const wb = new ExcelJS.Workbook();
-                const ws = wb.addWorksheet('Report');
-                
-                ws.addRow([`รายงานสรุปสต็อกคงเหลือ (${document.getElementById('b3Select').options[document.getElementById('b3Select').selectedIndex].text})`]);
-                ws.mergeCells('A1:F1'); ws.getRow(1).font = { size: 16, bold: true }; ws.getRow(1).alignment = { horizontal: 'center' };
-                ws.addRow([`พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`]); ws.mergeCells('A2:F2'); ws.getRow(2).alignment = { horizontal: 'right' };
-                ws.addRow([]);
-
-                ws.addRow(['ลำดับ', 'หมวดหมู่', 'ประเภท', 'รายละเอียด/รุ่น', 'คงเหลือ', 'หน่วย']);
-                let hRow = ws.getRow(4);
-                hRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; hRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; hRow.alignment = { horizontal: 'center' };
-
-                reportData.forEach((item, i) => {
-                    let row = ws.addRow([i + 1, item.cat, item.type, item.detail, item.qty, item.unit]);
-                    if(item.qty === 0) { row.getCell(5).font = { bold: true, color: {argb: 'FFDC2626'} }; }
-                    else if(item.qty <= 5) { row.getCell(5).font = { bold: true, color: {argb: 'FFD97706'} }; }
-                    else { row.getCell(5).font = { bold: true, color: {argb: 'FF059669'} }; }
-                    row.getCell(5).alignment = { horizontal: 'center' }; row.getCell(1).alignment = { horizontal: 'center' };
-                });
-
-                ws.columns = [ {width: 8}, {width: 25}, {width: 20}, {width: 40}, {width: 15}, {width: 10} ];
+                const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Data');
+                ws.addRow(['CATEGORY', 'TYPE', 'DETAIL', 'QTY', 'UNIT']);
+                reportData.forEach(item => ws.addRow([item.cat, item.type, item.detail, item.qty, item.unit]));
 
                 const buffer = await wb.xlsx.writeBuffer();
-                let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }).replace(/\s/g, '_');
-                saveAs(new Blob([buffer]), `ADP_BotReport_${filter}_${dateStr}.xlsx`);
+                let dateStr = new Date().getTime();
+                saveAs(new Blob([buffer]), `ADP_AGENT_${filter}_${dateStr}.xlsx`);
 
                 hideOverlay();
-                printLog(`👨🏻‍💼 สร้างไฟล์เสร็จแล้วครับ! กำลังโหลดไฟล์ชื่อ <b>ADP_BotReport_${filter}_${dateStr}.xlsx</b> ส่งให้หัวหน้าได้เลยครับ 📈`, 'text-slate-200', true);
+                printLog(`File ADP_AGENT_${filter}_${dateStr}.xlsx downloaded.`, 'bot');
 
             } catch (e) {
                 hideOverlay();
-                printLog(`❌ ระบบออกรายงานขัดข้อง: ${e.message}`, 'text-red-500', true);
+                printLog(`EXPORT FAILED: ${e.message}`, 'error');
             }
         }
 
-        // Custom Toast ภายในหน้า
-        function showToast(msg, type='success') {
-            alert(msg); // ใช้ alert ชั่วคราวเพื่อความเบาของโค้ด หรือถ้าอยากสวยให้สร้าง div fixed
-        }
     </script>
 </body>
 </html>
