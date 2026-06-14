@@ -3,617 +3,583 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PIXEL AGENTS - ADP Office</title>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <title>ADP AI-OFFICE | Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&family=Fira+Code&display=swap" rel="stylesheet">
   <style>
     :root {
-      --pixel-border: 4px solid #000;
-      --bg-color: #1a1c2c;
-      --panel-bg: #333c57;
-      --room-bg: #5f574f;
-      --accent-green: #38b764;
-      --accent-purple: #5d275d;
-      --accent-blue: #29adff;
-      --accent-yellow: #ffcd75;
-      --terminal-bg: #1d2b53;
+      --bg-dark: #0a0e17;
+      --bg-panel: #111827;
+      --bg-card: #1f2937;
+      --neon-cyan: #06b6d4;
+      --neon-purple: #a855f7;
+      --neon-green: #10b981;
+      --neon-red: #ef4444;
+      --neon-yellow: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-dim: #9ca3af;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    
-    body { 
-      font-family: 'Press Start 2P', cursive; 
-      background-color: var(--bg-color); 
-      color: #fff; 
-      image-rendering: pixelated;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
       overflow: hidden;
     }
 
-    /* Header */
+    /* === HEADER === */
     .header {
-      background-color: var(--panel-bg);
-      border-bottom: var(--pixel-border);
-      padding: 15px;
-      text-align: center;
-      font-size: 18px;
-      color: var(--accent-yellow);
-      text-shadow: 3px 3px 0px #000;
       display: flex;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      gap: 15px;
+      padding: 15px 30px;
+      background: rgba(17, 24, 39, 0.8);
+      border-bottom: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+      backdrop-filter: blur(10px);
+      z-index: 10;
     }
-    .header span { color: var(--accent-blue); }
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: 24px;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+    }
+    .header-stats {
+      display: flex;
+      gap: 30px;
+    }
+    .stat-box {
+      text-align: right;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .stat-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      color: var(--neon-cyan);
+    }
 
-    /* Main Layout */
+    /* === MAIN LAYOUT === */
     .main-container {
       flex: 1;
       display: flex;
-      flex-direction: column;
-    }
-
-    .workspace {
-      flex: 1;
-      display: flex;
       overflow: hidden;
     }
 
-    /* Office Room (Grid) */
-    .office-room {
-      flex: 3;
-      background-color: var(--room-bg);
-      position: relative;
-      overflow: hidden;
-      border-right: var(--pixel-border);
-      cursor: default;
-    }
-
-    /* พื้นห้องแบบ Grid Tile */
-    .room-tile {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      background-image: 
-        linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
-      background-size: 48px 48px;
-      pointer-events: none;
-    }
-
-    /* กล่องข้อความระหว่างวางของ */
-    .placing-indicator {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent-purple);
-      padding: 8px 15px;
-      font-size: 10px;
-      border: var(--pixel-border);
-      box-shadow: 4px 4px 0px #000;
-      z-index: 100;
-      display: none;
-      animation: blink 1s infinite;
-    }
-    @keyframes blink { 50% { opacity: 0.7; } }
-
-    /* Pixel Items & Agents */
-    .pixel-entity {
-      position: absolute;
-      width: 48px;
-      height: 48px;
-      z-index: 10;
+    /* === LEFT PANEL: BOTS OVERVIEW === */
+    .bots-panel {
+      width: 380px;
+      background: var(--bg-panel);
+      border-right: 1px solid #333;
       display: flex;
       flex-direction: column;
+    }
+    .panel-header {
+      padding: 20px;
+      border-bottom: 1px solid #333;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      color: var(--neon-purple);
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: flex-end;
+    }
+    .bots-list {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
 
-    .sprite-box {
-      width: 40px;
-      height: 40px;
-      background: rgba(0,0,0,0.2);
-      border: 2px solid rgba(0,0,0,0.5);
+    /* Bot Card */
+    .bot-card {
+      background: var(--bg-card);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .bot-card:hover {
+      border-color: var(--neon-purple);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+      transform: translateY(-2px);
+    }
+    .bot-top {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    .bot-avatar {
+      width: 50px;
+      height: 50px;
+      background: #000;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 24px;
-      box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+      border: 2px solid var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
     }
-
-    .entity-name {
-      font-size: 6px;
-      background: #000;
-      color: #fff;
-      padding: 2px;
-      width: 100%;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: -2px;
+    .bot-info h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      color: var(--neon-cyan);
+      margin-bottom: 4px;
     }
-
-    .pixel-entity.agent .sprite-box {
-      border-color: var(--accent-green);
-      background: rgba(56, 183, 100, 0.2);
+    .bot-info p {
+      font-size: 11px;
+      color: var(--text-dim);
     }
-    
-    .pixel-entity.agent .sprite-box {
-      animation: idle-bounce 1s infinite alternate;
-    }
-
-    @keyframes idle-bounce {
-      from { transform: translateY(0); }
-      to { transform: translateY(-2px); }
-    }
-
-    /* Side Panel */
-    .side-panel {
-      flex: 1;
-      background-color: var(--panel-bg);
+    .bot-status {
+      position: absolute;
+      top: 15px;
+      right: 15px;
       display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-
-    .panel-section {
-      padding: 15px;
-      border-bottom: var(--pixel-border);
-    }
-
-    .panel-title {
+      align-items: center;
+      gap: 6px;
       font-size: 10px;
-      color: var(--accent-yellow);
-      margin-bottom: 15px;
-      text-align: center;
-      text-shadow: 2px 2px 0px #000;
+      text-transform: uppercase;
     }
-
-    /* Shop Items Grid */
-    .shop-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 8px var(--neon-green);
+    }
+    .status-dot.offline { background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); }
+    
+    .bot-actions {
+      display: flex;
       gap: 10px;
     }
-
-    .shop-item {
-      background: #262b40;
-      border: var(--pixel-border);
+    .btn-action {
+      flex: 1;
       padding: 8px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      border: 1px solid #444;
+      background: transparent;
+      color: var(--text-main);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-action:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .btn-action.primary {
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+    .btn-action.primary:hover {
+      background: rgba(6, 182, 212, 0.2);
+    }
+
+    /* === RIGHT PANEL: 3D ISOMETRIC OFFICE === */
+    .office-view {
+      flex: 1;
+      background: radial-gradient(circle at center, #1a1f2e 0%, #0a0e17 100%);
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    
+    /* Isometric Grid Wrapper */
+    .iso-wrapper {
+      transform: rotateX(60deg) rotateZ(-45deg);
+      transform-style: preserve-3d;
+      position: relative;
+      width: 600px;
+      height: 400px;
+    }
+
+    .floor {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(to right, rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      box-shadow: 0 0 50px rgba(6, 182, 212, 0.1);
+    }
+
+    /* 3D Objects inside office */
+    .obj-3d {
+      position: absolute;
+      transform-style: preserve-3d;
+    }
+
+    .room-block {
+      width: 180px;
+      height: 120px;
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
       display: flex;
       flex-direction: column;
       align-items: center;
-      cursor: pointer;
-      box-shadow: 3px 3px 0px #000;
-      transition: transform 0.1s;
+      justify-content: center;
+      transition: all 0.3s;
     }
-    .shop-item:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0px #000; }
-    .shop-item.active { border-color: var(--accent-green); background: rgba(56, 183, 100, 0.2); }
-    .shop-item .icon { font-size: 20px; margin-bottom: 5px; }
-    .shop-item .name { font-size: 7px; text-align: center; }
+    .room-block:hover {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+      transform: translateZ(10px); /* Lift up on hover */
+    }
+    .room-icon { font-size: 32px; margin-bottom: 10px; }
+    .room-name {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+    }
 
-    /* Agent Creator */
-    .form-group { margin-bottom: 12px; }
-    .form-group label { 
-      font-size: 8px; 
-      display: block; 
-      margin-bottom: 6px; 
-      color: var(--accent-blue);
-    }
-    .form-input {
-      width: 100%;
-      padding: 8px;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 8px;
-      background: #1a1c2c;
-      color: #fff;
-      border: var(--pixel-border);
-      box-shadow: inset 2px 2px 0px #000;
-    }
-    .form-input:focus { outline: none; border-color: var(--accent-blue); }
+    .pos-1 { top: 20px; left: 20px; }
+    .pos-2 { top: 20px; left: 220px; }
+    .pos-3 { top: 220px; left: 20px; }
 
-    .pixel-btn {
-      width: 100%;
-      background-color: var(--accent-purple);
-      color: #fff;
-      border: var(--pixel-border);
-      padding: 10px;
-      font-family: 'Press Start 2P', cursive;
-      font-size: 9px;
-      cursor: pointer;
-      box-shadow: 4px 4px 0px #000;
-      transition: transform 0.1s;
-      text-shadow: 1px 1px 0px #000;
+    /* Agent walking in 3D space */
+    .agent-3d {
+      position: absolute;
+      font-size: 24px;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 5px var(--neon-green));
     }
-    .pixel-btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
-    .pixel-btn.green { background-color: var(--accent-green); }
+    @keyframes float {
+      0%, 100% { transform: translateZ(0px); }
+      50% { transform: translateZ(15px); }
+    }
 
-    /* Terminal Bottom Bar */
-    .terminal-bar {
-      height: 150px;
-      background-color: var(--terminal-bg);
-      border-top: var(--pixel-border);
+    /* === BOTTOM PANEL: TERMINAL === */
+    .terminal-panel {
+      height: 180px;
+      background: #000;
+      border-top: 1px solid var(--neon-green);
       display: flex;
       flex-direction: column;
     }
-
-    .terminal-header {
-      background: #000;
-      color: var(--accent-green);
+    .term-header {
       padding: 5px 15px;
-      font-size: 8px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      font-family: 'Fira Code', monospace;
+      font-size: 11px;
+      color: var(--neon-green);
       display: flex;
       justify-content: space-between;
-      border-bottom: 2px solid #333;
     }
-
-    .terminal-content {
+    .term-body {
       flex: 1;
       padding: 10px 15px;
-      color: var(--accent-green);
-      font-size: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--neon-green);
       overflow-y: auto;
-      line-height: 1.6;
+      line-height: 1.5;
     }
+    .log-time { color: var(--text-dim); margin-right: 8px; }
+    .log-sys { color: var(--neon-cyan); }
+    .log-agent { color: var(--neon-purple); }
+    .log-warn { color: var(--neon-yellow); }
+    .log-err { color: var(--neon-red); }
 
-    .terminal-content .log-agent { color: var(--accent-yellow); }
-    .terminal-content .log-system { color: var(--accent-blue); }
-    .terminal-content .log-error { color: #ff004d; }
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #1a1c2c; }
-    ::-webkit-scrollbar-thumb { background: #333c57; border: 1px solid #000; }
-
-    .placing-mode { cursor: crosshair !important; }
   </style>
 </head>
 <body>
 
+  <!-- HEADER -->
   <div class="header">
-    PIXEL <span>AGENTS</span> OFFICE
+    <div class="logo">ADP AI-OFFICE</div>
+    <div class="header-stats">
+      <div class="stat-box">
+        <div class="stat-label">Total Assets</div>
+        <div class="stat-value" id="statAssets">1,245</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Active Agents</div>
+        <div class="stat-value" id="statAgents">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">System Status</div>
+        <div class="stat-value" style="color: var(--neon-green);">ONLINE</div>
+      </div>
+    </div>
   </div>
 
+  <!-- MAIN CONTENT -->
   <div class="main-container">
-    <div class="workspace">
-      
-      <!-- Office Room -->
-      <div class="office-room" id="officeRoom" onclick="placeEntity(event)">
-        <div class="room-tile"></div>
-        <div class="placing-indicator" id="placingIndicator">กำลังวาง: คลิกที่พื้นห้อง...</div>
+    
+    <!-- LEFT: BOTS OVERVIEW -->
+    <div class="bots-panel">
+      <div class="panel-header">
+        <span>BOTS OVERVIEW</span>
+        <button class="btn-action primary" onclick="openCreateBot()">+ DEPLOY NEW</button>
       </div>
-
-      <!-- Side Panel -->
-      <div class="side-panel">
-        
-        <!-- ร้านของตกแต่ง -->
-        <div class="panel-section">
-          <div class="panel-title">🛒 ร้านของตกแต่ง</div>
-          <div class="shop-grid" id="shopGrid">
-            <!-- Items will be injected by JS -->
-          </div>
-        </div>
-
-        <!-- สร้าง Agent -->
-        <div class="panel-section">
-          <div class="panel-title">🤖 สร้าง AI Agent</div>
-          <div class="form-group">
-            <label>NAME</label>
-            <input type="text" id="agentName" class="form-input" placeholder="ชื่อ Agent">
-          </div>
-          <div class="form-group">
-            <label>CLASS / ROLE</label>
-            <select id="agentRole" class="form-input">
-              <option value="monitor">🕵️ ตรวจสอบสต็อก</option>
-              <option value="report">🧙 ทำรายงานเดือน</option>
-              <option value="fix">🔧 แจ้งเตือนชำรุด</option>
-            </select>
-          </div>
-          <button class="pixel-btn green" onclick="hireAgent()">DEPLOY AGENT</button>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="panel-section" style="border-bottom: none; margin-top: auto;">
-          <button class="pixel-btn" onclick="saveOfficeState()" style="margin-bottom: 10px;">💾 SYNC TO CLOUD</button>
-          <button class="pixel-btn" onclick="clearRoom()" style="background-color: #ff004d;">🗑️ RESET ROOM</button>
-        </div>
-
+      <div class="bots-list" id="botsList">
+        <!-- Bots will be rendered here -->
       </div>
     </div>
 
-    <!-- Terminal Log -->
-    <div class="terminal-bar">
-      <div class="terminal-header">
-        <span>CLAUDE CODE TERMINAL v1.0</span>
-        <span id="agentCount">AGENTS: 0</span>
+    <!-- RIGHT: 3D OFFICE VIEW -->
+    <div class="office-view">
+      <div class="iso-wrapper">
+        <div class="floor"></div>
+        
+        <!-- ห้องต่างๆ ในสำนักงาน -->
+        <div class="obj-3d room-block pos-1">
+          <div class="room-icon">🖥️</div>
+          <div class="room-name">MAIN OFFICE</div>
+        </div>
+        
+        <div class="obj-3d room-block pos-2">
+          <div class="room-icon">💽</div>
+          <div class="room-name">SERVER ROOM</div>
+        </div>
+        
+        <div class="obj-3d room-block pos-3">
+          <div class="room-icon">☕</div>
+          <div class="room-name">PANTRY / WH</div>
+        </div>
+
+        <!-- Agent ที่กำลังเดินไปมา -->
+        <div id="agentContainer"></div>
       </div>
-      <div class="terminal-content" id="terminalLog">
-        > System Initialized...<br>
-        > Connecting to ADP Backend...<br>
-        <span class="log-system">> [STATUS] Office Ready for customization.</span><br>
-      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM: TERMINAL -->
+  <div class="terminal-panel">
+    <div class="term-header">
+      <span>SYSTEM TERMINAL</span>
+      <span>v6.2.1</span>
+    </div>
+    <div class="term-body" id="terminalLog">
+      <div><span class="log-time">[00:00:00]</span> <span class="log-sys">System Initialized...</span></div>
+      <div><span class="log-time">[00:00:01]</span> <span class="log-sys">Connecting to ADP Backend...</span></div>
+      <div><span class="log-time">[00:00:02]</span> <span class="log-warn">Waiting for Agent deployment.</span></div>
     </div>
   </div>
 
   <script>
-    // ==========================================
-    // CONFIG & STATE
-    // ==========================================
-    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec'; // ใส่ URL ของคุณที่นี่
+    const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec'; // ใส่ URL ของ Google Apps Script ที่นี่
     
-    let officeState = { items: [], agents: [] };
-    let isPlacing = false;
-    let currentTool = null;
-
-    // รายการของตกแต่งในร้าน
-    const shopItems = [
-      { id: 'desk', sprite: '🖥️', name: 'โต๊ะ+จอ' },
-      { id: 'plant', sprite: '🪴', name: 'ต้นไม้' },
-      { id: 'coffee', sprite: '☕', name: 'กาแฟ' },
-      { id: 'shelf', sprite: '📚', name: 'ชั้นหนังสือ' },
-      { id: 'cabinet', sprite: '🗄️', name: 'ตู้เอกสาร' },
-      { id: 'server', sprite: '💽', name: 'แม่ข่าย' },
+    let agents = [];
+    
+    // ตำแหน่ง Agent ในห้อง 3D (X, Y ใน iso-wrapper)
+    const agentPositions = [
+      {x: 100, y: 60}, {x: 300, y: 60}, {x: 100, y: 260}, {x: 300, y: 260}, {x: 200, y: 150}
     ];
 
-    const agentSprites = {
-      monitor: '🕵️',
-      report: '🧙',
-      fix: '🔧'
-    };
+    // ข้อมูล Class ของ Bot ที่รับหน้าที่เหมือน Warehouse
+    const botClasses = [
+      { id: 'sync', name: 'ATLAS', icon: '🤖', role: 'SYNC MASTER', desc: 'ซิงค์ข้อมูลสต็อกทั้งหมดไปคลังกลาง' },
+      { id: 'audit', name: 'NOVA', icon: '🕵️', role: 'AUDITOR', desc: 'ตรวจสอบอุปกรณ์ชำรุดและแจ้งเตือน' },
+      { id: 'report', name: 'SCRIBE', icon: '🧙', role: 'REPORTER', desc: 'ตรวจรายงานเดือนและทวงถามสถานี' },
+      { id: 'wh_mgr', name: 'CUSTODIAN', icon: '📦', role: 'WH KEEPER', desc: 'จัดการรับ-คืน สินค้าเข้าคลังส่วนกลาง' }
+    ];
 
-    // ==========================================
-    // INITIALIZATION
-    // ==========================================
+    let selectedClass = botClasses[0];
+
+    // Init
     window.onload = () => {
-      renderShop();
-      loadOfficeState();
+      renderBotClasses();
+      addLog('sys', 'Dashboard ready. Deploy agents to begin tasks.');
     };
 
-    function renderShop() {
-      const grid = document.getElementById('shopGrid');
-      grid.innerHTML = '';
-      shopItems.forEach(item => {
-        const el = document.createElement('div');
-        el.className = 'shop-item';
-        el.id = 'shop_' + item.id;
-        el.onclick = () => selectTool(item);
-        el.innerHTML = `
-          <div class="icon">${item.sprite}</div>
-          <div class="name">${item.name}</div>
+    function renderBotClasses() {
+      const list = document.getElementById('botsList');
+      list.innerHTML = '';
+      
+      botClasses.forEach((bot, index) => {
+        const isDeployed = agents.some(a => a.id === bot.id);
+        
+        const card = document.createElement('div');
+        card.className = 'bot-card';
+        card.innerHTML = `
+          <div class="bot-top">
+            <div class="bot-avatar">${bot.icon}</div>
+            <div class="bot-info">
+              <h3>${bot.name}</h3>
+              <p>${bot.role}</p>
+            </div>
+            <div class="bot-status">
+              <div class="status-dot ${isDeployed ? '' : 'offline'}"></div>
+              ${isDeployed ? 'ONLINE' : 'OFFLINE'}
+            </div>
+          </div>
+          <p style="font-size:11px; color:#9ca3af; margin-bottom:15px;">${bot.desc}</p>
+          <div class="bot-actions">
+            ${isDeployed 
+              ? `<button class="btn-action primary" onclick="runTask('${bot.id}')">▶ RUN TASK</button>
+                 <button class="btn-action" onclick="recallBot('${bot.id}')" style="border-color:var(--neon-red); color:var(--neon-red);">RECALL</button>` 
+              : `<button class="btn-action primary" style="flex:1" onclick="deployBot('${bot.id}')">DEPLOY AGENT</button>`
+            }
+          </div>
         `;
-        grid.appendChild(el);
+        list.appendChild(card);
       });
     }
 
-    // ==========================================
-    // OFFICE ROOM LOGIC (PLACEMENT)
-    // ==========================================
-    function selectTool(item) {
-      // ถ้ากดซ้ำให้ยกเลิก
-      if (currentTool && currentTool.id === item.id) {
-        cancelPlacement();
-        return;
-      }
+    // จ้าง Agent ลงมาทำงานในห้อง
+    function deployBot(botId) {
+      const botData = botClasses.find(b => b.id === botId);
+      if (!botData || agents.some(a => a.id === botId)) return;
 
-      isPlacing = true;
-      currentTool = item;
-      
-      document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('active'));
-      document.getElementById('shop_' + item.id).classList.add('active');
-      document.getElementById('officeRoom').classList.add('placing-mode');
-      document.getElementById('placingIndicator').style.display = 'block';
-      document.getElementById('placingIndicator').innerText = `กำลังวาง: ${item.name}`;
-    }
+      const pos = agentPositions[agents.length % agentPositions.length];
 
-    function cancelPlacement() {
-      isPlacing = false;
-      currentTool = null;
-      document.querySelectorAll('.shop-item').forEach(el => el.classList.remove('active'));
-      document.getElementById('officeRoom').classList.remove('placing-mode');
-      document.getElementById('placingIndicator').style.display = 'none';
-    }
-
-    function placeEntity(event) {
-      if (!isPlacing || !currentTool) return;
-
-      const room = document.getElementById('officeRoom');
-      const rect = room.getBoundingClientRect();
-      
-      // คำนวณตำแหน่งแบบ Grid (48x48 px)
-      const x = Math.floor((event.clientX - rect.left) / 48) * 48;
-      const y = Math.floor((event.clientY - rect.top) / 48) * 48;
-
-      // ป้องกันการวางซ้อนที่เดิม
-      const isOccupied = officeState.items.some(i => i.x === x && i.y === y) || 
-                         officeState.agents.some(a => a.x === x && a.y === y);
-      if (isOccupied) {
-        addLog(`> <span class="log-error">[ERROR] ช่องนี้มีของอยู่แล้ว!</span>`);
-        return;
-      }
-
-      const newId = 'item_' + Date.now();
-      const newItem = {
-        id: newId,
-        type: currentTool.id,
-        sprite: currentTool.sprite,
-        name: currentTool.name,
-        x: x,
-        y: y
-      };
-
-      officeState.items.push(newItem);
-      renderEntity(newItem, false);
-      
-      addLog(`> <span class="log-system">[SYSTEM] วาง ${currentTool.name} ที่พิกัด [${x/48}, ${y/48}]</span>`);
-      cancelPlacement();
-    }
-
-    function renderEntity(data, isAgent) {
-      const room = document.getElementById('officeRoom');
-      const el = document.createElement('div');
-      el.className = `pixel-entity ${isAgent ? 'agent' : ''}`;
-      el.style.left = data.x + 'px';
-      el.style.top = data.y + 'px';
-      el.dataset.id = data.id;
-      el.innerHTML = `
-        <div class="sprite-box">${data.sprite}</div>
-        <div class="entity-name">${data.name}</div>
-      `;
-      
-      // ถ้าเป็น Agent ให้สามารถคลิกเพื่อสั่งงานได้
-      if (isAgent) {
-        el.onclick = (e) => {
-          e.stopPropagation();
-          commandAgent(data);
-        };
-      }
-
-      room.appendChild(el);
-    }
-
-    // ==========================================
-    // AGENT LOGIC
-    // ==========================================
-    function hireAgent() {
-      const nameInput = document.getElementById('agentName');
-      const roleSelect = document.getElementById('agentRole');
-
-      const name = nameInput.value.trim() || 'Agent-X';
-      const role = roleSelect.value;
-      const sprite = agentSprites[role];
-
-      // หาจุดว่างให้ Agent (มุมขวาล่าง)
-      const room = document.getElementById('officeRoom');
-      let x = 96;
-      let y = 96;
-      
-      // พยายามหาช่องว่างแบบง่ายๆ
-      while (officeState.agents.some(a => a.x === x && a.y === y)) {
-        x += 48;
-        if (x > room.clientWidth - 48) {
-          x = 48;
-          y += 48;
-        }
-      }
-
-      const agentId = 'agent_' + Date.now();
       const newAgent = {
-        id: agentId,
-        name: name,
-        role: role,
-        sprite: sprite,
-        x: x,
-        y: y
+        ...botData,
+        x: pos.x,
+        y: pos.y
       };
 
-      officeState.agents.push(newAgent);
-      renderEntity(newAgent, true);
+      agents.push(newAgent);
       
-      document.getElementById('agentCount').innerText = `AGENTS: ${officeState.agents.length}`;
-      addLog(`> <span class="log-agent">[AGENT DEPLOYED] ${name} (Class: ${role}) ประจำการแล้ว!</span>`);
-      
-      nameInput.value = '';
+      // วาด Agent ลงในห้อง 3D
+      const container = document.getElementById('agentContainer');
+      const el = document.createElement('div');
+      el.className = 'agent-3d';
+      el.id = `agent_3d_${botId}`;
+      el.style.left = pos.x + 'px';
+      el.style.top = pos.y + 'px';
+      el.innerHTML = botData.icon;
+      container.appendChild(el);
 
-      // จำลองการทำงานอัตโนมัติครั้งแรก
-      setTimeout(() => simulateAgentTask(newAgent), 2000);
+      document.getElementById('statAgents').innerText = agents.length;
+      addLog('agent', `${botData.name} (${botData.role}) deployed to office.`);
+      renderBotClasses();
     }
 
-    function commandAgent(agent) {
-      addLog(`> <span class="log-agent">[COMMAND] สั่งงาน ${agent.name}...</span>`);
-      simulateAgentTask(agent);
+    // สั่ง Recall Bot
+    function recallBot(botId) {
+      agents = agents.filter(a => a.id !== botId);
+      const el = document.getElementById(`agent_3d_${botId}`);
+      if (el) el.remove();
+
+      document.getElementById('statAgents').innerText = agents.length;
+      addLog('warn', `Agent ${botId} recalled.`);
+      renderBotClasses();
     }
 
-    function simulateAgentTask(agent) {
-      let taskDetail = "";
-      let logClass = "log-agent";
+    // สั่งรัน Task ของ Agent (ทำหน้าที่เหมือน Warehouse.html)
+    async function runTask(botId) {
+      const agent = agents.find(a => a.id === botId);
+      if (!agent) return;
 
-      if(agent.role === 'monitor') {
-        taskDetail = "กำลังสแกน S/N อุปกรณ์ในคลัง... พบของว่าง 12 รายการ";
-      } else if(agent.role === 'report') {
-        taskDetail = "กำลังรวบรวมข้อมูลสถานีเพื่อทำรายงานประจำเดือน...";
-      } else if(agent.role === 'fix') {
-        taskDetail = "ตรวจพบจอมอนิเตอร์ชำรุด 1 รายการ กำลังบันทึกเพื่อแจ้งซ่อม!";
-        logClass = "log-error"; // ให้ขึ้นสีแดงเด่นๆ
-      }
-
-      addLog(`> <span class="${logClass}">[${agent.name}] ${taskDetail}</span>`);
-    }
-
-    // ==========================================
-    // BACKEND INTEGRATION
-    // ==========================================
-    async function saveOfficeState() {
-      addLog(`> <span class="log-system">[SYSTEM] กำลังเชื่อมต่อ Backend เพื่อบันทึก...</span>`);
-      
-      // เตรียม Log สำหรับส่งไป Telegram ผ่าน Apps Script
-      const logs = officeState.agents.map(a => ({
-        station: "AI Office",
-        action: "Agent Active",
-        detail: `Agent ${a.name} (Role: ${a.role}) ประจำการอยู่`
-      }));
+      addLog('agent', `[${agent.name}] Executing task: ${agent.role}...`);
 
       try {
-        const response = await fetch(BACKEND_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'SAVE_OFFICE_STATE',
-            value: JSON.stringify(officeState),
-            logs: logs
-          })
-        });
-        const result = await response.json();
-        
-        if(result.status === 'success') {
-          addLog(`> <span class="log-system">[SYSTEM] ✅ บันทึกสถานะสำนักงานสำเร็จ!</span>`);
-        } else {
-          addLog(`> <span class="log-error">[ERROR] Backend error: ${result.message}</span>`);
+        let payload = {};
+        let endpoint = BACKEND_URL;
+
+        // แยกหน้าที่ตาม Class ของ Agent
+        if (agent.id === 'sync') {
+          // รัน Sync ข้อมูลไปคลังกลาง (เหมือนกดปุ่ม Sync ใน warehouse)
+          addLog('sys', `[ATLAS] Reading local data and preparing SYNC to Central...`);
+          payload = { action: 'SYNC_ASSETS', updates: [], logs: [{ station: 'AI Agent', action: 'Agent Sync', detail: 'ATLAS กำลังซิงค์ข้อมูลอัตโนมัติ' }] };
+        } 
+        else if (agent.id === 'audit') {
+          // ตรวจสอบของชำรุด
+          addLog('sys', `[NOVA] Scanning database for broken items...`);
+          endpoint += '?action=GET_ALL'; // ดึงข้อมูลมาตรวจ
+          const res = await fetch(endpoint);
+          const data = await res.json();
+          
+          let brokenCount = 0;
+          if(data.value) {
+            const db = JSON.parse(data.value);
+            // Logic ตรวจสอบของชำรุดเบื้องต้น
+            const checkBroken = (arr) => { if(arr) arr.forEach(r => { if(r[5]==='ชำรุด') brokenCount++; }); };
+            Object.values(db).forEach(stationData => {
+              try {
+                const sObj = JSON.parse(stationData);
+                checkBroken(sObj.cpu); checkBroken(sObj.nb); checkBroken(sObj.mon);
+              } catch(e) {}
+            });
+          }
+          addLog(brokenCount > 0 ? 'err' : 'sys', `[NOVA] Audit complete. Found ${brokenCount} broken items.`);
+          return; // จบการทำงานของ NOVA เพราะเป็น GET
         }
-      } catch (error) {
-        addLog(`> <span class="log-error">[NETWORK ERROR] ไม่สามารถเชื่อมต่อ Backend ได้</span>`);
-      }
-    }
-
-    async function loadOfficeState() {
-      try {
-        const response = await fetch(`${BACKEND_URL}?action=GET_OFFICE_STATE`);
-        const result = await response.json();
-        
-        if(result.value) {
-          officeState = JSON.parse(result.value);
-          
-          // ล้างห้องเดิมก่อนแล้ววาดใหม่
-          document.querySelectorAll('.pixel-entity').forEach(el => el.remove());
-          
-          officeState.items.forEach(item => renderEntity(item, false));
-          officeState.agents.forEach(agent => renderEntity(agent, true));
-          
-          document.getElementById('agentCount').innerText = `AGENTS: ${officeState.agents.length}`;
-          addLog(`> <span class="log-system">[SYSTEM] ✅ โหลดสถานะสำนักงานล่าสุดสำเร็จ!</span>`);
+        else if (agent.id === 'report') {
+          // ตรวจรายงานเดือน
+          addLog('sys', `[SCRIBE] Checking monthly report status...`);
+          endpoint += '?action=GET_ALL';
+          const res = await fetch(endpoint);
+          const data = await res.json();
+          addLog('sys', `[SCRIBE] Report data fetched. Simulating confirmation...`);
+          payload = { action: 'SAVE_OFFICE_STATE', value: JSON.stringify({checked: true}), logs: [{ station: 'AI Agent', action: 'Agent Report', detail: 'SCRIBE ตรวจสอบรายงาน' }] };
         }
+        else if (agent.id === 'wh_mgr') {
+          // จำลองการรับ-คืน ของเข้าคลัง
+          addLog('sys', `[CUSTODIAN] Checking warehouse withdrawals...`);
+          payload = { action: 'SAVE_OFFICE_STATE', value: JSON.stringify({wh_sync: true}), logs: [{ station: 'AI Agent', action: 'Agent WH', detail: 'CUSTODIAN กำลังจัดการคลังสินค้า' }] };
+        }
+
+        // ส่งข้อมูลไป Backend (หากเป็น POST)
+        if (payload.action) {
+          const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (result.status === 'success') {
+            addLog('sys', `[${agent.name}] Task completed successfully. Cloud synced.`);
+          } else {
+            addLog('err', `[${agent.name}] Backend error.`);
+          }
+        }
+
       } catch (error) {
-        addLog(`> <span class="log-error">[LOAD ERROR] ไม่สามารถโหลดข้อมูลเดิมได้</span>`);
+        addLog('err', `[${agent.name}] Connection error: ${error.message}`);
       }
     }
 
-    function clearRoom() {
-      if(confirm('ต้องการล้างข้อมูลห้องทั้งหมดหรือไม่?')) {
-        officeState = { items: [], agents: [] };
-        document.querySelectorAll('.pixel-entity').forEach(el => el.remove());
-        document.getElementById('agentCount').innerText = `AGENTS: 0`;
-        addLog(`> <span class="log-error">[SYSTEM] รีเซ็ตห้องทำงานแล้ว</span>`);
-      }
-    }
+    // Terminal Logger
+    function addLog(type, message) {
+      const logBody = document.getElementById('terminalLog');
+      const now = new Date();
+      const time = now.toTimeString().split(' ')[0];
+      
+      const classMap = {
+        'sys': 'log-sys',
+        'agent': 'log-agent',
+        'warn': 'log-warn',
+        'err': 'log-err'
+      };
 
-    // ==========================================
-    // UI HELPER
-    // ==========================================
-    function addLog(htmlContent) {
-      const terminal = document.getElementById('terminalLog');
-      terminal.innerHTML += htmlContent + '<br>';
-      terminal.scrollTop = terminal.scrollHeight;
+      const logClass = classMap[type] || 'log-sys';
+      
+      logBody.innerHTML += `<div><span class="log-time">[${time}]</span> <span class="${logClass}">${message}</span></div>`;
+      logBody.scrollTop = logBody.scrollHeight;
     }
   </script>
 </body>
