@@ -18,142 +18,223 @@
     </script>
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; }
+        body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; user-select: none; }
         
-        /* 🌟 2D World CSS */
-        .world-container { background-image: url('data:image/svg+xml;utf8,<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="%231e293b"/><path d="M0 40 L40 0 H38 L0 38 Z M40 40 L0 0 V2 L40 38 Z" stroke="%23334155" stroke-width="1"/></svg>'); }
+        /* 🌟 แผนผังห้อง 2D (Top-down) */
+        .world-bg { 
+            background-color: #1e293b;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 2px, transparent 2px);
+            background-size: 40px 40px;
+        }
         
-        .floor-wood { background: #a27042; background-image: repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(0,0,0,0.1) 20px), repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.1) 40px); box-shadow: inset 0 0 50px rgba(0,0,0,0.5); border: 8px solid #5c3a21; }
-        .floor-concrete { background: #94a3b8; background-image: radial-gradient(#64748b 1px, transparent 1px); background-size: 20px 20px; box-shadow: inset 0 0 50px rgba(0,0,0,0.3); border: 8px solid #475569; }
+        /* พื้นห้องออฟฟิศ (ไม้) */
+        .room-office { 
+            background: #8b5a2b; 
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(0,0,0,0.1) 20px); 
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.6); 
+            border: 8px solid #4a3018; 
+            border-right: 4px solid #4a3018;
+        }
         
-        .desk { background: #8b5a2b; box-shadow: 4px 4px 0px rgba(0,0,0,0.4), inset -2px -2px 0px rgba(0,0,0,0.2); border-radius: 4px; position: relative; }
-        .desk::after { content: '💻'; position: absolute; top: 10px; left: 10px; font-size: 1.2rem; }
-        .desk::before { content: '☕'; position: absolute; top: 10px; right: 10px; font-size: 0.8rem; }
-        
-        .storage-box { background: #ca8a04; box-shadow: 2px 2px 0px rgba(0,0,0,0.4); border: 2px solid #854d0e; border-radius: 2px; }
-        .server-rack { background: #334155; box-shadow: 2px 2px 0px rgba(0,0,0,0.4); border: 2px solid #0f172a; display: flex; flex-direction: column; gap: 2px; padding: 2px; }
-        .server-light { height: 4px; background: #10b981; border-radius: 2px; animation: blink 1.5s infinite; }
-        
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        
-        .bot { font-size: 2.5rem; filter: drop-shadow(0px 4px 2px rgba(0,0,0,0.4)); animation: bounce 2s infinite ease-in-out; cursor: pointer; transition: transform 0.2s; z-index: 10; }
-        .bot:hover { transform: scale(1.1) translateY(-5px); filter: drop-shadow(0px 0px 10px rgba(99,102,241,0.8)); }
-        .bot.active { filter: drop-shadow(0px 0px 15px rgba(16,185,129,0.9)); }
+        /* พื้นห้องคลัง (คอนกรีต) */
+        .room-warehouse { 
+            background: #64748b; 
+            background-image: radial-gradient(#475569 2px, transparent 2px); 
+            background-size: 20px 20px; 
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.4); 
+            border: 8px solid #334155; 
+            border-left: 4px solid #334155;
+        }
 
+        /* ของตกแต่งในห้อง */
+        .desk { background: #d97706; box-shadow: 4px 4px 0px rgba(0,0,0,0.4), inset -2px -2px 0px rgba(0,0,0,0.2); border-radius: 4px; position: relative; }
+        .pc-monitor { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 24px; height: 8px; background: #1e293b; border: 2px solid #0f172a; border-radius: 2px; }
+        .plant { filter: drop-shadow(4px 4px 2px rgba(0,0,0,0.5)); font-size: 2rem; }
+        
+        /* โซนเก็บของในคลัง */
+        .rack { background: #334155; border: 2px solid #0f172a; box-shadow: 4px 4px 0px rgba(0,0,0,0.4); }
+        .box { background: #ca8a04; border: 1px solid #854d0e; box-shadow: 1px 1px 0px rgba(0,0,0,0.4); }
+
+        /* แอนิเมชันของน้อง Bot */
+        @keyframes idleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes runLeftRight { 0%, 100% { transform: translateX(0) scaleX(1); } 50% { transform: translateX(30px) scaleX(-1); } }
+        
+        .bot-char { 
+            font-size: 2.5rem; filter: drop-shadow(0px 8px 4px rgba(0,0,0,0.5)); 
+            animation: idleBounce 2s infinite ease-in-out; 
+            cursor: pointer; transition: all 0.3s; z-index: 20; 
+        }
+        .bot-char:hover { transform: scale(1.15) translateY(-5px); filter: drop-shadow(0px 0px 15px rgba(99,102,241,0.8)); }
+        
+        /* วงแหวนเมื่อเลือก Bot */
+        .bot-aura { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%) rotateX(60deg); width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; transition: all 0.3s; }
+        .bot-char.active .bot-aura { border-color: #10b981; box-shadow: 0 0 15px #10b981, inset 0 0 10px #10b981; animation: spin 3s linear infinite; }
+        @keyframes spin { 100% { transform: translateX(-50%) rotateX(60deg) rotateZ(360deg); } }
+
+        /* 🌟 Terminal CSS */
         .terminal-scroll::-webkit-scrollbar { width: 6px; }
         .terminal-scroll::-webkit-scrollbar-track { background: #0f172a; }
-        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; }
+        .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        
+        .scanline {
+            width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(16, 185, 129, 0.1) 50%, rgba(0, 0, 0, 0) 100%);
+            opacity: 0.1; position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 6s linear infinite;
+        }
+        @keyframes scan { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
     </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden text-sm">
+<body class="flex flex-col h-screen w-screen">
 
-    <!-- 🌟 LEFT SIDE: 2D World Map -->
-    <div class="flex-1 relative world-container flex items-center justify-center p-4 lg:p-8">
+    <nav class="h-14 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-6 shrink-0 shadow-lg relative z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_10px_rgba(79,70,229,0.5)]">AI</div>
+            <h1 class="font-bold text-white tracking-widest text-lg">ADP <span class="text-indigo-400 font-light">Office HQ</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <span id="sysStatus" class="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse"><span class="w-2 h-2 rounded-full bg-amber-400"></span> CONNECTING...</span>
+            <button onclick="window.location.href='warehouse.html'" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold border border-slate-600 transition-colors">ย้อนกลับคลังหลัก</button>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden relative">
         
-        <!-- The Office -->
-        <div class="relative w-full max-w-4xl aspect-[4/3] flex shadow-2xl">
+        <div class="flex-1 world-bg relative flex flex-col justify-center items-center p-4 shadow-[inset_-20px_0_50px_rgba(0,0,0,0.5)] z-10">
+            <h2 class="absolute top-6 left-8 text-slate-500 font-bold tracking-[0.2em] opacity-50 text-2xl">2D VIRTUAL HQ</h2>
             
-            <!-- Room 1: Office (Wood Floor) -->
-            <div class="flex-1 floor-wood relative rounded-l-xl p-6">
-                <div class="absolute top-2 left-4 px-3 py-1 bg-black/60 rounded text-[10px] font-bold tracking-widest text-emerald-400">🤖 AI HQ OFFICE</div>
+            <div class="w-full max-w-5xl aspect-video flex rounded-2xl shadow-2xl overflow-hidden transform perspective-1000 rotateX-12">
                 
-                <!-- Bot 1: Checker -->
-                <div class="absolute top-20 left-10 text-center" onclick="activateBot(1)">
-                    <div class="bot" id="bot1">🕵️‍♂️</div>
-                    <div class="desk w-24 h-12 mt-1"></div>
-                    <div class="mt-2 bg-black/70 px-2 py-0.5 rounded text-[10px] font-bold text-blue-300">Bot 1: เช็คยอด</div>
-                </div>
+                <div class="flex-1 room-office relative p-6 flex flex-col justify-between">
+                    <div class="absolute top-0 left-4 bg-black/50 text-emerald-400 text-[10px] px-3 py-1 font-bold rounded-b-lg tracking-widest">OFFICE ZONE</div>
+                    
+                    <div class="plant absolute top-4 right-4">🪴</div>
+                    <div class="plant absolute bottom-4 right-4">🌴</div>
+                    
+                    <div class="relative w-max mx-auto mt-8 flex flex-col items-center group">
+                        <div class="bot-char relative" id="bot1" onclick="activateBot(1)">
+                            <div class="bot-aura"></div>
+                            👩🏻‍💻
+                            <div class="absolute -top-3 -right-3 bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">เช็คยอด!</div>
+                        </div>
+                        <div class="desk w-20 h-10 mt-1"><div class="pc-monitor"></div></div>
+                        <span class="mt-2 bg-slate-900/80 text-blue-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Bot 1: Checker</span>
+                    </div>
 
-                <!-- Bot 2: Runner -->
-                <div class="absolute bottom-20 left-10 text-center" onclick="activateBot(2)">
-                    <div class="bot" id="bot2">🏃‍♂️</div>
-                    <div class="desk w-24 h-12 mt-1"></div>
-                    <div class="mt-2 bg-black/70 px-2 py-0.5 rounded text-[10px] font-bold text-amber-300">Bot 2: เบิกจ่าย</div>
-                </div>
+                    <div class="flex justify-between w-full px-8 mb-4">
+                        <div class="relative flex flex-col items-center group">
+                            <div class="bot-char relative" id="bot2" onclick="activateBot(2)" style="animation-duration: 2.2s;">
+                                <div class="bot-aura"></div>
+                                🏃‍♂️
+                                <div class="absolute -top-3 -right-3 bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">เบิกของ!</div>
+                            </div>
+                            <div class="desk w-20 h-10 mt-1"><div class="pc-monitor"></div></div>
+                            <span class="mt-2 bg-slate-900/80 text-amber-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Bot 2: Runner</span>
+                        </div>
 
-                <!-- Bot 3: Reporter -->
-                <div class="absolute top-40 right-10 text-center" onclick="activateBot(3)">
-                    <div class="bot" id="bot3">👩‍💼</div>
-                    <div class="desk w-24 h-12 mt-1"></div>
-                    <div class="mt-2 bg-black/70 px-2 py-0.5 rounded text-[10px] font-bold text-pink-300">Bot 3: ออกรายงาน</div>
-                </div>
-                
-                <!-- Plants -->
-                <div class="absolute top-10 right-10 text-3xl drop-shadow-lg">🪴</div>
-                <div class="absolute bottom-10 right-10 text-3xl drop-shadow-lg">🪴</div>
-            </div>
-
-            <!-- Room 2: Warehouse (Concrete Floor) -->
-            <div class="flex-1 floor-concrete relative rounded-r-xl border-l-0 p-4 grid grid-cols-2 grid-rows-2 gap-4">
-                <div class="absolute top-2 right-4 px-3 py-1 bg-black/60 rounded text-[10px] font-bold tracking-widest text-blue-400">📦 WAREHOUSE ZONE</div>
-                
-                <!-- Zone A: Main -->
-                <div class="border-2 border-dashed border-slate-600 rounded-lg p-2 flex flex-col items-center justify-center relative bg-slate-800/30">
-                    <span class="absolute top-1 left-2 text-[10px] font-bold text-slate-400">ZONE A: MAIN</span>
-                    <div class="flex gap-2 mt-2">
-                        <div class="server-rack w-6 h-12"><div class="server-light"></div><div class="server-light" style="animation-delay: 0.5s"></div></div>
-                        <div class="server-rack w-6 h-12"><div class="server-light"></div><div class="server-light"></div></div>
+                        <div class="relative flex flex-col items-center group">
+                            <div class="bot-char relative" id="bot3" onclick="activateBot(3)" style="animation-duration: 1.8s;">
+                                <div class="bot-aura"></div>
+                                👨🏻‍💼
+                                <div class="absolute -top-3 -right-3 bg-pink-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">ออกรายงาน!</div>
+                            </div>
+                            <div class="desk w-20 h-10 mt-1"><div class="pc-monitor"></div></div>
+                            <span class="mt-2 bg-slate-900/80 text-pink-300 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Bot 3: Reporter</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Zone B: Parts -->
-                <div class="border-2 border-dashed border-slate-600 rounded-lg p-2 flex flex-col items-center justify-center relative bg-slate-800/30">
-                    <span class="absolute top-1 left-2 text-[10px] font-bold text-slate-400">ZONE B: PARTS</span>
-                    <div class="flex flex-wrap justify-center gap-1 mt-2 w-16">
-                        <div class="storage-box w-6 h-4"></div><div class="storage-box w-6 h-4 bg-amber-600"></div>
-                        <div class="storage-box w-6 h-4 bg-amber-700"></div><div class="storage-box w-6 h-4"></div>
+                <div class="w-1/2 room-warehouse relative grid grid-cols-2 grid-rows-2 gap-4 p-6">
+                    <div class="absolute top-0 right-4 bg-black/50 text-blue-400 text-[10px] px-3 py-1 font-bold rounded-b-lg tracking-widest z-10">STORAGE ZONE</div>
+                    
+                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
+                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">MAIN (อุปกรณ์หลัก)</span>
+                        <div class="flex gap-2 group-hover:scale-110 transition-transform">
+                            <div class="rack w-8 h-16 rounded-sm bg-slate-700 flex flex-col gap-1 p-1"><div class="h-2 bg-slate-900 w-full"></div><div class="h-2 bg-slate-900 w-full"></div><div class="h-2 bg-slate-900 w-full"></div></div>
+                            <div class="rack w-8 h-16 rounded-sm bg-slate-700 flex flex-col gap-1 p-1"><div class="h-2 bg-slate-900 w-full"></div><div class="h-2 bg-blue-500/50 w-full"></div><div class="h-2 bg-slate-900 w-full"></div></div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Zone C: Ink -->
-                <div class="border-2 border-dashed border-slate-600 rounded-lg p-2 flex flex-col items-center justify-center relative bg-slate-800/30">
-                    <span class="absolute top-1 left-2 text-[10px] font-bold text-slate-400">ZONE C: INK</span>
-                    <div class="text-2xl drop-shadow-md">🖨️🖨️</div>
-                </div>
+                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
+                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">PARTS (อะไหล่)</span>
+                        <div class="flex flex-wrap gap-1 justify-center w-16 group-hover:scale-110 transition-transform">
+                            <div class="box w-5 h-5"></div><div class="box w-5 h-5 bg-amber-600"></div><div class="box w-5 h-5"></div>
+                            <div class="box w-5 h-5 bg-amber-700"></div><div class="box w-5 h-5"></div><div class="box w-5 h-5 bg-amber-600"></div>
+                        </div>
+                    </div>
 
-                <!-- Zone D: Acc -->
-                <div class="border-2 border-dashed border-slate-600 rounded-lg p-2 flex flex-col items-center justify-center relative bg-slate-800/30">
-                    <span class="absolute top-1 left-2 text-[10px] font-bold text-slate-400">ZONE D: ACC</span>
-                    <div class="text-2xl drop-shadow-md">⌨️🖱️</div>
+                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
+                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">INK (หมึกพิมพ์)</span>
+                        <div class="text-4xl filter drop-shadow-lg group-hover:scale-110 transition-transform">🖨️</div>
+                    </div>
+
+                    <div class="bg-slate-800/40 border-2 border-dashed border-slate-500 rounded-xl relative flex flex-col items-center justify-center pt-4 group">
+                        <span class="absolute top-2 left-2 text-[9px] font-bold text-slate-400">ACCESSORIES (อุปกรณ์)</span>
+                        <div class="text-3xl filter drop-shadow-lg group-hover:scale-110 transition-transform">⌨️🖱️</div>
+                    </div>
                 </div>
             </div>
             
+            <p class="mt-6 text-slate-500 font-bold text-sm bg-slate-900/50 px-6 py-2 rounded-full backdrop-blur-sm border border-slate-700">👈 คลิกที่ตัว Bot เพื่อเรียกใช้งานแต่ละแผนก</p>
         </div>
-    </div>
 
-    <!-- 🌟 RIGHT SIDE: The Terminal -->
-    <div class="w-full lg:w-[400px] h-full bg-[#0a0f1c] border-l border-slate-700 flex flex-col font-mono shadow-2xl relative">
-        <!-- Terminal Header -->
-        <div class="bg-[#1e293b] p-3 flex justify-between items-center border-b border-slate-700 shrink-0">
-            <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                <span class="ml-2 text-slate-400 font-bold text-xs tracking-widest font-sans">TERMINAL / BOTS</span>
+        <div class="w-full lg:w-[450px] bg-[#020617] border-l border-slate-700 flex flex-col shadow-2xl relative z-20">
+            <div class="scanline"></div>
+            
+            <div class="h-12 bg-slate-900 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
+                <div class="flex gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                </div>
+                <div class="font-mono text-emerald-500 text-xs font-bold tracking-widest">AI_TERMINAL.EXE</div>
             </div>
-            <div id="connectionStatus" class="text-xs text-amber-400 animate-pulse">CONNECTING...</div>
-        </div>
 
-        <!-- Terminal Output -->
-        <div id="terminalOutput" class="flex-1 overflow-y-auto terminal-scroll p-5 flex flex-col gap-4 text-emerald-400 text-sm pb-10">
-            <div><span class="text-blue-400">></span> System Initializing...</div>
-            <div><span class="text-blue-400">></span> Loading Warehouse DB... <span id="loadProgress">0%</span></div>
-        </div>
+            <div id="terminalOutput" class="flex-1 overflow-y-auto terminal-scroll p-5 flex flex-col gap-3 font-mono text-emerald-400 text-sm leading-relaxed pb-8">
+                <div class="text-slate-400 mb-2 border-b border-slate-800 pb-2">
+                    System Booting...<br>
+                    Loading Warehouse API... <span id="loadPct" class="text-blue-400">0%</span>
+                </div>
+            </div>
 
-        <!-- Dynamic Action Area (Input/Forms based on active Bot) -->
-        <div id="terminalAction" class="bg-[#111827] border-t border-slate-700 p-4 shrink-0 h-[200px] flex flex-col font-sans">
-            <p class="text-slate-500 text-center text-xs mt-10 uppercase tracking-widest font-bold">กรุณาคลิกที่ Bot บนแผนผังเพื่อสั่งงาน</p>
+            <div id="terminalAction" class="bg-slate-900 border-t border-slate-700 p-5 shrink-0 min-h-[220px] flex flex-col justify-center">
+                <div class="text-center text-slate-500 font-bold animate-pulse uppercase tracking-widest text-sm">
+                    Waiting for Bot selection...
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Overlay Loader -->
-    <div id="overlay" class="fixed inset-0 bg-slate-900/80 z-[999] hidden flex-col items-center justify-center backdrop-blur-sm">
-        <div class="text-4xl animate-spin mb-4">⚙️</div>
-        <p class="font-mono text-emerald-400 tracking-widest" id="overlayText">PROCESSING...</p>
+    <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[999] hidden flex-col items-center justify-center backdrop-blur-md">
+        <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animation-spin mb-4" style="animation: spin 1s linear infinite;"></div>
+        <p class="font-mono text-emerald-400 text-xl tracking-widest font-bold" id="overlayText">CONNECTING DB...</p>
+    </div>
+
+    <div id="actionModal" class="fixed inset-0 bg-slate-900/80 z-[1000] hidden flex-col items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-slate-800 border-2 border-amber-500 rounded-2xl w-full max-w-sm p-6 shadow-[0_0_30px_rgba(245,158,11,0.3)] animate-fadeIn">
+            <h3 class="text-amber-400 font-bold text-lg mb-4 flex items-center gap-2">⚠️ ยืนยันการเบิกตัดสต็อก</h3>
+            <p id="modalItemName" class="font-bold text-white text-base mb-1 truncate">-</p>
+            <p class="text-slate-400 text-xs mb-4 border-b border-slate-600 pb-4">คงเหลือในคลัง: <span id="modalMaxQty" class="text-emerald-400 font-bold">0</span></p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">จำนวนที่ต้องการเบิก</label>
+                    <input type="number" id="modalInputQty" min="1" value="1" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-amber-500 font-bold font-mono">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อผู้เบิก / ปลายทาง</label>
+                    <input type="text" id="modalInputUser" placeholder="ระบุชื่อ..." class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-amber-500 font-medium">
+                </div>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="closeActionModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition-colors">ยกเลิก</button>
+                <button onclick="confirmWithdrawAction()" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">ยืนยันเบิก</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -161,332 +242,349 @@
         const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
         const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES';
 
-        let rawDataCache = null;
         let dbMain = { main: [], withdrawals: [] };
         let dbSup = { ink: [], accessories: [], parts: [] };
-        let allItems = []; // สำหรับค้นหา
-        let activeBot = 0;
+        let allItems = []; 
+        let activeBotId = 0;
+        let withdrawTarget = null; // เก็บข้อมูลชิ้นที่จะเบิก
 
         const terminalOut = document.getElementById('terminalOutput');
         const terminalAction = document.getElementById('terminalAction');
 
-        // ฟังก์ชันพิมพ์ลง Terminal
-        function printLog(msg, color = 'text-emerald-400', isBot = false) {
+        // ฟังก์ชันปริ้นท์ข้อความลงจอ
+        function printLog(msg, colorClass = 'text-emerald-400', isChat = false) {
             const div = document.createElement('div');
-            div.className = `fade-in ${color} ${isBot ? 'bg-slate-800/50 p-3 rounded border border-slate-700 font-sans text-sm shadow-md my-2' : ''}`;
-            if(isBot) div.innerHTML = msg;
-            else div.innerHTML = `<span class="text-blue-400">></span> ${msg}`;
+            div.className = `fade-in ${colorClass} ${isChat ? 'bg-slate-800/80 p-3 rounded-xl border border-slate-600 shadow-md font-sans' : 'font-mono'}`;
+            if(isChat) div.innerHTML = msg;
+            else div.innerHTML = `> ${msg}`;
             terminalOut.appendChild(div);
             terminalOut.scrollTop = terminalOut.scrollHeight;
         }
 
         function showOverlay(text) {
             document.getElementById('overlayText').innerText = text;
-            document.getElementById('overlay').classList.remove('hidden');
-            document.getElementById('overlay').classList.add('flex');
+            document.getElementById('overlay').classList.remove('hidden'); document.getElementById('overlay').classList.add('flex');
         }
         function hideOverlay() {
-            document.getElementById('overlay').classList.add('hidden');
-            document.getElementById('overlay').classList.remove('flex');
+            document.getElementById('overlay').classList.add('hidden'); document.getElementById('overlay').classList.remove('flex');
         }
 
-        // ดึงข้อมูลเมื่อเปิดหน้า
+        // 🌟 โหลดข้อมูลจาก Google Sheet เมื่อเปิดเว็บ
         window.onload = async function() {
             try {
-                document.getElementById('loadProgress').innerText = '20%';
+                document.getElementById('loadPct').innerText = '25%';
                 const res = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await res.json();
-                document.getElementById('loadProgress').innerText = '80%';
+                document.getElementById('loadPct').innerText = '75%';
                 
                 if (result.value) {
-                    rawDataCache = result.value;
                     if(result.value[WAREHOUSE_KEY]) dbMain = JSON.parse(result.value[WAREHOUSE_KEY]);
                     if(result.value[WAREHOUSE_SUPPLIES_KEY]) dbSup = JSON.parse(result.value[WAREHOUSE_SUPPLIES_KEY]);
                     buildIndex();
                 }
                 
-                document.getElementById('loadProgress').innerText = '100% DONE';
-                document.getElementById('connectionStatus').className = 'text-xs text-emerald-400';
-                document.getElementById('connectionStatus').innerText = 'CONNECTED';
-                printLog('All systems online. Bots are ready for orders.', 'text-white');
+                document.getElementById('loadPct').innerText = '100%';
                 
-                setTimeout(() => { activateBot(1); }, 1000); // Auto active Bot 1
+                let sysStatus = document.getElementById('sysStatus');
+                sysStatus.className = "flex items-center gap-2 text-xs font-bold text-emerald-400";
+                sysStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> DB CONNECTED';
+                
+                printLog('Database synced successfully.', 'text-white');
+                printLog('Please select a Bot from the map to begin.', 'text-slate-400');
+                
             } catch (e) {
-                document.getElementById('connectionStatus').className = 'text-xs text-red-500';
-                document.getElementById('connectionStatus').innerText = 'OFFLINE';
-                printLog('ERROR: Database connection failed.', 'text-red-500');
+                document.getElementById('sysStatus').className = "flex items-center gap-2 text-xs font-bold text-red-500";
+                document.getElementById('sysStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> OFFLINE';
+                printLog('ERROR: Connection failed!', 'text-red-500');
             }
         };
 
-        // จัดทำ Index ข้อมูลให้ค้นหาง่าย
+        // 🌟 สร้าง Index เพื่อให้บอทค้นหาของง่ายขึ้น
         function buildIndex() {
             allItems = [];
-            // อุปกรณ์หลัก
-            if(dbMain.main) dbMain.main.forEach((r, idx) => {
-                let type = r[1]||''; let brand = r[2]||''; let model = r[3]||''; let sn = r[4]||''; let status = r[5]||'';
-                if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type, name: `${brand} ${model}`, sn, status, qty: 1, unit: 'เครื่อง' });
-            });
-            // อะไหล่
-            if(dbSup.parts) dbSup.parts.forEach((r, idx) => {
-                let type = r[1]||''; let spec = r[2]||''; let qty = parseFloat(r[3]); let unit = r[4]||'';
-                if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${type} ${spec}`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
-            });
-            // อุปกรณ์ (Acc)
-            if(dbSup.accessories) dbSup.accessories.forEach((r, idx) => {
-                let type = r[1]||''; let spec = r[2]||''; let sn = r[3]||'-'; let qty = parseFloat(r[4]); let unit = r[5]||'';
-                if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์คอมฯ', name: `${type} ${spec}`, sn, status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
-            });
-            // หมึก
-            if(dbSup.ink) dbSup.ink.forEach((r, idx) => {
-                let type = r[1]||''; let spec = r[2]||''; let qty = parseFloat(r[3]); let unit = r[4]||'';
-                if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${type} (รองรับ ${spec})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
-            });
+            // ดึงอุปกรณ์หลัก
+            if(dbMain.main) {
+                dbMain.main.forEach((r, idx) => {
+                    let type = r[1]||''; let brand = r[2]||''; let model = r[3]||''; let sn = r[4]||''; let status = r[5]||'';
+                    if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type, name: `${brand} ${model}`.trim(), sn, status, qty: 1, unit: 'เครื่อง' });
+                });
+            }
+            // ดึงอะไหล่
+            if(dbSup.parts) {
+                dbSup.parts.forEach((r, idx) => {
+                    let type = r[1]||''; let spec = r[2]||''; let qty = parseFloat(r[3]); let unit = r[4]||'';
+                    if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${type} ${spec}`.trim(), sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
+                });
+            }
+            // ดึงอุปกรณ์ (Acc)
+            if(dbSup.accessories) {
+                dbSup.accessories.forEach((r, idx) => {
+                    let type = r[1]||''; let spec = r[2]||''; let sn = r[3]||'-'; let qty = parseFloat(r[4]); let unit = r[5]||'';
+                    if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์คอมฯ', name: `${type} ${spec}`.trim(), sn, status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
+                });
+            }
+            // ดึงหมึกพิมพ์
+            if(dbSup.ink) {
+                dbSup.ink.forEach((r, idx) => {
+                    let type = r[1]||''; let spec = r[2]||''; let qty = parseFloat(r[3]); let unit = r[4]||'';
+                    if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${type} (รองรับ ${spec})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit });
+                });
+            }
         }
 
-        // ==========================================
-        // ระบบควบคุม BOTS
-        // ==========================================
+        // 🌟 เปลี่ยนโหมดการทำงานเมื่อคลิกเลือก Bot
         function activateBot(botNum) {
-            document.querySelectorAll('.bot').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.bot-char').forEach(b => b.classList.remove('active'));
             document.getElementById('bot' + botNum).classList.add('active');
-            activeBot = botNum;
+            activeBotId = botNum;
 
             if (botNum === 1) {
-                printLog('🕵️‍♂️ <b>Checker Bot:</b> สวัสดีครับเจ้านาย! อยากให้ผมวิ่งไปนับของชิ้นไหน พิมพ์ชื่อมาได้เลยครับ', 'text-slate-200', true);
+                printLog('<b class="text-blue-300">👩🏻‍💻 Checker Bot:</b><br>สวัสดีค่ะ! ต้องการให้หนูเช็คยอดสต็อกของชิ้นไหน พิมพ์ค้นหาได้เลยค่ะ!', 'text-white', true);
                 terminalAction.innerHTML = `
-                    <label class="text-xs text-blue-400 font-bold mb-2 flex items-center gap-1">🔍 ค้นหาสต็อก</label>
-                    <input type="text" id="b1Search" placeholder="เช่น M201, RAM, DELL..." class="w-full bg-slate-900 border border-slate-600 text-white rounded p-2 text-sm outline-none focus:border-blue-500 mb-2 font-mono" onkeypress="if(event.key==='Enter') bot1Search()">
-                    <button onclick="bot1Search()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded shadow text-sm">สั่งค้นหา</button>
-                `;
-                setTimeout(() => document.getElementById('b1Search').focus(), 100);
-            } 
-            else if (botNum === 2) {
-                printLog('🏃‍♂️ <b>Runner Bot:</b> พร้อมรับออเดอร์แล้วครับ! อยากเบิกอะไรเดี๋ยวผมวิ่งไปหยิบให้ ตัดสต็อกให้ด้วยครับ', 'text-slate-200', true);
-                terminalAction.innerHTML = `
-                    <label class="text-xs text-amber-400 font-bold mb-2 flex items-center gap-1">📤 ทำรายการเบิกจ่าย</label>
-                    <input type="text" id="b2Search" placeholder="ค้นหาของที่จะเบิก..." class="w-full bg-slate-900 border border-slate-600 text-white rounded p-2 text-sm outline-none focus:border-amber-500 mb-2 font-mono" oninput="bot2Filter()">
-                    <div id="b2List" class="flex-1 overflow-y-auto text-xs bg-slate-900 border border-slate-700 rounded p-1 mb-2 custom-scrollbar flex flex-col gap-1">
-                        <div class="text-slate-500 text-center mt-2">พิมพ์ค้นหาด้านบน</div>
+                    <div class="font-sans">
+                        <label class="text-xs text-blue-400 font-bold mb-2 block uppercase tracking-widest">🔍 เช็คสต็อก (Search)</label>
+                        <input type="text" id="b1Input" placeholder="พิมพ์ชื่ออุปกรณ์, S/N, หรือหมวดหมู่..." class="w-full bg-slate-950 border-2 border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-3 transition-colors" onkeypress="if(event.key==='Enter') execBot1()">
+                        <button onclick="execBot1()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 text-sm">สั่งค้นหา</button>
                     </div>
                 `;
-                setTimeout(() => document.getElementById('b2Search').focus(), 100);
+                setTimeout(() => document.getElementById('b1Input').focus(), 100);
+            } 
+            else if (botNum === 2) {
+                printLog('<b class="text-amber-300">🏃‍♂️ Runner Bot:</b><br>พร้อมวิ่งแล้วลูกพี่! หาของที่จะเบิกแล้วกดตัดสต็อกมาได้เลย เดี๋ยวผมวิ่งไปหยิบให้!', 'text-white', true);
+                terminalAction.innerHTML = `
+                    <div class="font-sans h-full flex flex-col">
+                        <label class="text-xs text-amber-400 font-bold mb-2 block uppercase tracking-widest">📤 เบิกจ่ายตัดสต็อก (Withdraw)</label>
+                        <input type="text" id="b2Input" placeholder="ค้นหาของที่ต้องการเบิก..." class="w-full bg-slate-950 border-2 border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-amber-500 mb-3 transition-colors" oninput="execBot2Filter()">
+                        <div id="b2Results" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 p-1">
+                            <div class="text-center text-slate-500 text-xs mt-4">กรุณาพิมพ์ค้นหาด้านบน...</div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => document.getElementById('b2Input').focus(), 100);
             }
             else if (botNum === 3) {
-                printLog('👩‍💼 <b>Reporter Bot:</b> สวัสดีค่ะผู้จัดการ หนูเตรียมแบบฟอร์ม Excel ไว้ให้แล้ว จะให้สรุปยอดของหมวดไหนคะ?', 'text-slate-200', true);
+                printLog('<b class="text-pink-300">👨🏻‍💼 Reporter Bot:</b><br>ต้องการข้อมูลสรุปใช่ไหมครับ? เลือกหมวดหมู่ที่ต้องการแล้วผมจะออกเป็นไฟล์ Excel ให้ทันทีครับ', 'text-white', true);
                 terminalAction.innerHTML = `
-                    <label class="text-xs text-pink-400 font-bold mb-2 flex items-center gap-1">📊 ออกรายงาน Excel</label>
-                    <select id="b3Category" class="w-full bg-slate-900 border border-slate-600 text-white rounded p-2 text-sm outline-none focus:border-pink-500 mb-4 font-sans">
-                        <option value="ALL">📦 รวมอุปกรณ์และอะไหล่ทั้งหมด</option>
-                        <option value="LOW">🚨 รายการที่ใกล้หมด (Low Stock)</option>
-                        <option value="MAIN">💻 เฉพาะอุปกรณ์หลัก</option>
-                        <option value="PARTS">⚙️ เฉพาะอะไหล่และอุปกรณ์เสริม</option>
-                        <option value="INK">🖨️ เฉพาะหมึกพิมพ์</option>
-                    </select>
-                    <button onclick="bot3Export()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded shadow text-sm flex justify-center items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> ดาวน์โหลด Excel
-                    </button>
+                    <div class="font-sans">
+                        <label class="text-xs text-pink-400 font-bold mb-2 block uppercase tracking-widest">📊 ออกรายงาน (Export Excel)</label>
+                        <select id="b3Select" class="w-full bg-slate-950 border-2 border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-pink-500 mb-4 cursor-pointer">
+                            <option value="ALL">📦 รวมอุปกรณ์และอะไหล่ทั้งหมด</option>
+                            <option value="LOW">🚨 ของใกล้หมด (น้อยกว่า 5 ชิ้น)</option>
+                            <option value="MAIN">💻 เฉพาะอุปกรณ์หลัก</option>
+                            <option value="PARTS">⚙️ เฉพาะอะไหล่และอุปกรณ์เสริม</option>
+                            <option value="INK">🖨️ เฉพาะหมึกพิมพ์</option>
+                        </select>
+                        <button onclick="execBot3()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-xl shadow-lg transition-transform active:scale-95 text-sm flex justify-center items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> ดาวน์โหลดไฟล์
+                        </button>
+                    </div>
                 `;
             }
         }
 
-        // ==========================================
-        // BOT 1: CHECKER (ค้นหา)
-        // ==========================================
-        function bot1Search() {
-            let q = document.getElementById('b1Search').value.toLowerCase().trim();
+        // =====================================
+        // ฟังก์ชันการทำงานของ BOT 1
+        // =====================================
+        function execBot1() {
+            let q = document.getElementById('b1Input').value.toLowerCase().trim();
             if(!q) return;
-            printLog(`Executing command: Search "${q}"...`, 'text-blue-300');
+            printLog(`> Checker is searching for: "${q}"...`, 'text-slate-400');
             
             let matches = allItems.filter(i => i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q) || i.type.toLowerCase().includes(q));
             
             if(matches.length === 0) {
-                printLog(`🕵️‍♂️ ไม่พบของชื่อ <b>"${q}"</b> ในคลังเลยครับเจ้านาย`, 'text-slate-300', true);
+                printLog(`👩🏻‍💻 หา <b>"${q}"</b> ไม่เจอเลยค่ะ น่าจะไม่มีในคลังนะคะ`, 'text-slate-300', true);
             } else {
-                matches.sort((a,b) => b.qty - a.qty);
-                let html = `<div class="mb-2">วิ่งไปเช็คมาให้แล้วครับ! เจอ <b>${matches.length}</b> รายการ:</div><ul class="list-disc pl-4 space-y-2">`;
-                matches.slice(0, 10).forEach(m => {
-                    let color = m.qty <= 0 ? 'text-red-400' : (m.qty <= 5 ? 'text-amber-400' : 'text-emerald-400');
-                    html += `<li><span class="text-indigo-300">[${m.type}]</span> ${m.name} <br><span class="text-[11px] text-slate-400">S/N: ${m.sn}</span> <span class="float-right font-bold ${color}">${m.qty} ${m.unit}</span></li>`;
+                matches.sort((a,b) => b.qty - a.qty); // เรียงของเยอะขึ้นก่อน
+                let html = `<div class="mb-2 text-blue-200">🔍 เจอทั้งหมด <b>${matches.length}</b> รายการค่ะ:</div><div class="space-y-2">`;
+                matches.slice(0, 15).forEach(m => {
+                    let color = m.qty <= 0 ? 'text-red-400 font-bold' : (m.qty <= 5 ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold');
+                    html += `
+                        <div class="bg-slate-900 p-2 rounded border border-slate-700 text-xs">
+                            <div class="flex justify-between items-start">
+                                <span class="text-white font-medium break-words pr-2">${m.name}</span>
+                                <span class="${color} shrink-0 whitespace-nowrap">${m.qty} ${m.unit}</span>
+                            </div>
+                            <div class="text-[10px] text-slate-500 mt-1 flex justify-between">
+                                <span>[${m.type}]</span> <span>${m.sn !== '-' ? 'S/N: '+m.sn : m.status}</span>
+                            </div>
+                        </div>`;
                 });
-                if(matches.length > 10) html += `<li class="text-xs text-slate-500 italic mt-2">...และอื่นๆ อีก ${matches.length - 10} รายการ</li>`;
-                html += `</ul>`;
+                if(matches.length > 15) html += `<div class="text-xs text-slate-500 text-center mt-2">...มีอีก ${matches.length - 15} รายการ (พิมพ์ให้แคบลง)</div>`;
+                html += `</div>`;
                 printLog(html, 'text-slate-200', true);
             }
-            document.getElementById('b1Search').value = '';
+            document.getElementById('b1Input').value = '';
         }
 
-        // ==========================================
-        // BOT 2: RUNNER (เบิกจ่าย)
-        // ==========================================
-        function bot2Filter() {
-            let q = document.getElementById('b2Search').value.toLowerCase().trim();
-            let list = document.getElementById('b2List');
-            if(!q) { list.innerHTML = '<div class="text-slate-500 text-center mt-2">พิมพ์ค้นหาด้านบน</div>'; return; }
+        // =====================================
+        // ฟังก์ชันการทำงานของ BOT 2
+        // =====================================
+        function execBot2Filter() {
+            let q = document.getElementById('b2Input').value.toLowerCase().trim();
+            let list = document.getElementById('b2Results');
+            if(!q) { list.innerHTML = '<div class="text-slate-500 text-center text-xs mt-4">พิมพ์ค้นหาด้านบน...</div>'; return; }
 
-            // กรองเอาเฉพาะที่มีของ (qty > 0)
-            let matches = allItems.filter(i => i.qty > 0 && (i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q)));
+            // กรองเอาที่ว่าง (พร้อมจ่าย) หรือ มีจำนวน > 0
+            let matches = allItems.filter(i => (i.qty > 0 || i.status.includes('ว่าง')) && (i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q)));
             
-            if(matches.length === 0) { list.innerHTML = '<div class="text-red-400 text-center mt-2">ไม่พบของที่พร้อมจ่าย</div>'; return; }
+            if(matches.length === 0) { list.innerHTML = '<div class="text-red-400 text-center text-xs mt-4">❌ ไม่พบของที่เบิกได้</div>'; return; }
 
             let html = '';
-            matches.slice(0, 20).forEach(m => {
-                // เก็บ Data ลงในปุ่ม
+            matches.slice(0, 10).forEach(m => {
+                let safeName = String(m.name).replace(/'/g, "\\'");
                 html += `
-                <div class="bg-slate-800 hover:bg-slate-700 p-2 rounded cursor-pointer border border-slate-700 flex justify-between items-center" 
-                     onclick="bot2OpenForm('${m.ref}', ${m.idx}, '${m.name.replace(/'/g,"\\'")}', ${m.qty}, '${m.unit}')">
-                    <div class="truncate pr-2 font-sans">
-                        <div class="text-slate-200 font-bold truncate">${m.name}</div>
-                        <div class="text-[10px] text-slate-500">${m.type} ${m.sn !== '-' ? '| S/N: '+m.sn : ''}</div>
+                <div class="bg-slate-800 hover:bg-slate-700 p-3 rounded-xl cursor-pointer border border-slate-600 transition-colors flex justify-between items-center group" 
+                     onclick="openActionModal('${m.ref}', ${m.idx}, '${safeName}', ${m.qty}, '${m.unit}')">
+                    <div class="pr-2 overflow-hidden">
+                        <div class="text-white text-xs font-bold truncate group-hover:text-amber-400 transition-colors">${m.name}</div>
+                        <div class="text-[10px] text-slate-400 truncate">${m.type} ${m.sn !== '-' ? ' | S/N: '+m.sn : ''}</div>
                     </div>
-                    <div class="text-emerald-400 font-bold shrink-0">${m.qty} ${m.unit}</div>
+                    <div class="shrink-0 flex flex-col items-end">
+                        <span class="text-emerald-400 text-xs font-bold">${m.qty} ${m.unit}</span>
+                        <span class="text-[9px] bg-amber-500 text-black px-1.5 py-0.5 rounded mt-1 font-bold opacity-0 group-hover:opacity-100 transition-opacity">เบิก</span>
+                    </div>
                 </div>`;
             });
             list.innerHTML = html;
         }
 
-        function bot2OpenForm(ref, idx, name, maxQty, unit) {
-            terminalAction.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <label class="text-xs text-amber-400 font-bold flex items-center gap-1">📤 ยืนยันการเบิก</label>
-                    <button onclick="activateBot(2)" class="text-[10px] text-slate-400 hover:text-white underline">ยกเลิก</button>
-                </div>
-                <div class="text-sm text-white font-bold mb-1 truncate">${name}</div>
-                <div class="text-[10px] text-slate-400 mb-3">คงเหลือ: <span class="text-emerald-400">${maxQty} ${unit}</span></div>
-                
-                <div class="flex gap-2 mb-2">
-                    <input type="number" id="b2Qty" min="1" max="${maxQty}" value="1" class="w-1/3 bg-slate-900 border border-slate-600 text-white rounded p-2 text-sm outline-none focus:border-amber-500 text-center">
-                    <input type="text" id="b2User" placeholder="ชื่อคนเบิก/ปลายทาง..." class="w-2/3 bg-slate-900 border border-slate-600 text-white rounded p-2 text-sm outline-none focus:border-amber-500 font-sans">
-                </div>
-                
-                <button onclick="bot2Submit('${ref}', ${idx}, '${name}', ${maxQty}, '${unit}')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded shadow text-sm mt-auto">ยืนยันตัดสต็อก</button>
-            `;
+        function openActionModal(ref, idx, name, maxQty, unit) {
+            withdrawTarget = { ref, idx, name, maxQty, unit };
+            document.getElementById('modalItemName').innerText = name;
+            document.getElementById('modalMaxQty').innerText = `${maxQty} ${unit}`;
+            document.getElementById('modalInputQty').value = 1;
+            document.getElementById('modalInputQty').max = maxQty;
+            document.getElementById('modalInputUser').value = '';
+            
+            document.getElementById('actionModal').classList.remove('hidden');
+            document.getElementById('actionModal').classList.add('flex');
+            setTimeout(() => document.getElementById('modalInputUser').focus(), 100);
         }
 
-        async function bot2Submit(ref, idx, name, maxQty, unit) {
-            let qty = parseFloat(document.getElementById('b2Qty').value);
-            let user = document.getElementById('b2User').value.trim();
+        function closeActionModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+            document.getElementById('actionModal').classList.remove('flex');
+            withdrawTarget = null;
+        }
 
-            if(!qty || qty <= 0 || qty > maxQty) { alert('จำนวนไม่ถูกต้อง'); return; }
-            if(!user) { alert('กรุณาระบุชื่อผู้เบิก'); return; }
+        async function confirmWithdrawAction() {
+            if(!withdrawTarget) return;
+            let qty = parseFloat(document.getElementById('modalInputQty').value);
+            let user = document.getElementById('modalInputUser').value.trim();
 
-            showOverlay('UPDATING DB...');
-            printLog(`Executing withdraw: ${qty}x ${name} to ${user}...`, 'text-amber-300');
+            if(!qty || qty <= 0 || qty > withdrawTarget.maxQty) { showToast("จำนวนเบิกไม่ถูกต้อง", "error"); return; }
+            if(!user) { showToast("โปรดระบุผู้เบิก", "error"); return; }
+
+            closeActionModal();
+            showOverlay('RUNNING TO WAREHOUSE...');
+            printLog(`> Runner is moving ${qty}x [${withdrawTarget.name}] for ${user}...`, 'text-amber-300');
 
             try {
-                // 1. อัปเดต Array ในหน่วยความจำ
-                let newQty = maxQty - qty;
+                let ref = withdrawTarget.ref; let idx = withdrawTarget.idx;
+                let newQty = withdrawTarget.maxQty - qty;
+                let snRecord = null;
+
+                // อัปเดต Data ໃນตัวแปร
                 if (ref === 'MAIN') {
                     dbMain.main[idx][5] = 'จ่ายแล้ว';
-                    dbMain.main[idx][7] = String(dbMain.main[idx][7]||'') + ` [จ่ายให้: ${user}]`;
+                    let cRmk = String(dbMain.main[idx][7]||'').replace(/\[จ่ายให้:.*?\]/g, "").trim();
+                    dbMain.main[idx][7] = cRmk + (cRmk?" ":"") + `[จ่ายให้: ${user}]`;
+                    snRecord = dbMain.main[idx][4];
                 } else if (ref === 'PARTS') { dbSup.parts[idx][3] = newQty; }
-                else if (ref === 'ACC') { dbSup.accessories[idx][4] = newQty; }
+                else if (ref === 'ACC') { dbSup.accessories[idx][4] = newQty; snRecord = dbSup.accessories[idx][3]; }
                 else if (ref === 'INK') { dbSup.ink[idx][3] = newQty; }
 
-                // 2. สร้างประวัติ (Log)
+                // บันทึก Log การเบิก
                 let todayStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
                 dbMain.withdrawals = dbMain.withdrawals || [];
-                dbMain.withdrawals.push({
-                    date: todayStr, action: 'เบิกจ่าย', category: ref, specs: name, user: user, qty: qty, unit: unit, sn: ref==='MAIN'?dbMain.main[idx][4]:null
-                });
+                dbMain.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: ref, specs: withdrawTarget.name, user: user, qty: qty, unit: withdrawTarget.unit, sn: snRecord });
 
-                // 3. เตรียม Payload ส่งเซิร์ฟเวอร์
+                // เตรียมยิง API
                 let updates = [];
-                if (ref === 'MAIN') updates.push({ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
-                else updates.push({ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }); // อัปเดต withdrawals ใน main ด้วย
+                if (ref === 'MAIN') {
+                    updates.push({ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
+                } else {
+                    updates.push({ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }); 
+                }
 
-                let logs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(Bot)', detail: `[เบิก] ${name} จำนวน ${qty}${unit} โดย ${user}` }];
+                let apiLogs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(AI)', detail: `[เบิก] ${withdrawTarget.name} จำนวน ${qty}${withdrawTarget.unit} โดย ${user}` }];
 
-                // 4. ยิง API
-                let response = await fetch(API_URL, { 
-                    method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: logs }) 
-                });
-                
+                let response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: apiLogs }) });
                 let resJson = await response.json();
                 if(resJson.status !== 'success') throw new Error("API Error");
 
-                // 5. อัปเดตสำเร็จ
-                buildIndex(); // รีเฟรช Index
-                hideOverlay();
-                printLog(`🏃‍♂️ เรียบร้อยครับเจ้านาย! ผมวิ่งไปหยิบ <b>${name}</b> ให้คุณ ${user} แล้ว และตัดสต็อกในระบบเหลือ ${newQty} ${unit} แล้วครับ!`, 'text-slate-200', true);
+                buildIndex(); // รีเฟรช Index ใหม่
+                execBot2Filter(); // รีเฟรชช่องค้นหา
                 
-                // คืนค่าฟอร์ม
-                activateBot(2);
+                hideOverlay();
+                printLog(`🏃‍♂️ ฮึบ! หยิบของให้แล้วครับลูกพี่ ตัดสต็อกเหลือ <b>${newQty} ${withdrawTarget.unit}</b> เรียบร้อย!`, 'text-slate-200', true);
 
             } catch (e) {
                 hideOverlay();
-                printLog(`❌ ระบบขัดข้อง บันทึกไม่สำเร็จครับ`, 'text-red-500', true);
+                printLog(`❌ โอ๊ะ! ผมสะดุดล้ม ระบบบันทึกไม่สำเร็จครับ ลองอีกทีนะครับ`, 'text-red-500', true);
             }
         }
 
-        // ==========================================
+        // =====================================
         // BOT 3: REPORTER (Export Excel)
-        // ==========================================
-        async function bot3Export() {
-            let filter = document.getElementById('b3Category').value;
-            printLog(`Executing export: Mode ${filter}...`, 'text-pink-300');
-            showOverlay('GENERATING REPORT...');
+        // =====================================
+        async function execBot3() {
+            let filter = document.getElementById('b3Select').value;
+            printLog(`> Reporter is generating Excel [Mode: ${filter}]...`, 'text-pink-300');
+            showOverlay('COMPILING REPORT...');
 
             try {
                 let reportData = [];
-
-                // ประมวลผลคล้ายๆ หน้า warehouse.html
+                
                 if (filter === 'ALL' || filter === 'MAIN' || filter === 'LOW') {
                     let groups = {};
                     if(dbMain.main) dbMain.main.forEach(r => {
                         let type = String(r[1]||'').trim(); let brand = String(r[2]||'').trim(); let model = String(r[3]||'').trim(); let status = String(r[5]||'').trim();
                         let key = `${type}|${brand}|${model}`;
-                        if (!groups[key]) groups[key] = { category: '💻 อุปกรณ์หลัก (Main)', type: type, detail: `${brand} ${model}`.trim() || '-', qty: 0, unit: 'เครื่อง' };
+                        if (!groups[key]) groups[key] = { cat: '💻 อุปกรณ์หลัก (Main)', type: type, detail: `${brand} ${model}`.trim() || '-', qty: 0, unit: 'เครื่อง' };
                         if (status.includes('ว่าง') || status.includes('พร้อมจ่าย')) groups[key].qty++;
                     });
                     reportData.push(...Object.values(groups));
                 }
 
                 if (filter === 'ALL' || filter === 'PARTS' || filter === 'LOW') {
-                    if(dbSup.parts) dbSup.parts.forEach(r => {
-                        let qty = parseFloat(r[3]);
-                        if(!isNaN(qty)) reportData.push({ category: '⚙️ อะไหล่คอมพิวเตอร์', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[4]||'ชิ้น' });
-                    });
-                    if(dbSup.accessories) dbSup.accessories.forEach(r => {
-                        let qty = parseFloat(r[4]);
-                        if(!isNaN(qty)) reportData.push({ category: '⌨️ อุปกรณ์คอมพิวเตอร์', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[5]||'ชิ้น' });
-                    });
+                    if(dbSup.parts) dbSup.parts.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: '⚙️ อะไหล่', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[4]||'ชิ้น' }); });
+                    if(dbSup.accessories) dbSup.accessories.forEach(r => { let qty = parseFloat(r[4]); if(!isNaN(qty)) reportData.push({ cat: '⌨️ อุปกรณ์', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[5]||'ชิ้น' }); });
                 }
 
                 if (filter === 'ALL' || filter === 'INK' || filter === 'LOW') {
-                    if(dbSup.ink) dbSup.ink.forEach(r => {
-                        let qty = parseFloat(r[3]);
-                        if(!isNaN(qty)) reportData.push({ category: '🖨️ วัสดุสิ้นเปลือง', type: r[1]||'หมึกพิมพ์', detail: `ใช้กับ: ${r[2]||'-'}`, qty: qty, unit: r[4]||'ตลับ' });
-                    });
+                    if(dbSup.ink) dbSup.ink.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: '🖨️ หมึกพิมพ์', type: r[1]||'-', detail: `ใช้กับ: ${r[2]||'-'}`, qty: qty, unit: r[4]||'ตลับ' }); });
                 }
 
                 if (filter === 'LOW') {
                     reportData = reportData.filter(i => i.qty <= 5).sort((a, b) => a.qty - b.qty);
                 } else {
-                    reportData.sort((a, b) => a.category.localeCompare(b.category) || a.type.localeCompare(b.type));
+                    reportData.sort((a, b) => a.cat.localeCompare(b.cat) || a.type.localeCompare(b.type));
                 }
 
                 if(reportData.length === 0) {
                     hideOverlay();
-                    printLog(`👩‍💼 ไม่พบข้อมูลในหมวดหมู่นี้เลยค่ะ เจ้านายลองเลือกหมวดอื่นดูนะคะ`, 'text-slate-200', true);
+                    printLog(`👨🏻‍💼 ไม่พบข้อมูลในหมวดที่เลือกเลยครับ หรือของอาจจะยังเต็มสต็อกอยู่ครับ`, 'text-slate-300', true);
                     return;
                 }
 
-                // สร้าง Excel
                 const wb = new ExcelJS.Workbook();
-                const ws = wb.addWorksheet('Stock Summary');
+                const ws = wb.addWorksheet('Report');
                 
-                ws.addRow([`รายงานสรุปสต็อกคงเหลือ (${filter})`]);
+                ws.addRow([`รายงานสรุปสต็อกคงเหลือ (${document.getElementById('b3Select').options[document.getElementById('b3Select').selectedIndex].text})`]);
                 ws.mergeCells('A1:F1'); ws.getRow(1).font = { size: 16, bold: true }; ws.getRow(1).alignment = { horizontal: 'center' };
-                ws.addRow([`วันที่สร้าง: ${new Date().toLocaleString('th-TH')}`]); ws.mergeCells('A2:F2'); ws.getRow(2).alignment = { horizontal: 'right' };
+                ws.addRow([`พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`]); ws.mergeCells('A2:F2'); ws.getRow(2).alignment = { horizontal: 'right' };
                 ws.addRow([]);
 
-                ws.addRow(['ลำดับ', 'หมวดหมู่คลัง', 'ประเภท', 'รายละเอียด/รุ่น', 'คงเหลือ', 'หน่วย']);
+                ws.addRow(['ลำดับ', 'หมวดหมู่', 'ประเภท', 'รายละเอียด/รุ่น', 'คงเหลือ', 'หน่วย']);
                 let hRow = ws.getRow(4);
                 hRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }; hRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0f172a' } }; hRow.alignment = { horizontal: 'center' };
 
                 reportData.forEach((item, i) => {
-                    let row = ws.addRow([i + 1, item.category.replace(/[^ก-๙a-zA-Z0-9\s]/g, '').trim(), item.type, item.detail, item.qty, item.unit]);
-                    if(item.qty <= 5) { row.getCell(5).font = { bold: true, color: {argb: 'FFDC2626'} }; }
+                    let row = ws.addRow([i + 1, item.cat, item.type, item.detail, item.qty, item.unit]);
+                    if(item.qty === 0) { row.getCell(5).font = { bold: true, color: {argb: 'FFDC2626'} }; }
+                    else if(item.qty <= 5) { row.getCell(5).font = { bold: true, color: {argb: 'FFD97706'} }; }
                     else { row.getCell(5).font = { bold: true, color: {argb: 'FF059669'} }; }
                     row.getCell(5).alignment = { horizontal: 'center' }; row.getCell(1).alignment = { horizontal: 'center' };
                 });
@@ -495,10 +593,10 @@
 
                 const buffer = await wb.xlsx.writeBuffer();
                 let dateStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' }).replace(/\s/g, '_');
-                saveAs(new Blob([buffer]), `ADP_Report_${filter}_${dateStr}.xlsx`);
+                saveAs(new Blob([buffer]), `ADP_BotReport_${filter}_${dateStr}.xlsx`);
 
                 hideOverlay();
-                printLog(`👩‍💼 จัดทำรายงานเสร็จเรียบร้อยค่ะ! ไฟล์ <b>ADP_Report_${filter}_${dateStr}.xlsx</b> กำลังดาวน์โหลดนะคะ ส่งให้เจ้านายใหญ่ดูได้เลยค่ะ ✨`, 'text-slate-200', true);
+                printLog(`👨🏻‍💼 สร้างไฟล์เสร็จแล้วครับ! กำลังโหลดไฟล์ชื่อ <b>ADP_BotReport_${filter}_${dateStr}.xlsx</b> ส่งให้หัวหน้าได้เลยครับ 📈`, 'text-slate-200', true);
 
             } catch (e) {
                 hideOverlay();
@@ -506,6 +604,10 @@
             }
         }
 
+        // Custom Toast ภายในหน้า
+        function showToast(msg, type='success') {
+            alert(msg); // ใช้ alert ชั่วคราวเพื่อความเบาของโค้ด หรือถ้าอยากสวยให้สร้าง div fixed
+        }
     </script>
 </body>
 </html>
