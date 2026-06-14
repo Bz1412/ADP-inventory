@@ -339,14 +339,19 @@
             preview.className = `pixel-char gender-${gender} outfit-${outfit}`;
         }
 
+        // ===================================================
+        // 🌟 AGENT ENGINE (ระบบจ้างงาน เดิน และสั่งการ)
+        // ===================================================
+        
         function openHireModal() { 
-            updatePreview(); // อัปเดตพรีวิวครั้งแรก
-            document.getElementById('hireModal').classList.remove('hidden'); 
-            document.getElementById('hireModal').classList.add('flex'); 
+            updatePreview(); 
+            document.getElementById('hireModal').classList.remove('hidden');
+            document.getElementById('hireModal').classList.add('flex');
         }
+        
         function closeHireModal() { 
-            document.getElementById('hireModal').classList.add('hidden'); 
-            document.getElementById('hireModal').classList.remove('flex'); 
+            document.getElementById('hireModal').classList.add('hidden');
+            document.getElementById('hireModal').classList.remove('flex');
         }
 
         async function hireAgent() {
@@ -368,7 +373,7 @@
             closeHireModal();
             addLog(`Hired new agent: "${name}" assigned to department.`, 'system');
 
-            // สั่งให้เดินเข้าโต๊ะทำงาน
+            // สั่งให้เดินเข้าโต๊ะทำงาน (จุดเกิดคือ x: 0, y: 100 เหมือนเดินเข้ามาจากประตู)
             moveAgent(id, desk.x + 28, desk.y - 15);
             document.getElementById('inputName').value = '';
             selectAgent(id);
@@ -383,28 +388,39 @@
             }
         }
 
+        // 🌟 ฟังก์ชันวาดตัวละคร (ที่ตกหล่นไป)
         function renderAgent(agent) {
-            const layer = document.getElementById('agentsLayer');
-            let zIndex = agent.y + 10; 
-            let color = agent.role === 'CHECKER' ? '#3b82f6' : (agent.role === 'RUNNER' ? '#f59e0b' : '#ec4899');
+            const layer = document.getElementById('characterLayer');
+            if (!layer) return;
 
-            // สร้าง HTML ของ Pixel Character โดยใช้ CSS ที่เราเตรียมไว้
-            let pixelHtml = `
-                <div class="pixel-char gender-${agent.gender} outfit-${agent.outfit}">
-                    <div class="p-head"><div class="p-hair-m"></div><div class="p-hair-f"></div><div class="p-eyes"></div></div>
-                    <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
-                    <div class="p-legs"><div class="p-legs-gap"></div></div>
+            let charHtml = `
+            <div id="agent-${agent.id}" class="agent-avatar gender-${agent.gender} outfit-${agent.outfit} walking" style="left: 0px; top: 100px; pointer-events: auto;" onclick="selectAgent(${agent.id}); event.stopPropagation();">
+                <div class="select-ring"></div>
+                <div class="bot-popup" id="pop-${agent.id}">Working...</div>
+                <div class="pixel-body">
+                    <div class="pixel-head"><div class="hair-${agent.gender}"></div><div class="hair-${agent.gender}"></div><div class="pixel-eyes"></div></div>
                 </div>
-            `;
-
-            let html = `
-            <div id="agent-${agent.id}" class="sprite-upright agent-bot" style="left: ${agent.x}px; top: ${agent.y}px; z-index: ${zIndex};" onclick="activateAgent(${agent.id})">
-                <div class="bot-aura" style="border-color: transparent;"></div>
-                <div class="agent-bubble">Working...</div>
-                ${pixelHtml}
-                <div class="agent-label" style="border-color: ${color}; color: ${color};">${agent.name}</div>
+                <div class="pixel-legs"></div>
+                <span class="absolute top-[52px] left-1/2 -translate-x-1/2 text-[9px] font-bold bg-slate-900/80 border border-slate-700 px-1.5 py-0.5 rounded shadow whitespace-nowrap text-slate-200">${agent.name}</span>
             </div>`;
-            layer.insertAdjacentHTML('beforeend', html);
+            
+            layer.insertAdjacentHTML('beforeend', charHtml);
+        }
+
+        // ฟังก์ชันสั่งให้ตัวละครขยับพิกัดเดินดุ๊กดิ๊ก
+        function moveAgent(id, targetX, targetY, callback = null) {
+            let el = document.getElementById(`agent-${id}`);
+            let agent = agents.find(a => a.id === id);
+            if(!el || !agent) return;
+
+            el.classList.add('walking');
+            el.style.left = targetX + 'px';
+            el.style.top = targetY + 'px';
+
+            setTimeout(() => {
+                el.classList.remove('walking');
+                if(callback) callback();
+            }, 1000); // 1 วินาทีตามสปีดการเดิน CSS transition
         }
 
         function activateAgent(id) {
