@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADP AI Office HQ</title>
+    <title>ADP AI Agent Command Center</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,593 +18,602 @@
     </script>
 
     <style>
-        body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; user-select: none; }
+        body { margin: 0; overflow: hidden; background-color: #020617; color: white; user-select: none; }
         
-        /* 🌟 CSS ISOMETRIC ENGINE */
-        .iso-container { perspective: 1500px; overflow: auto; cursor: grab; }
-        .iso-container:active { cursor: grabbing; }
-
-        .iso-world {
-            position: relative; width: 800px; height: 800px; margin: 100px auto;
-            transform-style: preserve-3d;
-            transform: rotateX(60deg) rotateZ(-45deg); 
-            transition: transform 0.5s ease;
+        /* 🌟 Map Container & Isometric Grid */
+        .world-grid {
+            background-color: #0f172a;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            position: relative;
         }
 
-        /* 🌟 แผนผังห้อง */
-        .iso-floor {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #8b5a2b; 
-            background-image: linear-gradient(rgba(0,0,0,0.1) 2px, transparent 2px), linear-gradient(90deg, rgba(0,0,0,0.1) 2px, transparent 2px);
-            background-size: 80px 80px; 
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 20px 20px 50px rgba(0,0,0,0.5); border: 4px solid #5c3a21;
-        }
+        /* แบ่งห้องออฟฟิศกับคลัง */
+        .zone-office { background: #7c2d12/20; border: 4px solid #7c2d12; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
+        .zone-warehouse { background: #334155/30; border: 4px solid #334155; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
 
-        .iso-wall-left { position: absolute; top: 0; left: -20px; width: 20px; height: 100%; background-color: #94a3b8; transform-origin: right center; transform: rotateY(-90deg); border: 2px solid #475569; }
-        .iso-wall-top { position: absolute; top: -20px; left: 0; width: 100%; height: 20px; background-color: #cbd5e1; transform-origin: bottom center; transform: rotateX(90deg); border: 2px solid #64748b; }
+        /* อุปกรณ์ประกอบฉาก */
+        .desk-block { background: #b45309; border: 2px solid #78350f; box-shadow: 0 8px 0 #451a03, 0 15px 20px rgba(0,0,0,0.5); border-radius: 8px; }
+        .rack-block { background: #475569; border: 2px solid #1e293b; box-shadow: 0 10px 0 #1e293b, 0 20px 25px rgba(0,0,0,0.6); border-radius: 4px; }
 
-        /* 🌟 สิ่งของประกอบฉาก */
-        .sprite-upright { position: absolute; transform-style: preserve-3d; transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg); transform-origin: bottom center; transition: all 0.3s ease; }
-        .prop-desk { width: 100px; height: 80px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80"><rect y="40" width="100" height="40" fill="%23b45309" rx="4"/><rect x="10" y="20" width="80" height="40" fill="%23fcd34d" rx="2"/><rect x="30" y="10" width="40" height="25" fill="%231e293b" rx="2" stroke="%230f172a" stroke-width="2"/><rect x="45" y="35" width="10" height="10" fill="%2394a3b8"/></svg>') no-repeat bottom center; background-size: contain; filter: drop-shadow(10px 20px 10px rgba(0,0,0,0.5)); margin-left: -50px; margin-top: -80px;}
-        .prop-rack { width: 120px; height: 140px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140"><rect x="10" y="10" width="100" height="130" fill="%23475569" stroke="%231e293b" stroke-width="4"/><rect x="20" y="30" width="80" height="20" fill="%23ca8a04"/><rect x="20" y="70" width="35" height="20" fill="%233b82f6"/><rect x="65" y="70" width="35" height="20" fill="%23ef4444"/><rect x="20" y="110" width="80" height="20" fill="%2310b981"/></svg>') no-repeat bottom center; background-size: contain; filter: drop-shadow(15px 25px 15px rgba(0,0,0,0.6)); margin-left: -60px; margin-top: -140px;}
+        /* 🌟 ตัวละคร 2D Pixel Custom Generator (CSS Pure) */
+        .agent-avatar { position: absolute; width: 40px; height: 50px; transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 50; cursor: pointer; }
+        .pixel-body { position: absolute; bottom: 12px; left: 10px; width: 20px; height: 20px; border: 2px solid #000; border-radius: 4px; }
+        .pixel-head { position: absolute; top: -14px; left: 0; width: 16px; height: 16px; background: #ffdb99; border: 2px solid #000; border-radius: 3px; }
+        .pixel-eyes { position: absolute; top: 5px; left: 3px; width: 2px; height: 2px; background: #000; box-shadow: 6px 0 0 #000; }
+        
+        /* ทรงผม */
+        .hair-MALE { position: absolute; top: -18px; left: -2px; width: 20px; height: 6px; background: #2d1e18; border: 2px solid #000; border-radius: 4px 4px 0 0; }
+        .hair-FEMALE { position: absolute; top: -18px; left: -2px; width: 20px; height: 20px; background: #451a03; border: 2px solid #000; border-radius: 4px 4px 2px 2px; }
+        
+        /* ชุดเสื้อผ้า */
+        .outfit-SUIT .pixel-body { background: #1e293b; }
+        .outfit-SUIT::after { content: '👔'; position: absolute; bottom: 16px; left: 15px; font-size: 8px; }
+        .outfit-WORK .pixel-body { background: #2563eb; }
+        .outfit-CASUAL .pixel-body { background: #16a34a; }
+        
+        /* ขา */
+        .pixel-legs { position: absolute; bottom: 2px; left: 14px; width: 12px; height: 10px; background: #0f172a; border: 2px solid #000; border-top: none; }
+        
+        /* แอนิเมชันเดินดุ๊กดิ๊ก */
+        .agent-avatar.walking { animation: walkBounce 0.2s infinite alternate; }
+        @keyframes walkBounce { 0% { transform: translateY(0); } 100% { transform: translateY(-4px); } }
 
-        /* ================================================= */
-        /* 🌟 CSS PIXEL AVATAR GENERATOR (ไม่ต้องใช้รูปภาพ!) */
-        /* ================================================= */
-        .agent-bot { width: 60px; height: 80px; margin-left: -30px; margin-top: -90px; cursor: pointer; filter: drop-shadow(5px 10px 5px rgba(0,0,0,0.4)); animation: idle 2s infinite alternate; }
-        .agent-bot:hover { filter: drop-shadow(0 0 15px rgba(99,102,241,0.8)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); z-index: 50 !important; }
-        .agent-bot.active { filter: drop-shadow(0 0 20px rgba(16,185,129,1)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); z-index: 50 !important; }
-        @keyframes idle { 0% { transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(0); } 100% { transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(-5px); } }
+        /* วงแหวนใต้เท้าบอทเมื่อถูกเลือก */
+        .select-ring { position: absolute; bottom: -2px; left: 6px; width: 28px; height: 8px; background: rgba(16,185,129,0.3); border: 2px solid #10b981; border-radius: 50%; opacity: 0; transition: opacity 0.2s; }
+        .agent-avatar.selected .select-ring { opacity: 1; }
 
-        /* ชิ้นส่วน 2D Pixel Character */
-        .pixel-char { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) scale(1.5); width: 24px; height: 36px; }
-        .p-head { position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background: #fcd34d; border: 2px solid #000; z-index: 3; border-radius: 2px; }
-        .p-eyes { position: absolute; top: 6px; left: 3px; width: 2px; height: 2px; background: #000; box-shadow: 6px 0 0 #000; }
-        .p-hair-m { position: absolute; top: -4px; left: -2px; width: 16px; height: 6px; background: #451a03; border: 2px solid #000; display: none; border-radius: 2px 2px 0 0; }
-        .p-hair-f { position: absolute; top: -4px; left: -2px; width: 16px; height: 22px; background: #451a03; border: 2px solid #000; display: none; border-radius: 4px 4px 0 0; }
-        .p-body { position: absolute; top: 18px; left: 4px; width: 16px; height: 12px; border: 2px solid #000; z-index: 2; border-radius: 2px; }
-        .p-suit-shirt { position: absolute; top: 0; left: 4px; width: 4px; height: 8px; background: #fff; display: none; z-index: 2; }
-        .p-suit-tie { position: absolute; top: 2px; left: 5px; width: 2px; height: 6px; background: #ef4444; display: none; z-index: 3; }
-        .p-legs { position: absolute; top: 28px; left: 4px; width: 16px; height: 10px; background: #1e293b; border: 2px solid #000; z-index: 1; border-top: none; }
-        .p-legs-gap { position: absolute; bottom: -2px; left: 4px; width: 4px; height: 6px; background: transparent; border: 2px solid #000; border-bottom: none; border-top: none; }
+        /* บอลลูนคำพูดคำสั่งบนหัวบอท */
+        .bot-popup { position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; font-weight: bold; font-size: 10px; padding: 4px 8px; border-radius: 8px; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .agent-avatar.busy .bot-popup { opacity: 1; }
 
-        /* Logic ควบคุมการแสดงผลตาม Class */
-        .gender-MALE .p-hair-m { display: block; }
-        .gender-FEMALE .p-hair-f { display: block; }
-        .outfit-SUIT .p-body { background: #0f172a; } /* สูทสีดำ */
-        .outfit-SUIT .p-suit-shirt, .outfit-SUIT .p-suit-tie { display: block; }
-        .outfit-WORK .p-body { background: #3b82f6; } /* เสื้อช่าง/ฟ้า */
-        .outfit-CASUAL .p-body { background: #10b981; } /* เสื้อลำลองเขียว */
-
-        /* ป้ายชื่อและสถานะ */
-        .agent-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.8); border: 1px solid #475569; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; white-space: nowrap; pointer-events: none; font-weight: bold; }
-        .agent-bubble { position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: white; color: #0f172a; font-size: 12px; padding: 4px 8px; border-radius: 8px; white-space: nowrap; font-weight: bold; font-family: 'Prompt'; box-shadow: 0 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        .agent-bubble::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); border-width: 5px 5px 0; border-style: solid; border-color: white transparent transparent transparent; }
-        .agent-bot.working .agent-bubble { opacity: 1; animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
-
-        /* 🌟 Terminal CSS */
-        .terminal-scroll::-webkit-scrollbar { width: 8px; }
-        .terminal-scroll::-webkit-scrollbar-track { background: #020617; }
+        .terminal-scroll::-webkit-scrollbar { width: 6px; }
         .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .scanline { width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.1) 50%, rgba(0,0,0,0) 100%); position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 8s linear infinite; z-index: 50; }
+        .scanline { width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.05) 50%, rgba(0,0,0,0) 100%); position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 6s linear infinite; }
         @keyframes scan { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
-        .log-entry { animation: fadeIn 0.3s ease-out forwards; border-left: 2px solid #10b981; padding-left: 8px; margin-bottom: 8px; }
     </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden text-sm">
+<body class="flex h-screen w-screen overflow-hidden">
 
-    <div class="flex-1 relative flex flex-col bg-[#0f172a] shadow-[inset_-30px_0_50px_rgba(0,0,0,0.8)] z-10">
+    <div class="flex-1 relative flex flex-col bg-[#0b0f19] p-6 justify-center items-center overflow-auto">
         
-        <div class="h-14 bg-slate-900/80 backdrop-blur border-b border-slate-700 flex items-center justify-between px-6 shrink-0 relative z-50">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(99,102,241,0.6)]">PX</div>
-                <h1 class="font-bold text-white tracking-widest text-lg">AGENT <span class="text-slate-500 font-light text-sm">v2.0</span></h1>
+        <div class="w-[900px] h-[550px] world-grid rounded-3xl border border-slate-700 p-6 relative shadow-2xl">
+            
+            <div class="absolute top-6 left-6 w-[450px] h-[490px] zone-office rounded-2xl p-4">
+                <div class="text-xs font-bold text-orange-400 tracking-widest uppercase mb-4">💻 แผนกบริหาร AI Agents</div>
+                
+                <div class="desk-block w-24 h-14 absolute top-16 left-10 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 1</div>
+                <div class="desk-block w-24 h-14 absolute top-16 left-280 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 2</div>
+                <div class="desk-block w-24 h-14 absolute bottom-16 left-10 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 3</div>
+                <div class="desk-block w-24 h-14 absolute bottom-16 left-280 flex items-center justify-center text-xs font-bold text-slate-400 shadow-lg">โต๊ะทำงาน 4</div>
             </div>
-            <div class="flex items-center gap-4">
-                <span id="sysStatus" class="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse"><span class="w-2 h-2 rounded-full bg-amber-400"></span> DB CONNECTING...</span>
-                <button onclick="window.location.href='warehouse.html'" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold border border-slate-600 transition-colors shadow-lg">ย้อนกลับ</button>
+
+            <div class="absolute top-6 right-6 w-[380px] h-[490px] zone-warehouse rounded-2xl p-4 flex flex-col justify-between">
+                <div class="text-xs font-bold text-blue-400 tracking-widest uppercase">📦 คลังสินค้าส่วนกลาง</div>
+                
+                <div class="flex justify-between w-full">
+                    <div id="rack-main" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE A: อุปกรณ์หลัก</div>
+                    <div id="rack-parts" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE B: อะไหล่คอมฯ</div>
+                </div>
+                <div class="flex justify-between w-full">
+                    <div id="rack-ink" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE C: หมึกพิมพ์</div>
+                    <div id="rack-acc" class="rack-block w-36 h-20 flex items-center justify-center text-xs font-bold text-slate-300">ZONE D: อุปกรณ์เสริม</div>
+                </div>
             </div>
+
+            <div id="characterLayer" class="absolute inset-0 pointer-events-none"></div>
         </div>
 
-        <div class="flex-1 iso-container relative" id="dragContainer">
-            <div class="iso-world" id="isoWorld">
-                <div class="iso-floor"></div>
-                <div class="iso-wall-left"></div>
-                <div class="iso-wall-top"></div>
-                
-                <div class="sprite-upright prop-rack" style="left: 640px; top: 80px; z-index: 720;"></div>
-                <div class="sprite-upright prop-rack" style="left: 640px; top: 240px; z-index: 880;"></div>
-                <div class="sprite-upright prop-rack" style="left: 640px; top: 400px; z-index: 1040;"></div>
-                <div class="sprite-upright prop-rack" style="left: 640px; top: 560px; z-index: 1200;"></div>
-                
-                <div class="absolute" style="left: 80px; top: 80px; width: 400px; height: 640px; background: rgba(59,130,246,0.1); border: 2px dashed rgba(59,130,246,0.3);"></div>
-
-                <div class="sprite-upright prop-desk" id="desk-1" style="left: 200px; top: 200px; z-index: 400;"></div>
-                <div class="sprite-upright prop-desk" id="desk-2" style="left: 400px; top: 200px; z-index: 600;"></div>
-                <div class="sprite-upright prop-desk" id="desk-3" style="left: 200px; top: 500px; z-index: 700;"></div>
-                <div class="sprite-upright prop-desk" id="desk-4" style="left: 400px; top: 500px; z-index: 900;"></div>
-
-                <div id="agentsLayer"></div>
-            </div>
-        </div>
-
-        <div class="absolute bottom-6 left-6 z-50 flex gap-3">
-            <button onclick="openHireModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_10px_20px_rgba(16,185,129,0.4)] transition-transform active:scale-95 flex items-center gap-2 border border-emerald-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                สร้างตัวละครบอท
-            </button>
-            <button onclick="resetCamera()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl font-bold shadow-lg transition-transform active:scale-95 border border-slate-600">
-                🎯 Reset View
+        <div class="absolute bottom-6 left-8 flex gap-3">
+            <button onclick="openHireModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3.5 rounded-2xl shadow-xl transition-transform active:scale-95 flex items-center gap-2 border border-indigo-400">
+                ✨ สร้าง & จ้าง Agent ทำงาน
             </button>
         </div>
     </div>
 
-    <div class="w-full lg:w-[400px] bg-[#020617] border-l border-slate-800 flex flex-col relative z-20 shadow-2xl">
+    <div class="w-[420px] bg-[#020617] border-l border-slate-800 h-full flex flex-col font-mono relative shadow-2xl shrink-0">
         <div class="scanline"></div>
         
-        <div class="h-10 bg-[#0f172a] flex items-center px-4 border-b border-slate-800 shrink-0 gap-2">
-            <span class="text-slate-400 font-mono text-xs font-bold tracking-widest">TERMINAL</span>
-            <span class="text-slate-600 text-xs">/</span>
-            <span id="activeAgentName" class="text-indigo-400 font-mono text-xs font-bold">NO_AGENT_SELECTED</span>
+        <div class="h-12 bg-slate-900 flex items-center px-4 border-b border-slate-800 gap-2 shrink-0">
+            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <span class="text-slate-400 text-xs font-bold tracking-widest ml-2" id="consoleHeader">AGENT_CONSOLE.EXE</span>
         </div>
 
-        <div id="terminalOutput" class="flex-1 overflow-y-auto terminal-scroll p-4 font-mono text-[13px] leading-relaxed pb-8">
-            <div class="text-slate-500 mb-4">
-                [SYSTEM] Initializing Custom Pixel Agent System...<br>
-                [SYSTEM] Welcome to the Interactive Warehouse.
-            </div>
+        <div id="terminalLogs" class="flex-1 overflow-y-auto terminal-scroll p-4 text-emerald-400 text-xs leading-relaxed flex flex-col gap-2">
+            <div class="text-slate-500">[SYSTEM] Booting HQ Command Network...</div>
+            <div class="text-slate-500">[SYSTEM] Syncing Google Sheet API... <span id="loadStatus" class="text-amber-400 font-bold">CONNECTING</span></div>
         </div>
 
-        <div id="terminalAction" class="bg-[#0f172a] border-t border-slate-800 p-5 shrink-0 min-h-[250px] flex flex-col justify-center transition-all">
-            <div class="text-center text-slate-500 font-mono animate-pulse uppercase tracking-widest text-sm flex flex-col items-center gap-2">
-                <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
-                สร้างบอทแล้วคลิกเลือกเพื่อมอบหมายงาน
+        <div id="actionPanel" class="bg-slate-900 border-t border-slate-800 p-5 min-h-[260px] flex flex-col justify-center font-sans">
+            <div class="text-center text-slate-500 font-bold uppercase tracking-widest text-xs animate-pulse">
+                โปรดเลือกตัวละคร Agent บนแผนผังเพื่อสั่งงาน
             </div>
         </div>
     </div>
 
-    <div id="hireModal" class="fixed inset-0 bg-slate-900/80 z-[1000] hidden flex-col items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-slate-800 border-2 border-indigo-500/50 rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-fadeIn font-sans flex flex-col sm:flex-row gap-6">
+    <div id="hireModal" class="fixed inset-0 bg-slate-950/80 z-[900] hidden items-center justify-center backdrop-blur-sm p-4 font-sans">
+        <div class="bg-slate-800 border-2 border-indigo-500/30 rounded-3xl w-full max-w-lg p-6 shadow-2xl flex flex-col sm:flex-row gap-6">
             
-            <div class="w-full sm:w-1/3 flex flex-col items-center justify-center bg-slate-900 rounded-xl border border-slate-700 p-4">
-                <h4 class="text-xs font-bold text-slate-400 mb-4 tracking-widest uppercase">Preview</h4>
-                <div class="relative w-16 h-24 scale-125 mb-4">
-                    <div id="previewChar" class="pixel-char gender-MALE outfit-SUIT">
-                        <div class="p-head"><div class="p-hair-m"></div><div class="p-hair-f"></div><div class="p-eyes"></div></div>
-                        <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
-                        <div class="p-legs"><div class="p-legs-gap"></div></div>
+            <div class="w-full sm:w-1/3 bg-slate-950 rounded-2xl border border-slate-700 p-4 flex flex-col items-center justify-center">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Avatar Preview</span>
+                <div class="w-10 h-16 relative scale-[2] my-4">
+                    <div id="previewChar" class="agent-avatar gender-MALE outfit-SUIT left-0 top-0">
+                        <div class="select-ring"></div>
+                        <div class="pixel-body">
+                            <div class="pixel-head"><div class="hair-MALE"></div><div class="hair-FEMALE"></div><div class="pixel-eyes"></div></div>
+                        </div>
+                        <div class="pixel-legs"></div>
                     </div>
                 </div>
             </div>
 
             <div class="w-full sm:w-2/3 space-y-4">
-                <h3 class="text-white font-bold text-lg mb-2 border-b border-slate-700 pb-2">🛠️ สร้าง Agent ใหม่</h3>
+                <h3 class="text-white font-bold text-lg border-b border-slate-700 pb-2">📋 ลงทะเบียนสร้าง Agent ประจำหน่วย</h3>
                 <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อบอท (Name)</label>
-                    <input type="text" id="agentName" placeholder="เช่น น้องสมหมาย" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm">
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อบอท (Agent Name)</label>
+                    <input type="text" id="inputName" placeholder="เช่น น้องมันนี่, บอทคลัง-01" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-2.5 text-white outline-none focus:border-indigo-500 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-xs font-bold text-slate-400 mb-1 block">เพศ / ทรงผม</label>
-                        <select id="agentGender" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm cursor-pointer">
-                            <option value="MALE">ชาย (ผมสั้น)</option>
-                            <option value="FEMALE">หญิง (ผมยาว)</option>
+                        <select id="inputGender" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-white outline-none text-sm cursor-pointer">
+                            <option value="MALE">👨‍💼 ชาย (ผมสั้น)</option>
+                            <option value="FEMALE">👩‍💼 หญิง (ผมยาว)</option>
                         </select>
                     </div>
                     <div>
                         <label class="text-xs font-bold text-slate-400 mb-1 block">ชุดแต่งกาย</label>
-                        <select id="agentOutfit" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm cursor-pointer">
-                            <option value="SUIT">สูททำงาน (สีดำ)</option>
-                            <option value="WORK">ชุดช่าง (สีฟ้า)</option>
-                            <option value="CASUAL">ชุดลำลอง (สีเขียว)</option>
+                        <select id="inputOutfit" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-3 py-2 text-white outline-none text-sm cursor-pointer">
+                            <option value="SUIT">🤵 สูททำงาน (สีดำ)</option>
+                            <option value="WORK">👕 เสื้อช่าง (สีฟ้า)</option>
+                            <option value="CASUAL">🟢 เสื้อลำลอง (สีเขียว)</option>
                         </select>
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">หน้าที่ (Role)</label>
-                    <select id="agentRole" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm cursor-pointer">
-                        <option value="CHECKER">🔍 หน้าที่: เช็คยอดและหาสินค้า</option>
-                        <option value="RUNNER">🏃‍♂️ หน้าที่: เบิกจ่ายและตัดสต็อก</option>
-                        <option value="REPORTER">📊 หน้าที่: สรุปและออกรายงาน Excel</option>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">เลือกฟังก์ชันหน้าที่ (Role)</label>
+                    <select id="inputRole" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-2.5 text-white outline-none text-sm cursor-pointer">
+                        <option value="CHECKER">🔍 Checker Bot (ตรวจเช็คและค้นหาพัสดุ)</option>
+                        <option value="RUNNER">🏃‍♂️ Runner Bot (เดินงานเบิกจ่ายตัดสต็อกจริง)</option>
+                        <option value="REPORTER">📊 Reporter Bot (สรุปยอดและออกรายงาน Excel)</option>
                     </select>
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button onclick="closeHireModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-lg text-sm transition-colors">ยกเลิก</button>
-                    <button onclick="hireAgent()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition-colors shadow-lg">ยืนยันสร้างตัวละคร</button>
+                    <button onclick="closeHireModal()" class="flex-1 bg-slate-700 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-slate-600">ยกเลิก</button>
+                    <button onclick="hireAgent()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-indigo-500 shadow-lg">ยืนยันการจ้าง</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[1500] hidden flex-col items-center justify-center backdrop-blur-md">
-        <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full mb-4 animate-spin"></div>
-        <p class="font-mono text-emerald-400 text-lg tracking-widest font-bold animate-pulse" id="overlayText">WORKING...</p>
+    <div id="withdrawModal" class="fixed inset-0 bg-slate-950/80 z-[1000] hidden items-center justify-center backdrop-blur-sm p-4">
+        <div class="bg-slate-800 border-2 border-amber-500/50 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-slide-up">
+            <h3 class="text-amber-400 font-bold text-lg mb-3">📤 คำสั่งเบิกพัสดุออกจากคลัง</h3>
+            <p id="wdItemName" class="font-bold text-white text-base truncate mb-1">-</p>
+            <p class="text-xs text-slate-400 border-b border-slate-700 pb-3 mb-4">ยอดในคลัง: <span id="wdMaxQty" class="text-emerald-400 font-bold">0</span></p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">ระบุจำนวนที่ต้องการเบิก</label>
+                    <input type="number" id="wdQtyInput" min="1" class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-2.5 text-white font-bold text-lg outline-none focus:border-amber-500 font-mono">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 block mb-1">ชื่อหน่วยงาน / ชื่อคนรับของ</label>
+                    <input type="text" id="wdUserInput" placeholder="ระบุปลายทาง..." class="w-full bg-slate-950 border border-slate-600 rounded-xl px-4 py-3 text-white outline-none focus:border-amber-500 font-medium">
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="closeWithdrawModal()" class="flex-1 bg-slate-700 text-white font-bold py-2.5 rounded-xl text-sm">ยกเลิก</button>
+                <button onclick="executeAgentWithdraw()" class="flex-1 bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm hover:bg-amber-500">สั่งให้บอทเดินไปหยิบ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[2000] hidden flex-col items-center justify-center backdrop-blur-md">
+        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="font-mono text-indigo-400 text-base font-bold tracking-widest" id="overlayText">AGENT PROCESSING...</p>
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec';
-        const WAREHOUSE_KEY = 'ADP_WAREHOUSE_CENTRAL';
-        const WAREHOUSE_SUPPLIES_KEY = 'ADP_WAREHOUSE_SUPPLIES';
+        // 🌟 พิกัดตำแหน่งโต๊ะทำงาน Fix บนแผนที่ (X, Y)
+        const deskPositions = [
+            { id: 1, x: 80, y: 150, occupied: false },
+            { id: 2, x: 260, y: 150, occupied: false },
+            { id: 3, x: 80, y: 380, occupied: false },
+            { id: 4, x: 260, y: 380, occupied: false }
+        ];
 
-        // 🌟 State Management
         let dbMain = { main: [], withdrawals: [] };
         let dbSup = { ink: [], accessories: [], parts: [] };
-        let allItems = []; 
-        let withdrawTarget = null;
-
-        // 🌟 Agent System
-        const availableDesks = [
-            { id: 1, x: 200, y: 200, occupied: false },
-            { id: 2, x: 400, y: 200, occupied: false },
-            { id: 3, x: 200, y: 500, occupied: false },
-            { id: 4, x: 400, y: 500, occupied: false }
-        ];
+        let allItems = [];
         let agents = [];
-        let activeAgentId = null;
+        let selectedAgentId = null;
+        let activeWithdrawItem = null;
 
-        const terminalOut = document.getElementById('terminalOutput');
-        const terminalAction = document.getElementById('terminalAction');
+        const logContainer = document.getElementById('terminalLogs');
+        const actionPanel = document.getElementById('actionPanel');
 
-        // ==========================================
-        // 🌟 UI Functions
-        // ==========================================
-        function printLog(msg, type = 'info') {
+        // ฟังก์ชันสั่งปริ้นข้อความแบบ Console Log
+        function addLog(text, type = 'info') {
             const div = document.createElement('div');
             let color = 'text-emerald-400';
-            if (type === 'error') color = 'text-red-400';
+            if (type === 'error') color = 'text-red-400 font-bold';
             if (type === 'system') color = 'text-blue-400';
-            if (type === 'bot') color = 'text-white';
+            if (type === 'bot') color = 'text-white bg-slate-800/80 p-3 rounded-xl border border-slate-700 shadow font-sans text-xs';
             
             div.className = `log-entry ${color}`;
-            div.innerHTML = type === 'bot' ? `[AGENT] ${msg}` : `<span class="opacity-50">${new Date().toLocaleTimeString('en-US', {hour12:false})}</span> ${msg}`;
+            if(type === 'bot') div.innerHTML = text;
+            else div.innerHTML = `> [${new Date().toLocaleTimeString('th-TH', {hour12:false})}] ${text}`;
             
-            terminalOut.appendChild(div);
-            terminalOut.scrollTop = terminalOut.scrollHeight;
+            logContainer.appendChild(div);
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
-        function showOverlay(text) { document.getElementById('overlayText').innerText = text; document.getElementById('overlay').classList.remove('hidden'); document.getElementById('overlay').classList.add('flex'); }
+        function showOverlay(txt) { document.getElementById('overlayText').innerText = txt; document.getElementById('overlay').classList.remove('hidden'); document.getElementById('overlay').classList.add('flex'); }
         function hideOverlay() { document.getElementById('overlay').classList.add('hidden'); document.getElementById('overlay').classList.remove('flex'); }
 
-        // ==========================================
-        // 🌟 Drag Map Logic
-        // ==========================================
-        let isDragging = false, startX, startY, scrollLeft, scrollTop;
-        const slider = document.getElementById('dragContainer');
-        slider.addEventListener('mousedown', (e) => { isDragging = true; startX = e.pageX - slider.offsetLeft; startY = e.pageY - slider.offsetTop; scrollLeft = slider.scrollLeft; scrollTop = slider.scrollTop; });
-        slider.addEventListener('mouseleave', () => { isDragging = false; });
-        slider.addEventListener('mouseup', () => { isDragging = false; });
-        slider.addEventListener('mousemove', (e) => { if (!isDragging) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX); slider.scrollTop = scrollTop - (y - startY); });
+        function openHireModal() { updatePreview(); document.getElementById('hireModal').style.display = 'flex'; }
+        function closeHireModal() { document.getElementById('hireModal').style.display = 'none'; }
         
-        function resetCamera() { slider.scrollTo({ top: 200, left: 200, behavior: 'smooth' }); }
+        function updatePreview() {
+            let gender = document.getElementById('inputGender').value;
+            let outfit = document.getElementById('inputOutfit').value;
+            document.getElementById('previewChar').className = `agent-avatar gender-${gender} outfit-${outfit} left-0 top-0`;
+        }
 
-        // ==========================================
-        // 🌟 Database Logic
-        // ==========================================
+        // 🌟 เชื่อมต่อดาวน์โหลดฐานข้อมูลพัสดุ
         window.onload = async function() {
-            setTimeout(resetCamera, 500); 
             try {
                 const res = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await res.json();
-                
                 if (result.value) {
                     if(result.value[WAREHOUSE_KEY]) dbMain = JSON.parse(result.value[WAREHOUSE_KEY]);
                     if(result.value[WAREHOUSE_SUPPLIES_KEY]) dbSup = JSON.parse(result.value[WAREHOUSE_SUPPLIES_KEY]);
                     buildIndex();
                 }
+                document.getElementById('loadStatus').className = 'text-emerald-400 font-bold';
+                document.getElementById('loadStatus').innerText = 'READY';
+                addLog('Command Center online. All Agent slots ready.', 'system');
                 
-                let sysStatus = document.getElementById('sysStatus');
-                sysStatus.className = "flex items-center gap-2 text-xs font-bold text-emerald-400";
-                sysStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> DB CONNECTED';
-                printLog('Warehouse Database synchronized.', 'system');
-                
-            } catch (e) {
-                document.getElementById('sysStatus').className = "flex items-center gap-2 text-xs font-bold text-red-500";
-                document.getElementById('sysStatus').innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span> OFFLINE';
-                printLog('Database connection failed!', 'error');
+                // จ้างบอทตัวแรกเริ่มทำงานให้ทันที
+                setTimeout(() => {
+                    document.getElementById('inputName').value = "น้องมันนี่";
+                    document.getElementById('inputRole').value = "CHECKER";
+                    hireAgent();
+                }, 800);
+            } catch(e) {
+                document.getElementById('loadStatus').className = 'text-red-500 font-bold';
+                document.getElementById('loadStatus').innerText = 'FAILED';
+                addLog('CRITICAL ERROR: Failed to fetch Warehouse database.', 'error');
             }
         };
 
         function buildIndex() {
             allItems = [];
-            if(dbMain.main) dbMain.main.forEach((r, idx) => { let sn = r[4]||''; if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type: r[1]||'', name: `${r[2]||''} ${r[3]||''}`.trim(), sn, status: r[5]||'', qty: 1, unit: 'เครื่อง' }); });
-            if(dbSup.parts) dbSup.parts.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'' }); });
-            if(dbSup.accessories) dbSup.accessories.forEach((r, idx) => { let qty = parseFloat(r[4]); if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: r[3]||'-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[5]||'' }); });
-            if(dbSup.ink) dbSup.ink.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${r[1]||''} (ใช้กับ: ${r[2]||''})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'' }); });
+            if(dbMain.main) dbMain.main.forEach((r, idx) => { let sn = r[4]||''; if(sn && sn !== '-') allItems.push({ ref: 'MAIN', idx, type: r[1]||'', name: `${r[2]||''} ${r[3]||''}`.trim(), sn, status: r[5]||'', qty: 1, unit: 'เครื่อง', targetRack: 'rack-main' }); });
+            if(dbSup.parts) dbSup.parts.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'PARTS', idx, type: 'อะไหล่', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'', targetRack: 'rack-parts' }); });
+            if(dbSup.accessories) dbSup.accessories.forEach((r, idx) => { let qty = parseFloat(r[4]); if(!isNaN(qty)) allItems.push({ ref: 'ACC', idx, type: 'อุปกรณ์', name: `${r[1]||''} ${r[2]||''}`.trim(), sn: r[3]||'-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[5]||'', targetRack: 'rack-acc' }); });
+            if(dbSup.ink) dbSup.ink.forEach((r, idx) => { let qty = parseFloat(r[3]); if(!isNaN(qty)) allItems.push({ ref: 'INK', idx, type: 'หมึกพิมพ์', name: `${r[1]||''} (ใช้กับ: ${r[2]||''})`, sn: '-', status: qty>0?'พร้อมจ่าย':'หมด', qty, unit: r[4]||'', targetRack: 'rack-ink' }); });
         }
 
-        // ==========================================
-        // 🌟 Agent Character System
-        // ==========================================
-        function updatePreview() {
-            let gender = document.getElementById('agentGender').value;
-            let outfit = document.getElementById('agentOutfit').value;
-            let preview = document.getElementById('previewChar');
-            // รีเซ็ตคลาส แล้วใส่ใหม่
-            preview.className = `pixel-char gender-${gender} outfit-${outfit}`;
-        }
-
-        function openHireModal() { 
-            updatePreview(); // อัปเดตพรีวิวครั้งแรก
-            document.getElementById('hireModal').classList.remove('hidden'); 
-            document.getElementById('hireModal').classList.add('flex'); 
-        }
-        function closeHireModal() { 
-            document.getElementById('hireModal').classList.add('hidden'); 
-            document.getElementById('hireModal').classList.remove('flex'); 
-        }
-
+        // ===================================================
+        // 🌟 AGENT ENGINE (ระบบจ้างงาน เดิน และสั่งการ)
+        // ===================================================
         function hireAgent() {
-            let name = document.getElementById('agentName').value.trim() || 'Bot-' + (agents.length + 1);
-            let role = document.getElementById('agentRole').value;
-            let gender = document.getElementById('agentGender').value;
-            let outfit = document.getElementById('agentOutfit').value;
+            let name = document.getElementById('inputName').value.trim() || 'Agent-' + (agents.length + 1);
+            let role = document.getElementById('inputRole').value;
+            let gender = document.getElementById('inputGender').value;
+            let outfit = document.getElementById('inputOutfit').value;
 
-            let desk = availableDesks.find(d => !d.occupied);
-            if (!desk) { alert("ไม่มีโต๊ะทำงานว่างแล้วครับ! (สูงสุด 4 ตัว)"); closeHireModal(); return; }
-            
+            let desk = deskPositions.find(d => !d.occupied);
+            if(!desk) { alert("ที่นั่งออฟฟิศเต็มแล้วค่ะ!"); closeHireModal(); return; }
+
             desk.occupied = true;
-            let newId = Date.now();
+            let id = Date.now();
             
-            let agentObj = { id: newId, name: name, role: role, gender: gender, outfit: outfit, deskId: desk.id, x: desk.x, y: desk.y };
-            agents.push(agentObj);
-            
-            renderAgent(agentObj);
-            printLog(`New pixel agent created: ${name} [${role}]`, 'system');
-            closeHireModal();
-            
-            activateAgent(newId);
-        }
+            let agent = { id, name, role, gender, outfit, deskId: desk.id, homeX: desk.x, intentX: desk.x, homeY: desk.y, intentY: desk.y };
+            agents.push(agent);
 
-        function renderAgent(agent) {
-            const layer = document.getElementById('agentsLayer');
-            let zIndex = agent.y + 10; 
-            let color = agent.role === 'CHECKER' ? '#3b82f6' : (agent.role === 'RUNNER' ? '#f59e0b' : '#ec4899');
-
-            // สร้าง HTML ของ Pixel Character โดยใช้ CSS ที่เราเตรียมไว้
-            let pixelHtml = `
-                <div class="pixel-char gender-${agent.gender} outfit-${agent.outfit}">
-                    <div class="p-head"><div class="p-hair-m"></div><div class="p-hair-f"></div><div class="p-eyes"></div></div>
-                    <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
-                    <div class="p-legs"><div class="p-legs-gap"></div></div>
+            // สร้าง Element ตัวละคร
+            let charHtml = `
+            <div id="agent-${id}" class="agent-avatar gender-${gender} outfit-${outfit} walking" style="left: 200px; top: 500px; pointer-events: auto;" onclick="selectAgent(${id}); event.stopPropagation();">
+                <div class="select-ring"></div>
+                <div class="bot-popup" id="pop-${id}">Working...</div>
+                <div class="pixel-body">
+                    <div class="pixel-head"><div class="hair-${gender}"></div><div class="hair-${gender}"></div><div class="pixel-eyes"></div></div>
                 </div>
-            `;
-
-            let html = `
-            <div id="agent-${agent.id}" class="sprite-upright agent-bot" style="left: ${agent.x}px; top: ${agent.y}px; z-index: ${zIndex};" onclick="activateAgent(${agent.id})">
-                <div class="bot-aura" style="border-color: transparent;"></div>
-                <div class="agent-bubble">Working...</div>
-                ${pixelHtml}
-                <div class="agent-label" style="border-color: ${color}; color: ${color};">${agent.name}</div>
+                <div class="pixel-legs"></div>
+                <span class="absolute top-[52px] left-1/2 -translate-x-1/2 text-[9px] font-bold bg-slate-900/80 border border-slate-700 px-1.5 py-0.5 rounded shadow whitespace-nowrap text-slate-200">${name}</span>
             </div>`;
-            layer.insertAdjacentHTML('beforeend', html);
+            
+            document.getElementById('characterLayer').insertAdjacentHTML('beforeend', charHtml);
+            closeHireModal();
+            addLog(`Hired new agent: "${name}" assigned to department.`, 'system');
+
+            // สั่งให้เดินจากประตูหน้าเข้าประจำที่โต๊ะทำงาน
+            moveAgent(id, desk.x + 28, desk.y - 15);
+            
+            // เคลียร์ค่าฟอร์มกลับคืน
+            document.getElementById('inputName').value = '';
+            
+            selectAgent(id);
         }
 
-        function activateAgent(id) {
-            activeAgentId = id;
+        // ฟังก์ชันสั่งให้ตัวละครขยับพิกัดเดินดุ๊กดิ๊ก
+        function moveAgent(id, targetX, targetY, callback = null) {
+            let el = document.getElementById(`agent-${id}`);
+            let agent = agents.find(a => a.id === id);
+            if(!el || !agent) return;
+
+            el.classList.add('walking');
+            el.style.left = targetX + 'px';
+            el.style.top = targetY + 'px';
+
+            setTimeout(() => {
+                el.classList.remove('walking');
+                if(callback) callback();
+            }, 1000); // 1 วินาทีตามสปีดการเดิน CSS transition
+        }
+
+        function selectAgent(id) {
+            selectedAgentId = id;
             let agent = agents.find(a => a.id === id);
             
-            document.querySelectorAll('.agent-bot').forEach(b => b.classList.remove('active'));
-            let el = document.getElementById(`agent-${id}`);
-            if(el) el.classList.add('active');
+            document.querySelectorAll('.agent-avatar').forEach(el => el.classList.remove('selected'));
+            document.getElementById(`agent-${id}`).classList.add('selected');
 
-            document.getElementById('activeAgentName').innerText = `${agent.name} [${agent.role}]`;
-            document.getElementById('activeAgentName').className = `font-mono text-xs font-bold ${agent.role === 'CHECKER' ? 'text-blue-400' : (agent.role === 'RUNNER' ? 'text-amber-400' : 'text-pink-400')}`;
+            document.getElementById('consoleHeader').innerText = `HQ_CONSOLE // ${agent.name.toUpperCase()}`;
+            
+            let roleTh = agent.role === 'CHECKER' ? 'แผนกเช็คยอด' : (agent.role === 'RUNNER' ? 'แผนกเบิกจ่าย' : 'แผนกรายงาน');
+            addLog(`<b class="text-indigo-400">🤖 [${roleTh}] ${agent.name}:</b> พร้อมรับคำสั่งประจำจุดแล้วค่ะเจ้านาย!`, 'bot', true);
 
-            printLog(`สวัสดีครับ! ผม ${agent.name} ยินดีรับคำสั่งครับ`, 'bot');
-
-            buildTerminalUI(agent.role);
+            buildTerminalForm(agent.role);
         }
 
-        function triggerAgentAnim(text) {
-            if(!activeAgentId) return;
-            let el = document.getElementById(`agent-${activeAgentId}`);
-            if(el) {
-                let bubble = el.querySelector('.agent-bubble');
-                bubble.innerText = text;
-                el.classList.add('working');
-                setTimeout(() => el.classList.remove('working'), 3000);
-            }
-        }
-
-        // ==========================================
-        // 🌟 Terminal UI & Tasks
-        // ==========================================
-        function buildTerminalUI(role) {
+        function buildTerminalForm(role) {
             if (role === 'CHECKER') {
-                terminalAction.innerHTML = `
-                    <div class="flex items-center gap-2 text-blue-400 mb-3"><span class="w-2 h-2 bg-blue-500 rounded-sm"></span> <span class="text-xs font-bold font-mono">STOCK CHECK SYSTEM</span></div>
-                    <input type="text" id="termSearch" placeholder="Enter keyword or S/N..." class="w-full bg-[#020617] border border-blue-900/50 text-emerald-400 rounded p-3 text-sm outline-none focus:border-blue-500 font-mono mb-3" onkeypress="if(event.key==='Enter') taskSearch()">
-                    <button onclick="taskSearch()" class="w-full bg-blue-900/40 hover:bg-blue-600 text-blue-200 font-mono py-2 border border-blue-800 rounded transition-colors text-sm">EXECUTE SEARCH</button>
+                actionPanel.innerHTML = `
+                    <label class="text-xs text-blue-400 font-bold block uppercase tracking-wider mb-2">🔍 สั่งระบบหาสินค้าด่วน (Search)</label>
+                    <input type="text" id="b1Q" placeholder="พิมพ์ชื่อสเปค, S/N, หรือหมวดพัสดุ..." class="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-mono rounded-xl p-3 text-sm outline-none focus:border-blue-500 mb-3" onkeypress="if(event.key==='Enter') runCheckerTask()">
+                    <button onclick="runCheckerTask()" class="w-full bg-blue-900/40 border border-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition-colors text-sm">EXECUTE STOCK CHECK</button>
                 `;
-                setTimeout(() => document.getElementById('termSearch').focus(), 100);
+                setTimeout(() => document.getElementById('b1Q').focus(), 100);
             } 
             else if (role === 'RUNNER') {
-                terminalAction.innerHTML = `
-                    <div class="flex items-center gap-2 text-amber-400 mb-2"><span class="w-2 h-2 bg-amber-500 rounded-sm"></span> <span class="text-xs font-bold font-mono">WITHDRAW PROTOCOL</span></div>
-                    <input type="text" id="termFilter" placeholder="Search item to withdraw..." class="w-full bg-[#020617] border border-amber-900/50 text-emerald-400 rounded p-2 text-sm outline-none focus:border-amber-500 font-mono mb-2" oninput="taskFilter()">
-                    <div id="termList" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 mb-2 max-h-[100px] border border-slate-800 bg-[#020617] p-1 rounded"></div>
+                actionPanel.innerHTML = `
+                    <label class="text-xs text-amber-500 font-bold block uppercase tracking-wider mb-2">🏃‍♂️ สั่งเบิกพัสดุออกจากคลัง (Withdraw)</label>
+                    <input type="text" id="b2Q" placeholder="พิมพ์หาของที่จะเบิกจ่าย..." class="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-mono rounded-xl p-3 text-sm outline-none focus:border-amber-500 mb-2" oninput="runRunnerFilter()">
+                    <div id="b2FormList" class="max-h-[110px] overflow-y-auto custom-scrollbar bg-slate-950 border border-slate-800 p-1 rounded-xl flex flex-col gap-1"></div>
                 `;
-                taskFilter(); 
+                runRunnerFilter();
             }
             else if (role === 'REPORTER') {
-                terminalAction.innerHTML = `
-                    <div class="flex items-center gap-2 text-pink-400 mb-3"><span class="w-2 h-2 bg-pink-500 rounded-sm"></span> <span class="text-xs font-bold font-mono">DATA EXPORT ROUTINE</span></div>
-                    <select id="termCat" class="w-full bg-[#020617] border border-pink-900/50 text-emerald-400 rounded p-3 text-sm outline-none focus:border-pink-500 font-mono mb-4 cursor-pointer">
-                        <option value="ALL">EXPORT_ALL_DATA</option>
-                        <option value="LOW">EXPORT_LOW_STOCK_WARNING</option>
-                        <option value="MAIN">EXPORT_MAIN_EQUIPMENT</option>
-                        <option value="PARTS">EXPORT_PARTS_AND_ACC</option>
+                actionPanel.innerHTML = `
+                    <label class="text-xs text-pink-400 font-bold block uppercase tracking-wider mb-2">📊 สั่งสรุปยอดพัสดุออก Excel</label>
+                    <select id="b3Q" class="w-full bg-slate-950 border border-slate-700 text-emerald-400 font-mono rounded-xl p-3 text-sm outline-none focus:border-pink-500 mb-4 cursor-pointer">
+                        <option value="ALL">สรุปพัสดุพร้อมจ่ายทั้งหมดในคลัง</option>
+                        <option value="LOW">สรุปแจ้งเตือนของขาดคลัง (ต่ำกว่า 5)</option>
+                        <option value="MAIN">สรุปเฉพาะหมวดอุปกรณ์หลัก</option>
+                        <option value="SUP">สรุปหมวดอะไหล่และหมึกพิมพ์</option>
                     </select>
-                    <button onclick="taskExport()" class="w-full bg-pink-900/40 hover:bg-pink-600 text-pink-200 font-mono py-3 border border-pink-800 rounded transition-colors text-sm">GENERATE EXCEL</button>
+                    <button onclick="runReporterTask()" class="w-full bg-pink-900/40 border border-pink-600 text-white font-bold py-3 rounded-xl hover:bg-pink-600 transition-colors text-sm flex justify-center items-center gap-2">
+                        💾 GENERATE EXCEL REPORT
+                    </button>
                 `;
             }
         }
 
-        // --- Role: Checker ---
-        function taskSearch() {
-            let q = document.getElementById('termSearch').value.toLowerCase().trim();
+        // --- Task Agent 1: ค้นหาพัสดุ ---
+        function runCheckerTask() {
+            let q = document.getElementById('b1Q').value.toLowerCase().trim();
             if(!q) return;
-            triggerAgentAnim('Checking...');
-            printLog(`Processing query: "${q}"...`, 'system');
+
+            let agent = window.agents.find(a => a.id === selectedAgentId);
+            let pop = document.getElementById(`pop-${selectedAgentId}`);
             
-            let matches = allItems.filter(i => i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q) || i.type.toLowerCase().includes(q));
+            pop.innerText = "กำลังหาข้อมูล..";
+            document.getElementById(`agent-${selectedAgentId}`).classList.add('busy');
+            addLog(`Checker Agent is checking rack memory for: "${q}"...`, 'system');
+
+            // เอฟเฟกต์บอทเดินไปดูที่ชั้นคลังสินค้าจริง
+            let matches = allItems.filter(i => i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q));
+            let targetRackId = (matches.length > 0) ? matches[0].targetRack : 'rack-main';
+            let rackEl = document.getElementById(targetRackId);
             
-            if(matches.length === 0) {
-                printLog(`No records found for "${q}".`, 'bot');
-            } else {
-                matches.sort((a,b) => b.qty - a.qty);
-                let html = `Found ${matches.length} records:<br>`;
-                matches.slice(0, 10).forEach(m => {
-                    let color = m.qty <= 0 ? 'text-red-500' : 'text-emerald-500';
-                    html += `<span class="text-blue-400">[${m.type}]</span> ${m.name} | S/N: ${m.sn} | QTY: <span class="${color}">${m.qty}</span><br>`;
-                });
-                if(matches.length > 10) html += `...and ${matches.length - 10} more.`;
-                printLog(html, 'bot');
-            }
-            document.getElementById('termSearch').value = '';
+            // คำนวณจุดพิกัดชั้นวางของ
+            let rx = rackEl.offsetLeft + 40;
+            let ry = rackEl.offsetTop + 40;
+
+            moveAgent(selectedAgentId, rx, ry, () => {
+                // เมื่อเดินไปถึงชั้นวางแล้ว พิมพ์รายงานขึ้นจอบอร์ด
+                setTimeout(() => {
+                    document.getElementById(`agent-${selectedAgentId}`).classList.remove('busy');
+                    if (matches.length === 0) {
+                        addLog(`<b class="text-blue-300">👩🏻‍💻 [Checker] ${agent.name}:</b> หนูเดินไปส่องดูที่ชั้นวางแล้ว ไม่เจอพัสดุชื่อ <b>"${q}"</b> เลยค่ะเจ้านาย`, 'white', true);
+                    } else {
+                        let rowHtml = `<div class="mb-2 text-blue-300">👩🏻‍💻 เดินไปนับสต็อกที่ชั้นมาให้แล้วค่ะ เจอรุ่นที่ตรงกันตามนี้:</div><div class="space-y-1.5 max-h-[180px] overflow-y-auto custom-scrollbar pr-1">`;
+                        matches.slice(0, 10).forEach(m => {
+                            let cl = m.qty <= 0 ? 'text-red-400 font-bold' : (m.qty <= 5 ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold');
+                            rowHtml += `<div class="bg-slate-900 p-2 rounded-lg border border-slate-700 text-xs flex justify-between"><span><span class="text-slate-500">[${m.type}]</span> ${m.name}</span><span class="${cl}">${m.qty} ${m.unit}</span></div>`;
+                        });
+                        rowHtml += `</div>`;
+                        addLog(rowHtml, 'white', true);
+                    }
+                    // สั่งเดินกลับมานั่งโต๊ะทำงานตามเดิม
+                    moveAgent(selectedAgentId, agent.homeX + 28, agent.homeY - 15);
+                }, 800);
+            });
+            document.getElementById('b1Q').value = '';
         }
 
-        // --- Role: Runner ---
-        function taskFilter() {
-            let q = document.getElementById('termFilter').value.toLowerCase().trim();
-            let list = document.getElementById('termList');
+        // --- Task Agent 2: สั่งเบิกตัดสต็อก ---
+        function runRunnerFilter() {
+            let q = document.getElementById('b2Q').value.toLowerCase().trim();
+            let box = document.getElementById('b2FormList');
+            if(!q) { box.innerHTML = '<div class="text-slate-500 text-center text-xs mt-3">พิมพ์ค้นหารุ่นอุปกรณ์...</div>'; return; }
+
             let matches = allItems.filter(i => i.qty > 0 && (i.name.toLowerCase().includes(q) || i.sn.toLowerCase().includes(q)));
-            
-            if(matches.length === 0) { list.innerHTML = '<div class="text-slate-600 text-center text-xs mt-2 font-mono">NO ITEMS MATCHED</div>'; return; }
+            if(matches.length === 0) { box.innerHTML = '<div class="text-red-400 text-center text-xs mt-3">❌ ไม่พบของที่เบิกได้</div>'; return; }
 
             let html = '';
-            matches.slice(0, 15).forEach(m => {
-                let safeName = String(m.name).replace(/'/g, "\\'");
+            matches.slice(0, 10).forEach(m => {
+                let sName = String(m.name).replace(/'/g, "\\'");
                 html += `
-                <div class="bg-slate-800/50 hover:bg-amber-900/30 p-2 rounded cursor-pointer border border-slate-700/50 flex justify-between items-center text-xs font-mono" 
-                     onclick="openWithdrawForm('${m.ref}', ${m.idx}, '${safeName}', ${m.qty}, '${m.unit}')">
-                    <div class="truncate text-slate-300 w-3/4">${m.name}</div>
-                    <div class="text-amber-400 shrink-0">QTY: ${m.qty}</div>
+                <div class="bg-slate-900 hover:bg-slate-800 p-2 rounded-lg border border-slate-700 flex justify-between items-center text-xs cursor-pointer"
+                     onclick="triggerAgentWithdrawForm('${m.ref}', ${m.idx}, '${sName}', ${m.qty}, '${m.unit}', '${m.targetRack}')">
+                     <div><div class="text-white font-bold truncate max-w-[200px]">${m.name}</div><div class="text-[10px] text-slate-500">S/N: ${m.sn}</div></div>
+                     <span class="text-amber-500 font-mono font-bold">มี ${m.qty}</span>
                 </div>`;
             });
-            list.innerHTML = html;
+            box.innerHTML = html;
         }
 
-        function openWithdrawForm(ref, idx, name, maxQty, unit) {
-            terminalAction.innerHTML = `
-                <div class="flex items-center justify-between mb-2 text-amber-400 font-mono text-xs font-bold border-b border-amber-900/50 pb-1">
-                    <span>> TARGET: ${name.substring(0,20)}...</span>
-                    <button onclick="buildTerminalUI('RUNNER')" class="text-slate-500 hover:text-white">[CANCEL]</button>
-                </div>
-                <div class="flex gap-2 mb-2 font-mono text-xs">
-                    <div class="w-1/3 text-slate-400">QTY (Max ${maxQty}):</div>
-                    <input type="number" id="wQty" min="1" max="${maxQty}" value="1" class="w-2/3 bg-[#020617] border border-slate-700 text-white rounded p-1 outline-none text-center">
-                </div>
-                <div class="flex gap-2 mb-3 font-mono text-xs">
-                    <div class="w-1/3 text-slate-400">RECEIVER:</div>
-                    <input type="text" id="wUser" placeholder="Enter name..." class="w-2/3 bg-[#020617] border border-slate-700 text-emerald-400 rounded p-1 outline-none">
-                </div>
-                <button onclick="submitWithdraw('${ref}', ${idx}, '${name}', ${maxQty}, '${unit}')" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-mono font-bold py-2 rounded shadow text-sm">CONFIRM DEDUCT</button>
-            `;
+        function triggerAgentWithdrawForm(ref, idx, name, maxQty, unit, targetRack) {
+            activeWithdrawItem = { ref, idx, name, maxQty, unit, targetRack };
+            document.getElementById('wdItemName').innerText = name;
+            document.getElementById('wdMaxQty').innerText = `${maxQty} ${unit}`;
+            document.getElementById('wdQtyInput').value = 1;
+            document.getElementById('wdQtyInput').max = maxQty;
+            document.getElementById('wdUserInput').value = '';
+
+            document.getElementById('withdrawModal').classList.remove('hidden');
+            document.getElementById('withdrawModal').classList.add('flex');
+        }
+        function closeWithdrawModal() { document.getElementById('withdrawModal').classList.add('hidden'); document.getElementById('withdrawModal').classList.remove('flex'); activeWithdrawItem = null; }
+
+        async function executeAgentWithdraw() {
+            if(!activeWithdrawItem) return;
+            let qty = parseFloat(document.getElementById('wdQtyInput').value);
+            let user = document.getElementById('wdUserInput').value.trim();
+
+            if(!qty || qty <= 0 || qty > activeWithdrawItem.maxQty) { alert('ระบุจำนวนไม่ถูกต้อง'); return; }
+            if(!user) { alert('กรุณาพิมพ์ชื่อคนรับพัสดุ'); return; }
+
+            closeWithdrawModal();
+            let agent = window.agents.find(a => a.id === selectedAgentId);
+            
+            document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังไปหยิบของ..";
+            document.getElementById(`agent-${selectedAgentId}`).classList.add('busy');
+            addLog(`Runner Agent moving to ${activeWithdrawItem.targetRack}...`, 'system');
+
+            // 1. บอทเดินไปที่ชั้นวางของคลังเพื่อไปหยิบของ
+            let rackEl = document.getElementById(activeWithdrawItem.targetRack);
+            moveAgent(selectedAgentId, rackEl.offsetLeft + 40, rackEl.offsetTop + 40, async () => {
+                
+                // 2. เมื่อไปถึงชั้น แกล้งหยุดรอ 1 วินาทีเพื่อหยิบของ แล้วทำเรื่องยิงส่งฐานข้อมูล
+                showOverlay('SAVING DEDUCTION...');
+                try {
+                    let ref = activeWithdrawItem.ref; let idx = activeWithdrawItem.idx;
+                    let newQty = activeWithdrawItem.maxQty - qty;
+
+                    if(ref === 'MAIN') {
+                        dbMain.main[idx][5] = 'จ่ายแล้ว';
+                        dbMain.main[idx][7] = String(dbMain.main[idx][7]||'').replace(/\[จ่ายให้:.*?\]/g, "").trim() + ` [จ่ายให้: ${user}]`;
+                    } else if (ref === 'PARTS') dbSup.parts[idx][3] = newQty;
+                    else if (ref === 'ACC') dbSup.accessories[idx][4] = newQty;
+                    else if (ref === 'INK') dbSup.ink[idx][3] = newQty;
+
+                    // บันทึก Log withdrawals
+                    let todayStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                    dbMain.withdrawals = dbMain.withdrawals || [];
+                    dbMain.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: ref, specs: activeWithdrawItem.name, user: user, qty: qty, unit: activeWithdrawItem.unit, sn: ref==='MAIN'?dbMain.main[idx][4]:null });
+
+                    let updates = (ref === 'MAIN') ? [{ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }] : [{ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) }];
+                    let apiLogs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(เกม)', detail: `บอท ${agent.name} หยิบเบิก ${activeWithdrawItem.name} จำนวน ${qty} จ่ายให้ ${user}` }];
+
+                    let response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: apiLogs }) });
+                    let resJson = await response.json();
+                    if(resJson.status !== 'success') throw new Error("API error");
+
+                    buildIndex();
+                    runRunnerFilter(); // รีเฟรชหน้าช่องกรอกเบิกขวา
+
+                    hideOverlay();
+                    document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังนำไปส่ง..";
+
+                    // 3. บอทเดินนำของกลับไปส่งให้ผู้เบิกที่ออฟฟิศหน้าประตู
+                    moveAgent(selectedAgentId, 220, 480, () => {
+                        addLog(`<b class="text-amber-400">🏃‍♂️ [Runner] ${agent.name}:</b> ลูกพี่! ผมหิ้ว <b>${activeWithdrawItem.name}</b> จำนวน ${qty} ไปส่งให้คุณ ${user} เรียบร้อยแล้ว สต็อกถูกตัดทอนเรียบร้อย!`, 'white', true);
+                        document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected'; // ปลดเซ็ตสถานะยุ่ง
+                        
+                        // เดินกลับไปนั่งโต๊ะทำงานประจำจุด
+                        moveAgent(selectedAgentId, agent.homeX + 28, agent.homeY - 15);
+                    });
+
+                } catch(err) {
+                    hideOverlay();
+                    document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected';
+                    moveAgent(selectedAgentId, agent.homeX + 28, agent.homeY - 15);
+                    addLog('❌ การเบิกจ่ายผ่านบอทล้มเหลว เซิร์ฟเวอร์ขาดการติดต่อ', 'error');
+                }
+            });
+            document.getElementById('b2Q').value = '';
         }
 
-        async function submitWithdraw(ref, idx, name, maxQty, unit) {
-            let qty = parseFloat(document.getElementById('wQty').value);
-            let user = document.getElementById('wUser').value.trim();
-
-            if(!qty || qty <= 0 || qty > maxQty) { printLog('ERR: Invalid Quantity.', 'error'); return; }
-            if(!user) { printLog('ERR: Receiver name required.', 'error'); return; }
-
-            triggerAgentAnim('Running!');
-            showOverlay('SYNCING DATABASE...');
-            printLog(`Executing withdraw protocol...`, 'system');
-
-            try {
-                let newQty = maxQty - qty;
-                if (ref === 'MAIN') {
-                    dbMain.main[idx][5] = 'จ่ายแล้ว';
-                    dbMain.main[idx][7] = String(dbMain.main[idx][7]||'') + ` [จ่ายให้: ${user}]`;
-                } else if (ref === 'PARTS') { dbSup.parts[idx][3] = newQty; }
-                else if (ref === 'ACC') { dbSup.accessories[idx][4] = newQty; }
-                else if (ref === 'INK') { dbSup.ink[idx][3] = newQty; }
-
-                let todayStr = new Date().toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                dbMain.withdrawals = dbMain.withdrawals || [];
-                dbMain.withdrawals.push({ date: todayStr, action: 'เบิกจ่าย', category: ref, specs: name, user: user, qty: qty, unit: unit, sn: ref==='MAIN'?dbMain.main[idx][4]:null });
-
-                let updates = [];
-                if (ref === 'MAIN') updates.push({ key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
-                else updates.push({ key: WAREHOUSE_SUPPLIES_KEY, value: JSON.stringify(dbSup) }, { key: WAREHOUSE_KEY, value: JSON.stringify(dbMain) });
-
-                let logs = [{ station: 'คลังส่วนกลาง', action: 'เบิกจ่าย(Agent)', detail: `[เบิก] ${name} จำนวน ${qty} โดย ${user}` }];
-
-                let response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: logs }) });
-                let resJson = await response.json();
-                if(resJson.status !== 'success') throw new Error("API Error");
-
-                buildIndex(); 
-                hideOverlay();
-                printLog(`Success. ${qty}x ${name} deducted. Remaining: ${newQty}.`, 'bot');
-                buildTerminalUI('RUNNER');
-
-            } catch (e) {
-                hideOverlay();
-                printLog(`TRANSACTION FAILED. Connection error.`, 'error');
-            }
-        }
-
-        // --- Role: Reporter ---
-        async function taskExport() {
-            let filter = document.getElementById('termCat').value;
-            triggerAgentAnim('Compiling...');
-            printLog(`Compiling Data Matrix [${filter}]...`, 'system');
-            showOverlay('GENERATING EXCEL...');
+        // --- Task Agent 3: สรุปและดาวน์โหลดรายงาน ---
+        async function runReporterTask() {
+            let filter = document.getElementById('b3Q').value;
+            let agent = window.agents.find(a => a.id === selectedAgentId);
+            
+            document.getElementById(`pop-${selectedAgentId}`).innerText = "กำลังรวบรวมข้อมูล..";
+            document.getElementById(`agent-${selectedAgentId}`).classList.add('busy');
+            showOverlay('COMPILING EXCEL...');
+            addLog(`Reporter Agent is formatting Excel spreadsheets [Type: ${filter}]...`, 'system');
 
             try {
                 let reportData = [];
-
                 if (filter === 'ALL' || filter === 'MAIN' || filter === 'LOW') {
                     let groups = {};
                     if(dbMain.main) dbMain.main.forEach(r => {
-                        let type = String(r[1]||'').trim(); let brand = String(r[2]||'').trim(); let model = String(r[3]||'').trim(); let status = String(r[5]||'').trim();
-                        let key = `${type}|${brand}|${model}`;
-                        if (!groups[key]) groups[key] = { cat: 'MAIN', type: type, detail: `${brand} ${model}`.trim() || '-', qty: 0, unit: 'EA' };
-                        if (status.includes('ว่าง') || status.includes('พร้อมจ่าย')) groups[key].qty++;
+                        let type = String(r[1]||'').trim(); let key = `${type}|${String(r[2]||'').trim()}|${String(r[3]||'').trim()}`;
+                        if (!groups[key]) groups[key] = { cat: 'MAIN', type: type, detail: `${r[2]||''} ${r[3]||''}`.trim(), qty: 0, unit: 'เครื่อง' };
+                        if (String(r[5]||'').includes('ว่าง')) groups[key].qty++;
                     });
                     reportData.push(...Object.values(groups));
                 }
-
-                if (filter === 'ALL' || filter === 'PARTS' || filter === 'LOW') {
-                    if(dbSup.parts) dbSup.parts.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'PARTS', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[4]||'EA' }); });
-                    if(dbSup.accessories) dbSup.accessories.forEach(r => { let qty = parseFloat(r[4]); if(!isNaN(qty)) reportData.push({ cat: 'ACCESSORY', type: r[1]||'-', detail: r[2]||'-', qty: qty, unit: r[5]||'EA' }); });
+                if (filter === 'ALL' || filter === 'SUP' || filter === 'LOW') {
+                    if(dbSup.parts) dbSup.parts.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'PARTS', type: r[1]||'-', detail: r[2]||'-', qty, unit: r[4]||'ชิ้น' }); });
+                    if(dbSup.accessories) dbSup.accessories.forEach(r => { let qty = parseFloat(r[4]); if(!isNaN(qty)) reportData.push({ cat: 'ACC', type: r[1]||'-', detail: r[2]||'-', qty, unit: r[5]||'ชิ้น' }); });
+                    if(dbSup.ink) dbSup.ink.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'INK', type: r[1]||'-', detail: `รองรับ: ${r[2]||'-'}`, qty, unit: r[4]||'ตลับ' }); });
                 }
 
-                if (filter === 'ALL' || filter === 'INK' || filter === 'LOW') {
-                    if(dbSup.ink) dbSup.ink.forEach(r => { let qty = parseFloat(r[3]); if(!isNaN(qty)) reportData.push({ cat: 'INK', type: r[1]||'-', detail: `For: ${r[2]||'-'}`, qty: qty, unit: r[4]||'EA' }); });
-                }
+                if (filter === 'LOW') reportData = reportData.filter(i => i.qty <= 5).sort((a,b)=>a.qty-b.qty);
+                else reportData.sort((a,b) => a.cat.localeCompare(b.cat) || a.type.localeCompare(b.type));
 
-                if (filter === 'LOW') reportData = reportData.filter(i => i.qty <= 5).sort((a, b) => a.qty - b.qty);
-                else reportData.sort((a, b) => a.cat.localeCompare(b.cat) || a.type.localeCompare(b.type));
+                if(reportData.length === 0) { hideOverlay(); document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected'; addLog('ไม่พบข้อมูลตามเงื่อนไขที่สั่งงาน', 'error'); return; }
 
-                if(reportData.length === 0) {
-                    hideOverlay(); printLog(`Query returned 0 results.`, 'bot'); return;
-                }
+                const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Stock_Summary');
+                ws.addRow([`รายงานสรุปยอดพัสดุคงเหลือในโกดังส่วนกลาง`]);
+                ws.addRow([`จัดทำโดย Agent: ${agent.name} | ดึงข้อมูล ณ วันที่: ${new Date().toLocaleString('th-TH')}`]);
+                ws.addRow([]);
+                ws.addRow(['ลำดับ', 'หมวดหมู่', 'ประเภทพัสดุ', 'ยี่ห้อ/รุ่น/รายละเอียด', 'จำนวนคงเหลือ', 'หน่วยนับ']);
+                
+                let hRow = ws.getRow(4); hRow.font = { bold: true, color: {argb:'FFFFFFFF'} }; hRow.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF1E293B'} };
 
-                const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('Data');
-                ws.addRow(['CATEGORY', 'TYPE', 'DETAIL', 'QTY', 'UNIT']);
-                reportData.forEach(item => ws.addRow([item.cat, item.type, item.detail, item.qty, item.unit]));
-
+                reportData.forEach((item, i) => {
+                    let r = ws.addRow([i+1, item.cat, item.type, item.detail, item.qty, item.unit]);
+                    r.getCell(5).font = { bold: true, color: { argb: item.qty<=2 ? 'FFDC2626' : 'FF059669' } };
+                });
+                
+                ws.columns = [ {width: 8}, {width: 15}, {width: 20}, {width: 45}, {width: 15}, {width: 10} ];
                 const buffer = await wb.xlsx.writeBuffer();
-                let dateStr = new Date().getTime();
-                saveAs(new Blob([buffer]), `ADP_AGENT_${filter}_${dateStr}.xlsx`);
+                saveAs(new Blob([buffer]), `Report_By_${agent.name}_${new Date().getTime()}.xlsx`);
 
                 hideOverlay();
-                printLog(`File ADP_AGENT_${filter}_${dateStr}.xlsx downloaded.`, 'bot');
+                document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected';
+                addLog(`<b class="text-pink-400 font-bold">👨🏻‍💼 [Reporter] ${agent.name}:</b> จัดทำตารางสรุปแบบเสร็จสมบูรณ์เรียบร้อยแล้วครับเจ้านาย! ไฟล์รายงานดาวน์โหลดเข้าเครื่องสำเร็จแล้วครับผม 📉📊`, 'white', true);
 
-            } catch (e) {
+            } catch(e) {
                 hideOverlay();
-                printLog(`EXPORT FAILED: ${e.message}`, 'error');
+                document.getElementById(`agent-${selectedAgentId}`).className = 'agent-avatar selected';
+                addLog('❌ ระบบประมวลผล Excel พังขัดข้อง', 'error');
             }
         }
-
     </script>
 </body>
 </html>
