@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADP Pixel Agents</title>
+    <title>ADP AI Office HQ</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ใช้ Prompt สำหรับ UI และ VT323 สำหรับ Terminal -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=VT323&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -22,162 +21,120 @@
         body { margin: 0; overflow: hidden; background-color: #0f172a; color: white; user-select: none; }
         
         /* 🌟 CSS ISOMETRIC ENGINE */
-        .iso-container {
-            perspective: 1500px;
-            overflow: auto; /* ให้เลื่อนดูแผนที่ได้ */
-            cursor: grab;
-        }
+        .iso-container { perspective: 1500px; overflow: auto; cursor: grab; }
         .iso-container:active { cursor: grabbing; }
 
         .iso-world {
-            position: relative;
-            width: 800px; height: 800px;
-            margin: 100px auto;
+            position: relative; width: 800px; height: 800px; margin: 100px auto;
             transform-style: preserve-3d;
-            transform: rotateX(60deg) rotateZ(-45deg); /* มุมมอง Isometric 2.5D */
+            transform: rotateX(60deg) rotateZ(-45deg); 
             transition: transform 0.5s ease;
         }
 
-        /* พื้นห้อง (Floor) */
+        /* 🌟 แผนผังห้อง */
         .iso-floor {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #8b5a2b; /* สีพื้นไม้ */
-            background-image: 
-                linear-gradient(rgba(0,0,0,0.1) 2px, transparent 2px),
-                linear-gradient(90deg, rgba(0,0,0,0.1) 2px, transparent 2px);
-            background-size: 80px 80px; /* ขนาดตาราง Grid */
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 20px 20px 50px rgba(0,0,0,0.5);
-            border: 4px solid #5c3a21;
+            background-color: #8b5a2b; 
+            background-image: linear-gradient(rgba(0,0,0,0.1) 2px, transparent 2px), linear-gradient(90deg, rgba(0,0,0,0.1) 2px, transparent 2px);
+            background-size: 80px 80px; 
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 20px 20px 50px rgba(0,0,0,0.5); border: 4px solid #5c3a21;
         }
 
-        /* กำแพง (Walls) */
-        .iso-wall-left {
-            position: absolute; top: 0; left: -20px; width: 20px; height: 100%;
-            background-color: #94a3b8; transform-origin: right center; transform: rotateY(-90deg);
-            border: 2px solid #475569;
-        }
-        .iso-wall-top {
-            position: absolute; top: -20px; left: 0; width: 100%; height: 20px;
-            background-color: #cbd5e1; transform-origin: bottom center; transform: rotateX(90deg);
-            border: 2px solid #64748b;
-        }
+        .iso-wall-left { position: absolute; top: 0; left: -20px; width: 20px; height: 100%; background-color: #94a3b8; transform-origin: right center; transform: rotateY(-90deg); border: 2px solid #475569; }
+        .iso-wall-top { position: absolute; top: -20px; left: 0; width: 100%; height: 20px; background-color: #cbd5e1; transform-origin: bottom center; transform: rotateX(90deg); border: 2px solid #64748b; }
 
-        /* 🌟 CSS 2D Sprites (ตั้งขึ้นมาหาคนดู) */
-        .sprite-upright {
-            position: absolute;
-            transform-style: preserve-3d;
-            /* แก้ความเอียงของพื้น ให้หันหน้าตรงเข้ากล้อง */
-            transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg);
-            transform-origin: bottom center;
-            transition: all 0.3s ease;
-        }
-
-        /* โต๊ะทำงาน (Desk) */
+        /* 🌟 สิ่งของประกอบฉาก */
+        .sprite-upright { position: absolute; transform-style: preserve-3d; transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg); transform-origin: bottom center; transition: all 0.3s ease; }
         .prop-desk { width: 100px; height: 80px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80"><rect y="40" width="100" height="40" fill="%23b45309" rx="4"/><rect x="10" y="20" width="80" height="40" fill="%23fcd34d" rx="2"/><rect x="30" y="10" width="40" height="25" fill="%231e293b" rx="2" stroke="%230f172a" stroke-width="2"/><rect x="45" y="35" width="10" height="10" fill="%2394a3b8"/></svg>') no-repeat bottom center; background-size: contain; filter: drop-shadow(10px 20px 10px rgba(0,0,0,0.5)); margin-left: -50px; margin-top: -80px;}
-        
-        /* ชั้นวางคลังสินค้า (Rack) */
         .prop-rack { width: 120px; height: 140px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140"><rect x="10" y="10" width="100" height="130" fill="%23475569" stroke="%231e293b" stroke-width="4"/><rect x="20" y="30" width="80" height="20" fill="%23ca8a04"/><rect x="20" y="70" width="35" height="20" fill="%233b82f6"/><rect x="65" y="70" width="35" height="20" fill="%23ef4444"/><rect x="20" y="110" width="80" height="20" fill="%2310b981"/></svg>') no-repeat bottom center; background-size: contain; filter: drop-shadow(15px 25px 15px rgba(0,0,0,0.6)); margin-left: -60px; margin-top: -140px;}
 
-        /* ตัวละคร (Agent Bot) */
-        .agent-bot {
-            width: 50px; height: 70px;
-            margin-left: -25px; margin-top: -80px; /* ขยับให้ยืนอยู่หลังโต๊ะพอดี */
-            cursor: pointer;
-            filter: drop-shadow(5px 10px 5px rgba(0,0,0,0.4));
-            animation: idle 2s infinite alternate;
-        }
-        .agent-bot:hover { filter: drop-shadow(0 0 15px rgba(99,102,241,0.8)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); }
-        .agent-bot.active { filter: drop-shadow(0 0 20px rgba(16,185,129,1)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); }
-
+        /* ================================================= */
+        /* 🌟 CSS PIXEL AVATAR GENERATOR (ไม่ต้องใช้รูปภาพ!) */
+        /* ================================================= */
+        .agent-bot { width: 60px; height: 80px; margin-left: -30px; margin-top: -90px; cursor: pointer; filter: drop-shadow(5px 10px 5px rgba(0,0,0,0.4)); animation: idle 2s infinite alternate; }
+        .agent-bot:hover { filter: drop-shadow(0 0 15px rgba(99,102,241,0.8)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); z-index: 50 !important; }
+        .agent-bot.active { filter: drop-shadow(0 0 20px rgba(16,185,129,1)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) scale(1.1); z-index: 50 !important; }
         @keyframes idle { 0% { transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(0); } 100% { transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(-5px); } }
 
+        /* ชิ้นส่วน 2D Pixel Character */
+        .pixel-char { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%) scale(1.5); width: 24px; height: 36px; }
+        .p-head { position: absolute; top: 4px; left: 4px; width: 16px; height: 16px; background: #fcd34d; border: 2px solid #000; z-index: 3; border-radius: 2px; }
+        .p-eyes { position: absolute; top: 6px; left: 3px; width: 2px; height: 2px; background: #000; box-shadow: 6px 0 0 #000; }
+        .p-hair-m { position: absolute; top: -4px; left: -2px; width: 16px; height: 6px; background: #451a03; border: 2px solid #000; display: none; border-radius: 2px 2px 0 0; }
+        .p-hair-f { position: absolute; top: -4px; left: -2px; width: 16px; height: 22px; background: #451a03; border: 2px solid #000; display: none; border-radius: 4px 4px 0 0; }
+        .p-body { position: absolute; top: 18px; left: 4px; width: 16px; height: 12px; border: 2px solid #000; z-index: 2; border-radius: 2px; }
+        .p-suit-shirt { position: absolute; top: 0; left: 4px; width: 4px; height: 8px; background: #fff; display: none; z-index: 2; }
+        .p-suit-tie { position: absolute; top: 2px; left: 5px; width: 2px; height: 6px; background: #ef4444; display: none; z-index: 3; }
+        .p-legs { position: absolute; top: 28px; left: 4px; width: 16px; height: 10px; background: #1e293b; border: 2px solid #000; z-index: 1; border-top: none; }
+        .p-legs-gap { position: absolute; bottom: -2px; left: 4px; width: 4px; height: 6px; background: transparent; border: 2px solid #000; border-bottom: none; border-top: none; }
+
+        /* Logic ควบคุมการแสดงผลตาม Class */
+        .gender-MALE .p-hair-m { display: block; }
+        .gender-FEMALE .p-hair-f { display: block; }
+        .outfit-SUIT .p-body { background: #0f172a; } /* สูทสีดำ */
+        .outfit-SUIT .p-suit-shirt, .outfit-SUIT .p-suit-tie { display: block; }
+        .outfit-WORK .p-body { background: #3b82f6; } /* เสื้อช่าง/ฟ้า */
+        .outfit-CASUAL .p-body { background: #10b981; } /* เสื้อลำลองเขียว */
+
         /* ป้ายชื่อและสถานะ */
-        .agent-label {
-            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
-            background: rgba(15,23,42,0.8); border: 1px solid #475569;
-            color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;
-            white-space: nowrap; pointer-events: none; font-weight: bold;
-        }
-        .agent-bubble {
-            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
-            background: white; color: #0f172a; font-size: 12px; padding: 4px 8px; border-radius: 8px;
-            white-space: nowrap; font-weight: bold; font-family: 'Prompt';
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
+        .agent-label { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.8); border: 1px solid #475569; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; white-space: nowrap; pointer-events: none; font-weight: bold; }
+        .agent-bubble { position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: white; color: #0f172a; font-size: 12px; padding: 4px 8px; border-radius: 8px; white-space: nowrap; font-weight: bold; font-family: 'Prompt'; box-shadow: 0 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .agent-bubble::after { content: ''; position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); border-width: 5px 5px 0; border-style: solid; border-color: white transparent transparent transparent; }
         .agent-bot.working .agent-bubble { opacity: 1; animation: bounce 1s infinite; }
-
         @keyframes bounce { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
 
         /* 🌟 Terminal CSS */
         .terminal-scroll::-webkit-scrollbar { width: 8px; }
         .terminal-scroll::-webkit-scrollbar-track { background: #020617; }
         .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        
-        .scanline {
-            width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.1) 50%, rgba(0,0,0,0) 100%);
-            position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 8s linear infinite; z-index: 50;
-        }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .scanline { width: 100%; height: 100px; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(16,185,129,0.1) 50%, rgba(0,0,0,0) 100%); position: absolute; top: 0; left: 0; pointer-events: none; animation: scan 8s linear infinite; z-index: 50; }
         @keyframes scan { 0% { transform: translateY(-100px); } 100% { transform: translateY(100vh); } }
-
         .log-entry { animation: fadeIn 0.3s ease-out forwards; border-left: 2px solid #10b981; padding-left: 8px; margin-bottom: 8px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-
-        /* Grid System สำหรับวางของ */
-        /* Grid ขนาด 80x80 (10x10 ช่อง) */
     </style>
 </head>
 <body class="flex h-screen w-screen overflow-hidden text-sm">
 
-    <!-- 🌟 LEFT SIDE: 2D Isometric World -->
     <div class="flex-1 relative flex flex-col bg-[#0f172a] shadow-[inset_-30px_0_50px_rgba(0,0,0,0.8)] z-10">
         
-        <!-- Top Toolbar -->
         <div class="h-14 bg-slate-900/80 backdrop-blur border-b border-slate-700 flex items-center justify-between px-6 shrink-0 relative z-50">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(99,102,241,0.6)]">PIXEL</div>
-                <h1 class="font-bold text-white tracking-widest text-lg">AGENTS <span class="text-slate-500 font-light text-sm">v1.0</span></h1>
+                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(99,102,241,0.6)]">PX</div>
+                <h1 class="font-bold text-white tracking-widest text-lg">AGENT <span class="text-slate-500 font-light text-sm">v2.0</span></h1>
             </div>
             <div class="flex items-center gap-4">
                 <span id="sysStatus" class="flex items-center gap-2 text-xs font-bold text-amber-400 animate-pulse"><span class="w-2 h-2 rounded-full bg-amber-400"></span> DB CONNECTING...</span>
-                <button onclick="window.location.href='warehouse.html'" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold border border-slate-600 transition-colors">ย้อนกลับ</button>
+                <button onclick="window.location.href='warehouse.html'" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-bold border border-slate-600 transition-colors shadow-lg">ย้อนกลับ</button>
             </div>
         </div>
 
-        <!-- The Isometric Canvas -->
         <div class="flex-1 iso-container relative" id="dragContainer">
             <div class="iso-world" id="isoWorld">
                 <div class="iso-floor"></div>
                 <div class="iso-wall-left"></div>
                 <div class="iso-wall-top"></div>
                 
-                <!-- 📦 คลังสินค้า (วาง Rack แบบ Fix) -->
-                <!-- x, y คือพิกัด Grid (ช่องละ 80px) -->
                 <div class="sprite-upright prop-rack" style="left: 640px; top: 80px; z-index: 720;"></div>
                 <div class="sprite-upright prop-rack" style="left: 640px; top: 240px; z-index: 880;"></div>
                 <div class="sprite-upright prop-rack" style="left: 640px; top: 400px; z-index: 1040;"></div>
                 <div class="sprite-upright prop-rack" style="left: 640px; top: 560px; z-index: 1200;"></div>
                 
-                <!-- พรมแบ่งโซนออฟฟิศ -->
-                <div class="absolute" style="left: 80px; top: 80px; width: 400px; height: 640px; background: rgba(59,130,246,0.2); border: 2px dashed rgba(59,130,246,0.5);"></div>
-                <div class="sprite-upright text-4xl" style="left: 120px; top: 120px; z-index: 240; filter: drop-shadow(5px 5px 5px rgba(0,0,0,0.5)); transform: translateZ(0px) rotateZ(45deg) rotateX(-60deg) translateY(-20px);">🪴</div>
+                <div class="absolute" style="left: 80px; top: 80px; width: 400px; height: 640px; background: rgba(59,130,246,0.1); border: 2px dashed rgba(59,130,246,0.3);"></div>
 
-                <!-- 💻 โต๊ะทำงาน (Desks) วางเตรียมไว้ 4 ตัว -->
                 <div class="sprite-upright prop-desk" id="desk-1" style="left: 200px; top: 200px; z-index: 400;"></div>
                 <div class="sprite-upright prop-desk" id="desk-2" style="left: 400px; top: 200px; z-index: 600;"></div>
                 <div class="sprite-upright prop-desk" id="desk-3" style="left: 200px; top: 500px; z-index: 700;"></div>
                 <div class="sprite-upright prop-desk" id="desk-4" style="left: 400px; top: 500px; z-index: 900;"></div>
 
-                <!-- Agents จะถูก Render แทรกตรงนี้ผ่าน JS -->
                 <div id="agentsLayer"></div>
             </div>
         </div>
 
-        <!-- 🌟 Action Bar (ปุ่มสร้าง Agent ล่างซ้าย) -->
         <div class="absolute bottom-6 left-6 z-50 flex gap-3">
             <button onclick="openHireModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold shadow-[0_10px_20px_rgba(16,185,129,0.4)] transition-transform active:scale-95 flex items-center gap-2 border border-emerald-400">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Hire Agent
+                สร้างตัวละครบอท
             </button>
             <button onclick="resetCamera()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 rounded-xl font-bold shadow-lg transition-transform active:scale-95 border border-slate-600">
                 🎯 Reset View
@@ -185,72 +142,83 @@
         </div>
     </div>
 
-    <!-- 🌟 RIGHT SIDE: Terminal Console -->
-    <div class="w-full lg:w-[450px] bg-[#020617] border-l border-slate-800 flex flex-col relative z-20">
+    <div class="w-full lg:w-[400px] bg-[#020617] border-l border-slate-800 flex flex-col relative z-20 shadow-2xl">
         <div class="scanline"></div>
         
-        <!-- Terminal Tab -->
         <div class="h-10 bg-[#0f172a] flex items-center px-4 border-b border-slate-800 shrink-0 gap-2">
             <span class="text-slate-400 font-mono text-xs font-bold tracking-widest">TERMINAL</span>
             <span class="text-slate-600 text-xs">/</span>
             <span id="activeAgentName" class="text-indigo-400 font-mono text-xs font-bold">NO_AGENT_SELECTED</span>
         </div>
 
-        <!-- Console Output -->
         <div id="terminalOutput" class="flex-1 overflow-y-auto terminal-scroll p-4 font-mono text-[13px] leading-relaxed pb-8">
             <div class="text-slate-500 mb-4">
-                [SYSTEM] Initializing Claude Code Engine v2.1.49...<br>
-                [SYSTEM] Welcome to Pixel Agents Workspace.
+                [SYSTEM] Initializing Custom Pixel Agent System...<br>
+                [SYSTEM] Welcome to the Interactive Warehouse.
             </div>
         </div>
 
-        <!-- Interaction Form (Dynamic) -->
         <div id="terminalAction" class="bg-[#0f172a] border-t border-slate-800 p-5 shrink-0 min-h-[250px] flex flex-col justify-center transition-all">
             <div class="text-center text-slate-500 font-mono animate-pulse uppercase tracking-widest text-sm flex flex-col items-center gap-2">
                 <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
-                Select an agent to assign tasks.
+                สร้างบอทแล้วคลิกเลือกเพื่อมอบหมายงาน
             </div>
         </div>
     </div>
 
-    <!-- 🌟 Modal: จ้าง Agent ใหม่ -->
     <div id="hireModal" class="fixed inset-0 bg-slate-900/80 z-[1000] hidden flex-col items-center justify-center backdrop-blur-sm p-4">
-        <div class="bg-slate-800 border border-slate-600 rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fadeIn font-sans">
-            <h3 class="text-white font-bold text-xl mb-4 flex items-center gap-2">🧑‍💻 Hire New Agent</h3>
+        <div class="bg-slate-800 border-2 border-indigo-500/50 rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-fadeIn font-sans flex flex-col sm:flex-row gap-6">
             
-            <div class="space-y-4 mb-6">
-                <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">Agent Name</label>
-                    <input type="text" id="agentName" placeholder="e.g. สมชาย, Bot-01" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-indigo-500">
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">Assign Role (หน้าที่)</label>
-                    <select id="agentRole" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 text-white outline-none focus:border-indigo-500 cursor-pointer">
-                        <option value="CHECKER">🔍 Checker (ตรวจเช็คสต็อก)</option>
-                        <option value="RUNNER">🏃‍♂️ Runner (วิ่งเบิกจ่ายตัดสต็อก)</option>
-                        <option value="REPORTER">📊 Reporter (สรุปรายงาน Excel)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-400 mb-1 block">Avatar (อิโมจิ)</label>
-                    <div class="flex gap-2 justify-center text-3xl bg-slate-900 p-2 rounded-lg border border-slate-600">
-                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('👨‍💻')">👨‍💻</div>
-                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('👩‍💻')">👩‍💻</div>
-                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('🤖')">🤖</div>
-                        <div class="cursor-pointer hover:scale-125 transition-transform" onclick="selectAvatar('👾')">👾</div>
-                        <input type="hidden" id="agentAvatar" value="👨‍💻">
+            <div class="w-full sm:w-1/3 flex flex-col items-center justify-center bg-slate-900 rounded-xl border border-slate-700 p-4">
+                <h4 class="text-xs font-bold text-slate-400 mb-4 tracking-widest uppercase">Preview</h4>
+                <div class="relative w-16 h-24 scale-125 mb-4">
+                    <div id="previewChar" class="pixel-char gender-MALE outfit-SUIT">
+                        <div class="p-head"><div class="p-hair-m"></div><div class="p-hair-f"></div><div class="p-eyes"></div></div>
+                        <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
+                        <div class="p-legs"><div class="p-legs-gap"></div></div>
                     </div>
                 </div>
             </div>
-            
-            <div class="flex gap-3">
-                <button onclick="closeHireModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-lg transition-colors">Cancel</button>
-                <button onclick="hireAgent()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">Hire Agent</button>
+
+            <div class="w-full sm:w-2/3 space-y-4">
+                <h3 class="text-white font-bold text-lg mb-2 border-b border-slate-700 pb-2">🛠️ สร้าง Agent ใหม่</h3>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">ชื่อบอท (Name)</label>
+                    <input type="text" id="agentName" placeholder="เช่น น้องสมหมาย" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 mb-1 block">เพศ / ทรงผม</label>
+                        <select id="agentGender" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm cursor-pointer">
+                            <option value="MALE">ชาย (ผมสั้น)</option>
+                            <option value="FEMALE">หญิง (ผมยาว)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-400 mb-1 block">ชุดแต่งกาย</label>
+                        <select id="agentOutfit" onchange="updatePreview()" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm cursor-pointer">
+                            <option value="SUIT">สูททำงาน (สีดำ)</option>
+                            <option value="WORK">ชุดช่าง (สีฟ้า)</option>
+                            <option value="CASUAL">ชุดลำลอง (สีเขียว)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">หน้าที่ (Role)</label>
+                    <select id="agentRole" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-white outline-none focus:border-indigo-500 text-sm cursor-pointer">
+                        <option value="CHECKER">🔍 หน้าที่: เช็คยอดและหาสินค้า</option>
+                        <option value="RUNNER">🏃‍♂️ หน้าที่: เบิกจ่ายและตัดสต็อก</option>
+                        <option value="REPORTER">📊 หน้าที่: สรุปและออกรายงาน Excel</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeHireModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-lg text-sm transition-colors">ยกเลิก</button>
+                    <button onclick="hireAgent()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition-colors shadow-lg">ยืนยันสร้างตัวละคร</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 🌟 Overlay โหลดข้อมูล/ทำงาน -->
     <div id="overlay" class="fixed inset-0 bg-slate-950/90 z-[1500] hidden flex-col items-center justify-center backdrop-blur-md">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full mb-4 animate-spin"></div>
         <p class="font-mono text-emerald-400 text-lg tracking-widest font-bold animate-pulse" id="overlayText">WORKING...</p>
@@ -310,13 +278,13 @@
         slider.addEventListener('mouseup', () => { isDragging = false; });
         slider.addEventListener('mousemove', (e) => { if (!isDragging) return; e.preventDefault(); const x = e.pageX - slider.offsetLeft; const y = e.pageY - slider.offsetTop; slider.scrollLeft = scrollLeft - (x - startX); slider.scrollTop = scrollTop - (y - startY); });
         
-        function resetCamera() { slider.scrollTo({ top: 300, left: 300, behavior: 'smooth' }); }
+        function resetCamera() { slider.scrollTo({ top: 200, left: 200, behavior: 'smooth' }); }
 
         // ==========================================
         // 🌟 Database Logic
         // ==========================================
         window.onload = async function() {
-            setTimeout(resetCamera, 500); // ตั้งกล้องตรงกลางเมื่อโหลดเสร็จ
+            setTimeout(resetCamera, 500); 
             try {
                 const res = await fetch(`${API_URL}?key=ALL_DATA`);
                 const result = await res.json();
@@ -348,47 +316,67 @@
         }
 
         // ==========================================
-        // 🌟 Agent System Logic
+        // 🌟 Agent Character System
         // ==========================================
-        function openHireModal() { document.getElementById('hireModal').classList.remove('hidden'); document.getElementById('hireModal').classList.add('flex'); }
-        function closeHireModal() { document.getElementById('hireModal').classList.add('hidden'); document.getElementById('hireModal').classList.remove('flex'); }
-        function selectAvatar(emoji) { document.getElementById('agentAvatar').value = emoji; }
+        function updatePreview() {
+            let gender = document.getElementById('agentGender').value;
+            let outfit = document.getElementById('agentOutfit').value;
+            let preview = document.getElementById('previewChar');
+            // รีเซ็ตคลาส แล้วใส่ใหม่
+            preview.className = `pixel-char gender-${gender} outfit-${outfit}`;
+        }
+
+        function openHireModal() { 
+            updatePreview(); // อัปเดตพรีวิวครั้งแรก
+            document.getElementById('hireModal').classList.remove('hidden'); 
+            document.getElementById('hireModal').classList.add('flex'); 
+        }
+        function closeHireModal() { 
+            document.getElementById('hireModal').classList.add('hidden'); 
+            document.getElementById('hireModal').classList.remove('flex'); 
+        }
 
         function hireAgent() {
-            let name = document.getElementById('agentName').value.trim() || 'Agent-' + (agents.length + 1);
+            let name = document.getElementById('agentName').value.trim() || 'Bot-' + (agents.length + 1);
             let role = document.getElementById('agentRole').value;
-            let avatar = document.getElementById('agentAvatar').value;
+            let gender = document.getElementById('agentGender').value;
+            let outfit = document.getElementById('agentOutfit').value;
 
-            // หาโต๊ะว่าง
             let desk = availableDesks.find(d => !d.occupied);
-            if (!desk) { alert("ไม่มีโต๊ะทำงานว่างแล้ว!"); closeHireModal(); return; }
+            if (!desk) { alert("ไม่มีโต๊ะทำงานว่างแล้วครับ! (สูงสุด 4 ตัว)"); closeHireModal(); return; }
             
             desk.occupied = true;
             let newId = Date.now();
             
-            let agentObj = { id: newId, name: name, role: role, avatar: avatar, deskId: desk.id, x: desk.x, y: desk.y };
+            let agentObj = { id: newId, name: name, role: role, gender: gender, outfit: outfit, deskId: desk.id, x: desk.x, y: desk.y };
             agents.push(agentObj);
             
             renderAgent(agentObj);
-            printLog(`New agent hired: ${name} [${role}]`, 'system');
+            printLog(`New pixel agent created: ${name} [${role}]`, 'system');
             closeHireModal();
             
-            // Auto active
             activateAgent(newId);
         }
 
         function renderAgent(agent) {
             const layer = document.getElementById('agentsLayer');
-            // Z-index คำนวณจากพิกัด Y ให้ตัวที่อยู่ล่างบังตัวที่อยู่บน
             let zIndex = agent.y + 10; 
-            
             let color = agent.role === 'CHECKER' ? '#3b82f6' : (agent.role === 'RUNNER' ? '#f59e0b' : '#ec4899');
+
+            // สร้าง HTML ของ Pixel Character โดยใช้ CSS ที่เราเตรียมไว้
+            let pixelHtml = `
+                <div class="pixel-char gender-${agent.gender} outfit-${agent.outfit}">
+                    <div class="p-head"><div class="p-hair-m"></div><div class="p-hair-f"></div><div class="p-eyes"></div></div>
+                    <div class="p-body"><div class="p-suit-shirt"></div><div class="p-suit-tie"></div></div>
+                    <div class="p-legs"><div class="p-legs-gap"></div></div>
+                </div>
+            `;
 
             let html = `
             <div id="agent-${agent.id}" class="sprite-upright agent-bot" style="left: ${agent.x}px; top: ${agent.y}px; z-index: ${zIndex};" onclick="activateAgent(${agent.id})">
                 <div class="bot-aura" style="border-color: transparent;"></div>
                 <div class="agent-bubble">Working...</div>
-                ${agent.avatar}
+                ${pixelHtml}
                 <div class="agent-label" style="border-color: ${color}; color: ${color};">${agent.name}</div>
             </div>`;
             layer.insertAdjacentHTML('beforeend', html);
@@ -398,18 +386,15 @@
             activeAgentId = id;
             let agent = agents.find(a => a.id === id);
             
-            // อัปเดตกราฟิกตัวที่ถูกเลือก
             document.querySelectorAll('.agent-bot').forEach(b => b.classList.remove('active'));
             let el = document.getElementById(`agent-${id}`);
             if(el) el.classList.add('active');
 
-            // อัปเดต Terminal Header
             document.getElementById('activeAgentName').innerText = `${agent.name} [${agent.role}]`;
             document.getElementById('activeAgentName').className = `font-mono text-xs font-bold ${agent.role === 'CHECKER' ? 'text-blue-400' : (agent.role === 'RUNNER' ? 'text-amber-400' : 'text-pink-400')}`;
 
-            printLog(`Hi! I'm ${agent.name}. Ready for task.`, 'bot');
+            printLog(`สวัสดีครับ! ผม ${agent.name} ยินดีรับคำสั่งครับ`, 'bot');
 
-            // เปลี่ยนหน้าจอ Terminal Action ตาม Role
             buildTerminalUI(agent.role);
         }
 
@@ -442,7 +427,7 @@
                     <input type="text" id="termFilter" placeholder="Search item to withdraw..." class="w-full bg-[#020617] border border-amber-900/50 text-emerald-400 rounded p-2 text-sm outline-none focus:border-amber-500 font-mono mb-2" oninput="taskFilter()">
                     <div id="termList" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 mb-2 max-h-[100px] border border-slate-800 bg-[#020617] p-1 rounded"></div>
                 `;
-                taskFilter(); // Load all initial
+                taskFilter(); 
             }
             else if (role === 'REPORTER') {
                 terminalAction.innerHTML = `
