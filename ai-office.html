@@ -283,6 +283,7 @@
         // ==========================================
         // 🌟 Database Logic
         // ==========================================
+        // 🌟 โหลดข้อมูลจาก Google Sheet เมื่อเปิดเว็บ
         window.onload = async function() {
             setTimeout(resetCamera, 500); 
             try {
@@ -292,6 +293,18 @@
                 if (result.value) {
                     if(result.value[WAREHOUSE_KEY]) dbMain = JSON.parse(result.value[WAREHOUSE_KEY]);
                     if(result.value[WAREHOUSE_SUPPLIES_KEY]) dbSup = JSON.parse(result.value[WAREHOUSE_SUPPLIES_KEY]);
+                    
+                    // 🌟 ดึงข้อมูล Agents จากฐานข้อมูลมาแสดงผล
+                    if(result.value['ADP_AGENTS_DB']) {
+                        agents = JSON.parse(result.value['ADP_AGENTS_DB']);
+                        agents.forEach(a => {
+                            let desk = deskPositions.find(d => d.id === a.deskId);
+                            if(desk) desk.occupied = true; // จองโต๊ะ
+                            renderAgent(a); // วาดตัวละครลงห้อง
+                        });
+                        addLog(`Loaded ${agents.length} agents from database.`, 'system');
+                    }
+
                     buildIndex();
                 }
                 
@@ -336,26 +349,38 @@
             document.getElementById('hireModal').classList.remove('flex'); 
         }
 
-        function hireAgent() {
-            let name = document.getElementById('agentName').value.trim() || 'Bot-' + (agents.length + 1);
-            let role = document.getElementById('agentRole').value;
-            let gender = document.getElementById('agentGender').value;
-            let outfit = document.getElementById('agentOutfit').value;
+        async function hireAgent() {
+            let name = document.getElementById('inputName').value.trim() || 'Agent-' + (agents.length + 1);
+            let role = document.getElementById('inputRole').value;
+            let gender = document.getElementById('inputGender').value;
+            let outfit = document.getElementById('inputOutfit').value;
 
-            let desk = availableDesks.find(d => !d.occupied);
-            if (!desk) { alert("ไม่มีโต๊ะทำงานว่างแล้วครับ! (สูงสุด 4 ตัว)"); closeHireModal(); return; }
-            
+            let desk = deskPositions.find(d => !d.occupied);
+            if(!desk) { alert("ที่นั่งออฟฟิศเต็มแล้วค่ะ!"); closeHireModal(); return; }
+
             desk.occupied = true;
-            let newId = Date.now();
+            let id = Date.now();
             
-            let agentObj = { id: newId, name: name, role: role, gender: gender, outfit: outfit, deskId: desk.id, x: desk.x, y: desk.y };
+            let agentObj = { id, name, role, gender, outfit, deskId: desk.id, homeX: desk.x, intentX: desk.x, homeY: desk.y, intentY: desk.y };
             agents.push(agentObj);
-            
+
             renderAgent(agentObj);
-            printLog(`New pixel agent created: ${name} [${role}]`, 'system');
             closeHireModal();
-            
-            activateAgent(newId);
+            addLog(`Hired new agent: "${name}" assigned to department.`, 'system');
+
+            // สั่งให้เดินเข้าโต๊ะทำงาน
+            moveAgent(id, desk.x + 28, desk.y - 15);
+            document.getElementById('inputName').value = '';
+            selectAgent(id);
+
+            // 🌟 สั่งเซฟข้อมูล Agents ลง Google Sheet
+            try {
+                let updates = [{ key: 'ADP_AGENTS_DB', value: JSON.stringify(agents) }];
+                let logs = [{ station: 'ระบบจัดการ AI', action: 'เพิ่ม Agent', detail: `จ้างบอทใหม่ชื่อ ${agentObj.name} (ตำแหน่ง: ${agentObj.role}) เข้าสู่ออฟฟิศ` }];
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'SYNC_ASSETS', updates: updates, logs: logs }) });
+            } catch(e) {
+                console.error("Save agent failed");
+            }
         }
 
         function renderAgent(agent) {
