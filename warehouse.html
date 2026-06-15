@@ -682,6 +682,9 @@
                                 Agent Network
                             </h3>
                         </div>
+                        <button id="btnEditOffice" class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-2 rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:text-orange-500 transition-colors mr-2" title="โหมดลากวาง Agent" onclick="toggleOfficeEditMode()">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"></path></svg>
+                        </button>
                         <button class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-2 rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:text-blue-500 transition-colors" title="Toggle Diagram View" onclick="document.getElementById('iso-grid').classList.toggle('diagram-view')">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                         </button>
@@ -697,16 +700,14 @@
                             
                             <!-- ServerBot (Top Left) -->
                             <div class="sd-character ai-character" id="char-serverbot" onclick="openAiChat('serverbot')" style="top: 15%; left: 10%;">
-                                <div class="sd-avatar bg-gradient-to-br from-indigo-500 to-purple-600">
-                                    <span class="emoji">🗄️</span>
+                                <div class="sd-avatar bg-cover bg-center" style="background-image: url('pixel_serverbot_1781542695589.png'); image-rendering: pixelated; width: 64px; height: 64px; background-color: transparent;">
                                 </div>
                                 <div class="sd-label">ServerBot</div>
                             </div>
 
                             <!-- BoxBot (Top Right) -->
                             <div class="sd-character ai-character" id="char-boxbot" onclick="openAiChat('boxbot')" style="top: 15%; right: 10%;">
-                                <div class="sd-avatar bg-gradient-to-br from-red-500 to-orange-500">
-                                    <span class="emoji">📦</span>
+                                <div class="sd-avatar bg-cover bg-center relative" style="background-image: url('pixel_boxbot_1781542707616.png'); image-rendering: pixelated; width: 64px; height: 64px; background-color: transparent;">
                                     <div id="badge-boxbot" class="absolute -top-2 -right-2 bg-red-600 text-white text-[12px] font-black w-7 h-7 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-bounce" style="display: none;">0</div>
                                 </div>
                                 <div class="sd-label">BoxBot</div>
@@ -714,19 +715,16 @@
 
                             <!-- Finder (Center) -->
                             <div class="sd-character ai-character" id="char-finder" onclick="openAiChat('finder')" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                                <div class="sd-avatar bg-gradient-to-br from-amber-400 to-orange-500" style="width: 100px; height: 100px; font-size: 50px;">
-                                    <span class="emoji">🔍</span>
+<div class="sd-avatar bg-cover bg-center" style="background-image: url('pixel_finder_1781542724358.png'); image-rendering: pixelated; width: 100px; height: 100px; background-color: transparent; box-shadow: none;">
                                 </div>
                                 <div class="sd-label text-sm px-4 py-1.5">Finder</div>
                             </div>
 
                             <!-- Stocky (Bottom Left) -->
                             <div class="sd-character ai-character active-agent" id="char-stocky" onclick="openAiChat('stocky')" style="bottom: 10%; left: 20%;">
-                                <div class="sd-avatar bg-gradient-to-br from-emerald-500 to-teal-600">
-                                    <span class="emoji">📋</span>
+                                <div class="sd-avatar bg-cover bg-center" style="background-image: url('pixel_stocky_1781542734794.png'); image-rendering: pixelated; width: 64px; height: 64px; background-color: transparent; box-shadow: none;">
                                 </div>
                                 <div class="sd-label">Stocky</div>
-                            </div>
 
                             <!-- Buyer (Bottom Right) -->
                             <div class="sd-character ai-character" id="char-buyer" onclick="openAiChat('buyer')" style="bottom: 10%; right: 20%;">
@@ -3494,11 +3492,14 @@ async function commitScan() {
                  
                  // Randomize position slightly for visual diagram feel, or use flex wrap
                  html += `
-                 <div class="p-3 rounded-xl border-2 shadow-sm cursor-pointer transition-transform hover:-translate-y-1 hover:shadow-md min-w-[140px] text-center ${statusColor}"
-                      onclick="openStockLookup('${s.station}')" title="คลิกเพื่อดูอุปกรณ์ในสถานีนี้">
+                 <div class="p-3 rounded-xl border-2 shadow-sm transition-transform hover:-translate-y-1 hover:shadow-md min-w-[140px] text-center ${statusColor}">
                       <div class="font-bold text-sm mb-1">${icon} ${s.station}</div>
                       <div class="text-[10px] opacity-80 uppercase tracking-wider">${s.group}</div>
                       <div class="mt-2 text-xs font-medium">อุปกรณ์: ${s.count}</div>
+                      <div class="mt-3 flex gap-1 justify-center">
+                          <button onclick="openStockLookup('${s.station}')" class="px-2 py-1 bg-white/50 hover:bg-white rounded text-xs border border-current flex-1 transition-colors">📋 รายการ</button>
+                          <button onclick="openRoomLayout('${s.station}', event)" class="px-2 py-1 bg-white/50 hover:bg-white rounded text-xs border border-current flex-1 transition-colors">📐 จัดห้อง</button>
+                      </div>
                  </div>
                  `;
              });
@@ -3509,6 +3510,126 @@ async function commitScan() {
              
              container.innerHTML = html;
         }
+        // --- PHASE 1: Draggable AI Agents ---
+        let isOfficeEditMode = false;
+        function toggleOfficeEditMode() {
+            isOfficeEditMode = !isOfficeEditMode;
+            const btn = document.getElementById('btnEditOffice');
+            if(isOfficeEditMode) {
+                btn.classList.add('bg-orange-100', 'text-orange-600', 'border-orange-300');
+                btn.classList.remove('bg-white/80');
+                showToast("เปิดโหมดลากวาง Agent แล้ว");
+                document.querySelectorAll('.sd-character').forEach(el => el.classList.add('cursor-move'));
+            } else {
+                btn.classList.remove('bg-orange-100', 'text-orange-600', 'border-orange-300');
+                btn.classList.add('bg-white/80');
+                showToast("บันทึกตำแหน่ง Agent แล้ว", "success");
+                document.querySelectorAll('.sd-character').forEach(el => el.classList.remove('cursor-move'));
+            }
+        }
+
+        function initDraggableAgents() {
+            const characters = document.querySelectorAll('.sd-character');
+            const container = document.getElementById('office-bg');
+            let draggedItem = null;
+            let offsetX = 0, offsetY = 0;
+
+            // Load saved positions
+            const savedPositions = JSON.parse(localStorage.getItem('office_agent_positions') || '{}');
+            characters.forEach(char => {
+                if (savedPositions[char.id]) {
+                    char.style.left = savedPositions[char.id].left;
+                    char.style.top = savedPositions[char.id].top;
+                    char.style.bottom = 'auto'; // override bottom if top is saved
+                    char.style.right = 'auto';
+                    char.style.transform = 'none'; // remove center transform if any
+                }
+                
+                // Override onclick to prevent opening chat while in edit mode
+                const originalOnClick = char.getAttribute('onclick');
+                char.removeAttribute('onclick');
+                char.addEventListener('click', (e) => {
+                    if (isOfficeEditMode) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    } else {
+                        // Extract agent name from openAiChat('name')
+                        const match = originalOnClick.match(/'([^']+)'/);
+                        if(match) openAiChat(match[1]);
+                    }
+                });
+
+                // Mouse / Touch Events
+                char.addEventListener('mousedown', dragStart);
+                char.addEventListener('touchstart', dragStart, {passive: false});
+            });
+
+            function dragStart(e) {
+                if (!isOfficeEditMode) return;
+                draggedItem = this;
+                const rect = draggedItem.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                
+                // For touch or mouse
+                let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                offsetX = clientX - rect.left;
+                offsetY = clientY - rect.top;
+
+                // Bring to front
+                draggedItem.style.zIndex = 1000;
+                draggedItem.style.bottom = 'auto';
+                draggedItem.style.right = 'auto';
+                draggedItem.style.transform = 'none';
+
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('touchmove', drag, {passive: false});
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('touchend', dragEnd);
+            }
+
+            function drag(e) {
+                if (!draggedItem) return;
+                e.preventDefault(); // Prevent scrolling on touch
+                
+                const containerRect = container.getBoundingClientRect();
+                let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+                let x = clientX - containerRect.left - offsetX;
+                let y = clientY - containerRect.top - offsetY;
+
+                // Boundaries
+                x = Math.max(0, Math.min(x, containerRect.width - draggedItem.offsetWidth));
+                y = Math.max(0, Math.min(y, containerRect.height - draggedItem.offsetHeight));
+
+                draggedItem.style.left = x + 'px';
+                draggedItem.style.top = y + 'px';
+            }
+
+            function dragEnd() {
+                if (!draggedItem) return;
+                draggedItem.style.zIndex = '';
+                
+                // Save position
+                const savedPositions = JSON.parse(localStorage.getItem('office_agent_positions') || '{}');
+                savedPositions[draggedItem.id] = {
+                    left: draggedItem.style.left,
+                    top: draggedItem.style.top
+                };
+                localStorage.setItem('office_agent_positions', JSON.stringify(savedPositions));
+                
+                draggedItem = null;
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('touchend', dragEnd);
+            }
+        }
+        
+        // Initialize draggables after DOM loads
+        setTimeout(initDraggableAgents, 1000);
 
     </script>
 
@@ -3535,5 +3656,228 @@ async function commitScan() {
         </div>
     </div>
     
+    <!-- Room Layout Modal -->
+    <div id="roomLayoutModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[950] hidden flex-col items-center justify-center p-4 animate-fade-in no-print">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-6xl h-[85vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700 relative">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">จัดห้อง: <span id="roomLayoutTitle" class="text-blue-600">Station</span></h3>
+                    <p class="text-sm text-slate-500">ลากอุปกรณ์ด้านซ้ายมาวางในผังห้องด้านขวา (จัดตำแหน่งให้ตรงกับห้องจริง)</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 mr-4">
+                        <label class="text-sm font-medium">กว้าง:</label>
+                        <input type="number" id="roomWidthInput" class="w-16 px-2 py-1 border rounded text-sm bg-white dark:bg-slate-700 dark:border-slate-600 outline-none" value="800" onchange="updateRoomSize()">
+                        <label class="text-sm font-medium">ยาว:</label>
+                        <input type="number" id="roomHeightInput" class="w-16 px-2 py-1 border rounded text-sm bg-white dark:bg-slate-700 dark:border-slate-600 outline-none" value="600" onchange="updateRoomSize()">
+                    </div>
+                    <button onclick="saveRoomLayout()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                        💾 บันทึกผังห้อง
+                    </button>
+                    <button onclick="closeRoomLayout()" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-500">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Sidebar: Items -->
+                <div class="w-64 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto p-4 flex flex-col gap-2" id="roomLayoutSidebar">
+                    <!-- Items to drag -->
+                </div>
+                
+                <!-- Canvas: Room Grid -->
+                <div class="flex-1 bg-slate-200/50 dark:bg-slate-900 overflow-auto relative p-8 flex items-start justify-start" id="roomLayoutCanvasContainer">
+                    <div id="roomLayoutCanvas" class="bg-white dark:bg-slate-800 shadow-xl border-2 border-dashed border-slate-300 dark:border-slate-600 relative overflow-hidden" 
+                         style="width: 800px; height: 600px; background-size: 40px 40px; background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);">
+                        <!-- Dropped items go here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRoomStation = '';
+        let roomLayoutState = {};
+        let draggingRoomItem = null;
+        let roomOffsetX = 0;
+        let roomOffsetY = 0;
+
+        function openRoomLayout(stationName, event) {
+            if(event) {
+                event.stopPropagation(); // prevent opening stock lookup
+            }
+            currentRoomStation = stationName;
+            document.getElementById('roomLayoutTitle').innerText = stationName;
+            
+            // Load state
+            const savedState = localStorage.getItem('diagram_state_' + stationName);
+            if (savedState) {
+                roomLayoutState = JSON.parse(savedState);
+                document.getElementById('roomWidthInput').value = roomLayoutState.width || 800;
+                document.getElementById('roomHeightInput').value = roomLayoutState.height || 600;
+            } else {
+                roomLayoutState = { width: 800, height: 600, items: {} };
+                document.getElementById('roomWidthInput').value = 800;
+                document.getElementById('roomHeightInput').value = 600;
+            }
+            
+            updateRoomSize();
+            renderRoomItems();
+            
+            document.getElementById('roomLayoutModal').classList.remove('hidden');
+            document.getElementById('roomLayoutModal').classList.add('flex');
+        }
+
+        function closeRoomLayout() {
+            document.getElementById('roomLayoutModal').classList.add('hidden');
+            document.getElementById('roomLayoutModal').classList.remove('flex');
+            currentRoomStation = '';
+        }
+
+        function updateRoomSize() {
+            const w = document.getElementById('roomWidthInput').value;
+            const h = document.getElementById('roomHeightInput').value;
+            const canvas = document.getElementById('roomLayoutCanvas');
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            roomLayoutState.width = w;
+            roomLayoutState.height = h;
+        }
+
+        function saveRoomLayout() {
+            localStorage.setItem('diagram_state_' + currentRoomStation, JSON.stringify(roomLayoutState));
+            showToast('บันทึกผังห้องเรียบร้อย', 'success');
+            closeRoomLayout();
+        }
+
+        function renderRoomItems() {
+            const sidebar = document.getElementById('roomLayoutSidebar');
+            const canvas = document.getElementById('roomLayoutCanvas');
+            
+            sidebar.innerHTML = '<div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">อุปกรณ์ในสถานี</div>';
+            canvas.innerHTML = '';
+            
+            // Filter globalDeployedData for current station
+            const items = globalDeployedData.filter(d => d.station === currentRoomStation);
+            
+            if (items.length === 0) {
+                sidebar.innerHTML += '<div class="text-sm text-slate-400">ไม่มีอุปกรณ์ในสถานีนี้</div>';
+            }
+
+            items.forEach((item, idx) => {
+                // fallback to idx if item.id is undefined
+                const itemId = item.id || 'item_' + idx; 
+                const isPlaced = roomLayoutState.items && roomLayoutState.items[itemId];
+                
+                const el = document.createElement('div');
+                el.className = 'p-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg shadow-sm cursor-move text-sm flex items-center gap-2 select-none hover:border-blue-400 transition-colors z-10';
+                el.innerHTML = '<span class="text-lg">' + (item.status === 'ชำรุด' || item.status === 'ส่งซ่อม' ? '⚠️' : '📦') + '</span><div><div class="font-bold truncate w-32" title="'+item.name+'">' + item.name + '</div><div class="text-xs text-slate-400">' + item.group + '</div></div>';
+                el.id = 'room_item_' + itemId;
+                el.dataset.itemId = itemId;
+                
+                // Add event listeners for drag
+                el.addEventListener('mousedown', roomDragStart);
+                el.addEventListener('touchstart', roomDragStart, {passive: false});
+
+                if (isPlaced) {
+                    el.style.position = 'absolute';
+                    el.style.left = isPlaced.left;
+                    el.style.top = isPlaced.top;
+                    canvas.appendChild(el);
+                } else {
+                    el.style.position = 'relative';
+                    sidebar.appendChild(el);
+                }
+            });
+        }
+
+        function roomDragStart(e) {
+            draggingRoomItem = this;
+            const rect = draggingRoomItem.getBoundingClientRect();
+            
+            let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+            roomOffsetX = clientX - rect.left;
+            roomOffsetY = clientY - rect.top;
+
+            draggingRoomItem.style.zIndex = 2000;
+            // Move to body temporarily during drag so it escapes overflow hidden
+            document.body.appendChild(draggingRoomItem);
+            draggingRoomItem.style.position = 'absolute';
+            draggingRoomItem.style.left = (clientX - roomOffsetX) + 'px';
+            draggingRoomItem.style.top = (clientY - roomOffsetY) + 'px';
+
+            document.addEventListener('mousemove', roomDragMove);
+            document.addEventListener('touchmove', roomDragMove, {passive: false});
+            document.addEventListener('mouseup', roomDragEnd);
+            document.addEventListener('touchend', roomDragEnd);
+        }
+
+        function roomDragMove(e) {
+            if (!draggingRoomItem) return;
+            e.preventDefault();
+            let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+
+            draggingRoomItem.style.left = (clientX - roomOffsetX) + 'px';
+            draggingRoomItem.style.top = (clientY - roomOffsetY) + 'px';
+        }
+
+        function roomDragEnd(e) {
+            if (!draggingRoomItem) return;
+            draggingRoomItem.style.zIndex = '10';
+            
+            const canvas = document.getElementById('roomLayoutCanvas');
+            const canvasRect = canvas.getBoundingClientRect();
+            
+            const itemRect = draggingRoomItem.getBoundingClientRect();
+            const centerX = itemRect.left + itemRect.width / 2;
+            const centerY = itemRect.top + itemRect.height / 2;
+
+            const itemId = draggingRoomItem.dataset.itemId;
+            if (!roomLayoutState.items) roomLayoutState.items = {};
+
+            // Check if dropped inside canvas
+            if (centerX >= canvasRect.left && centerX <= canvasRect.right &&
+                centerY >= canvasRect.top && centerY <= canvasRect.bottom) {
+                
+                // Snap to canvas
+                canvas.appendChild(draggingRoomItem);
+                
+                let relativeX = itemRect.left - canvasRect.left;
+                let relativeY = itemRect.top - canvasRect.top;
+                
+                // Grid Snap (40px to match background grid)
+                relativeX = Math.round(relativeX / 40) * 40;
+                relativeY = Math.round(relativeY / 40) * 40;
+
+                draggingRoomItem.style.left = relativeX + 'px';
+                draggingRoomItem.style.top = relativeY + 'px';
+                
+                roomLayoutState.items[itemId] = {
+                    left: relativeX + 'px',
+                    top: relativeY + 'px'
+                };
+            } else {
+                // Returned to sidebar
+                document.getElementById('roomLayoutSidebar').appendChild(draggingRoomItem);
+                draggingRoomItem.style.position = 'relative';
+                draggingRoomItem.style.left = 'auto';
+                draggingRoomItem.style.top = 'auto';
+                delete roomLayoutState.items[itemId];
+            }
+
+            draggingRoomItem = null;
+            document.removeEventListener('mousemove', roomDragMove);
+            document.removeEventListener('touchmove', roomDragMove);
+            document.removeEventListener('mouseup', roomDragEnd);
+            document.removeEventListener('touchend', roomDragEnd);
+        }
+    </script>
 </body>
 </html>
