@@ -2172,10 +2172,8 @@
         document.getElementById('pwa-manifest').setAttribute('href', manifestUrl);
 
         if ('serviceWorker' in navigator) {
-            const swCode = `self.addEventListener('install', (e) => { self.skipWaiting(); }); self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); }); self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });`;
-            const swBlob = new Blob([swCode], {type: 'application/javascript'});
-            const swUrl = URL.createObjectURL(swBlob);
-            navigator.serviceWorker.register(swUrl).catch(console.error);
+            // Disabled dummy blob service worker to prevent GitHub Pages protocol error
+            // If you want a real PWA, you should create a separate sw.js file and register it here.
         }
 
         let deferredPrompt;
@@ -3093,6 +3091,15 @@ async function commitScan() {
                 
                 if (result.status !== 'success') throw new Error(result.message || 'Unknown Error');
                 
+                // Check if API returned an error object instead of candidates
+                if (result.data.error) {
+                    throw new Error(`API Error: ${result.data.error.message || 'Unknown API Error'}`);
+                }
+                
+                if (!result.data.candidates || result.data.candidates.length === 0) {
+                    throw new Error('API Response missing candidates.');
+                }
+                
                 let replyText = result.data.candidates[0].content.parts[0].text;
                 
                 aiChatHistory.push({"role": "model", "parts": [{"text": replyText}]});
@@ -3119,13 +3126,18 @@ async function commitScan() {
                 }
 
             } catch (err) {
-                console.error(err);
+                console.error("AI Error:", err);
                 const typingEl = document.getElementById(typingId);
                 if (typingEl) typingEl.parentNode.remove();
                 
-                // Fallback to hardcoded logic if API fails or key is invalid
-                appendAiMessage('กำลังสลับไปโหมดออฟไลน์... ⚡', true);
-                handleCustomSearch(query);
+                // Show specific error message if it's an API key issue
+                if (err.message && err.message.includes('API key not valid')) {
+                    appendAiMessage('⚠️ *ระบบ AI ขัดข้อง:* ดูเหมือนว่า API Key ที่ใช้จะไม่ถูกต้อง หรือไม่ใช่ของ Gemini API ครับ โปรดตรวจสอบรหัส API Key อีกครั้งในไฟล์ `รหัส.gs` นะครับ ⚡', true);
+                } else {
+                    // Fallback to hardcoded logic if API fails
+                    appendAiMessage(`กำลังสลับไปโหมดออฟไลน์... ⚡ (Error: ${err.message})`, true);
+                    handleCustomSearch(query);
+                }
             }
         }
 
