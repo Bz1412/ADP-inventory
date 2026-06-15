@@ -122,9 +122,132 @@
         
         .hover-card { transition: all 0.2s ease; cursor: pointer; }
         .hover-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+
+        /* AI Agent 2DCG Office & Chat CSS */
+        .office-2d-scene {
+            border-radius: 1.5rem;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            background-color: #0f172a;
+        }
+        .office-2d-scene.diagram-view #sd-characters {
+            display: none;
+        }
+        
+        .sd-character {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
+        
+        .sd-character:hover {
+            transform: scale(1.15) translateY(-10px);
+        }
+        
+        #char-finder:hover {
+            transform: translate(-50%, -60%) scale(1.15);
+        }
+
+        .sd-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            border: 3px solid rgba(255,255,255,0.8);
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.3),
+                inset 0 0 15px rgba(255,255,255,0.4);
+            position: relative;
+            animation: float-avatar 4s ease-in-out infinite;
+            transition: all 0.3s;
+        }
+        
+        .sd-label {
+            transform: scale(1.15) translateY(-10px) !important;
+            z-index: 30;
+        }
+        
+        @keyframes pixelWalk {
+            0% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(-3deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-5px) rotate(3deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        
+        .anim-pixel-walk {
+            animation: pixelWalk 1s infinite steps(2);
+        }
+
+        .pulse-active {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+            animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+        @keyframes pulse-ring {
+            100% { box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+        }
+
+        .glass-chat {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        .dark .glass-chat {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .chat-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+        
+        .chat-bubble-ai { border-radius: 20px 20px 20px 4px; }
+        .chat-bubble-user { border-radius: 20px 20px 4px 20px; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 <body class="bg-[#f8fafc] text-slate-800 dark:bg-[#0f172a] dark:text-slate-200 transition-colors duration-300 overflow-x-hidden">
+
+    <script>
+        const SMART_AI_API_KEY = "sk-placeholder-api-key";
+
+        async function callSmartAI(prompt) {
+            // Implementation for AI interaction
+            console.log("Calling Smart AI with:", prompt);
+            return "ผลลัพธ์จาก AI สำหรับ: " + prompt;
+        }
+
+        function initPixelAgents() {
+            document.querySelectorAll('.sd-character').forEach(el => {
+                el.classList.add('anim-pixel-walk');
+            });
+        }
+        // Initialize on load
+        window.onload = () => { initPixelAgents(); };
+    </script>
 
     <div id="toastContainer" class="fixed top-20 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 pointer-events-none no-print w-max max-w-[90vw]"></div>
 
@@ -311,6 +434,7 @@
             <button onclick="switchTab('parts')" id="tab-parts" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">⚙️ อะไหล่ & อุปกรณ์</button>
             <button onclick="switchTab('supplies')" id="tab-supplies" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">🖨️ หมึกพิมพ์</button>
             <button onclick="switchTab('deployed')" id="tab-deployed" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">📍 ข้อมูลการเบิกจ่าย</button>
+            <button onclick="switchTab('aiagent')" id="tab-aiagent" class="tab-btn px-6 py-2.5 rounded-xl font-medium text-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 whitespace-nowrap shrink-0">🤖 AI Agent</button>
         </div>
 
         <div id="view-dashboard" class="animate-fade-in">
@@ -541,6 +665,140 @@
                     </div>
             </div>
         </div>
+
+        <div id="view-aiagent" class="hidden animate-fade-in pb-20 h-[calc(100vh-200px)] min-h-[600px]">
+            <div class="flex flex-col lg:flex-row gap-6 h-full w-full">
+                <!-- Left: Isometric Office / Interactive Diagram -->
+                <div class="w-full lg:w-1/2 xl:w-3/5 h-full relative glass-chat rounded-3xl overflow-hidden flex flex-col group border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50">
+                    
+                    <!-- Header Actions -->
+                    <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
+                        <div class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                            <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                                <span class="relative flex h-3 w-3">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                                </span>
+                                Agent Network
+                            </h3>
+                        </div>
+                        <button class="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-2 rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:text-blue-500 transition-colors" title="Toggle Diagram View" onclick="document.getElementById('iso-grid').classList.toggle('diagram-view')">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- 2DCG Office Scene (Pixel Agents Style) -->
+                    <div id="office-bg" class="office-2d-scene flex-1 relative overflow-hidden bg-cover bg-center" style="background-image: url('pixel_office_bg.png'); image-rendering: pixelated;">
+                        <!-- Dark overlay for better contrast -->
+                        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-0"></div>
+
+                        <!-- SD Characters Container -->
+                        <div id="sd-characters" class="relative w-full h-full p-6">
+                            
+                            <!-- ServerBot (Top Left) -->
+                            <div class="sd-character ai-character" id="char-serverbot" onclick="openAiChat('serverbot')" style="top: 15%; left: 10%;">
+                                <div class="sd-avatar bg-gradient-to-br from-indigo-500 to-purple-600">
+                                    <span class="emoji">🗄️</span>
+                                </div>
+                                <div class="sd-label">ServerBot</div>
+                            </div>
+
+                            <!-- BoxBot (Top Right) -->
+                            <div class="sd-character ai-character" id="char-boxbot" onclick="openAiChat('boxbot')" style="top: 15%; right: 10%;">
+                                <div class="sd-avatar bg-gradient-to-br from-red-500 to-orange-500">
+                                    <span class="emoji">📦</span>
+                                    <div id="badge-boxbot" class="absolute -top-2 -right-2 bg-red-600 text-white text-[12px] font-black w-7 h-7 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-bounce" style="display: none;">0</div>
+                                </div>
+                                <div class="sd-label">BoxBot</div>
+                            </div>
+
+                            <!-- Finder (Center) -->
+                            <div class="sd-character ai-character" id="char-finder" onclick="openAiChat('finder')" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <div class="sd-avatar bg-gradient-to-br from-amber-400 to-orange-500" style="width: 100px; height: 100px; font-size: 50px;">
+                                    <span class="emoji">🔍</span>
+                                </div>
+                                <div class="sd-label text-sm px-4 py-1.5">Finder</div>
+                            </div>
+
+                            <!-- Stocky (Bottom Left) -->
+                            <div class="sd-character ai-character active-agent" id="char-stocky" onclick="openAiChat('stocky')" style="bottom: 10%; left: 20%;">
+                                <div class="sd-avatar bg-gradient-to-br from-emerald-500 to-teal-600">
+                                    <span class="emoji">📋</span>
+                                </div>
+                                <div class="sd-label">Stocky</div>
+                            </div>
+
+                            <!-- Buyer (Bottom Right) -->
+                            <div class="sd-character ai-character" id="char-buyer" onclick="openAiChat('buyer')" style="bottom: 10%; right: 20%;">
+                                <div class="sd-avatar bg-gradient-to-br from-pink-500 to-rose-600">
+                                    <span class="emoji">🛒</span>
+                                </div>
+                                <div class="sd-label">Buyer</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Interactive Diagram Container (Hidden by default) -->
+                        <div id="interactiveDiagramWrapper" class="absolute inset-0 w-full h-full p-6 hidden flex-col relative overflow-hidden" style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95)); z-index: 20;">
+                            <div class="text-center mb-4">
+                                <h4 class="font-bold text-slate-800 dark:text-slate-200">🗺️ แผนผังสถานี</h4>
+                                <p class="text-xs text-slate-500">คลิกที่สถานีเพื่อดูรายละเอียดอุปกรณ์</p>
+                            </div>
+                            <div id="diagramNodes" class="flex-1 overflow-y-auto custom-scrollbar flex flex-wrap gap-4 justify-center items-start content-start p-2">
+                                <!-- Nodes will be injected here via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Chat Panel -->
+                <div class="w-full lg:w-1/2 xl:w-2/5 h-full glass-chat rounded-3xl flex flex-col shadow-xl overflow-hidden relative border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80">
+                    
+                    <!-- Decorative Gradient Top -->
+                    <div class="h-2 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+
+                    <!-- Chat Header -->
+                    <div class="p-4 sm:p-5 border-b border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center bg-white/40 dark:bg-slate-800/40">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-xl flex items-center justify-center text-xl shadow-inner border border-white/50 dark:border-slate-600/50">
+                                    🤖
+                                </div>
+                                <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
+                            </div>
+                            <div id="aiChatHeader">
+                                <div class="font-bold text-lg text-slate-800 dark:text-white">Warehouse AI</div>
+                                <div class="text-xs text-blue-600 dark:text-blue-400 font-medium">Assistant</div>
+                            </div>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button id="toggleDiagramBtn" onclick="toggleOfficeDiagram(true)" style="display: none;" class="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors text-xs font-bold shadow-sm whitespace-nowrap">
+                                🗺️ ดูแผนผัง
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages Area -->
+                    <div class="flex-1 p-4 overflow-y-auto chat-scroll flex flex-col gap-4 bg-slate-50/50 dark:bg-slate-900/50" id="aiChatMessages">
+                        <!-- Messages injected by JS -->
+                    </div>
+
+                    <!-- Predefined Questions -->
+                    <div id="aiQuestionButtons" class="px-4 py-3 bg-white/60 dark:bg-slate-800/60 border-t border-slate-200/50 dark:border-slate-700/50 flex flex-col gap-2 overflow-y-auto max-h-40 chat-scroll backdrop-blur-md">
+                        <!-- Buttons injected by JS -->
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-3 sm:p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-slate-700/50 z-10">
+                        <div class="relative flex items-center">
+                            <input type="text" id="aiCustomInput" onkeypress="if(event.key === 'Enter') handleAiQuestion('custom_search')" placeholder="พิมพ์เพื่อค้นหาหรือถาม..." class="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white transition-all shadow-inner">
+                            <button onclick="handleAiQuestion('custom_search')" class="absolute right-2 w-9 h-9 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors shadow-md transform hover:scale-105 active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: translateX(-1px) translateY(1px);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="fixed bottom-6 left-6 z-50 flex items-center bg-white dark:bg-slate-800 rounded-full shadow-2xl border border-slate-200 dark:border-slate-700 p-1.5 transition-transform hover:scale-105">
@@ -700,9 +958,10 @@
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-slate-600', 'dark:text-slate-400'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+            const targetBtn = document.getElementById(`tab-${tabId}`);
+            if(targetBtn) targetBtn.classList.add('active');
 
-            ['dashboard', 'warehouse', 'parts', 'supplies', 'deployed'].forEach(id => {
+            ['dashboard', 'warehouse', 'parts', 'supplies', 'deployed', 'aiagent'].forEach(id => {
                 if(id !== tabId) {
                     let tBtn = document.getElementById(`tab-${id}`); if(tBtn) tBtn.classList.add('text-slate-600', 'dark:text-slate-400');
                     let tView = document.getElementById(`view-${id}`); if(tView) tView.classList.add('hidden');
@@ -710,6 +969,10 @@
             });
             const targetView = document.getElementById(`view-${tabId}`);
             if(targetView) { targetView.classList.remove('hidden', 'animate-fade-in'); void targetView.offsetWidth; targetView.classList.add('animate-fade-in'); }
+            
+            if(tabId === 'aiagent' && typeof initAIAgent === 'function') {
+                initAIAgent();
+            }
         }
 
         window.onload = async function() {
@@ -1004,13 +1267,15 @@
                                         user = r[1]||'-'; brand = r[2]||''; model = r[3]||''; sn = r[4]||''; status = r[5]||'ปกติ';
                                     } else if (baseType === 'Printer') {
                                         user = r[1]||'-'; brand = r[2]||''; model = r[3]||''; sn = r[4]||''; 
-                                        status = (r.length >= 10) ? (r[7]||'ปกติ') : (r[5]||'ปกติ');
+                                        status = r[7]||'ปกติ'; // สถานะของ Printer อยู่ index 7
                                     } else if (baseType === 'SPC') {
-                                        if (r.length >= 9) {
-                                            actualCat = r[1]||''; user = r[2]||'-'; brand = r[3]||''; model = r[4]||''; sn = r[5]||''; status = r[6]||'ปกติ'; remark = String(r[8]||'').toLowerCase();
-                                        } else {
-                                            user = r[1]||'-'; brand = r[2]||''; model = r[3]||''; sn = r[4]||''; status = r[5]||'ปกติ'; remark = String(r[6]||'').toLowerCase();
-                                        }
+                                        actualCat = r[1]||''; 
+                                        user = r[2]||'-'; 
+                                        brand = r[3]||''; 
+                                        model = r[4]||''; 
+                                        sn = r[5]||''; 
+                                        status = r[6]||'ปกติ'; 
+                                        remark = String(r[8]||'').toLowerCase();
                                         
                                         let rmkLower = remark + " " + actualCat.toLowerCase();
                                         if (rmkLower.includes('ups') || rmkLower.includes('สำรองไฟ')) actualCat = 'UPS';
@@ -2444,6 +2709,13 @@ async function commitScan() {
             if (!query) { showToast("กรุณาพิมพ์คำค้นหาก่อน", "error"); return; }
             openStockLookup(query);
             document.getElementById('dashStockSearchInput').value = ''; // เคลียร์ช่องค้นหาหน้าหลัก
+            
+            // if we are in AI Agent tab, we can also use this for general search
+            const aiInput = document.getElementById('aiCustomInput');
+            if (aiInput && !aiInput.classList.contains('hidden') && document.getElementById('tab-aiagent').classList.contains('active')) {
+                aiInput.value = query;
+                handleAiQuestion('custom_search');
+            }
         }
 
         function openStockLookup(initialQuery = '') {
@@ -2583,6 +2855,637 @@ async function commitScan() {
             }, 300);
         }
     
+        // ==========================================
+        // 🤖 AI Agent & Interactive Office System
+        // ==========================================
+        
+        let currentAiAgent = null;
+        let isTyping = false;
+
+        const aiAgents = {
+            stocky: {
+                id: 'stocky',
+                name: '🧮 Stocky (สต็อกกี้)',
+                role: 'นักวิเคราะห์สต็อก',
+                greeting: 'สวัสดีครับ! ผม Stocky ยินดีให้ข้อมูลภาพรวมและวิเคราะห์สต็อกในคลังครับ',
+                questions: [
+                    { id: 'q_stock_all', text: '📊 สต็อกทั้งหมดมีเท่าไหร่?' },
+                    { id: 'q_stock_summary', text: '📈 สรุปแยกประเภทอุปกรณ์' },
+                    { id: 'q_stock_most', text: '🏆 อะไรที่มีในคลังเยอะที่สุด?' }
+                ]
+            },
+            finder: {
+                id: 'finder',
+                name: '🔍 Finder (ไฟน์เดอร์)',
+                role: 'นักสืบอุปกรณ์',
+                greeting: 'สวัสดี! ฉัน Finder กำลังตามหาอุปกรณ์ชิ้นไหนอยู่หรือเปล่า? ให้ฉันช่วยหาที่อยู่ของมันได้นะ',
+                questions: [
+                    { id: 'q_find_sn', text: '🔍 ค้นหาอุปกรณ์จาก S/N' },
+                    { id: 'q_find_location', text: '📍 ค้นหาตามสถานี/สถานที่' }
+                ]
+            },
+            boxbot: {
+                id: 'boxbot',
+                name: '📦 BoxBot (บ็อกซ์บอท)',
+                role: 'ผู้ดูแลคลัง',
+                greeting: 'วี๊ด... บึ้ม! BoxBot รายงานตัว! เราช่วยเช็คว่าของอะไรใกล้หมดคลังได้นะ',
+                questions: [
+                    { id: 'q_box_low', text: '🚨 อะไรที่ใกล้จะหมดบ้าง?' },
+                    { id: 'q_box_ink', text: '🖨️ สถานะหมึกพิมพ์ตอนนี้' },
+                    { id: 'q_box_parts', text: '⚙️ สถานะอะไหล่ตอนนี้' }
+                ]
+            },
+            serverbot: {
+                id: 'serverbot',
+                name: '🖧 ServerBot (เซิร์ฟเวอร์บอท)',
+                role: 'ผู้ดูแลเครือข่าย',
+                greeting: 'ระบบปกติ... ServerBot พร้อมให้ข้อมูลเกี่ยวกับอุปกรณ์เครือข่ายแล้วครับ',
+                questions: [
+                    { id: 'q_srv_all', text: '🌐 สถานะ Server ทั้งหมด' },
+                    { id: 'q_srv_ups', text: '🔋 ตรวจสอบ UPS ที่ชำรุด' }
+                ]
+            },
+            buyer: {
+                id: 'buyer',
+                name: '🛒 Buyer (บายเออร์)',
+                role: 'ที่ปรึกษาจัดซื้อ',
+                greeting: 'สวัสดีค่ะ! Buyer เองค่ะ หากต้องการข้อมูลเพื่อพิจารณาจัดซื้อของเพิ่มเติม ถามได้เลยนะคะ',
+                questions: [
+                    { id: 'q_buy_suggest', text: '💡 ควรจัดซื้ออะไรเพิ่ม?' },
+                    { id: 'q_buy_most_used', text: '🔥 อะไหล่ไหนถูกเบิกไปมากที่สุด?' }
+                ]
+            }
+        };
+
+        function initAIAgent() {
+            // Reset state if needed when entering tab
+            if (!currentAiAgent) {
+                openAiChat('stocky');
+            }
+            // Trigger animation or recalculations
+            updateAgentBadges();
+        }
+
+        function openAiChat(agentId) {
+            const agent = aiAgents[agentId];
+            if (!agent) return;
+            
+            currentAiAgent = agentId;
+            
+            // Highlight selected agent in office
+            document.querySelectorAll('.ai-character').forEach(el => el.classList.remove('active-agent'));
+            const characterEl = document.getElementById(`char-${agentId}`);
+            if(characterEl) characterEl.classList.add('active-agent');
+
+            // Update Chat Header
+            document.getElementById('aiChatHeader').innerHTML = `
+                <div class="font-bold text-lg text-slate-800 dark:text-white">${agent.name}</div>
+                <div class="text-xs text-blue-600 dark:text-blue-400 font-medium">${agent.role}</div>
+            `;
+
+            // Reset Chat Messages
+            const chatBox = document.getElementById('aiChatMessages');
+            chatBox.innerHTML = '';
+            
+            // Add Greeting
+            appendAiMessage(agent.greeting, true);
+
+            // Render Question Buttons
+            renderAiQuestions(agent.questions);
+            
+            // Show diagram toggle if Finder
+            const diagramBtn = document.getElementById('toggleDiagramBtn');
+            if (diagramBtn) {
+                diagramBtn.style.display = agentId === 'finder' ? 'flex' : 'none';
+            }
+        }
+
+        function renderAiQuestions(questions) {
+            const container = document.getElementById('aiQuestionButtons');
+            if (!container) return;
+            
+            let html = '';
+            questions.forEach(q => {
+                html += `<button onclick="handleAiQuestion('${q.id}')" class="w-full text-left px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 transition-all shadow-sm hover:shadow active:scale-[0.98]">${q.text}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function appendAiMessage(text, isBot = true, isHtml = false) {
+            const chatBox = document.getElementById('aiChatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex w-full mb-4 animate-fade-in ${isBot ? 'justify-start' : 'justify-end'}`;
+            
+            let contentHtml = '';
+            if (isBot) {
+                contentHtml = `
+                    <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 mr-3 mt-1 shadow-sm border border-blue-200 dark:border-blue-800">
+                        🤖
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3.5 rounded-2xl rounded-tl-sm text-sm text-slate-700 dark:text-slate-300 shadow-sm max-w-[85%] chat-bubble-content whitespace-pre-wrap leading-relaxed">
+                        ${isHtml ? text : ''}
+                    </div>
+                `;
+            } else {
+                contentHtml = `
+                    <div class="bg-blue-600 text-white p-3.5 rounded-2xl rounded-tr-sm text-sm shadow-md max-w-[85%] whitespace-pre-wrap">
+                        ${text}
+                    </div>
+                `;
+            }
+            
+            msgDiv.innerHTML = contentHtml;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            if (isBot && !isHtml) {
+                typeWriterEffect(msgDiv.querySelector('.chat-bubble-content'), text);
+            }
+        }
+
+        function typeWriterEffect(element, text, speed = 15) {
+            isTyping = true;
+            element.innerHTML = '';
+            let i = 0;
+            
+            // disable buttons while typing
+            document.querySelectorAll('#aiQuestionButtons button').forEach(b => b.disabled = true);
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    const chatBox = document.getElementById('aiChatMessages');
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    setTimeout(type, speed);
+                } else {
+                    isTyping = false;
+                    document.querySelectorAll('#aiQuestionButtons button').forEach(b => b.disabled = false);
+                }
+            }
+            type();
+        }
+
+        async function handleAiQuestion(questionId) {
+            if (isTyping) return;
+            
+            const agent = aiAgents[currentAiAgent];
+            const question = agent.questions.find(q => q.id === questionId);
+            
+            if (question) {
+                appendAiMessage(question.text, false);
+                
+                // Show loading indicator
+                const loadingId = 'loading-' + Date.now();
+                appendAiMessage('<div class="flex gap-1"><span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></span><span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span><span class="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span></div>', true, true);
+                const chatBox = document.getElementById('aiChatMessages');
+                const loadingElement = chatBox.lastElementChild;
+                
+                // Small delay to simulate thinking
+                setTimeout(() => {
+                    loadingElement.remove();
+                    processAiLogic(questionId);
+                }, 600);
+            } else if (questionId === 'custom_search') {
+                const input = document.getElementById('aiCustomInput').value;
+                if (!input.trim()) return;
+                
+                appendAiMessage(input, false);
+                document.getElementById('aiCustomInput').value = '';
+                
+                // Show thinking animation
+                const typingId = 'typing-' + Date.now();
+                appendAiMessage(`<div id="${typingId}" class="flex gap-1 items-center"><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>`, true);
+                
+                // Call Smart AI API
+                callSmartAI(input, typingId);
+            }
+        }
+        const SMART_AI_API_KEY = 'AQ.Ab8RN6Lm2HUoPNIBqirwO0dRDd25t3YsXPKZbWypDH_J3I9niA';
+        let aiChatHistory = [
+            {"role": "user", "parts": [{"text": "คุณคือ AI Agent สายฮาสำหรับดูแลระบบโกดังสินค้าชื่อ 'Pixel Agent' คุณสามารถตอบคำถามเรื่องสต็อกได้สั้นๆ กระชับ ถ้าผู้ใช้สั่งให้เปิดแผนผังให้ตอบ [ACTION:DIAGRAM] ถ้าให้เบิกของ/หาของเจาะจง ให้ตอบ [ACTION:SEARCH:คำค้นหา]"}]},
+            {"role": "model", "parts": [{"text": "รับทราบครับผม! พร้อมลุยโกดังแล้วครับ 📦"}]}
+        ];
+
+        async function callSmartAI(query, typingId) {
+            // Build dynamic context from current warehouse status
+            let mainCount = cardData.MAIN.length;
+            let depCount = globalDeployedData.length;
+            let context = `[สถานะคลังตอนนี้: คลังส่วนกลาง=${mainCount}ชิ้น, ตามสถานี=${depCount}ชิ้น]`;
+            
+            aiChatHistory.push({"role": "user", "parts": [{"text": `${context} คำถาม: ${query}`}]});
+            
+            try {
+                // Call Gemini 1.5 Flash API
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${SMART_AI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: aiChatHistory })
+                });
+                
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.parentNode.remove();
+                
+                if (!response.ok) throw new Error('API Response Error');
+                const data = await response.json();
+                let replyText = data.candidates[0].content.parts[0].text;
+                
+                aiChatHistory.push({"role": "model", "parts": [{"text": replyText}]});
+                
+                // Parse Actions
+                if (replyText.includes('[ACTION:DIAGRAM]')) {
+                    replyText = replyText.replace('[ACTION:DIAGRAM]', '').trim();
+                    toggleOfficeDiagram(true);
+                }
+                
+                let searchMatch = replyText.match(/\[ACTION:SEARCH:(.*?)\]/);
+                if (searchMatch && searchMatch[1]) {
+                    replyText = replyText.replace(searchMatch[0], '').trim();
+                    handleCustomSearch(searchMatch[1].trim());
+                }
+                
+                if (replyText) appendAiMessage(replyText, true);
+                
+                // Add pixel agent jump effect
+                const currentAgent = document.querySelector('.sd-character.scale-110');
+                if (currentAgent) {
+                    currentAgent.style.transform = 'scale(1.2) translateY(-20px)';
+                    setTimeout(() => currentAgent.style.transform = 'scale(1.1) translateY(0)', 300);
+                }
+
+            } catch (err) {
+                console.error(err);
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.parentNode.remove();
+                
+                // Fallback to hardcoded logic if API fails or key is invalid
+                appendAiMessage('กำลังสลับไปโหมดออฟไลน์... ⚡', true);
+                handleCustomSearch(query);
+            }
+        }
+
+        function handleCustomSearch(query) {
+             appendAiMessage(`ฉันกำลังค้นหาข้อมูลเกี่ยวกับ "${query}" ให้เดี๋ยวนี้นะ...`);
+             setTimeout(() => {
+                 let matches = [];
+                 let q = query.toLowerCase().trim();
+                 
+                 // Search Deployed
+                 globalDeployedData.forEach(d => {
+                     let specs = String(d.specs || '').toLowerCase();
+                     let sn = String(d.sn || '').toLowerCase();
+                     let station = String(d.station || '').toLowerCase();
+                     if (specs.includes(q) || sn.includes(q) || station.includes(q)) {
+                         matches.push({ type: 'deployed', item: d });
+                     }
+                 });
+                 
+                 // Search Main Warehouse
+                 cardData.MAIN.forEach(r => {
+                     let brand = String(r[2] || '').toLowerCase();
+                     let model = String(r[3] || '').toLowerCase();
+                     let sn = String(r[4] || '').toLowerCase();
+                     if (brand.includes(q) || model.includes(q) || sn.includes(q)) {
+                         matches.push({ type: 'main', item: r });
+                     }
+                 });
+
+                 if (matches.length > 0) {
+                     let html = '<ul class="mt-2 space-y-2">';
+                     matches.slice(0, 5).forEach(m => {
+                         if (m.type === 'deployed') {
+                             html += `<li class="text-xs bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-100 dark:border-blue-800">
+                                📍 <b>${m.item.station}</b> (${m.item.group})<br>
+                                💻 ${m.item.category}: ${m.item.specs} <br>
+                                🏷️ S/N: ${m.item.sn} <br>
+                                🟢 สถานะ: <span class="font-bold ${m.item.status === 'ปกติ' ? 'text-emerald-600' : 'text-red-600'}">${m.item.status}</span>
+                             </li>`;
+                         } else {
+                             html += `<li class="text-xs bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded border border-emerald-100 dark:border-emerald-800">
+                                📦 <b>คลังส่วนกลาง</b><br>
+                                💻 ${m.item[1]}: ${m.item[2]} ${m.item[3]} <br>
+                                🏷️ S/N: ${m.item[4]} <br>
+                                🟢 สถานะ: <span class="font-bold ${m.item[5].includes('ว่าง') ? 'text-emerald-600' : 'text-slate-600'}">${m.item[5]}</span>
+                             </li>`;
+                         }
+                     });
+                     if (matches.length > 5) html += `<li class="text-xs text-center text-slate-500 mt-2">...และอีก ${matches.length - 5} รายการ</li>`;
+                     html += '</ul>';
+                     appendAiMessage(`เจอแล้วครับ! นี่คือข้อมูลที่ค้นพบ:`, true);
+                     setTimeout(() => appendAiMessage(html, true, true), 300);
+                 } else {
+                     // fallback to parts lookup
+                     openStockLookup(query);
+                     appendAiMessage(`หาอุปกรณ์หลักไม่เจอ ลองเปิดดูในหมวดอะไหล่/หมึกพิมพ์ให้นะครับ!`, true);
+                 }
+             }, 1500);
+        }
+
+        // ==========================================
+        // 🧠 AI Logic Engine (Data Processing)
+        // ==========================================
+        
+        function processAiLogic(qId) {
+            let response = '';
+            let responseHtml = '';
+            
+            // --- STOCKY LOGIC ---
+            if (qId === 'q_stock_all') {
+                let mainTotal = 0;
+                cardData.MAIN.forEach(r => {
+                    let brand = String(r[2] || '').trim();
+                    let model = String(r[3] || '').trim();
+                    let sn = String(r[4] || '').trim();
+                    let status = String(r[5] || '').trim();
+                    if ((brand && brand !== '-') || (model && model !== '-') || (sn && sn !== '-')) {
+                        if (status.includes('ว่าง') || status.includes('พร้อมจ่าย')) mainTotal++;
+                    }
+                });
+                
+                let deployedActive = 0;
+                let deployedTotalAll = 0;
+                globalDeployedData.forEach(d => {
+                    let specs = String(d.specs || '').trim();
+                    let sn = String(d.sn || '').trim();
+                    if ((specs && specs !== '-') || (sn && sn !== '-')) {
+                        deployedTotalAll++;
+                        if (d.status === 'ปกติ') deployedActive++;
+                    }
+                });
+                
+                response = `ตอนนี้ในระบบมีอุปกรณ์หลักรวมทั้งหมด ${mainTotal + deployedTotalAll} ชิ้นครับ\n\n📦 อยู่ในคลังส่วนกลาง (พร้อมจ่าย): ${mainTotal} ชิ้น\n📍 กระจายอยู่ตามสถานี (ใช้งานได้ปกติ): ${deployedActive} เครื่อง (จากยอดติดตั้งรวม ${deployedTotalAll} ชิ้น)`;
+            }
+            else if (qId === 'q_stock_summary') {
+                let html = '<div class="space-y-2 mt-2">';
+                const cats = Object.keys(categoryStats).sort((a,b) => (categoryStats[b].wh || 0) - (categoryStats[a].wh || 0));
+                
+                cats.slice(0, 5).forEach(cat => {
+                    let wh = categoryStats[cat].wh || 0;
+                    let dep = categoryStats[cat].deployed || 0;
+                    html += `
+                    <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-700">
+                        <span class="font-bold text-slate-700 dark:text-slate-200">${cat}</span>
+                        <div class="text-right text-xs">
+                            <span class="text-emerald-600 dark:text-emerald-400">คลัง: ${wh}</span> | 
+                            <span class="text-blue-600 dark:text-blue-400">สถานี: ${dep}</span>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+                response = `สรุป 5 อันดับแรกที่มีในคลังมากที่สุดครับ:`;
+                responseHtml = html;
+            }
+            else if (qId === 'q_stock_most') {
+                 let maxWh = 0; let topCat = '';
+                 for(let cat in categoryStats) {
+                     if((categoryStats[cat].wh || 0) > maxWh) { maxWh = categoryStats[cat].wh; topCat = cat; }
+                 }
+                 response = `อุปกรณ์ที่มีในคลังส่วนกลางเยอะที่สุดคือ **${topCat}** ครับ มีจำนวนถึง ${maxWh} รายการที่พร้อมจ่าย!`;
+            }
+            
+            // --- BOXBOT LOGIC ---
+            else if (qId === 'q_box_low') {
+                const lowItems = getLowStockData(2);
+                if (lowItems.length === 0) {
+                    response = `เย้! ตอนนี้ไม่มีของที่ใกล้หมดเลย สต็อกเราแน่นหนาดีมาก`;
+                } else {
+                    response = `พบรายการที่เหลือน้อยกว่า 3 ชิ้น จำนวน ${lowItems.length} รายการครับ:`;
+                    let html = '<ul class="mt-2 space-y-1">';
+                    lowItems.slice(0, 5).forEach(item => {
+                        html += `<li class="flex justify-between text-xs bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-2 rounded">
+                            <span class="truncate pr-2">${item.name}</span>
+                            <span class="font-bold shrink-0">เหลือ ${item.qty} ${item.unit}</span>
+                        </li>`;
+                    });
+                    if (lowItems.length > 5) html += `<li class="text-xs text-center text-slate-500 mt-2">...และอีก ${lowItems.length - 5} รายการ</li>`;
+                    html += '</ul>';
+                    responseHtml = html;
+                }
+            }
+            else if (qId === 'q_box_ink') {
+                let count = 0; let totalQty = 0;
+                if(whInkTable && whInkTable.getData) {
+                    whInkTable.getData().forEach(r => {
+                        let type = String(r[1] || '').trim();
+                        let spec = String(r[2] || '').trim();
+                        if(type && type !== '-') { count++; totalQty += parseInt(r[3]||0); }
+                    });
+                }
+                response = `มีรายการหมึกพิมพ์ทั้งหมด ${count} รุ่น จำนวนรวม ${totalQty} ตลับครับ`;
+            }
+            else if (qId === 'q_box_parts') {
+                let count = 0; let totalQty = 0;
+                if(whPartsTable && whPartsTable.getData) {
+                    whPartsTable.getData().forEach(r => {
+                        let type = String(r[1] || '').trim();
+                        let spec = String(r[2] || '').trim();
+                        if(type && type !== '-') { count++; totalQty += parseInt(r[3]||0); }
+                    });
+                }
+                response = `มีอะไหล่เตรียมพร้อมเปลี่ยนทั้งหมด ${count} รายการ จำนวนรวม ${totalQty} ชิ้น`;
+            }
+
+            // --- FINDER LOGIC ---
+            else if (qId === 'q_find_sn') {
+                response = `ต้องการหา S/N ไหนครับ? พิมพ์ S/N หรือชื่อรุ่นที่ช่องค้นหาด้านล่างได้เลย เดี๋ยวฉันเปิดเรดาร์หาให้!`;
+                setTimeout(() => document.getElementById('aiCustomInput').focus(), 1000);
+            }
+            else if (qId === 'q_find_location') {
+                response = `ระบบของเรารองรับการดูแผนผังสถานีครับ! คุณสามารถเปิด "แผนผังสถานี" (Interactive Diagram) เพื่อดูว่ามีอุปกรณ์ลงที่ไหนบ้าง`;
+                toggleOfficeDiagram(true);
+            }
+
+            // --- SERVERBOT LOGIC ---
+            else if (qId === 'q_srv_all') {
+                let srvCount = 0; let active = 0;
+                globalDeployedData.forEach(d => {
+                    let cat = String(d.category || '').trim().toLowerCase();
+                    if (cat === 'server' || cat === 'เซิร์ฟเวอร์') { 
+                        let specs = String(d.specs || '').trim();
+                        let sn = String(d.sn || '').trim();
+                        if ((specs && specs !== '-') || (sn && sn !== '-')) {
+                            srvCount++; 
+                            if(d.status==='ปกติ') active++; 
+                        }
+                    }
+                });
+                cardData.MAIN.forEach(r => {
+                    let type = String(r[1] || '').trim().toLowerCase();
+                    if (type === 'server' || type === 'เซิร์ฟเวอร์') { 
+                        let brand = String(r[2] || '').trim();
+                        let model = String(r[3] || '').trim();
+                        let sn = String(r[4] || '').trim();
+                        let status = String(r[5] || '').trim();
+                        if ((brand && brand !== '-') || (model && model !== '-') || (sn && sn !== '-')) {
+                            srvCount++; 
+                            if(status.includes('ว่าง') || status.includes('พร้อมจ่าย')) active++; 
+                        }
+                    }
+                });
+                response = `เรามี Server ในระบบทั้งหมด ${srvCount} เครื่องครับ\n🟢 สถานะปกติ/พร้อมใช้งาน: ${active} เครื่อง`;
+            }
+            else if (qId === 'q_srv_ups') {
+                const brokenUPS = globalDeployedData.filter(d => {
+                    let cat = String(d.category || '').trim().toLowerCase();
+                    return (cat === 'ups' || cat === 'สำรองไฟ') && ['ชำรุด', 'ส่งซ่อม', 'เสีย'].includes(d.status);
+                });
+                if (brokenUPS.length === 0) {
+                    response = `ตอนนี้ไม่มีแจ้งเตือน UPS ชำรุดเลยครับ ไฟฟ้าเสถียรดีเยี่ยม!`;
+                } else {
+                    response = `พบ UPS ชำรุดจำนวน ${brokenUPS.length} เครื่องครับ ดังนี้:`;
+                    let html = '<ul class="mt-2 space-y-1 list-disc pl-4 text-xs text-red-600 dark:text-red-400">';
+                    brokenUPS.slice(0, 5).forEach(item => {
+                        html += `<li>${item.station}: ${item.specs} [${item.sn}]</li>`;
+                    });
+                    if (brokenUPS.length > 5) html += `<li class="text-xs text-slate-500 list-none mt-1">และอื่นๆ อีก ${brokenUPS.length - 5} เครื่อง</li>`;
+                    html += '</ul>';
+                    responseHtml = html;
+                }
+            }
+
+            // --- BUYER LOGIC ---
+            else if (qId === 'q_buy_suggest') {
+                const lowItems = getLowStockData(3);
+                if (lowItems.length > 0) {
+                    response = `จากข้อมูลสต็อกปัจจุบัน ดิฉันขอแนะนำให้เร่งพิจารณาจัดซื้อรายการเหล่านี้ค่ะ (เหลือน้อยกว่า 3):`;
+                    let html = '<div class="mt-2 space-y-2">';
+                    lowItems.slice(0, 3).forEach(item => {
+                        html += `<div class="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-2 text-xs">
+                            <span class="font-bold text-amber-800 dark:text-amber-300 block">${item.name}</span>
+                            <span class="text-amber-700 dark:text-amber-400">คงเหลือเพียง: ${item.qty} ${item.unit}</span>
+                        </div>`;
+                    });
+                    html += '</div>';
+                    responseHtml = html;
+                } else {
+                    response = `ขณะนี้สต็อกยังคงมีเพียงพอค่ะ แต่ควรติดตามการเบิกจ่ายหมึกพิมพ์อย่างใกล้ชิดนะคะ`;
+                }
+            }
+            else if (qId === 'q_buy_most_used') {
+                if (whWithdrawals && whWithdrawals.length > 0) {
+                    const counts = {};
+                    whWithdrawals.forEach(w => {
+                        if (w.specs) { counts[w.specs] = (counts[w.specs] || 0) + (parseInt(w.qty) || 1); }
+                    });
+                    const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+                    
+                    response = `สถิติการเบิกใช้งานสูงสุด 3 อันดับแรกค่ะ:`;
+                    let html = '<ol class="mt-2 space-y-1 list-decimal pl-4 text-xs">';
+                    sorted.slice(0, 3).forEach(item => {
+                        html += `<li><span class="font-semibold">${item[0]}</span> (เบิกไป ${item[1]} ครั้ง/ชิ้น)</li>`;
+                    });
+                    html += '</ol>';
+                    responseHtml = html;
+                } else {
+                    response = `ขออภัยค่ะ ยังไม่มีข้อมูลการเบิกจ่ายที่เพียงพอในการวิเคราะห์สถิติในขณะนี้`;
+                }
+            }
+            
+            // Render Response
+            if (response) {
+                appendAiMessage(response);
+            }
+            if (responseHtml) {
+                setTimeout(() => {
+                    appendAiMessage(responseHtml, true, true);
+                }, response.length * 15 + 100);
+            }
+        }
+
+        function getLowStockData(threshold) {
+            let lowItems = [];
+            const checkTable = (table, cat) => {
+                if(table && table.getData) {
+                    table.getData().forEach(r => {
+                        if(r[1] && r[3] !== '' && !isNaN(r[3])) {
+                            if(parseInt(r[3]) <= threshold) {
+                                lowItems.push({ cat, name: r[2] || r[1], qty: r[3], unit: r[4]||'ชิ้น' });
+                            }
+                        }
+                    });
+                }
+            };
+            checkTable(whInkTable, 'หมึกพิมพ์');
+            checkTable(whPartsTable, 'อะไหล่');
+            checkTable(whAccTable, 'อุปกรณ์');
+            return lowItems.sort((a,b) => a.qty - b.qty);
+        }
+
+        function updateAgentBadges() {
+            // Update UI markers in the isometric office if needed
+            const lowItems = getLowStockData(2);
+            const boxbotBadge = document.getElementById('badge-boxbot');
+            if(boxbotBadge) {
+                if(lowItems.length > 0) {
+                    boxbotBadge.innerText = lowItems.length;
+                    boxbotBadge.style.display = 'block';
+                } else {
+                    boxbotBadge.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleOfficeDiagram(show) {
+            const characters = document.getElementById('sd-characters');
+            const diagramWrap = document.getElementById('interactiveDiagramWrapper');
+            const btn = document.getElementById('toggleDiagramBtn');
+            
+            if (show) {
+                if (characters) characters.style.display = 'none';
+                if (diagramWrap) {
+                    diagramWrap.classList.remove('hidden');
+                    diagramWrap.classList.add('flex');
+                }
+                if(btn) btn.innerHTML = '🏢 กลับไปห้องออฟฟิศ';
+                if(btn) btn.onclick = () => toggleOfficeDiagram(false);
+                renderDiagramNodes();
+            } else {
+                if (characters) characters.style.display = 'block';
+                if (diagramWrap) {
+                    diagramWrap.classList.add('hidden');
+                    diagramWrap.classList.remove('flex');
+                }
+                if(btn) btn.innerHTML = '🗺️ ดูแผนผังสถานี (Diagram)';
+                if(btn) btn.onclick = () => toggleOfficeDiagram(true);
+            }
+        }
+        
+        function renderDiagramNodes() {
+             const container = document.getElementById('diagramNodes');
+             if(!container) return;
+             
+             // Group deployed data by group/station
+             const stations = {};
+             globalDeployedData.forEach(d => {
+                 const key = `${d.group} > ${d.station}`;
+                 if(!stations[key]) stations[key] = { group: d.group, station: d.station, count: 0, broken: 0 };
+                 stations[key].count++;
+                 if(['ชำรุด', 'ส่งซ่อม'].includes(d.status)) stations[key].broken++;
+             });
+             
+             let html = '';
+             Object.values(stations).forEach((s, idx) => {
+                 let statusColor = s.broken > 0 ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'border-emerald-400 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                 let icon = s.broken > 0 ? '⚠️' : '🟢';
+                 
+                 // Randomize position slightly for visual diagram feel, or use flex wrap
+                 html += `
+                 <div class="p-3 rounded-xl border-2 shadow-sm cursor-pointer transition-transform hover:-translate-y-1 hover:shadow-md min-w-[140px] text-center ${statusColor}"
+                      onclick="openStockLookup('${s.station}')" title="คลิกเพื่อดูอุปกรณ์ในสถานีนี้">
+                      <div class="font-bold text-sm mb-1">${icon} ${s.station}</div>
+                      <div class="text-[10px] opacity-80 uppercase tracking-wider">${s.group}</div>
+                      <div class="mt-2 text-xs font-medium">อุปกรณ์: ${s.count}</div>
+                 </div>
+                 `;
+             });
+             
+             if(Object.keys(stations).length === 0) {
+                 html = '<div class="text-slate-400 w-full text-center py-10">ไม่พบข้อมูลสถานี (รอโหลดข้อมูล)</div>';
+             }
+             
+             container.innerHTML = html;
+        }
+
     </script>
 
     <div id="stockLookupModal" class="fixed inset-0 bg-slate-900/80 z-[900] hidden flex-col justify-end sm:justify-center items-center backdrop-blur-sm sm:p-4 no-print animate-fade-in" style="-webkit-overflow-scrolling: auto;">
