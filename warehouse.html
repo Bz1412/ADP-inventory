@@ -3053,7 +3053,7 @@ async function commitScan() {
                 
                 // Show thinking animation
                 const typingId = 'typing-' + Date.now();
-                appendAiMessage(`<div id="${typingId}" class="flex gap-1 items-center"><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>`, true);
+                appendAiMessage(`<div id="${typingId}" class="flex gap-1 items-center"><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div><div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div></div>`, true, true);
                 
                 // Call Smart AI API
                 callSmartAI(input, typingId);
@@ -3127,12 +3127,19 @@ async function commitScan() {
 
             } catch (err) {
                 console.error("AI Error:", err);
+                // Rollback the user message from history if API fails
+                if (aiChatHistory.length > 0 && aiChatHistory[aiChatHistory.length - 1].role === "user") {
+                    aiChatHistory.pop();
+                }
+                
                 const typingEl = document.getElementById(typingId);
                 if (typingEl) typingEl.parentNode.remove();
                 
                 // Show specific error message if it's an API key issue
                 if (err.message && err.message.includes('API key not valid')) {
                     appendAiMessage('⚠️ *ระบบ AI ขัดข้อง:* ดูเหมือนว่า API Key ที่ใช้จะไม่ถูกต้อง หรือไม่ใช่ของ Gemini API ครับ โปรดตรวจสอบรหัส API Key อีกครั้งในไฟล์ `รหัส.gs` นะครับ ⚡', true);
+                } else if (err.message && err.message.includes('high demand')) {
+                    appendAiMessage('⚠️ *AI กำลังยุ่งมาก:* ตอนนี้เซิร์ฟเวอร์ฟรีของ Google คนใช้งานเยอะมากครับ กรุณารอสักครู่แล้วลองถามใหม่นะครับ ⚡', true);
                 } else {
                     // Fallback to hardcoded logic if API fails
                     appendAiMessage(`กำลังสลับไปโหมดออฟไลน์... ⚡ (Error: ${err.message})`, true);
