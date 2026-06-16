@@ -3918,6 +3918,9 @@ window.unmergeSelected = function(tableId) {
     }
 }
 
+        // =========================================================
+        // 🌟 พิมพ์แบบฟอร์มสรุปรายงานประจำเดือน (เพิ่มตารางสรุปตัวเลขความเคลื่อนไหวหน้าสุดท้าย)
+        // =========================================================
         function printMonthlySummaryReport() {
             if (!globalAllDataCache) {
                 showToast('กำลังโหลดข้อมูล กรุณารอสักครู่...', 'error');
@@ -3941,7 +3944,7 @@ window.unmergeSelected = function(tableId) {
 
             let reportedList = [];
             let pendingList = [];
-            let brokenItemsByType = {}; // สร้าง Object เพื่อจัดกลุ่มตามประเภท
+            let brokenItemsByType = {}; 
             let totalBroken = 0;
             let currentMonthWithdrawals = [];
 
@@ -3952,7 +3955,6 @@ window.unmergeSelected = function(tableId) {
             // 1. ดึงและกรองข้อมูล
             for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
                 
-                // ดึงรายการเบิกจ่ายจากคลังส่วนกลาง
                 if (dbKey === 'ADP_WAREHOUSE_CENTRAL') {
                     try {
                         let whData = JSON.parse(jsonValue);
@@ -3979,7 +3981,6 @@ window.unmergeSelected = function(tableId) {
 
                 if (dbKey === 'ADP_AUTH_DB' || dbKey.includes('WAREHOUSE') || dbKey === 'ADP_AGENTS_DB') continue;
 
-                // ดึงข้อมูลสถานีต่างๆ
                 try {
                     const dbData = JSON.parse(jsonValue);
                     const parts = dbKey.split('_');
@@ -3994,7 +3995,6 @@ window.unmergeSelected = function(tableId) {
                         if (isReported) reportedList.push(stName);
                         else pendingList.push(stName);
 
-                        // ดึงของชำรุด (นับเฉพาะชำรุด/ส่งซ่อม/เสีย) และจัดกลุ่มตามประเภท
                         const checkBroken = (arr, typeName, isPrn, isSpc) => {
                             if (!arr) return;
                             arr.forEach(r => {
@@ -4027,15 +4027,11 @@ window.unmergeSelected = function(tableId) {
                 if (!processedStations.has(s)) pendingList.push(s);
             });
 
-            // 2. จัดเรียง Action (เบิกจ่าย-รับคืน) เป็นกลุ่มตัวอักษรให้อ่านง่าย
             currentMonthWithdrawals.sort((a, b) => {
                 let actionA = a.action || '';
                 let actionB = b.action || '';
-                // เรียงตามตัวอักษรของ Action (นำเข้า -> เบิกจ่าย -> รับคืน)
                 if (actionA < actionB) return -1;
                 if (actionA > actionB) return 1;
-                
-                // ถ้า Action เหมือนกัน ให้เรียงตามวันที่
                 let dateA = a.date || '';
                 let dateB = b.date || '';
                 if (dateA > dateB) return -1;
@@ -4043,7 +4039,26 @@ window.unmergeSelected = function(tableId) {
                 return 0;
             });
 
-            // 3. ประกอบ HTML ตารางแยกประเภทของชำรุด
+            // 🌟 คำนวณสรุปตัวเลขความเคลื่อนไหว (จัดกลุ่มตามหมวดหมู่พัสดุ)
+            let movementSummary = {};
+            currentMonthWithdrawals.forEach(w => {
+                let cat = (w.category && w.category !== '-') ? w.category : 'อุปกรณ์ทั่วไป';
+                let action = w.action || 'ไม่ระบุ';
+                let qty = parseFloat(w.qty) || 1;
+
+                if (!movementSummary[cat]) {
+                    movementSummary[cat] = { 'in': 0, 'out': 0, 'return': 0 };
+                }
+                
+                if (action.includes('นำเข้า') || action.includes('เพิ่ม')) {
+                    movementSummary[cat]['in'] += qty;
+                } else if (action.includes('เบิกจ่าย') || action.includes('จ่ายแล้ว')) {
+                    movementSummary[cat]['out'] += qty;
+                } else if (action.includes('รับคืน') || action.includes('ส่งคืน')) {
+                    movementSummary[cat]['return'] += qty;
+                }
+            });
+
             let brokenHtml = '';
             let types = Object.keys(brokenItemsByType).sort();
             
@@ -4105,7 +4120,6 @@ window.unmergeSelected = function(tableId) {
                         <h3 class="text-lg">ประจำเดือน ${monthDisplay}</h3>
                     </div>
 
-                    <!-- ส่วนที่ 1: สถานะการส่งรายงาน -->
                     <div class="mb-6 page-break-inside-avoid">
                         <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">1. สถานะการตรวจสอบและส่งรายงาน (${reportedList.length}/${allExpectedStations.length} หน่วย)</h3>
                         <div class="flex w-full gap-4 mt-2">
@@ -4120,15 +4134,13 @@ window.unmergeSelected = function(tableId) {
                         </div>
                     </div>
 
-                    <!-- ส่วนที่ 2: อุปกรณ์ชำรุด (แยกตามประเภท) -->
                     <div class="mb-6">
                         <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">2. สรุปรายการอุปกรณ์ชำรุด/ส่งซ่อม (รวมทั้งหมด ${totalBroken} รายการ)</h3>
                         ${brokenHtml}
                     </div>
 
-                    <!-- ส่วนที่ 3: เบิกจ่าย-รับคืน (จัดเรียงตาม Action) -->
                     <div class="mb-6">
-                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">3. สรุปความเคลื่อนไหว (คลังส่วนกลาง ประจำเดือน)</h3>
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">3. รายละเอียดความเคลื่อนไหว (คลังส่วนกลาง ประจำเดือน)</h3>
                         <table class="w-full border-collapse border border-black text-sm text-left">
                             <thead>
                                 <tr class="bg-gray-100">
@@ -4157,15 +4169,39 @@ window.unmergeSelected = function(tableId) {
                         </table>
                     </div>
                     
-                    <!-- ลายเซ็น -->
-                    <div class="mt-12 flex justify-end page-break-inside-avoid">
-                        <div style="text-align: center; width: 250px;">
-                            <p style="margin-bottom: 40px;">ลงชื่อ .......................................................</p>
-                            <p>( ....................................................... )</p>
-                            <p style="margin-top: 10px;">วันที่ ....... / ....... / ...........</p>
-                            <p style="margin-top: 5px; font-size: 12px; color: gray;">ผู้ตรวจสอบและจัดทำรายงาน</p>
+                    <div class="mt-8 page-break-inside-avoid">
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">4. สรุปยอดความเคลื่อนไหวแยกตามประเภทพัสดุ (สรุปตัวเลข)</h3>
+                        <table class="w-full border-collapse border border-black text-sm text-center mb-8">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th style="width: 40%; text-align: left; padding-left: 15px;">หมวดหมู่พัสดุ</th>
+                                    <th style="width: 20%; color: #15803d;">นำเข้าคลัง (+)</th>
+                                    <th style="width: 20%; color: #ea580c;">เบิกจ่าย (-)</th>
+                                    <th style="width: 20%; color: #1d4ed8;">รับคืนคลัง (+)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${Object.keys(movementSummary).length > 0 ? Object.keys(movementSummary).map(cat => `
+                                    <tr>
+                                        <td style="text-align: left; font-weight: bold; padding-left: 15px;">${cat}</td>
+                                        <td style="font-weight: bold; color: ${movementSummary[cat]['in'] > 0 ? '#15803d' : '#333'}">${movementSummary[cat]['in'] || 0}</td>
+                                        <td style="font-weight: bold; color: ${movementSummary[cat]['out'] > 0 ? '#ea580c' : '#333'}">${movementSummary[cat]['out'] || 0}</td>
+                                        <td style="font-weight: bold; color: ${movementSummary[cat]['return'] > 0 ? '#1d4ed8' : '#333'}">${movementSummary[cat]['return'] || 0}</td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="4" style="text-align: center; padding: 15px; color: gray;">ไม่มีความเคลื่อนไหวในเดือนนี้</td></tr>'}
+                            </tbody>
+                        </table>
+
+                        <div class="flex justify-end mt-8">
+                            <div style="text-align: center; width: 250px;">
+                                <p style="margin-bottom: 40px;">ลงชื่อ .......................................................</p>
+                                <p>( ....................................................... )</p>
+                                <p style="margin-top: 10px;">วันที่ ....... / ....... / ...........</p>
+                                <p style="margin-top: 5px; font-size: 12px; color: gray;">ผู้ตรวจสอบและจัดทำรายงาน</p>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             `;
 
