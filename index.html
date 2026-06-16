@@ -615,41 +615,51 @@ nav {
         </div>
 
         <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-200">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> สถานะการส่งรายงานประจำเดือน</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
-    ยอดสรุปสถานี: 
-    <select id="monthSelector" onchange="changeReportMonth()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
-    </select>
-</p>
-                </div>
-                <div class="flex items-center gap-4 text-sm font-medium bg-slate-50 dark:bg-slate-900/50 px-4 py-2 rounded-xl border border-slate-100 dark:border-slate-700">
-                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <span class="text-slate-600 dark:text-slate-300">ส่งแล้ว:</span> <span id="countReported" class="text-slate-900 dark:text-white font-bold">0</span></div>
-                    <div class="w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
-                    <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-slate-600 dark:text-slate-300">ยังไม่ส่ง:</span> <span id="countPending" class="text-slate-900 dark:text-white font-bold">0</span></div>
-                </div>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> 
+                สถานะการส่งรายงานประจำเดือน
+            </h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+                ยอดสรุปสถานี: 
+                <select id="monthSelector" onchange="changeReportMonth()" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                </select>
+            </p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div class="flex items-center gap-4 text-sm font-medium bg-slate-50 dark:bg-slate-900/50 px-4 py-2.5 rounded-xl border border-slate-100 dark:border-slate-700 w-full sm:w-auto justify-center">
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> <span class="text-slate-600 dark:text-slate-300">ส่งแล้ว:</span> <span id="countReported" class="text-slate-900 dark:text-white font-bold">0</span></div>
+                <div class="w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
+                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> <span class="text-slate-600 dark:text-slate-300">ยังไม่ส่ง:</span> <span id="countPending" class="text-slate-900 dark:text-white font-bold">0</span></div>
             </div>
             
-            <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-2.5 mb-6 overflow-hidden shadow-inner">
-                <div id="reportProgressBar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-1000 w-0 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-            </div>
+            <button onclick="printMonthlySummaryReport()" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> พิมพ์แบบฟอร์มสรุป
+            </button>
+        </div>
+    </div>
+    
+    <div class="w-full bg-slate-100 dark:bg-slate-700/50 rounded-full h-2.5 mb-6 overflow-hidden shadow-inner">
+        <div id="reportProgressBar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-1000 w-0 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+    </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <div class="border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl p-5 shadow-sm">
-                    <h3 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2"><span class="text-lg">✅</span> สถานีที่ส่งแล้ว</h3>
-                    <div id="listReported" class="flex flex-wrap gap-2 text-xs">
-                        <span class="text-slate-400 italic font-medium">กำลังโหลดข้อมูล...</span>
-                    </div>
-                </div>
-                <div class="border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 rounded-2xl p-5 shadow-sm">
-                    <h3 class="text-sm font-bold text-red-700 dark:text-red-400 mb-4 flex items-center gap-2"><span class="text-lg">❌</span> สถานีที่ยังไม่ส่ง</h3>
-                    <div id="listPending" class="flex flex-wrap gap-2 text-xs">
-                        <span class="text-slate-400 italic font-medium">กำลังโหลดข้อมูล...</span>
-                    </div>
-                </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div class="border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-emerald-700 dark:text-emerald-400 mb-4 flex items-center gap-2"><span class="text-lg">✅</span> สถานีที่ส่งแล้ว</h3>
+            <div id="listReported" class="flex flex-wrap gap-2 text-xs">
+                <span class="text-slate-400 italic font-medium">กำลังโหลดข้อมูล...</span>
             </div>
         </div>
+        <div class="border border-red-100 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10 rounded-2xl p-5 shadow-sm">
+            <h3 class="text-sm font-bold text-red-700 dark:text-red-400 mb-4 flex items-center gap-2"><span class="text-lg">❌</span> สถานีที่ยังไม่ส่ง</h3>
+            <div id="listPending" class="flex flex-wrap gap-2 text-xs">
+                <span class="text-slate-400 italic font-medium">กำลังโหลดข้อมูล...</span>
+            </div>
+        </div>
+    </div>
+</div>
 
         <div class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-10 animate-slide-up delay-300">
             <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-2 flex items-center gap-2"><svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> ค้นหาอุปกรณ์</h2>
@@ -3907,6 +3917,237 @@ window.unmergeSelected = function(tableId) {
         showToast("ไม่พบเซลล์ที่ถูกผสานในพื้นที่ที่เลือก", "error");
     }
 }
+
+        // =========================================================
+        // 🌟 พิมพ์แบบฟอร์มสรุปรายงานประจำเดือน (ดึงตามเดือนที่เลือกใน Dropdown)
+        // =========================================================
+        function printMonthlySummaryReport() {
+            if (!globalAllDataCache) {
+                showToast('กำลังโหลดข้อมูล กรุณารอสักครู่...', 'error');
+                return;
+            }
+
+            // ดึงเดือนจาก Dropdown ของระบบคุณ BenP
+            let currentMonthStr = "";
+            let monthDisplay = "";
+            const monthDropdown = document.getElementById('monthSelector');
+            
+            if (monthDropdown && monthDropdown.value) {
+                currentMonthStr = monthDropdown.value; 
+                monthDisplay = monthDropdown.options[monthDropdown.selectedIndex].text;
+            } else {
+                const now = new Date();
+                currentMonthStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+                const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                monthDisplay = `${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
+            }
+
+            let reportedList = [];
+            let pendingList = [];
+            let brokenItems = []; 
+            let currentMonthWithdrawals = [];
+
+            let allExpectedStations = [];
+            groupOrder.forEach(g => { inventoryGroups[g].forEach(s => { allExpectedStations.push(s); }); });
+            let processedStations = new Set();
+
+            // 1. ดึงและกรองข้อมูล
+            for (const [dbKey, jsonValue] of Object.entries(globalAllDataCache)) {
+                
+                // ดึงรายการเบิกจ่ายจากคลังส่วนกลาง
+                if (dbKey === 'ADP_WAREHOUSE_CENTRAL') {
+                    try {
+                        let whData = JSON.parse(jsonValue);
+                        if (whData.withdrawals) {
+                            whData.withdrawals.forEach(w => {
+                                let wDateStr = String(w.date || '');
+                                let isCurrentMonth = false;
+                                
+                                // รองรับ Format 'YYYY-MM-DD' หรือ 'DD/MM/YYYY'
+                                if (wDateStr.startsWith(currentMonthStr)) {
+                                    isCurrentMonth = true;
+                                } else {
+                                    let datePart = wDateStr.split(' ')[0]; 
+                                    let parts = datePart.split('/');
+                                    // แปลง DD/MM/YYYY กลับมาเทียบ
+                                    if (parts.length >= 3 && `${parts[2]}-${parts[1]}` === currentMonthStr) {
+                                        isCurrentMonth = true;
+                                    }
+                                }
+                                if (isCurrentMonth) currentMonthWithdrawals.push(w);
+                            });
+                        }
+                    } catch(e) {}
+                    continue;
+                }
+
+                if (dbKey === 'ADP_AUTH_DB' || dbKey.includes('WAREHOUSE') || dbKey === 'ADP_AGENTS_DB') continue;
+
+                // ดึงข้อมูลสถานีต่างๆ
+                try {
+                    const dbData = JSON.parse(jsonValue);
+                    const parts = dbKey.split('_');
+                    if (parts.length >= 3) {
+                        const stName = parts[2];
+                        processedStations.add(stName);
+                        
+                        // ระบบเช็คเดือนล่าสุด
+                        let isReported = false;
+                        if (dbData.lastConfirmed === currentMonthStr) isReported = true;
+                        if (dbData.confirmedMonths && dbData.confirmedMonths.includes(currentMonthStr)) isReported = true;
+
+                        if (isReported) {
+                            reportedList.push(stName);
+                        } else {
+                            pendingList.push(stName);
+                        }
+
+                        // ดึงของชำรุด (นับเฉพาะชำรุด/ส่งซ่อม)
+                        const checkBroken = (arr, typeName, isPrn, isSpc) => {
+                            if (!arr) return;
+                            arr.forEach(r => {
+                                let isNewSpc = isSpc && r.length >= 9;
+                                let statusIdx = isPrn ? 7 : (isSpc ? (isNewSpc ? 6 : 5) : 5);
+                                let status = String(r[statusIdx] || '').trim();
+                                
+                                if (status === 'ชำรุด' || status === 'ส่งซ่อม' || status === 'เสีย') {
+                                    let brandModel = isSpc ? (isNewSpc ? `${r[3]||''} ${r[4]||''}` : r[3]) : `${r[2]||''} ${r[3]||''}`;
+                                    let sn = isSpc && isNewSpc ? r[5] : r[4];
+                                    let tName = isSpc ? (r[1] || typeName) : typeName;
+                                    brokenItems.push({ station: stName, type: tName, detail: brandModel.trim(), sn: sn || '-' });
+                                }
+                            });
+                        };
+
+                        checkBroken(dbData.cpu, 'คอมพิวเตอร์', false, false);
+                        checkBroken(dbData.nb, 'โน๊ตบุ๊ค', false, false);
+                        checkBroken(dbData.mon, 'จอมอนิเตอร์', false, false);
+                        checkBroken(dbData.prn, 'เครื่องพิมพ์', true, false);
+                        checkBroken(dbData.spc, 'เครื่องมือพิเศษ/อื่นๆ', false, true);
+                    }
+                } catch(e) {}
+            }
+
+            allExpectedStations.forEach(s => {
+                if (!processedStations.has(s)) pendingList.push(s);
+            });
+
+            // 2. เรียงลำดับรายการเบิกจ่ายให้ล่าสุดอยู่บน
+            currentMonthWithdrawals.reverse();
+
+            // 3. ประกอบ HTML เพื่อ Print A4
+            let html = `
+                <style>
+                    @media print {
+                        @page { margin: 1.5cm; size: A4 portrait; }
+                        body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: white !important; font-family: 'Sarabun', 'Prompt', sans-serif; color: black; }
+                        #printArea { display: block !important; width: 100% !important; padding: 0 !important; background: white !important; position: absolute !important; left: 0 !important; top: 0 !important; opacity: 1 !important; z-index: 9999 !important; }
+                        .print-page-wrap { width: 100%; display: block; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; page-break-inside: auto; font-size: 13px; }
+                        th, td { border: 1px solid #333; padding: 6px 8px; }
+                        th { background-color: #f3f4f6 !important; font-weight: bold; text-align: center; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                        thead { display: table-header-group; }
+                        .header-title { text-align: center; margin-bottom: 1.5rem; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                        .text-green { color: #15803d; font-weight: bold; }
+                        .text-red { color: #b91c1c; font-weight: bold; }
+                        .text-blue { color: #1d4ed8; font-weight: bold; }
+                        .text-orange { color: #c2410c; font-weight: bold; }
+                    }
+                </style>
+                
+                <div class="print-page-wrap bg-white text-black p-8 font-sans w-full">
+                    <div class="header-title text-center mb-6 border-b-2 border-black pb-4">
+                        <h2 class="text-2xl font-bold mb-1">รายงานสรุปข้อมูลคลังและสถานภาพอุปกรณ์</h2>
+                        <h3 class="text-lg">ประจำเดือน ${monthDisplay}</h3>
+                    </div>
+
+                    <div class="mb-6 page-break-inside-avoid">
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">1. สถานะการตรวจสอบและส่งรายงาน (${reportedList.length}/${allExpectedStations.length} หน่วย)</h3>
+                        <div class="flex w-full gap-4 mt-2">
+                            <div class="w-1/2 border border-black p-3">
+                                <h4 class="text-green border-b border-gray-300 pb-1 mb-2">✅ ส่งรายงานแล้ว (${reportedList.length} หน่วย)</h4>
+                                <p class="text-xs leading-relaxed">${reportedList.length > 0 ? reportedList.join(', ') : '-'}</p>
+                            </div>
+                            <div class="w-1/2 border border-black p-3">
+                                <h4 class="text-red border-b border-gray-300 pb-1 mb-2">❌ ยังไม่ส่งรายงาน (${pendingList.length} หน่วย)</h4>
+                                <p class="text-xs leading-relaxed">${pendingList.length > 0 ? pendingList.join(', ') : '-'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">2. สรุปรายการอุปกรณ์ชำรุด/ส่งซ่อม (รวม ${brokenItems.length} รายการ)</h3>
+                        <table class="w-full border-collapse border border-black text-sm text-left">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th style="width: 5%">ลำดับ</th>
+                                    <th style="width: 25%">ประเภทอุปกรณ์</th>
+                                    <th style="width: 25%">สถานี/พื้นที่</th>
+                                    <th style="width: 45%">ยี่ห้อ / รุ่น / (S/N)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${brokenItems.length > 0 ? brokenItems.map((item, idx) => `
+                                    <tr>
+                                        <td style="text-align: center">${idx + 1}</td>
+                                        <td>${item.type}</td>
+                                        <td>${item.station}</td>
+                                        <td>${item.detail} ${item.sn && item.sn !== '-' ? ` <span style="color: gray; font-size: 11px;">(S/N: ${item.sn})</span>` : ''}</td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="4" style="text-align: center; padding: 15px;">ไม่มีอุปกรณ์ชำรุด</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">3. สรุปความเคลื่อนไหว (เบิก-รับคืนคลังส่วนกลาง ประจำเดือน)</h3>
+                        <table class="w-full border-collapse border border-black text-sm text-left">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th style="width: 5%">ลำดับ</th>
+                                    <th style="width: 15%">วันที่</th>
+                                    <th style="width: 12%">แอคชัน</th>
+                                    <th style="width: 35%">รายการพัสดุ</th>
+                                    <th style="width: 8%">จำนวน</th>
+                                    <th style="width: 25%">ผู้เบิก/ผู้ส่งคืน (ปลายทาง)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${currentMonthWithdrawals.length > 0 ? currentMonthWithdrawals.map((w, idx) => `
+                                    <tr>
+                                        <td style="text-align: center">${idx + 1}</td>
+                                        <td style="text-align: center; font-size: 11px;">${w.date || '-'}</td>
+                                        <td style="text-align: center" class="${w.action && w.action.includes('รับคืน') ? 'text-blue' : 'text-orange'}">${w.action || '-'}</td>
+                                        <td><span style="font-weight: bold;">[${w.category || '-'}]</span> ${w.specs || '-'} 
+                                            ${w.sn && w.sn !== '-' ? `<br><span style="font-size: 10px; color: gray;">S/N: ${w.sn}</span>` : ''}
+                                        </td>
+                                        <td style="text-align: center; font-weight: bold;">${w.qty || 1} <span style="font-size: 10px; font-weight: normal;">${w.unit || ''}</span></td>
+                                        <td style="font-size: 12px;">${w.user || '-'}</td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="6" style="text-align: center; padding: 15px;">ไม่มีรายการเบิกจ่ายหรือรับคืนในเดือนนี้</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-12 flex justify-end page-break-inside-avoid">
+                        <div style="text-align: center; width: 250px;">
+                            <p style="margin-bottom: 40px;">ลงชื่อ .......................................................</p>
+                            <p>( ....................................................... )</p>
+                            <p style="margin-top: 10px;">วันที่ ....... / ....... / ...........</p>
+                            <p style="margin-top: 5px; font-size: 12px; color: gray;">ผู้สรุปรายงานประจำเดือน</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = html;
+
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        }
         
     </script>
 </body>
