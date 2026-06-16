@@ -3918,8 +3918,12 @@ window.unmergeSelected = function(tableId) {
     }
 }
 
-        // =========================================================
-        // 🌟 พิมพ์แบบฟอร์มสรุปรายงานประจำเดือน (เพิ่มตารางสรุปตัวเลขความเคลื่อนไหวหน้าสุดท้าย)
+        จัดให้ครับ! เพื่อบังคับให้ **หัวข้อที่ 4 (สรุปตัวเลขและลายเซ็น)** ปัดไปขึ้นหน้าใหม่เสมอเวลาสั่งพิมพ์ เราจะใช้คำสั่ง CSS `page-break-before: always;` เข้าไปกำกับที่บล็อกนั้นครับ
+
+รบกวนคุณ BenP ก๊อปปี้ฟังก์ชันด้านล่างนี้ ไป **วางทับฟังก์ชัน `printMonthlySummaryReport()` ตัวเดิม** ได้เลยครับ (แก้จุดที่ปัดหน้าให้เรียบร้อยแล้วครับ):
+
+// =========================================================
+        // 🌟 พิมพ์แบบฟอร์มสรุปรายงานประจำเดือน (ยุบรวมหมวดหมู่ภาษาไทย-อังกฤษ + ปัดหน้าใหม่)
         // =========================================================
         function printMonthlySummaryReport() {
             if (!globalAllDataCache) {
@@ -3941,6 +3945,20 @@ window.unmergeSelected = function(tableId) {
                 const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
                 monthDisplay = `${thaiMonths[now.getMonth()]} ${now.getFullYear() + 543}`;
             }
+
+            // 🌟 ฟังก์ชันช่วยยุบรวมหมวดหมู่ (Normalize Category) ให้ไทย-อังกฤษเป็นหมวดเดียวกัน
+            const normalizeCategory = (catStr) => {
+                if (!catStr || catStr === '-') return 'อุปกรณ์ทั่วไป';
+                let c = String(catStr).trim().toLowerCase();
+                if (c === 'monitor' || c === 'จอมอนิเตอร์' || c === 'จอ') return 'จอมอนิเตอร์';
+                if (c === 'notebook' || c === 'โน๊ตบุ๊ค') return 'โน๊ตบุ๊ค';
+                if (c === 'pc' || c === 'คอมพิวเตอร์' || c === 'cpu') return 'คอมพิวเตอร์';
+                if (c === 'printer' || c === 'เครื่องพิมพ์') return 'เครื่องพิมพ์';
+                if (c === 'ups' || c === 'เครื่องสำรองไฟ') return 'เครื่องสำรองไฟ (UPS)';
+                if (c === 'server' || c === 'เซิร์ฟเวอร์') return 'เซิร์ฟเวอร์ (Server)';
+                if (c === 'switch' || c === 'เครือข่าย') return 'สวิตช์ (Network Switch)';
+                return String(catStr).trim();
+            };
 
             let reportedList = [];
             let pendingList = [];
@@ -3972,7 +3990,11 @@ window.unmergeSelected = function(tableId) {
                                         isCurrentMonth = true;
                                     }
                                 }
-                                if (isCurrentMonth) currentMonthWithdrawals.push(w);
+                                if (isCurrentMonth) {
+                                    // 🌟 ปรับชื่อหมวดหมู่ให้เป็นภาษาไทยแบบรวมกลุ่ม
+                                    w.category = normalizeCategory(w.category);
+                                    currentMonthWithdrawals.push(w);
+                                }
                             });
                         }
                     } catch(e) {}
@@ -3995,7 +4017,7 @@ window.unmergeSelected = function(tableId) {
                         if (isReported) reportedList.push(stName);
                         else pendingList.push(stName);
 
-                        const checkBroken = (arr, typeName, isPrn, isSpc) => {
+                        const checkBroken = (arr, defaultType, isPrn, isSpc) => {
                             if (!arr) return;
                             arr.forEach(r => {
                                 let isNewSpc = isSpc && r.length >= 9;
@@ -4005,7 +4027,10 @@ window.unmergeSelected = function(tableId) {
                                 if (status === 'ชำรุด' || status === 'ส่งซ่อม' || status === 'เสีย') {
                                     let brandModel = isSpc ? (isNewSpc ? `${r[3]||''} ${r[4]||''}` : r[3]) : `${r[2]||''} ${r[3]||''}`;
                                     let sn = isSpc && isNewSpc ? r[5] : r[4];
-                                    let tName = isSpc ? (r[1] || typeName) : typeName;
+                                    
+                                    // 🌟 ปรับชื่อหมวดหมู่ของพัสดุชำรุด
+                                    let rawType = isSpc ? (r[1] || defaultType) : defaultType;
+                                    let tName = normalizeCategory(rawType);
                                     
                                     if (!brokenItemsByType[tName]) brokenItemsByType[tName] = [];
                                     brokenItemsByType[tName].push({ station: stName, detail: brandModel.trim(), sn: sn || '-', status: status });
@@ -4018,7 +4043,7 @@ window.unmergeSelected = function(tableId) {
                         checkBroken(dbData.nb, 'โน๊ตบุ๊ค', false, false);
                         checkBroken(dbData.mon, 'จอมอนิเตอร์', false, false);
                         checkBroken(dbData.prn, 'เครื่องพิมพ์', true, false);
-                        checkBroken(dbData.spc, 'เครื่องมือพิเศษ/อื่นๆ', false, true);
+                        checkBroken(dbData.spc, 'เครื่องมือพิเศษ', false, true);
                     }
                 } catch(e) {}
             }
@@ -4039,10 +4064,10 @@ window.unmergeSelected = function(tableId) {
                 return 0;
             });
 
-            // 🌟 คำนวณสรุปตัวเลขความเคลื่อนไหว (จัดกลุ่มตามหมวดหมู่พัสดุ)
+            // 🌟 คำนวณสรุปตัวเลขความเคลื่อนไหว
             let movementSummary = {};
             currentMonthWithdrawals.forEach(w => {
-                let cat = (w.category && w.category !== '-') ? w.category : 'อุปกรณ์ทั่วไป';
+                let cat = w.category;
                 let action = w.action || 'ไม่ระบุ';
                 let qty = parseFloat(w.qty) || 1;
 
@@ -4169,7 +4194,7 @@ window.unmergeSelected = function(tableId) {
                         </table>
                     </div>
                     
-                    <div class="mt-8 page-break-inside-avoid">
+                    <div class="mt-8 page-break-inside-avoid" style="page-break-before: always; padding-top: 10px;">
                         <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">4. สรุปยอดความเคลื่อนไหวแยกตามประเภทพัสดุ (สรุปตัวเลข)</h3>
                         <table class="w-full border-collapse border border-black text-sm text-center mb-8">
                             <thead>
@@ -4192,7 +4217,7 @@ window.unmergeSelected = function(tableId) {
                             </tbody>
                         </table>
 
-                        <div class="flex justify-end mt-8">
+                        <div class="flex justify-end mt-12">
                             <div style="text-align: center; width: 250px;">
                                 <p style="margin-bottom: 40px;">ลงชื่อ .......................................................</p>
                                 <p>( ....................................................... )</p>
