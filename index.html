@@ -3918,16 +3918,13 @@ window.unmergeSelected = function(tableId) {
     }
 }
 
-        // =========================================================
-        // 🌟 พิมพ์แบบฟอร์มสรุปรายงานประจำเดือน (ดึงตามเดือนที่เลือกใน Dropdown)
-        // =========================================================
         function printMonthlySummaryReport() {
             if (!globalAllDataCache) {
                 showToast('กำลังโหลดข้อมูล กรุณารอสักครู่...', 'error');
                 return;
             }
 
-            // ดึงเดือนจาก Dropdown ของระบบคุณ BenP
+            // ดึงเดือนจาก Dropdown
             let currentMonthStr = "";
             let monthDisplay = "";
             const monthDropdown = document.getElementById('monthSelector');
@@ -3944,7 +3941,8 @@ window.unmergeSelected = function(tableId) {
 
             let reportedList = [];
             let pendingList = [];
-            let brokenItems = []; 
+            let brokenItemsByType = {}; // สร้าง Object เพื่อจัดกลุ่มตามประเภท
+            let totalBroken = 0;
             let currentMonthWithdrawals = [];
 
             let allExpectedStations = [];
@@ -3963,13 +3961,11 @@ window.unmergeSelected = function(tableId) {
                                 let wDateStr = String(w.date || '');
                                 let isCurrentMonth = false;
                                 
-                                // รองรับ Format 'YYYY-MM-DD' หรือ 'DD/MM/YYYY'
                                 if (wDateStr.startsWith(currentMonthStr)) {
                                     isCurrentMonth = true;
                                 } else {
                                     let datePart = wDateStr.split(' ')[0]; 
                                     let parts = datePart.split('/');
-                                    // แปลง DD/MM/YYYY กลับมาเทียบ
                                     if (parts.length >= 3 && `${parts[2]}-${parts[1]}` === currentMonthStr) {
                                         isCurrentMonth = true;
                                     }
@@ -3991,18 +3987,14 @@ window.unmergeSelected = function(tableId) {
                         const stName = parts[2];
                         processedStations.add(stName);
                         
-                        // ระบบเช็คเดือนล่าสุด
                         let isReported = false;
                         if (dbData.lastConfirmed === currentMonthStr) isReported = true;
                         if (dbData.confirmedMonths && dbData.confirmedMonths.includes(currentMonthStr)) isReported = true;
 
-                        if (isReported) {
-                            reportedList.push(stName);
-                        } else {
-                            pendingList.push(stName);
-                        }
+                        if (isReported) reportedList.push(stName);
+                        else pendingList.push(stName);
 
-                        // ดึงของชำรุด (นับเฉพาะชำรุด/ส่งซ่อม)
+                        // ดึงของชำรุด (นับเฉพาะชำรุด/ส่งซ่อม/เสีย) และจัดกลุ่มตามประเภท
                         const checkBroken = (arr, typeName, isPrn, isSpc) => {
                             if (!arr) return;
                             arr.forEach(r => {
@@ -4014,7 +4006,10 @@ window.unmergeSelected = function(tableId) {
                                     let brandModel = isSpc ? (isNewSpc ? `${r[3]||''} ${r[4]||''}` : r[3]) : `${r[2]||''} ${r[3]||''}`;
                                     let sn = isSpc && isNewSpc ? r[5] : r[4];
                                     let tName = isSpc ? (r[1] || typeName) : typeName;
-                                    brokenItems.push({ station: stName, type: tName, detail: brandModel.trim(), sn: sn || '-' });
+                                    
+                                    if (!brokenItemsByType[tName]) brokenItemsByType[tName] = [];
+                                    brokenItemsByType[tName].push({ station: stName, detail: brandModel.trim(), sn: sn || '-', status: status });
+                                    totalBroken++;
                                 }
                             });
                         };
@@ -4032,10 +4027,58 @@ window.unmergeSelected = function(tableId) {
                 if (!processedStations.has(s)) pendingList.push(s);
             });
 
-            // 2. เรียงลำดับรายการเบิกจ่ายให้ล่าสุดอยู่บน
-            currentMonthWithdrawals.reverse();
+            // 2. จัดเรียง Action (เบิกจ่าย-รับคืน) เป็นกลุ่มตัวอักษรให้อ่านง่าย
+            currentMonthWithdrawals.sort((a, b) => {
+                let actionA = a.action || '';
+                let actionB = b.action || '';
+                // เรียงตามตัวอักษรของ Action (นำเข้า -> เบิกจ่าย -> รับคืน)
+                if (actionA < actionB) return -1;
+                if (actionA > actionB) return 1;
+                
+                // ถ้า Action เหมือนกัน ให้เรียงตามวันที่
+                let dateA = a.date || '';
+                let dateB = b.date || '';
+                if (dateA > dateB) return -1;
+                if (dateA < dateB) return 1;
+                return 0;
+            });
 
-            // 3. ประกอบ HTML เพื่อ Print A4
+            // 3. ประกอบ HTML ตารางแยกประเภทของชำรุด
+            let brokenHtml = '';
+            let types = Object.keys(brokenItemsByType).sort();
+            
+            if (types.length === 0) {
+                brokenHtml = '<table class="w-full border-collapse border border-black text-sm text-left"><tr><td style="text-align: center; padding: 15px;">ไม่มีอุปกรณ์ชำรุดหรือส่งซ่อมในเดือนนี้</td></tr></table>';
+            } else {
+                types.forEach(tName => {
+                    let items = brokenItemsByType[tName];
+                    brokenHtml += `
+                        <h4 style="font-weight: bold; margin-top: 15px; margin-bottom: 5px; color: #1e3a8a;">📌 ประเภท: ${tName} (${items.length} รายการ)</h4>
+                        <table class="w-full border-collapse border border-black text-sm text-left mb-4">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th style="width: 5%">ลำดับ</th>
+                                    <th style="width: 25%">สถานี/พื้นที่</th>
+                                    <th style="width: 45%">ยี่ห้อ / รุ่น / (S/N)</th>
+                                    <th style="width: 25%">สถานะ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${items.map((item, idx) => `
+                                    <tr>
+                                        <td style="text-align: center">${idx + 1}</td>
+                                        <td>${item.station}</td>
+                                        <td>${item.detail} ${item.sn && item.sn !== '-' ? ` <span style="color: gray; font-size: 11px;">(S/N: ${item.sn})</span>` : ''}</td>
+                                        <td style="font-weight: bold; color: ${item.status === 'ส่งซ่อม' ? '#d97706' : '#dc2626'}">${item.status}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                });
+            }
+
+            // 4. ประกอบ HTML ออกแบบมาเพื่อ A4 Print
             let html = `
                 <style>
                     @media print {
@@ -4062,6 +4105,7 @@ window.unmergeSelected = function(tableId) {
                         <h3 class="text-lg">ประจำเดือน ${monthDisplay}</h3>
                     </div>
 
+                    <!-- ส่วนที่ 1: สถานะการส่งรายงาน -->
                     <div class="mb-6 page-break-inside-avoid">
                         <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">1. สถานะการตรวจสอบและส่งรายงาน (${reportedList.length}/${allExpectedStations.length} หน่วย)</h3>
                         <div class="flex w-full gap-4 mt-2">
@@ -4076,32 +4120,15 @@ window.unmergeSelected = function(tableId) {
                         </div>
                     </div>
 
+                    <!-- ส่วนที่ 2: อุปกรณ์ชำรุด (แยกตามประเภท) -->
                     <div class="mb-6">
-                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">2. สรุปรายการอุปกรณ์ชำรุด/ส่งซ่อม (รวม ${brokenItems.length} รายการ)</h3>
-                        <table class="w-full border-collapse border border-black text-sm text-left">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th style="width: 5%">ลำดับ</th>
-                                    <th style="width: 25%">ประเภทอุปกรณ์</th>
-                                    <th style="width: 25%">สถานี/พื้นที่</th>
-                                    <th style="width: 45%">ยี่ห้อ / รุ่น / (S/N)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${brokenItems.length > 0 ? brokenItems.map((item, idx) => `
-                                    <tr>
-                                        <td style="text-align: center">${idx + 1}</td>
-                                        <td>${item.type}</td>
-                                        <td>${item.station}</td>
-                                        <td>${item.detail} ${item.sn && item.sn !== '-' ? ` <span style="color: gray; font-size: 11px;">(S/N: ${item.sn})</span>` : ''}</td>
-                                    </tr>
-                                `).join('') : '<tr><td colspan="4" style="text-align: center; padding: 15px;">ไม่มีอุปกรณ์ชำรุด</td></tr>'}
-                            </tbody>
-                        </table>
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">2. สรุปรายการอุปกรณ์ชำรุด/ส่งซ่อม (รวมทั้งหมด ${totalBroken} รายการ)</h3>
+                        ${brokenHtml}
                     </div>
 
+                    <!-- ส่วนที่ 3: เบิกจ่าย-รับคืน (จัดเรียงตาม Action) -->
                     <div class="mb-6">
-                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">3. สรุปความเคลื่อนไหว (เบิก-รับคืนคลังส่วนกลาง ประจำเดือน)</h3>
+                        <h3 class="text-md font-bold bg-gray-200 p-2 border border-black mb-2">3. สรุปความเคลื่อนไหว (คลังส่วนกลาง ประจำเดือน)</h3>
                         <table class="w-full border-collapse border border-black text-sm text-left">
                             <thead>
                                 <tr class="bg-gray-100">
@@ -4118,24 +4145,25 @@ window.unmergeSelected = function(tableId) {
                                     <tr>
                                         <td style="text-align: center">${idx + 1}</td>
                                         <td style="text-align: center; font-size: 11px;">${w.date || '-'}</td>
-                                        <td style="text-align: center" class="${w.action && w.action.includes('รับคืน') ? 'text-blue' : 'text-orange'}">${w.action || '-'}</td>
+                                        <td style="text-align: center; font-weight: bold; color: ${w.action && w.action.includes('รับคืน') ? '#1d4ed8' : (w.action && w.action.includes('นำเข้า') ? '#15803d' : '#ea580c')}">${w.action || '-'}</td>
                                         <td><span style="font-weight: bold;">[${w.category || '-'}]</span> ${w.specs || '-'} 
                                             ${w.sn && w.sn !== '-' ? `<br><span style="font-size: 10px; color: gray;">S/N: ${w.sn}</span>` : ''}
                                         </td>
                                         <td style="text-align: center; font-weight: bold;">${w.qty || 1} <span style="font-size: 10px; font-weight: normal;">${w.unit || ''}</span></td>
                                         <td style="font-size: 12px;">${w.user || '-'}</td>
                                     </tr>
-                                `).join('') : '<tr><td colspan="6" style="text-align: center; padding: 15px;">ไม่มีรายการเบิกจ่ายหรือรับคืนในเดือนนี้</td></tr>'}
+                                `).join('') : '<tr><td colspan="6" style="text-align: center; padding: 15px;">ไม่มีรายการเบิกจ่าย รับคืน หรือนำเข้า ในเดือนนี้</td></tr>'}
                             </tbody>
                         </table>
                     </div>
                     
+                    <!-- ลายเซ็น -->
                     <div class="mt-12 flex justify-end page-break-inside-avoid">
                         <div style="text-align: center; width: 250px;">
                             <p style="margin-bottom: 40px;">ลงชื่อ .......................................................</p>
                             <p>( ....................................................... )</p>
                             <p style="margin-top: 10px;">วันที่ ....... / ....... / ...........</p>
-                            <p style="margin-top: 5px; font-size: 12px; color: gray;">ผู้สรุปรายงานประจำเดือน</p>
+                            <p style="margin-top: 5px; font-size: 12px; color: gray;">ผู้ตรวจสอบและจัดทำรายงาน</p>
                         </div>
                     </div>
                 </div>
