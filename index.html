@@ -2222,140 +2222,126 @@ nav {
         function closeMonthlyModal() { document.getElementById('monthlyConfirmModal').classList.add('hidden'); document.getElementById('monthlyConfirmModal').classList.remove('flex'); }
 
         async function executeConfirmMonth() {
-            closeMonthlyModal(); 
-            const now = new Date(); 
-            const currentMonthStr = selectedReportMonth || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
-            let confirmedList = originalDbData.confirmedMonths || (originalDbData.lastConfirmed ? [originalDbData.lastConfirmed] : []);
-            if (!confirmedList.includes(currentMonthStr)) confirmedList.push(currentMonthStr);
-            pendingLogs = isEditingConfirmedReport ? [{ station: currentStation, action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ station: currentStation, action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
-            document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; 
-            document.getElementById('loadingOverlay').classList.remove('hidden'); 
-            document.getElementById('loadingOverlay').classList.add('flex');
-            
-            try {
-                const checkHas = (b, m, s) => { let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim(); return (bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-'); };
-                let combinedData = tableCPUMON.getData();
-                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], checkHas(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
-                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], checkHas(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
-                let cpuMergeObj = tableCPUMON.options.mergeCells || {};
+    closeMonthlyModal(); 
+    const now = new Date(); 
+    const currentMonthStr = selectedReportMonth || (now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'));
+    let confirmedList = originalDbData.confirmedMonths || (originalDbData.lastConfirmed ? [originalDbData.lastConfirmed] : []);
+    if (!confirmedList.includes(currentMonthStr)) confirmedList.push(currentMonthStr);
+    pendingLogs = isEditingConfirmedReport ? [{ station: currentStation, action: 'แก้ไขรายงาน', detail: `ยืนยันแก้ไขข้อมูลเดือน ${currentMonthStr}` }] : [{ station: currentStation, action: 'ส่งรายงาน', detail: `ยืนยันข้อมูลเดือน ${currentMonthStr}` }];
+    document.getElementById('loadingText').innerText = 'กำลังส่งรายงาน...'; 
+    document.getElementById('loadingOverlay').classList.remove('hidden'); 
+    document.getElementById('loadingOverlay').classList.add('flex');
+    
+    try {
+        const checkHas = (b, m, s) => { let bb = String(b||'').trim(); let mm = String(m||'').trim(); let ss = String(s||'').trim(); return (bb && bb!=='-') || (mm && mm!=='-') || (ss && ss!=='-'); };
+        let combinedData = tableCPUMON.getData();
+        let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], checkHas(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+        let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], checkHas(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
+        let cpuMergeObj = tableCPUMON.options.mergeCells || {};
 
-                const newPayload = { 
-                    cpu: newCpu, 
-                    nb: tableNB.getData().map(r => r.slice(0, -1)), 
-                    mon: newMon, 
-                    prn: tablePrn.getData().map(r => r.slice(0, -1)), 
-                    spc: tableSpc.getData().map(r => r.slice(0, -1)), 
-                    cpuMerge: cpuMergeObj, 
-                    lastConfirmed: currentMonthStr,
-                    confirmedMonths: confirmedList
-                };
+        // 🌟 สำคัญ: เพิ่ม diagram: originalDbData.diagram เข้าไปเพื่อไม่ให้ผังห้องหาย
+        const newPayload = { 
+            cpu: newCpu, 
+            nb: tableNB.getData().map(r => r.slice(0, -1)), 
+            mon: newMon, 
+            prn: tablePrn.getData().map(r => r.slice(0, -1)), 
+            spc: tableSpc.getData().map(r => r.slice(0, -1)), 
+            cpuMerge: cpuMergeObj, 
+            lastConfirmed: currentMonthStr,
+            confirmedMonths: confirmedList,
+            diagram: originalDbData.diagram 
+        };
 
-                let response = await fetch(API_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ 
-                        action: 'CONFIRM_MONTHLY',
-                        key: `ADP_${currentGroup}_${currentStation}`, 
-                        value: JSON.stringify(newPayload), 
-                        logs: pendingLogs,
-                        stationName: currentStation,
-                        reportMonth: currentMonthStr
-                    }) 
-                });
+        let response = await fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'CONFIRM_MONTHLY', key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs, stationName: currentStation, reportMonth: currentMonthStr }) 
+        });
 
-                let textResult = await response.text();
-                let result;
-                try { result = JSON.parse(textResult); } catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
-                if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
+        let textResult = await response.text();
+        let result;
+        try { result = JSON.parse(textResult); } catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
+        if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
 
-                if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
-                
-                showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จและแจ้งเตือนแล้ว` : `ส่งรายงานสำเร็จและแจ้งเตือนแล้ว`); 
-                isEditingConfirmedReport = true; 
-                document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
-                document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
-                hasUnsavedDeletions = false; 
-            } catch (e) { 
-                console.error(e); 
-                showToast("ส่งรายงานล้มเหลว: " + e.message, "error"); 
-            } finally { 
-                document.getElementById('loadingOverlay').classList.add('hidden'); 
-                document.getElementById('loadingOverlay').classList.remove('flex'); 
-            }
-        }
+        if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
+        originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+        
+        showToast(isEditingConfirmedReport ? `แก้ไขรายงานสำเร็จและแจ้งเตือนแล้ว` : `ส่งรายงานสำเร็จและแจ้งเตือนแล้ว`); 
+        isEditingConfirmedReport = true; 
+        document.getElementById('btnConfirmMonth').className = "has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-500 border border-amber-200 dark:border-amber-800 px-4 py-2.5 rounded-xl hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm"; 
+        document.getElementById('btnConfirmText').innerText = "แก้ไขรายงาน";
+        hasUnsavedDeletions = false; 
+    } catch (e) { 
+        console.error(e); showToast("ส่งรายงานล้มเหลว: " + e.message, "error"); 
+    } finally { 
+        document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
+    }
+}
 
         async function executeSaveData() {
-            closeConfirmModal(); 
-            document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; 
-            document.getElementById('loadingOverlay').classList.remove('hidden'); 
-            document.getElementById('loadingOverlay').classList.add('flex');
-            
-            try {
+    closeConfirmModal(); 
+    document.getElementById('loadingText').innerText = 'กำลังซิงค์...'; 
+    document.getElementById('loadingOverlay').classList.remove('hidden'); 
+    document.getElementById('loadingOverlay').classList.add('flex');
+    
+    try {
+        fillMissingSNs();
+        let combinedData = tableCPUMON.getData();
 
-                fillMissingSNs();
+        const isValidItem = (b, m, s) => { 
+            let bb = (b === undefined || b === null) ? '' : String(b).trim().toLowerCase(); 
+            let mm = (m === undefined || m === null) ? '' : String(m).trim().toLowerCase(); 
+            let ss = (s === undefined || s === null) ? '' : String(s).trim().toLowerCase(); 
+            return !((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a' || bb==='undefined' || bb==='null') && (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a' || mm==='undefined' || mm==='null') && (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a' || ss==='undefined' || ss==='null'));
+        };
 
-                let combinedData = tableCPUMON.getData();
+        let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], isValidItem(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
+        let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], isValidItem(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
+        
+        let cpuMergeObj = tableCPUMON.options.mergeCells || {};
+        let confirmedList = originalDbData.confirmedMonths || (originalDbData.lastConfirmed ? [originalDbData.lastConfirmed] : []);
 
-                const isValidItem = (b, m, s) => { 
-                    let bb = (b === undefined || b === null) ? '' : String(b).trim().toLowerCase(); 
-                    let mm = (m === undefined || m === null) ? '' : String(m).trim().toLowerCase(); 
-                    let ss = (s === undefined || s === null) ? '' : String(s).trim().toLowerCase(); 
-                    return !((!bb || bb==='-' || bb==='ไม่มี' || bb==='n/a' || bb==='undefined' || bb==='null') && (!mm || mm==='-' || mm==='ไม่มี' || mm==='n/a' || mm==='undefined' || mm==='null') && (!ss || ss==='-' || ss==='ไม่มี' || ss==='n/a' || ss==='undefined' || ss==='null'));
-                };
+        // 🌟 สำคัญ: เพิ่ม diagram: originalDbData.diagram เข้าไปเพื่อไม่ให้ผังห้องหาย
+        const newPayload = { 
+            cpu: newCpu, 
+            nb: tableNB.getData().map(r => r.slice(0, -1)), 
+            mon: newMon, 
+            prn: tablePrn.getData().map(r => r.slice(0, -1)), 
+            spc: tableSpc.getData().map(r => r.slice(0, -1)), 
+            cpuMerge: cpuMergeObj,
+            lastConfirmed: originalDbData.lastConfirmed,
+            confirmedMonths: confirmedList,
+            diagram: originalDbData.diagram 
+        };
 
-                let newCpu = combinedData.map(r => ["", r[1], r[2], r[3], r[4], isValidItem(r[2],r[3],r[4]) ? (r[5]||'ปกติ') : 'ไม่มี', r[10], r[11]]);
-                let newMon = combinedData.map(r => ["", r[1], r[6], r[7], r[8], isValidItem(r[6],r[7],r[8]) ? (r[9]||'ปกติ') : 'ไม่มี', r[11]]);
-                
-                let cpuMergeObj = tableCPUMON.options.mergeCells || {};
-                let confirmedList = originalDbData.confirmedMonths || (originalDbData.lastConfirmed ? [originalDbData.lastConfirmed] : []);
+        let response = await fetch(API_URL, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(newPayload), logs: pendingLogs }) 
+        });
 
-                const newPayload = { 
-                    cpu: newCpu, 
-                    nb: tableNB.getData().map(r => r.slice(0, -1)), 
-                    mon: newMon, 
-                    prn: tablePrn.getData().map(r => r.slice(0, -1)), 
-                    spc: tableSpc.getData().map(r => r.slice(0, -1)), 
-                    cpuMerge: cpuMergeObj,
-                    lastConfirmed: originalDbData.lastConfirmed,
-                    confirmedMonths: confirmedList
-                };
+        let textResult = await response.text();
+        let result;
+        try { result = JSON.parse(textResult); } catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
 
-                let response = await fetch(API_URL, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ 
-                        key: `ADP_${currentGroup}_${currentStation}`, 
-                        value: JSON.stringify(newPayload), 
-                        logs: pendingLogs 
-                    }) 
-                });
+        if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
+        
+        if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
 
-                let textResult = await response.text();
-                let result;
-                try { result = JSON.parse(textResult); } catch(e) { throw new Error("เซิร์ฟเวอร์ขัดข้อง"); }
+        originalDbData = JSON.parse(JSON.stringify(newPayload)); 
+        hasUnsavedDeletions = false; 
+        pendingLogs = [];
+        showToast(`บันทึกข้อมูลเรียบร้อย`);
+        
+        if (currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') loadDashboardStats();
+        openStation(currentGroup, currentStation);
 
-                if(result.status !== 'success') throw new Error(result.message || "ระบบตอบกลับผิดพลาด");
-                
-                if(globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(newPayload);
-
-                originalDbData = JSON.parse(JSON.stringify(newPayload)); 
-                hasUnsavedDeletions = false; 
-                pendingLogs = [];
-                showToast(`บันทึกข้อมูลเรียบร้อย`);
-                
-                if (currentUserRole === 'Admin' && typeof loadDashboardStats === 'function') loadDashboardStats();
-
-                openStation(currentGroup, currentStation);
-
-            } catch (e) { 
-                console.error(e); 
-                showToast("บันทึกไม่สำเร็จ: " + e.message, "error"); 
-            } finally { 
-                document.getElementById('loadingOverlay').classList.add('hidden'); 
-                document.getElementById('loadingOverlay').classList.remove('flex'); 
-            }
-        }
+    } catch (e) { 
+        console.error(e); showToast("บันทึกไม่สำเร็จ: " + e.message, "error"); 
+    } finally { 
+        document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); 
+    }
+}
 
         function createQRLabelElement(type, brand, model, sn, user, dateStr) {
             let baseUrl = window.location.href.split('?')[0]; 
@@ -2927,7 +2913,7 @@ nav {
                     });
 
                     let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]); let newMon = cpumonData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
-                    let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null }; let cacheKey = `ADP_${groupName}_${fullStationName}`;
+                    let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, diagram: oldData.diagram, lastConfirmed: null }; let cacheKey = `ADP_${groupName}_${fullStationName}`;
                     if (globalAllDataCache && globalAllDataCache[cacheKey]) { try { let oldData = JSON.parse(globalAllDataCache[cacheKey]); newPayload.lastConfirmed = oldData.lastConfirmed; } catch(e) {} }
                     saveQueue.push({ name: fullStationName, key: cacheKey, payload: newPayload, logs: [{ action: 'นำเข้าไฟล์รวม', detail: `อัปเดตข้อมูล ${fullStationName} อัตโนมัติด้วยไฟล์รวม` }] });
                 });
@@ -3150,7 +3136,7 @@ nav {
                 
                 let newCpu = cpumonData.map(r => ["", r[1], r[2], r[3], r[4], r[5], r[10], r[11]]);
                 let newMon = cpumonData.map(r => ["", r[1], r[6], r[7], r[8], r[9], r[11]]);
-                let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: null };
+                let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, diagram: oldData.diagram, lastConfirmed: null };
                 
                 if (globalAllDataCache && globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]) { try { let oldData = JSON.parse(globalAllDataCache[`ADP_${currentGroup}_${currentStation}`]); newPayload.lastConfirmed = oldData.lastConfirmed; } catch(e) {} }
 
@@ -3423,7 +3409,7 @@ nav {
                             removed.forEach(i => stationLogs.push({ station: fullStationName, action: 'ลบอุปกรณ์', detail: i }));
 
                             let existingQueueIdx = saveQueue.findIndex(q => q.name === fullStationName);
-                            let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, lastConfirmed: oldData.lastConfirmed };
+                            let newPayload = { cpu: newCpu, nb: nbData, mon: newMon, prn: prnData, spc: spcData, diagram: oldData.diagram, lastConfirmed: oldData.lastConfirmed };
                             
                             if (existingQueueIdx >= 0) {
                                 saveQueue[existingQueueIdx].payload = newPayload;
@@ -4336,33 +4322,14 @@ async function openDiagramModal() {
     document.getElementById('diagramModal').classList.remove('hidden');
     document.getElementById('diagramModal').classList.add('flex');
     
-    document.getElementById('loadingText').innerText = 'กำลังโหลดผังห้อง...';
-    document.getElementById('loadingOverlay').classList.remove('hidden'); 
-    document.getElementById('loadingOverlay').classList.add('flex');
-
-    try {
-        // วิ่งไปดึงผังห้องที่ชีต "Diagrams"
-        const targetStation = encodeURIComponent(currentStation);
-        const response = await fetch(`${API_URL}?action=GET_DIAGRAM&station=${targetStation}`);
-        const result = await response.json();
-        
-        if (result.data) {
-            currentDiagramData = JSON.parse(result.data);
-            if(!currentDiagramData.roomWidth) currentDiagramData.roomWidth = 800;
-            if(!currentDiagramData.roomHeight) currentDiagramData.roomHeight = 600;
-        } else {
-            currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
-        }
-        
-        renderDiagram();
-    } catch(e) {
-        console.error(e);
-        showToast("โหลดผังห้องล้มเหลว (เริ่มจากห้องเปล่า)", "error");
-        renderDiagram();
-    } finally {
-        document.getElementById('loadingOverlay').classList.add('hidden'); 
-        document.getElementById('loadingOverlay').classList.remove('flex');
+    // 🌟 ดึงข้อมูลจาก originalDbData ที่ติดมากับตารางอุปกรณ์เลย (ปลอดภัยและไม่ทับข้อมูลเก่า)
+    if (originalDbData && originalDbData.diagram) {
+        currentDiagramData = JSON.parse(JSON.stringify(originalDbData.diagram));
+    } else {
+        currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
     }
+    
+    renderDiagram();
 }
 
 function closeDiagramModal() {
@@ -4535,27 +4502,32 @@ function updateCurrentDiagramData() {
     });
 }
 
-// 💾 ส่งพิกัดและขนาดห้องไปบันทึกที่ชีต "Diagrams"
 async function saveDiagram() {
     updateCurrentDiagramData();
-    document.getElementById('loadingText').innerText = 'บันทึกผังห้องลงฐานข้อมูล...';
+    document.getElementById('loadingText').innerText = 'บันทึกผังห้องลงฐานข้อมูลหลัก...';
     document.getElementById('loadingOverlay').classList.remove('hidden'); 
     document.getElementById('loadingOverlay').classList.add('flex');
 
     try {
+        // 🌟 ฝังข้อมูลผังห้อง (diagram) เข้าไปรวมกับข้อมูลอุปกรณ์เดิม
+        originalDbData.diagram = currentDiagramData;
+        
         const payload = {
-            action: 'SAVE_DIAGRAM',
-            station: currentStation,
-            data: JSON.stringify(currentDiagramData)
+            key: `ADP_${currentGroup}_${currentStation}`,
+            value: JSON.stringify(originalDbData),
+            logs: [{ station: currentStation, action: 'อัปเดตผังห้อง', detail: 'บันทึกการจัดผังห้องใหม่' }]
         };
 
+        // ใช้ endpoint ปกติในการบันทึกข้อมูล
         const response = await fetch(API_URL, {
             method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload)
         });
 
         const result = await response.json();
         if (result.status === 'success') {
+            if (globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(originalDbData);
             showToast("💾 บันทึกโครงสร้างผังห้องสำเร็จ!");
         } else {
             showToast("บันทึกล้มเหลว โปรดตรวจสอบสิทธิ์", "error");
