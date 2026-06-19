@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4.3.0/dist/jsuites.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
     <style>
                
@@ -732,6 +733,10 @@ nav {
                 <button onclick="prepareSave()" data-tooltip="เซฟการเปลี่ยนแปลงลงฐานข้อมูลหลัก" class="has-tooltip w-full sm:w-auto justify-center bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 px-6 py-2.5 rounded-xl hover:bg-black dark:hover:bg-white font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-md">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg> บันทึก
                 </button>
+
+                <button onclick="openDiagramModal()" data-tooltip="จัดผังห้องแบบลากวาง" class="has-tooltip w-full sm:w-auto justify-center bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 shadow-sm">
+    📍 จัดผัง
+</button>
             </div>
         </div>
 
@@ -861,6 +866,30 @@ nav {
             </div>
         </div>
     </div>
+
+    <div id="diagramModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in no-print">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-6xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 h-[90vh] animate-pop-in">
+        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+            <div>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 จัดผังอุปกรณ์</h3>
+                <p id="diagramStationName" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">ชื่อสถานี</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="saveDiagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-transform active:scale-95 flex items-center gap-2">
+                    💾 บันทึกพิกัด
+                </button>
+                <button onclick="closeDiagramModal()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-xl font-bold transition-transform active:scale-95">ปิด</button>
+            </div>
+        </div>
+        <div class="p-6 bg-slate-100 dark:bg-slate-900 flex-1 relative overflow-hidden flex flex-col gap-2">
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-blue-500"></span> สามารถลากกล่องเพื่อจัดวางตำแหน่งได้ตามต้องการ
+            </div>
+            <div id="diagramRoom" class="w-full flex-1 bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative overflow-hidden shadow-inner touch-none">
+                </div>
+        </div>
+    </div>
+</div>
 
     <script>
         const API_URL = 'https://script.google.com/macros/s/AKfycbwCut-_LOFpyERCvO2f_kc0MnaowZGZ6VafjwmCBY2sE4VSrDvLuDf-fuQmp5vI9naQ/exec';
@@ -4230,6 +4259,142 @@ window.unmergeSelected = function(tableId) {
                 window.print();
             }, 300);
         }
+
+        // ==========================================
+// ระบบจัดผังห้อง (Diagram Drag & Drop)
+// ==========================================
+
+function openDiagramModal() {
+    if (!currentStation) {
+        showToast("กรุณาเลือกสถานีก่อน", "error");
+        return;
+    }
+    
+    document.getElementById('diagramStationName').innerText = `สถานี: ${currentStation} (${currentGroup})`;
+    document.getElementById('diagramModal').classList.remove('hidden');
+    document.getElementById('diagramModal').classList.add('flex');
+    
+    renderDiagram();
+}
+
+function closeDiagramModal() {
+    document.getElementById('diagramModal').classList.add('hidden');
+    document.getElementById('diagramModal').classList.remove('flex');
+}
+
+function renderDiagram() {
+    const room = document.getElementById('diagramRoom');
+    room.innerHTML = ''; // ล้างผังเก่า
+
+    // โหลดพิกัดที่เคยเซฟไว้ในเครื่อง (ถ้ามี)
+    let savedPositions = {};
+    try {
+        savedPositions = JSON.parse(localStorage.getItem('adp_diagram_' + currentStation)) || {};
+    } catch(e) {}
+
+    let devices = [];
+
+    // ตัวช่วยดึงข้อมูลเข้า Array แบบสั้นๆ
+    const addDev = (type, brand, model, sn, user, icon) => {
+        let actualSn = (sn && String(sn).trim() !== '-') ? sn : `${brand}-${model}`;
+        if (!actualSn || actualSn === '-') return; 
+        devices.push({ id: `dev_${actualSn.replace(/\W/g, '')}`, type, brand, model, sn, user, icon });
+    };
+
+    // 1. ดึงคอมพิวเตอร์และจอ
+    if (tableCPUMON) {
+        tableCPUMON.getData().forEach(r => {
+            if (r[2] || r[4]) addDev('PC', r[2], r[3], r[4], r[1], '💻');
+            if (r[6] || r[8]) addDev('Monitor', r[6], r[7], r[8], r[1], '🖥️');
+        });
+    }
+    // 2. ดึงโน๊ตบุ๊ค
+    if (tableNB) tableNB.getData().forEach(r => { if (r[2] || r[4]) addDev('Notebook', r[2], r[3], r[4], r[1], '💻'); });
+    // 3. ดึงเครื่องพิมพ์
+    if (tablePrn) tablePrn.getData().forEach(r => { if (r[2] || r[4]) addDev('Printer', r[2], r[3], r[4], r[1], '🖨️'); });
+    // 4. ดึงเครื่องมือพิเศษ
+    if (tableSpc) tableSpc.getData().forEach(r => { if (r[3] || r[5]) addDev(r[1]||'Tools', r[3], r[4], r[5], r[2], '🛠️'); });
+
+    // สร้าง Element กล่องอุปกรณ์ในผัง
+    let defaultX = 20; let defaultY = 20;
+    devices.forEach((dev, idx) => {
+        // หากไม่เคยมีพิกัด ให้เรียงต่อกันเป็นแถว
+        let pos = savedPositions[dev.id] || { 
+            x: defaultX + (idx % 8) * 100, 
+            y: defaultY + Math.floor(idx / 8) * 100 
+        };
+        
+        let el = document.createElement('div');
+        el.id = dev.id;
+        // ดีไซน์กล่องอุปกรณ์
+        el.className = 'draggable-device absolute w-24 h-24 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-2 hover:border-indigo-400 hover:shadow-md transition-shadow z-10';
+        el.setAttribute('data-x', pos.x);
+        el.setAttribute('data-y', pos.y);
+        el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+        
+        let displayName = dev.sn && dev.sn !== '-' ? dev.sn : dev.brand;
+        
+        el.innerHTML = `
+            <span class="text-3xl leading-none drop-shadow-sm mb-1">${dev.icon}</span>
+            <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
+            <span class="text-[9px] text-slate-500 dark:text-slate-400 leading-tight w-full truncate mt-0.5">${displayName}</span>
+        `;
+        
+        // เมื่อคลิกกล่อง ให้นำมาไว้หน้าสุด
+        el.addEventListener('mousedown', () => {
+            document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
+            el.style.zIndex = '50';
+        });
+
+        room.appendChild(el);
+    });
+
+    initInteract();
+}
+
+let interactInitialized = false;
+function initInteract() {
+    if (interactInitialized) return;
+    interact('.draggable-device').draggable({
+        inertia: true,
+        modifiers: [
+            interact.modifiers.restrictRect({
+                restriction: 'parent',
+                endOnly: true
+            })
+        ],
+        autoScroll: true,
+        listeners: {
+            start(event) { event.target.style.cursor = 'grabbing'; },
+            move(event) {
+                const target = event.target;
+                const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                
+                target.style.transform = `translate(${x}px, ${y}px)`;
+                target.setAttribute('data-x', x);
+                target.setAttribute('data-y', y);
+            },
+            end(event) { event.target.style.cursor = 'grab'; }
+        }
+    });
+    interactInitialized = true;
+}
+
+function saveDiagram() {
+    const devices = document.querySelectorAll('.draggable-device');
+    let savedData = {};
+    devices.forEach(dev => {
+        savedData[dev.id] = {
+            x: Math.round(dev.getAttribute('data-x')),
+            y: Math.round(dev.getAttribute('data-y'))
+        };
+    });
+    
+    // บันทึกลง LocalStorage ของเครื่องที่กำลังใช้งาน
+    localStorage.setItem('adp_diagram_' + currentStation, JSON.stringify(savedData));
+    showToast("💾 บันทึกตำแหน่งผังห้องลงเครื่องสำเร็จ!");
+}
         
     </script>
 </body>
