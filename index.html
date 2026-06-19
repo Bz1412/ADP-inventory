@@ -928,10 +928,12 @@ nav {
                 </div>
             </div>
             
+            <div id="roomTabsContainer" class="w-full bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 px-4 py-2.5 flex items-center gap-2 overflow-x-auto shadow-sm z-40 no-print">
+                </div>
+
             <div id="diagramScrollArea" class="flex-1 relative overflow-auto custom-scrollbar p-6 md:p-8">
                 
-                <div class="fixed top-24 right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
-                    
+                <div class="fixed top-[135px] right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
                     <button onclick="spawnDoor()" class="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-lg text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 shadow-sm">
                         🚪 เพิ่มประตู
                     </button>
@@ -954,9 +956,13 @@ nav {
                     </div>
                 </div>
 
-                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative shadow-inner touch-none transition-all duration-300 mx-auto mt-4 mb-20 origin-top-left">
+                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative shadow-inner touch-none transition-all duration-300 mx-auto mt-6 mb-20 origin-top-left">
                     </div>
             </div>
+        </div>
+        
+    </div>
+</div>
                 
                 <div class="fixed top-24 right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
                     <div class="flex items-center gap-2">
@@ -4358,25 +4364,36 @@ window.unmergeSelected = function(tableId) {
         }
 
 // ===================================================
-// ระบบจัดผังห้อง (รองรับ Resize, Print Landscape & Save to Apps Script)
+// ระบบจัดผังห้อง (รองรับ Multi-Rooms, Resize, Print, Save)
 // ===================================================
 let allDiagramDevices = {}; 
-let currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
+let currentDiagramData = { activeRoomIndex: 0, rooms: [{ id: 'room_main', name: 'ห้องหลัก', roomWidth: 800, roomHeight: 600, devices: {}, walls: {} }] };
 
 async function openDiagramModal() {
     if (!currentStation) {
         showToast("กรุณาเลือกสถานีก่อน", "error"); return;
     }
-    
     document.getElementById('diagramStationName').innerText = `สถานี: ${currentStation} (${currentGroup})`;
     document.getElementById('diagramModal').classList.remove('hidden');
     document.getElementById('diagramModal').classList.add('flex');
-    
-    // 🌟 ดึงข้อมูลจาก originalDbData ที่ติดมากับตารางอุปกรณ์เลย (ปลอดภัยและไม่ทับข้อมูลเก่า)
+
     if (originalDbData && originalDbData.diagram) {
-        currentDiagramData = JSON.parse(JSON.stringify(originalDbData.diagram));
+        let oldD = originalDbData.diagram;
+        // แปลงข้อมูลโครงสร้างเก่า ให้กลายเป็นแบบใหม่ (หลายห้อง) อัตโนมัติ
+        if (!oldD.rooms) {
+            currentDiagramData = {
+                activeRoomIndex: 0,
+                rooms: [{
+                    id: 'room_main', name: 'ห้องหลัก',
+                    roomWidth: oldD.roomWidth || 800, roomHeight: oldD.roomHeight || 600,
+                    devices: oldD.devices || {}, walls: oldD.walls || {}
+                }]
+            };
+        } else {
+            currentDiagramData = JSON.parse(JSON.stringify(oldD));
+        }
     } else {
-        currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
+        currentDiagramData = { activeRoomIndex: 0, rooms: [{ id: 'room_main', name: 'ห้องหลัก', roomWidth: 800, roomHeight: 600, devices: {}, walls: {} }] };
     }
     
     renderDiagram();
@@ -4387,14 +4404,76 @@ function closeDiagramModal() {
     document.getElementById('diagramModal').classList.remove('flex');
 }
 
+// --- 🏢 ระบบจัดการห้อง ---
+function switchRoom(index) {
+    updateCurrentDiagramData();
+    currentDiagramData.activeRoomIndex = index;
+    if(isDrawWallMode) toggleDrawWallMode();
+    renderDiagram();
+}
+
+function addNewRoom() {
+    let name = prompt("ตั้งชื่ออาคาร/ห้องใหม่:", "ห้องที่ 2");
+    if (!name || name.trim() === '') return;
+    updateCurrentDiagramData();
+    currentDiagramData.rooms.push({
+        id: `room_${Math.random().toString(36).substr(2, 6)}`, name: name.trim(),
+        roomWidth: 800, roomHeight: 600, devices: {}, walls: {}
+    });
+    currentDiagramData.activeRoomIndex = currentDiagramData.rooms.length - 1;
+    renderDiagram();
+}
+
+function renameRoom(index, ev) {
+    ev.stopPropagation();
+    let oldName = currentDiagramData.rooms[index].name;
+    let newName = prompt("แก้ไขชื่ออาคาร/ห้อง:", oldName);
+    if (newName && newName.trim() !== '') {
+        currentDiagramData.rooms[index].name = newName.trim();
+        renderRoomTabs();
+    }
+}
+
+function deleteRoom(index, ev) {
+    ev.stopPropagation();
+    if (currentDiagramData.rooms.length <= 1) { showToast("ต้องมีอย่างน้อย 1 ห้อง", "error"); return; }
+    if (confirm(`คุณแน่ใจหรือไม่ที่จะลบ "${currentDiagramData.rooms[index].name}"?\n(อุปกรณ์ในห้องนี้จะถูกคืนไปยังตะกร้า)`)) {
+        currentDiagramData.rooms.splice(index, 1);
+        if (currentDiagramData.activeRoomIndex >= currentDiagramData.rooms.length) currentDiagramData.activeRoomIndex = currentDiagramData.rooms.length - 1;
+        renderDiagram();
+    }
+}
+
+function renderRoomTabs() {
+    const container = document.getElementById('roomTabsContainer');
+    if (!container) return;
+    let html = '';
+    currentDiagramData.rooms.forEach((r, i) => {
+        let isActive = (i === currentDiagramData.activeRoomIndex);
+        let activeClass = isActive ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600';
+        html += `
+            <div onclick="switchRoom(${i})" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors whitespace-nowrap group ${activeClass}">
+                <span class="text-sm font-bold">${r.name}</span>
+                <div class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="renameRoom(${i}, event)" class="hover:text-amber-300" title="เปลี่ยนชื่อ">✏️</button>
+                    ${currentDiagramData.rooms.length > 1 ? `<button onclick="deleteRoom(${i}, event)" class="hover:text-red-300" title="ลบห้อง">✕</button>` : ''}
+                </div>
+            </div>
+        `;
+    });
+    html += `<button onclick="addNewRoom()" class="ml-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors whitespace-nowrap flex items-center gap-1 shadow-sm">➕ เพิ่มห้อง</button>`;
+    container.innerHTML = html;
+}
+
 // 📏 ฟังก์ชันยืดหดขนาดห้อง
 function adjustRoomSize(axis, amount) {
+    let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
     if (axis === 'w') {
-        currentDiagramData.roomWidth = Math.max(400, currentDiagramData.roomWidth + amount);
-        document.getElementById('diagramRoom').style.width = currentDiagramData.roomWidth + 'px';
+        activeRoom.roomWidth = Math.max(400, activeRoom.roomWidth + amount);
+        document.getElementById('diagramRoom').style.width = activeRoom.roomWidth + 'px';
     } else {
-        currentDiagramData.roomHeight = Math.max(400, currentDiagramData.roomHeight + amount);
-        document.getElementById('diagramRoom').style.height = currentDiagramData.roomHeight + 'px';
+        activeRoom.roomHeight = Math.max(400, activeRoom.roomHeight + amount);
+        document.getElementById('diagramRoom').style.height = activeRoom.roomHeight + 'px';
     }
 }
 
@@ -4408,7 +4487,6 @@ function createSidebarItem(id, dev) {
     el.setAttribute('ondragstart', `dragFromSidebar(event, '${id}')`);
     let displayConn = dev.conn !== '-' ? `🔗 ${dev.conn}` : `ไม่มีข้อมูลเชื่อมต่อ`;
     
-    // 🌟 สร้างป้ายกำกับบอกสีเครื่องพิมพ์
     let colorBadge = '';
     if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
         let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
@@ -4458,7 +4536,6 @@ function placeDeviceInWorkspace(id, pos) {
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
 
     let displayLabel = dev.conn !== '-' ? dev.conn : '-';
-    
     let colorBadge = '';
     if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
         let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
@@ -4466,7 +4543,6 @@ function placeDeviceInWorkspace(id, pos) {
         colorBadge = `<div class="mt-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold ${badgeClass} inline-block leading-none truncate max-w-full" title="${dev.extra}">${dev.extra}</div>`;
     }
 
-    // เพิ่ม onmousedown และ ontouchstart เพื่อป้องกันการดึง event
     el.innerHTML = `
         <button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>
         <span class="text-3xl leading-none mb-1">${dev.icon}</span>
@@ -4485,20 +4561,18 @@ function placeDeviceInWorkspace(id, pos) {
 // 🚪 ฟังก์ชันสร้างประตูใหม่ (ถูกเรียกเมื่อกดปุ่ม "เพิ่มประตู")
 function spawnDoor() {
     let uniqueId = `dev_door_${Math.random().toString(36).substr(2, 6)}`;
-    
-    // คำนวณให้สร้างประตูโผล่มากึ่งกลางจอที่เรากำลังเลื่อนดูอยู่
     const scrollArea = document.getElementById('diagramScrollArea');
     let x = (scrollArea.scrollLeft + scrollArea.clientWidth / 2) - 50;
     let y = (scrollArea.scrollTop + scrollArea.clientHeight / 2) - 25;
-    
     if (x < 0) x = 20; if (y < 0) y = 20;
     let pos = { x: Math.round(x), y: Math.round(y) };
     
-    currentDiagramData.devices[uniqueId] = pos;
+    let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
+    if (!activeRoom.devices) activeRoom.devices = {};
+    activeRoom.devices[uniqueId] = pos;
     renderDoorInWorkspace(uniqueId, pos);
 }
 
-// 🖼️ วาด Element ประตูลงในห้อง
 function renderDoorInWorkspace(id, pos) {
     const room = document.getElementById('diagramRoom');
     let el = document.createElement('div');
@@ -4507,12 +4581,10 @@ function renderDoorInWorkspace(id, pos) {
     el.setAttribute('data-x', pos.x);
     el.setAttribute('data-y', pos.y);
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
-
     el.innerHTML = `
         <button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>
         <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 leading-none">🚪 ประตู/ทางเข้า</span>
     `;
-
     el.addEventListener('mousedown', () => {
         document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
         el.style.zIndex = '50';
@@ -4520,15 +4592,11 @@ function renderDoorInWorkspace(id, pos) {
     room.appendChild(el);
 }
 
-// ❌ ฟังก์ชันลบอุปกรณ์ (อัปเดตให้รองรับประตู)
 function removeDeviceFromWorkspace(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
     updateCurrentDiagramData();
-    
-    // ถ้าเป็นประตู ลบทิ้งแล้วจบเลย ไม่ต้องดันกลับไปแถบซ้าย
     if (id.startsWith('dev_door_')) return; 
-    
     renderDiagram(); 
 }
 
@@ -4622,7 +4690,7 @@ let interactInitialized = false;
 function initInteract() {
     if (interactInitialized) return;
     interact('.draggable-device').draggable({
-        ignoreFrom: 'button', // 🌟 สำคัญมาก: สั่งให้ไลบรารีไม่แย่งการจับคลิกจากปุ่ม
+        ignoreFrom: 'button',
         inertia: false,
         modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ],
         autoScroll: true,
@@ -4632,11 +4700,9 @@ function initInteract() {
                 target.style.cursor = 'grabbing'; 
                 if (!target.classList.contains('selected-device')) {
                     document.querySelectorAll('.selected-device').forEach(el => {
-                        el.classList.remove('selected-device');
-                        el.style.boxShadow = ''; el.style.borderColor = '';
+                        el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = '';
                     });
-                    target.classList.add('selected-device');
-                    target.style.boxShadow = '0 0 0 4px #3b82f6'; target.style.borderColor = '#2563eb';
+                    target.classList.add('selected-device'); target.style.boxShadow = '0 0 0 4px #3b82f6'; target.style.borderColor = '#2563eb';
                 }
             },
             move(event) {
@@ -4644,31 +4710,21 @@ function initInteract() {
                     const x = (parseFloat(el.getAttribute('data-x')) || 0) + event.dx;
                     const y = (parseFloat(el.getAttribute('data-y')) || 0) + event.dy;
                     el.style.transform = `translate(${x}px, ${y}px)`;
-                    el.setAttribute('data-x', x); 
-                    el.setAttribute('data-y', y);
+                    el.setAttribute('data-x', x); el.setAttribute('data-y', y);
                 });
             },
             end(event) { event.target.style.cursor = 'grab'; }
         }
     }).on('tap', function(event) {
-        // 🌟 ป้องกันไม่ให้การ Tap แย่งการทำงานของปุ่มกากบาท
         if (event.target.tagName.toLowerCase() === 'button') return;
-        
         const target = event.currentTarget;
         if (!event.shiftKey) {
-            document.querySelectorAll('.selected-device').forEach(el => {
-                el.classList.remove('selected-device');
-                el.style.boxShadow = ''; el.style.borderColor = '';
-            });
-            target.classList.add('selected-device');
-            target.style.boxShadow = '0 0 0 4px #3b82f6'; target.style.borderColor = '#2563eb';
+            document.querySelectorAll('.selected-device').forEach(el => { el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = ''; });
+            target.classList.add('selected-device'); target.style.boxShadow = '0 0 0 4px #3b82f6'; target.style.borderColor = '#2563eb';
         } else {
             target.classList.toggle('selected-device');
-            if (target.classList.contains('selected-device')) {
-                target.style.boxShadow = '0 0 0 4px #3b82f6'; target.style.borderColor = '#2563eb';
-            } else {
-                target.style.boxShadow = ''; target.style.borderColor = '';
-            }
+            if (target.classList.contains('selected-device')) { target.style.boxShadow = '0 0 0 4px #3b82f6'; target.style.borderColor = '#2563eb'; } 
+            else { target.style.boxShadow = ''; target.style.borderColor = ''; }
         }
     });
     interactInitialized = true;
@@ -4677,45 +4733,26 @@ function initInteract() {
 async function saveDiagram() {
     updateCurrentDiagramData();
     document.getElementById('loadingText').innerText = 'บันทึกผังห้องลงฐานข้อมูลหลัก...';
-    document.getElementById('loadingOverlay').classList.remove('hidden'); 
-    document.getElementById('loadingOverlay').classList.add('flex');
+    document.getElementById('loadingOverlay').classList.remove('hidden'); document.getElementById('loadingOverlay').classList.add('flex');
 
     try {
-        // 🌟 ฝังข้อมูลผังห้อง (diagram) เข้าไปรวมกับข้อมูลอุปกรณ์เดิม
         originalDbData.diagram = currentDiagramData;
-        
-        const payload = {
-            key: `ADP_${currentGroup}_${currentStation}`,
-            value: JSON.stringify(originalDbData),
-            logs: [{ station: currentStation, action: 'อัปเดตผังห้อง', detail: 'บันทึกการจัดผังห้องใหม่' }]
-        };
-
-        // ใช้ endpoint ปกติในการบันทึกข้อมูล
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload)
-        });
-
+        const payload = { key: `ADP_${currentGroup}_${currentStation}`, value: JSON.stringify(originalDbData), logs: [{ station: currentStation, action: 'อัปเดตผังห้อง', detail: 'บันทึกการจัดผังห้องและอาคาร' }] };
+        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
         const result = await response.json();
+        
         if (result.status === 'success') {
             if (globalAllDataCache) globalAllDataCache[`ADP_${currentGroup}_${currentStation}`] = JSON.stringify(originalDbData);
             showToast("💾 บันทึกโครงสร้างผังห้องสำเร็จ!");
-        } else {
-            showToast("บันทึกล้มเหลว โปรดตรวจสอบสิทธิ์", "error");
-        }
-    } catch(e) {
-        console.error(e);
-        showToast("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", "error");
-    } finally {
-        document.getElementById('loadingOverlay').classList.add('hidden'); 
-        document.getElementById('loadingOverlay').classList.remove('flex');
-    }
+        } else { showToast("บันทึกล้มเหลว โปรดตรวจสอบสิทธิ์", "error"); }
+    } catch(e) { console.error(e); showToast("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", "error"); } 
+    finally { document.getElementById('loadingOverlay').classList.add('hidden'); document.getElementById('loadingOverlay').classList.remove('flex'); }
 }
 
 function clearCurrentDiagram() {
-    if(confirm("คุณต้องการล้างอุปกรณ์ทั้งหมดออกจากผังห้องใช่หรือไม่?")) {
-        currentDiagramData.devices = {};
+    if(confirm("คุณต้องการล้างอุปกรณ์ทั้งหมดออกจากห้องปัจจุบันใช่หรือไม่?")) {
+        let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
+        activeRoom.devices = {}; activeRoom.walls = {};
         renderDiagram();
         showToast("🧹 รีเซ็ตผังห้องเรียบร้อย (อย่าลืมกดบันทึกเพื่ออัปเดตระบบ)");
     }
@@ -4725,44 +4762,29 @@ function clearCurrentDiagram() {
 // 🧱 ระบบวาดฉากกั้นห้อง และ ลากครอบ (Lasso)
 // ==========================================
 
-let isDrawWallMode = false;
-let isDrawingWall = false;
-let wallStartX = 0, wallStartY = 0;
-let currentTempWall = null;
-
-// สลับโหมดการวาดกำแพง
+let isDrawWallMode = false; let isDrawingWall = false; let wallStartX = 0, wallStartY = 0; let currentTempWall = null;
 function toggleDrawWallMode() {
     isDrawWallMode = !isDrawWallMode;
-    const btn = document.getElementById('btnDrawWall');
-    const room = document.getElementById('diagramRoom');
-    
-    // ยกเลิกการเลือกอุปกรณ์ทั้งหมด
-    document.querySelectorAll('.selected-device').forEach(el => {
-        el.classList.remove('selected-device');
-        el.style.boxShadow = ''; el.style.borderColor = '';
-    });
-
+    const btn = document.getElementById('btnDrawWall'); const room = document.getElementById('diagramRoom');
+    document.querySelectorAll('.selected-device').forEach(el => { el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = ''; });
     if (isDrawWallMode) {
-        btn.classList.replace('bg-slate-100', 'bg-blue-600');
-        btn.classList.replace('text-slate-700', 'text-white');
-        btn.classList.replace('dark:bg-slate-700', 'dark:bg-blue-600');
-        room.style.cursor = 'crosshair';
-        showToast("✏️ โหมดวาดฉากกั้น: คลิกลากที่ว่างเพื่อสร้างกำแพง (ดับเบิลคลิกที่กำแพงเพื่อลบ)");
+        btn.classList.replace('bg-slate-100', 'bg-blue-600'); btn.classList.replace('text-slate-700', 'text-white'); btn.classList.replace('dark:bg-slate-700', 'dark:bg-blue-600');
+        room.style.cursor = 'crosshair'; showToast("✏️ โหมดวาดฉากกั้น: คลิกลากที่ว่างเพื่อสร้างกำแพง (ดับเบิลคลิกที่กำแพงเพื่อลบ)");
     } else {
-        btn.classList.replace('bg-blue-600', 'bg-slate-100');
-        btn.classList.replace('text-white', 'text-slate-700');
-        btn.classList.replace('dark:bg-blue-600', 'dark:bg-slate-700');
-        room.style.cursor = 'default';
-        showToast("🖱️ กลับสู่โหมดลากจัดวางปกติ");
+        btn.classList.replace('bg-blue-600', 'bg-slate-100'); btn.classList.replace('text-white', 'text-slate-700'); btn.classList.replace('dark:bg-blue-600', 'dark:bg-slate-700');
+        room.style.cursor = 'default'; showToast("🖱️ กลับสู่โหมดลากจัดวางปกติ");
     }
 }
 
 // 🔄 อัปเดต renderDiagram ให้ดึงกำแพงเก่ามาแสดงด้วย
 function renderDiagram() {
+    renderRoomTabs();
     const room = document.getElementById('diagramRoom');
     room.innerHTML = '';
-    room.style.width = currentDiagramData.roomWidth + 'px';
-    room.style.height = currentDiagramData.roomHeight + 'px';
+    
+    let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
+    room.style.width = activeRoom.roomWidth + 'px';
+    room.style.height = activeRoom.roomHeight + 'px';
     
     document.getElementById('list-PC').innerHTML = '';
     document.getElementById('list-NB').innerHTML = '';
@@ -4770,7 +4792,6 @@ function renderDiagram() {
     document.getElementById('list-SPC').innerHTML = '';
 
     allDiagramDevices = {};
-
     const processItem = (catKey, type, brand, model, sn, user, icon, conn, extra = '') => {
         let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
         if(!brand && !model && !actualSn) return; 
@@ -4789,109 +4810,75 @@ function renderDiagram() {
     if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8], r[5]); });
     if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️', r[7]); });
 
-    let savedPositions = currentDiagramData.devices || {};
-    let savedWalls = currentDiagramData.walls || {}; // 🌟 โหลดข้อมูลกำแพง
+    // ตรวจสอบว่าของชิ้นไหนถูกวางในห้อง "ใดๆ" ไปแล้วบ้าง
+    let allPlacedDevices = {};
+    let savedPositionsInActiveRoom = {};
+    let savedWallsInActiveRoom = {};
 
-    // โหลดกำแพง
-    Object.keys(savedWalls).forEach(id => {
-        renderWallInWorkspace(id, savedWalls[id]);
+    currentDiagramData.rooms.forEach((r, i) => {
+        if (r.devices) Object.keys(r.devices).forEach(k => { allPlacedDevices[k] = true; });
+        if (i === currentDiagramData.activeRoomIndex) {
+            savedPositionsInActiveRoom = r.devices || {};
+            savedWallsInActiveRoom = r.walls || {};
+        }
     });
 
-    // โหลดประตู
-    Object.keys(savedPositions).forEach(k => {
-        if (k.startsWith('dev_door_')) renderDoorInWorkspace(k, savedPositions[k]);
+    Object.keys(savedWallsInActiveRoom).forEach(id => renderWallInWorkspace(id, savedWallsInActiveRoom[id]));
+    Object.keys(savedPositionsInActiveRoom).forEach(k => {
+        if (k.startsWith('dev_door_')) renderDoorInWorkspace(k, savedPositionsInActiveRoom[k]);
     });
 
     Object.keys(allDiagramDevices).forEach(id => {
         const dev = allDiagramDevices[id];
-        let matchSavedKey = Object.keys(savedPositions).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
+        let matchActiveKey = Object.keys(savedPositionsInActiveRoom).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
         
-        if (matchSavedKey && savedPositions[matchSavedKey]) {
-            placeDeviceInWorkspace(id, savedPositions[matchSavedKey]);
+        if (matchActiveKey && savedPositionsInActiveRoom[matchActiveKey]) {
+            placeDeviceInWorkspace(id, savedPositionsInActiveRoom[matchActiveKey]);
         } else {
-            createSidebarItem(id, dev);
+            let isUsedAnywhere = Object.keys(allPlacedDevices).some(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
+            if (!isUsedAnywhere) {
+                createSidebarItem(id, dev);
+            }
         }
     });
 
     initInteract();
-    initRoomMouseEvents(); // ใช้ฟังก์ชันใหม่ที่รวม Lasso และ Draw Wall
+    initRoomMouseEvents(); 
 }
 
-// 🖼️ สร้าง Element กำแพงในหน้าจอ
 function renderWallInWorkspace(id, data) {
     const room = document.getElementById('diagramRoom');
     let el = document.createElement('div');
     el.id = id;
     el.className = 'absolute bg-slate-400 dark:bg-slate-600 border border-slate-500 dark:border-slate-500 z-0 rounded-sm hover:bg-rose-400 dark:hover:bg-rose-800 transition-colors shadow-sm';
-    el.style.left = data.x + 'px';
-    el.style.top = data.y + 'px';
-    el.style.width = data.w + 'px';
-    el.style.height = data.h + 'px';
-    el.title = "ดับเบิลคลิกเพื่อลบฉากกั้นนี้";
-    el.style.cursor = 'pointer';
-    
-    el.ondblclick = function(ev) {
-        ev.stopPropagation();
-        this.remove();
-        updateCurrentDiagramData();
-    };
-    
+    el.style.left = data.x + 'px'; el.style.top = data.y + 'px'; el.style.width = data.w + 'px'; el.style.height = data.h + 'px';
+    el.title = "ดับเบิลคลิกเพื่อลบฉากกั้นนี้"; el.style.cursor = 'pointer';
+    el.ondblclick = function(ev) { ev.stopPropagation(); this.remove(); updateCurrentDiagramData(); };
     room.appendChild(el);
 }
 
-// 🖱️ ระบบจัดการเมาส์ในห้อง (รวมลากครอบอุปกรณ์ และ วาดกำแพง)
 let roomMouseEventsInit = false;
 function initRoomMouseEvents() {
     if (roomMouseEventsInit) return;
     const room = document.getElementById('diagramRoom');
-    let lassoStartX = 0, lassoStartY = 0;
-    let isDrawingLasso = false;
+    let lassoStartX = 0, lassoStartY = 0; let isDrawingLasso = false;
 
     room.addEventListener('mousedown', (e) => {
-        // หากคลิกโดนกล่องอุปกรณ์หรือกำแพง ให้ข้ามไป
         if (e.target.closest('.draggable-device') || e.target.closest('button') || e.target.id.startsWith('wall_')) return;
-        
         const rect = room.getBoundingClientRect();
-
-        // 🧱 โหมดวาดกำแพง
         if (isDrawWallMode) {
-            isDrawingWall = true;
-            wallStartX = e.clientX - rect.left;
-            wallStartY = e.clientY - rect.top;
-
+            isDrawingWall = true; wallStartX = e.clientX - rect.left; wallStartY = e.clientY - rect.top;
             currentTempWall = document.createElement('div');
             currentTempWall.className = 'absolute bg-slate-400 dark:bg-slate-600 border border-slate-500 dark:border-slate-400 shadow-sm z-0 rounded-sm no-print-border';
-            currentTempWall.style.left = wallStartX + 'px';
-            currentTempWall.style.top = wallStartY + 'px';
-            currentTempWall.style.width = '0px';
-            currentTempWall.style.height = '0px';
+            currentTempWall.style.left = wallStartX + 'px'; currentTempWall.style.top = wallStartY + 'px'; currentTempWall.style.width = '0px'; currentTempWall.style.height = '0px';
             room.appendChild(currentTempWall);
             return;
         }
-
-        // 🔲 โหมดลากครอบ (Lasso)
-        if (!e.shiftKey) {
-            document.querySelectorAll('.selected-device').forEach(el => {
-                el.classList.remove('selected-device');
-                el.style.boxShadow = ''; el.style.borderColor = '';
-            });
-        }
-        isDrawingLasso = true;
-        lassoStartX = e.clientX - rect.left;
-        lassoStartY = e.clientY - rect.top;
-
+        if (!e.shiftKey) { document.querySelectorAll('.selected-device').forEach(el => { el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = ''; }); }
+        isDrawingLasso = true; lassoStartX = e.clientX - rect.left; lassoStartY = e.clientY - rect.top;
         let lasso = document.getElementById('selection-lasso');
-        if (!lasso) {
-            lasso = document.createElement('div');
-            lasso.id = 'selection-lasso';
-            lasso.className = 'absolute border-2 border-dashed border-blue-500 bg-blue-500/20 z-50 pointer-events-none no-print';
-            room.appendChild(lasso);
-        }
-        lasso.style.left = lassoStartX + 'px';
-        lasso.style.top = lassoStartY + 'px';
-        lasso.style.width = '0px';
-        lasso.style.height = '0px';
-        lasso.style.display = 'block';
+        if (!lasso) { lasso = document.createElement('div'); lasso.id = 'selection-lasso'; lasso.className = 'absolute border-2 border-dashed border-blue-500 bg-blue-500/20 z-50 pointer-events-none no-print'; room.appendChild(lasso); }
+        lasso.style.left = lassoStartX + 'px'; lasso.style.top = lassoStartY + 'px'; lasso.style.width = '0px'; lasso.style.height = '0px'; lasso.style.display = 'block';
     });
 
     room.addEventListener('mousemove', (e) => {
@@ -4899,89 +4886,41 @@ function initRoomMouseEvents() {
         let currentX = Math.max(0, Math.min(e.clientX - rect.left, room.clientWidth));
         let currentY = Math.max(0, Math.min(e.clientY - rect.top, room.clientHeight));
 
-        // 🧱 วาดกำแพง
         if (isDrawingWall && currentTempWall) {
-            let x = Math.min(wallStartX, currentX);
-            let y = Math.min(wallStartY, currentY);
-            let w = Math.abs(currentX - wallStartX);
-            let h = Math.abs(currentY - wallStartY);
-            
-            // ช่วยให้วาดกำแพงเส้นตรงง่ายขึ้น (Snapping)
-            if (w > h && h < 15) h = 8; // วาดแนวนอน
-            if (h > w && w < 15) w = 8; // วาดแนวตั้ง
-
-            currentTempWall.style.left = x + 'px';
-            currentTempWall.style.top = y + 'px';
-            currentTempWall.style.width = w + 'px';
-            currentTempWall.style.height = h + 'px';
+            let x = Math.min(wallStartX, currentX); let y = Math.min(wallStartY, currentY);
+            let w = Math.abs(currentX - wallStartX); let h = Math.abs(currentY - wallStartY);
+            if (w > h && h < 15) h = 8; if (h > w && w < 15) w = 8; 
+            currentTempWall.style.left = x + 'px'; currentTempWall.style.top = y + 'px'; currentTempWall.style.width = w + 'px'; currentTempWall.style.height = h + 'px';
             return;
         }
 
-        // 🔲 วาด Lasso
         if (isDrawingLasso) {
-            let x = Math.min(lassoStartX, currentX);
-            let y = Math.min(lassoStartY, currentY);
-            let w = Math.abs(currentX - lassoStartX);
-            let h = Math.abs(currentY - lassoStartY);
-
+            let x = Math.min(lassoStartX, currentX); let y = Math.min(lassoStartY, currentY);
+            let w = Math.abs(currentX - lassoStartX); let h = Math.abs(currentY - lassoStartY);
             let lasso = document.getElementById('selection-lasso');
-            if (lasso) {
-                lasso.style.left = x + 'px';
-                lasso.style.top = y + 'px';
-                lasso.style.width = w + 'px';
-                lasso.style.height = h + 'px';
-            }
+            if (lasso) { lasso.style.left = x + 'px'; lasso.style.top = y + 'px'; lasso.style.width = w + 'px'; lasso.style.height = h + 'px'; }
         }
     });
 
     window.addEventListener('mouseup', (e) => {
-        // 🧱 สิ้นสุดวาดกำแพง
         if (isDrawingWall && currentTempWall) {
             isDrawingWall = false;
-            let w = parseFloat(currentTempWall.style.width);
-            let h = parseFloat(currentTempWall.style.height);
-            
-            // ถ้ายกเมาส์ไวไป แล้วเส้นเล็กเกินไป ให้ลบทิ้ง
-            if (w < 10 && h < 10) {
-                currentTempWall.remove();
-                currentTempWall = null;
-                return;
-            }
-
+            let w = parseFloat(currentTempWall.style.width); let h = parseFloat(currentTempWall.style.height);
+            if (w < 10 && h < 10) { currentTempWall.remove(); currentTempWall = null; return; }
             let wallId = `wall_${Math.random().toString(36).substr(2, 6)}`;
-            currentTempWall.id = wallId;
-            currentTempWall.title = "ดับเบิลคลิกเพื่อลบฉากกั้น";
-            currentTempWall.style.cursor = 'pointer';
-            
-            // กดดับเบิลคลิกที่กำแพงเพื่อลบ
-            currentTempWall.ondblclick = function(ev) {
-                ev.stopPropagation();
-                this.remove();
-                updateCurrentDiagramData();
-            };
-
-            currentTempWall = null;
-            updateCurrentDiagramData();
-            
-            // เด้งกลับโหมดลากวางปกติอัตโนมัติ เพื่อให้ไม่เผลอวาดซ้ำ
-            toggleDrawWallMode();
+            currentTempWall.id = wallId; currentTempWall.title = "ดับเบิลคลิกเพื่อลบฉากกั้น"; currentTempWall.style.cursor = 'pointer';
+            currentTempWall.ondblclick = function(ev) { ev.stopPropagation(); this.remove(); updateCurrentDiagramData(); };
+            currentTempWall = null; updateCurrentDiagramData(); toggleDrawWallMode();
             return;
         }
-
-        // 🔲 สิ้นสุดลากครอบ (Lasso)
         if (isDrawingLasso) {
             isDrawingLasso = false;
-            let lasso = document.getElementById('selection-lasso');
-            if (!lasso) return;
-
+            let lasso = document.getElementById('selection-lasso'); if (!lasso) return;
             const lassoRect = lasso.getBoundingClientRect();
             document.querySelectorAll('.draggable-device').forEach(el => {
                 const elRect = el.getBoundingClientRect();
-                if (elRect.left < lassoRect.right && elRect.right > lassoRect.left &&
-                    elRect.top < lassoRect.bottom && elRect.bottom > lassoRect.top) {
-                    el.classList.add('selected-device');
-                    el.style.boxShadow = '0 0 0 4px #3b82f6';
-                    el.style.borderColor = '#2563eb';
+                if (elRect.left < lassoRect.right && elRect.right > lassoRect.left && elRect.top < lassoRect.bottom && elRect.bottom > lassoRect.top) {
+                    el.classList.add('selected-device'); el.style.boxShadow = '0 0 0 4px #3b82f6'; el.style.borderColor = '#2563eb';
                 }
             });
             lasso.style.display = 'none';
@@ -4992,20 +4931,22 @@ function initRoomMouseEvents() {
 
 // 💾 อัปเดตข้อมูลที่จะส่งไป Google Sheets ให้เซฟกำแพงด้วย
 function updateCurrentDiagramData() {
+    if (!currentDiagramData || !currentDiagramData.rooms) return;
+    let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
+
     const devices = document.querySelectorAll('.draggable-device');
-    currentDiagramData.devices = {};
+    activeRoom.devices = {};
     devices.forEach(dev => {
-        currentDiagramData.devices[dev.id] = {
+        activeRoom.devices[dev.id] = {
             x: Math.round(dev.getAttribute('data-x')),
             y: Math.round(dev.getAttribute('data-y'))
         };
     });
 
-    // 🌟 ดึงข้อมูลกำแพงทั้งหมดมาเซฟ
     const walls = document.querySelectorAll('[id^="wall_"]');
-    currentDiagramData.walls = {};
+    activeRoom.walls = {};
     walls.forEach(w => {
-        currentDiagramData.walls[w.id] = {
+        activeRoom.walls[w.id] = {
             x: parseFloat(w.style.left),
             y: parseFloat(w.style.top),
             w: parseFloat(w.style.width),
@@ -5017,22 +4958,15 @@ function updateCurrentDiagramData() {
 // 🖨️ 4. อัปเดตฟังก์ชัน Print (แก้ปัญหาล้นไปหน้า 2 ถาวร)
 function printDiagram() {
     const room = document.getElementById('diagramRoom');
-    
-    // เอาเส้นลากครอบและกรอบสีน้ำเงินออกก่อนพิมพ์
-    document.querySelectorAll('.selected-device').forEach(el => {
-        el.classList.remove('selected-device');
-        el.style.boxShadow = ''; el.style.borderColor = '';
-    });
-    let lasso = document.getElementById('selection-lasso');
-    if (lasso) lasso.style.display = 'none';
+    document.querySelectorAll('.selected-device').forEach(el => { el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = ''; });
+    let lasso = document.getElementById('selection-lasso'); if (lasso) lasso.style.display = 'none';
 
     updateCurrentDiagramData();
+    let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
     const clonedContent = room.innerHTML;
     
-    let connCounts = {};
-    let printerCount = 0;
-    
-    let placedDevices = currentDiagramData.devices || {};
+    let connCounts = {}; let printerCount = 0;
+    let placedDevices = activeRoom.devices || {};
     Object.keys(placedDevices).forEach(id => {
         let dev = allDiagramDevices[id];
         if (dev) {
@@ -5043,106 +4977,46 @@ function printDiagram() {
     });
 
     let summaryHtml = `<div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; color: #334155; background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 8px;">`;
-    summaryHtml += `<div style="font-weight: bold; border-bottom: 1px solid #cbd5e1; margin-bottom: 4px; padding-bottom: 2px; width: 100%; text-align: right;">📊 สรุปอุปกรณ์ในผัง</div>`;
+    summaryHtml += `<div style="font-weight: bold; border-bottom: 1px solid #cbd5e1; margin-bottom: 4px; padding-bottom: 2px; width: 100%; text-align: right;">📊 สรุปอุปกรณ์ในห้องนี้</div>`;
     let hasConn = false;
-    Object.keys(connCounts).sort().forEach(c => {
-        summaryHtml += `<div style="margin-bottom: 2px;">🔗 ${c} : <span style="font-weight: bold; color: #0f172a; font-size: 12px;">${connCounts[c]}</span> เครื่อง</div>`;
-        hasConn = true;
-    });
+    Object.keys(connCounts).sort().forEach(c => { summaryHtml += `<div style="margin-bottom: 2px;">🔗 ${c} : <span style="font-weight: bold; color: #0f172a; font-size: 12px;">${connCounts[c]}</span> เครื่อง</div>`; hasConn = true; });
     if (!hasConn) summaryHtml += `<div style="color: #94a3b8; font-style: italic;">ไม่มีข้อมูลการเชื่อมต่อ</div>`;
     summaryHtml += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1;">🖨️ เครื่องพิมพ์รวม : <span style="font-weight: bold; color: #0f172a; font-size: 12px;">${printerCount}</span> เครื่อง</div></div>`;
 
-    // 🌟 คำนวณสเกลแบบไดนามิกให้พอดีหน้า A4 (เผื่อพื้นที่ Header แล้ว)
-    const maxPrintWidth = 1050;
-    const maxPrintHeight = 600; 
-    
-    const scaleX = maxPrintWidth / currentDiagramData.roomWidth;
-    const scaleY = maxPrintHeight / currentDiagramData.roomHeight;
+    const maxPrintWidth = 1050; const maxPrintHeight = 600; 
+    const scaleX = maxPrintWidth / activeRoom.roomWidth; const scaleY = maxPrintHeight / activeRoom.roomHeight;
     const scale = Math.min(1, scaleX, scaleY);
-
-    // 🌟 คำนวณขนาดกล่องจริงๆ หลังจากย่อสเกลแล้ว (สำคัญมาก เพื่อไม่ให้ล้นหน้า)
-    const finalWidth = currentDiagramData.roomWidth * scale;
-    const finalHeight = currentDiagramData.roomHeight * scale;
+    const finalWidth = activeRoom.roomWidth * scale; const finalHeight = activeRoom.roomHeight * scale;
 
     const html = `
         <style>
             @media print {
-                @page { size: A4 landscape; margin: 5mm; } /* ลดระยะขอบกระดาษให้น้อยที่สุด */
-                body { 
-                    background: #fff !important; 
-                    font-family: 'Prompt', sans-serif; 
-                    margin: 0; padding: 0;
-                    overflow: hidden !important; /* ห้ามเบราว์เซอร์มี Scroll หรือทะลุหน้า */
-                }
+                @page { size: A4 landscape; margin: 5mm; } 
+                body { background: #fff !important; font-family: 'Prompt', sans-serif; margin: 0; padding: 0; overflow: hidden !important; }
                 .no-print { display: none !important; }
             }
-            .print-container { 
-                width: 100%; 
-                height: 98vh; /* บังคับให้สูงสุดไม่เกิน 1 หน้ากระดาษ */
-                display: flex; 
-                flex-direction: column; 
-                align-items: center; 
-                justify-content: flex-start; 
-                overflow: hidden;
-            }
-            .print-header { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: flex-end; 
-                margin-bottom: 10px; 
-                border-bottom: 2px solid #cbd5e1; 
-                padding-bottom: 5px; 
-                width: 100%; 
-                max-width: ${Math.max(finalWidth, 800)}px; /* ให้หัวกระดาษกว้างเท่าห้อง */
-            }
-            
-            /* กล่องรับขนาดที่แท้จริงหลังย่อ */
-            .print-wrapper {
-                width: ${finalWidth}px;
-                height: ${finalHeight}px;
-                overflow: hidden;
-                margin: 0 auto;
-            }
-
+            .print-container { width: 100%; height: 98vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden;}
+            .print-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 2px solid #cbd5e1; padding-bottom: 5px; width: 100%; max-width: ${Math.max(finalWidth, 800)}px; }
+            .print-wrapper { width: ${finalWidth}px; height: ${finalHeight}px; overflow: hidden; margin: 0 auto; }
             .print-room { 
-                position: relative; 
-                border: 2px solid #334155; 
-                border-radius: 8px; 
-                background-color: #f8fafc;
-                width: ${currentDiagramData.roomWidth}px; 
-                height: ${currentDiagramData.roomHeight}px; 
-                transform-origin: top left; /* บังคับให้ย่อจากมุมซ้ายบนเท่านั้น */
-                transform: scale(${scale});
+                position: relative; border: 2px solid #334155; border-radius: 8px; background-color: #f8fafc;
+                width: ${activeRoom.roomWidth}px; height: ${activeRoom.roomHeight}px; 
+                transform-origin: top left; transform: scale(${scale});
             }
-            /* บังคับให้สีกำแพงพิมพ์ออกกระดาษ */
-            .print-room div[id^="wall_"] {
-                background-color: #94a3b8 !important;
-                border: 1px solid #64748b !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+            .print-room div[id^="wall_"] { background-color: #94a3b8 !important; border: 1px solid #64748b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         </style>
         <div class="print-container">
             <div class="print-header">
                 <div>
-                    <h2 style="margin: 0; font-size: 16px; font-weight: bold; color: #1e293b;">📍 แผนผังอุปกรณ์สถานี: ${currentStation}</h2>
+                    <h2 style="margin: 0; font-size: 16px; font-weight: bold; color: #1e293b;">📍 แผนผังสถานี: ${currentStation} | อาคาร/ห้อง: <span style="color: #3b82f6;">${activeRoom.name}</span></h2>
                     <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
                 </div>
                 ${summaryHtml}
             </div>
-            
-            <div class="print-wrapper">
-                <div class="print-room">
-                    ${clonedContent}
-                </div>
-            </div>
-
+            <div class="print-wrapper"><div class="print-room">${clonedContent}</div></div>
         </div>
     `;
-    
-    const printArea = document.getElementById('printArea');
-    printArea.innerHTML = html;
-    
+    const printArea = document.getElementById('printArea'); printArea.innerHTML = html;
     setTimeout(() => { window.print(); }, 500);
 }
         
