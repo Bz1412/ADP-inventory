@@ -31,6 +31,22 @@
     <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
     <style>
+
+        @media print {
+        /* ซ่อนหน้าเว็บเบื้องหลังและ Modal ทั้งหมดขณะพิมพ์ */
+        body > *:not(#printArea) {
+            display: none !important;
+        }
+        #printArea {
+            display: block !important;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .no-print {
+            display: none !important;
+        }
+    }
                
         .jexcel_search {
             display: flex !important;
@@ -867,26 +883,59 @@ nav {
         </div>
     </div>
 
-    <div id="diagramModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in no-print">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-6xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 h-[90vh] animate-pop-in">
-        <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+    <div id="diagramModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm no-print animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 w-full h-full flex flex-col overflow-hidden">
+        
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
             <div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 จัดผังอุปกรณ์</h3>
-                <p id="diagramStationName" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">ชื่อสถานี</p>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 ระบบจัดตำแหน่งและผังอุปกรณ์ภายในห้อง</h3>
+                <p id="diagramStationName" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">ชื่อสถานี</p>
             </div>
-            <div class="flex gap-3">
-                <button onclick="saveDiagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md transition-transform active:scale-95 flex items-center gap-2">
+            <div class="flex gap-2">
+                <button onclick="printDiagram()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5">
+                    🖨️ พิมพ์ผัง A4
+                </button>
+                <button onclick="clearCurrentDiagram()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95">
+                    🧹 รีเซ็ตผังว่าง
+                </button>
+                <button onclick="saveDiagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5">
                     💾 บันทึกพิกัด
                 </button>
-                <button onclick="closeDiagramModal()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-xl font-bold transition-transform active:scale-95">ปิด</button>
+                <button onclick="closeDiagramModal()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-xl font-bold transition-transform active:scale-95">ปิดหน้าต่าง</button>
             </div>
         </div>
-        <div class="p-6 bg-slate-100 dark:bg-slate-900 flex-1 relative overflow-hidden flex flex-col gap-2">
-            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-blue-500"></span> สามารถลากกล่องเพื่อจัดวางตำแหน่งได้ตามต้องการ
-            </div>
-            <div id="diagramRoom" class="w-full flex-1 bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative overflow-hidden shadow-inner touch-none">
+        
+        <div class="flex flex-1 overflow-hidden bg-slate-100 dark:bg-slate-900">
+            
+            <div class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 overflow-y-auto flex flex-col gap-4">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">📦 อุปกรณ์ที่ยังไม่ได้จัดวาง (ลากไปวางในห้อง)</div>
+                
+                <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">💻 คอมพิวเตอร์ & จอภาพ</div>
+                    <div id="list-PC" class="flex flex-col gap-1.5 min-h-[40px]"></div>
                 </div>
+                
+                <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">💻 โน๊ตบุ๊ค (Notebook)</div>
+                    <div id="list-NB" class="flex flex-col gap-1.5 min-h-[40px]"></div>
+                </div>
+                
+                <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">🖨️ เครื่องพิมพ์ (Printer)</div>
+                    <div id="list-PRN" class="flex flex-col gap-1.5 min-h-[40px]"></div>
+                </div>
+                
+                <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">🛠️ เครื่องมือพิเศษ</div>
+                    <div id="list-SPC" class="flex flex-col gap-1.5 min-h-[40px]"></div>
+                </div>
+            </div>
+            
+            <div class="flex-1 p-6 flex flex-col overflow-hidden">
+                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="w-full flex-1 bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl relative overflow-hidden shadow-inner touch-none">
+                    </div>
+            </div>
+            
         </div>
     </div>
 </div>
@@ -4260,9 +4309,10 @@ window.unmergeSelected = function(tableId) {
             }, 300);
         }
 
-        // ==========================================
-// ระบบจัดผังห้อง (Diagram Drag & Drop)
-// ==========================================
+// ===================================================
+// ระบบจัดผังห้องเวอร์ชันแอดวานซ์ (Drag from Outside & Print A4)
+// ===================================================
+let allDiagramDevices = {}; // เก็บ Object ข้อมูลดิบของอุปกรณ์ทั้งหมดรอบปัจจุบัน
 
 function openDiagramModal() {
     if (!currentStation) {
@@ -4284,74 +4334,159 @@ function closeDiagramModal() {
 
 function renderDiagram() {
     const room = document.getElementById('diagramRoom');
-    room.innerHTML = ''; // ล้างผังเก่า
+    room.innerHTML = ''; // ล้างพื้นที่ห้องให้โล่งก่อน
+    
+    // เคลียร์รายการในตระกร้า Sidebar
+    const listPC = document.getElementById('list-PC'); listPC.innerHTML = '';
+    const listNB = document.getElementById('list-NB'); listNB.innerHTML = '';
+    const listPRN = document.getElementById('list-PRN'); listPRN.innerHTML = '';
+    const listSPC = document.getElementById('list-SPC'); listSPC.innerHTML = '';
 
-    // โหลดพิกัดที่เคยเซฟไว้ในเครื่อง (ถ้ามี)
+    allDiagramDevices = {};
+
+    // ดึงประวัติพิกัดเก่าจากเบราว์เซอร์
     let savedPositions = {};
     try {
         savedPositions = JSON.parse(localStorage.getItem('adp_diagram_' + currentStation)) || {};
-    } catch(e) {}
+    } catch(e){}
 
-    let devices = [];
-
-    // ตัวช่วยดึงข้อมูลเข้า Array แบบสั้นๆ
-    const addDev = (type, brand, model, sn, user, icon) => {
-        let actualSn = (sn && String(sn).trim() !== '-') ? sn : `${brand}-${model}`;
-        if (!actualSn || actualSn === '-') return; 
-        devices.push({ id: `dev_${actualSn.replace(/\W/g, '')}`, type, brand, model, sn, user, icon });
+    // ฟังก์ชันช่วยจัดรูปแบบข้อมูลอุปกรณ์เข้าชุดกลาง
+    const processItem = (catKey, type, brand, model, sn, user, icon) => {
+        let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
+        if(!brand && !model && !actualSn) return; // ข้ามบรรทัดว่าง
+        
+        let uniqueId = `dev_${catKey}_${(actualSn || brand + model).replace(/\W/g, '')}_${Math.random().toString(36).substr(2, 4)}`;
+        allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon };
     };
 
-    // 1. ดึงคอมพิวเตอร์และจอ
+    // ดึงข้อมูลสดจากโครงสร้าง jspreadsheet ทุกตารางของคุณ
     if (tableCPUMON) {
         tableCPUMON.getData().forEach(r => {
-            if (r[2] || r[4]) addDev('PC', r[2], r[3], r[4], r[1], '💻');
-            if (r[6] || r[8]) addDev('Monitor', r[6], r[7], r[8], r[1], '🖥️');
+            if (r[2] || r[4]) processItem('PC', 'PC', r[2], r[3], r[4], r[1], '💻');
+            if (r[6] || r[8]) processItem('PC', 'Monitor', r[6], r[7], r[8], r[1], '🖥️');
         });
     }
-    // 2. ดึงโน๊ตบุ๊ค
-    if (tableNB) tableNB.getData().forEach(r => { if (r[2] || r[4]) addDev('Notebook', r[2], r[3], r[4], r[1], '💻'); });
-    // 3. ดึงเครื่องพิมพ์
-    if (tablePrn) tablePrn.getData().forEach(r => { if (r[2] || r[4]) addDev('Printer', r[2], r[3], r[4], r[1], '🖨️'); });
-    // 4. ดึงเครื่องมือพิเศษ
-    if (tableSpc) tableSpc.getData().forEach(r => { if (r[3] || r[5]) addDev(r[1]||'Tools', r[3], r[4], r[5], r[2], '🛠️'); });
+    if (tableNB) tableNB.getData().forEach(r => { if(r[2]||r[4]) processItem('NB', 'Notebook', r[2], r[3], r[4], r[1], '💻'); });
+    if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️'); });
+    if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️'); });
 
-    // สร้าง Element กล่องอุปกรณ์ในผัง
-    let defaultX = 20; let defaultY = 20;
-    devices.forEach((dev, idx) => {
-        // หากไม่เคยมีพิกัด ให้เรียงต่อกันเป็นแถว
-        let pos = savedPositions[dev.id] || { 
-            x: defaultX + (idx % 8) * 100, 
-            y: defaultY + Math.floor(idx / 8) * 100 
-        };
+    // คัดแยกชิ้นงาน: ถ้ามีประวัติพิกัด ให้ลงห้องเลย / ถ้าไม่มีให้ค้างไว้ที่แถบซ้ายข้างนอกก่อน
+    Object.keys(allDiagramDevices).forEach(id => {
+        const dev = allDiagramDevices[id];
         
-        let el = document.createElement('div');
-        el.id = dev.id;
-        // ดีไซน์กล่องอุปกรณ์
-        el.className = 'draggable-device absolute w-24 h-24 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-2 hover:border-indigo-400 hover:shadow-md transition-shadow z-10';
-        el.setAttribute('data-x', pos.x);
-        el.setAttribute('data-y', pos.y);
-        el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+        // หาว่าเคยมีพิกัดเซฟไว้โดยอ้างอิงจาก S/N หรือชื่อรุ่นไหม
+        let matchSavedKey = Object.keys(savedPositions).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
         
-        let displayName = dev.sn && dev.sn !== '-' ? dev.sn : dev.brand;
-        
-        el.innerHTML = `
-            <span class="text-3xl leading-none drop-shadow-sm mb-1">${dev.icon}</span>
-            <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
-            <span class="text-[9px] text-slate-500 dark:text-slate-400 leading-tight w-full truncate mt-0.5">${displayName}</span>
-        `;
-        
-        // เมื่อคลิกกล่อง ให้นำมาไว้หน้าสุด
-        el.addEventListener('mousedown', () => {
-            document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
-            el.style.zIndex = '50';
-        });
-
-        room.appendChild(el);
+        if (matchSavedKey && savedPositions[matchSavedKey]) {
+            // ส่งลงไปในผังห้อง
+            placeDeviceInWorkspace(id, savedPositions[matchSavedKey]);
+        } else {
+            // สร้างเป็นป้ายไว้ลากที่แถบข้างนอก (Sidebar)
+            createSidebarItem(id, dev);
+        }
     });
 
     initInteract();
 }
 
+// สร้าง Element ขนาดเล็กใน Sidebar ฝั่งซ้าย
+function createSidebarItem(id, dev) {
+    let targetList = document.getElementById(`list-${dev.catKey}`);
+    if (!targetList) return;
+
+    let el = document.createElement('div');
+    el.id = `side_${id}`;
+    el.className = 'p-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg cursor-grab hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 transition-all text-left flex items-center gap-2 select-none active:scale-95';
+    el.setAttribute('draggable', 'true');
+    el.setAttribute('ondragstart', `dragFromSidebar(event, '${id}')`);
+
+    let displaySn = dev.sn !== '-' ? `S/N: ${dev.sn}` : `${dev.brand}`;
+    el.innerHTML = `
+        <span class="text-xl">${dev.icon}</span>
+        <div class="flex-1 min-w-0">
+            <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">${dev.type}</p>
+            <p class="text-[10px] text-slate-400 dark:text-slate-400 truncate">${displaySn}</p>
+        </div>
+    `;
+    targetList.appendChild(el);
+}
+
+// แฟล็กการเริ่มลากภายนอก
+function dragFromSidebar(ev, id) {
+    ev.dataTransfer.setData("text/plain", id);
+}
+
+// ดักจับจังหวะปล่อยวางบนกระดาษผังห้อง
+function dropToWorkspace(ev) {
+    ev.preventDefault();
+    const id = ev.dataTransfer.getData("text/plain");
+    if (!id || !allDiagramDevices[id]) return;
+
+    const room = document.getElementById('diagramRoom');
+    const rect = room.getBoundingClientRect();
+    
+    // คำนวณพิกัดให้กึ่งกลางกล่อง (กว้าง 96px, สูง 96px) วางอยู่ตรงหัวเมาส์พอดี
+    let x = ev.clientX - rect.left - 48;
+    let y = ev.clientY - rect.top - 48;
+
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+
+    placeDeviceInWorkspace(id, { x: Math.round(x), y: Math.round(y) });
+    
+    // เอาตัวชิ้นที่ลากออกจาก Sidebar
+    const sideItem = document.getElementById(`side_${id}`);
+    if (sideItem) sideItem.remove();
+}
+
+// ฟังก์ชันสร้างกล่องอุปกรณ์ลงสู่ตารางห้องจำลองจริง
+function placeDeviceInWorkspace(id, pos) {
+    const room = document.getElementById('diagramRoom');
+    const dev = allDiagramDevices[id];
+    if (!dev) return;
+
+    let el = document.createElement('div');
+    el.id = id;
+    el.className = 'draggable-device absolute w-24 h-24 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1.5 hover:border-indigo-500 hover:shadow-md transition-shadow z-10';
+    el.setAttribute('data-x', pos.x);
+    el.setAttribute('data-y', pos.y);
+    el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+
+    let displayLabel = dev.sn !== '-' ? dev.sn : dev.brand;
+
+    el.innerHTML = `
+        <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
+        <span class="text-3xl leading-none mb-1">${dev.icon}</span>
+        <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
+        <span class="text-[9px] text-slate-400 dark:text-slate-400 leading-tight w-full truncate mt-0.5" title="${displayLabel}">${displayLabel}</span>
+    `;
+
+    // ดึงหน้ากากขึ้นด้านบนเมื่อทำการคลิกเลือกหยิบจับ
+    el.addEventListener('mousedown', () => {
+        document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
+        el.style.zIndex = '50';
+    });
+
+    room.appendChild(el);
+}
+
+// กดกากบาทเพื่อดึงอุปกรณ์ออกจากผัง ส่งกลับไปชุบชีวิตที่ Sidebar ด้านนอกตามเดิม
+function removeDeviceFromWorkspace(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+    
+    // สั่งเซฟตำแหน่งปัจจุบันที่เหลืออยู่แบบไว แล้วรีเรนเดอร์เพื่อคืนของเข้ากรอบข้างนอก
+    const devices = document.querySelectorAll('.draggable-device');
+    let savedData = {};
+    devices.forEach(dev => {
+        savedData[dev.id] = { x: Math.round(dev.getAttribute('data-x')), y: Math.round(dev.getAttribute('data-y')) };
+    });
+    localStorage.setItem('adp_diagram_' + currentStation, JSON.stringify(savedData));
+    
+    renderDiagram();
+}
+
+// ควบคุมการย้ายกล่องภายในห้องด้วยไลบรารี interact.js 
 let interactInitialized = false;
 function initInteract() {
     if (interactInitialized) return;
@@ -4381,6 +4516,7 @@ function initInteract() {
     interactInitialized = true;
 }
 
+// กดเซฟบันทึกรูปแบบ
 function saveDiagram() {
     const devices = document.querySelectorAll('.draggable-device');
     let savedData = {};
@@ -4391,9 +4527,71 @@ function saveDiagram() {
         };
     });
     
-    // บันทึกลง LocalStorage ของเครื่องที่กำลังใช้งาน
     localStorage.setItem('adp_diagram_' + currentStation, JSON.stringify(savedData));
-    showToast("💾 บันทึกตำแหน่งผังห้องลงเครื่องสำเร็จ!");
+    showToast("💾 บันทึกโครงสร้างผังห้องสำเร็จ!");
+}
+
+// เคลียร์ค่าทั้งหมดให้กลับมาเป็นห้องว่างเปล่า
+function clearCurrentDiagram() {
+    if(confirm("คุณต้องการดึงอุปกรณ์ทั้งหมดออกจากผังห้องใช่หรือไม่?")) {
+        localStorage.removeItem('adp_diagram_' + currentStation);
+        renderDiagram();
+        showToast("🧹 รีเซ็ตหน้ากระดาษผังห้องว่างเรียบร้อย");
+    }
+}
+
+// ==========================================
+// ฟังก์ชันจัดเอกสารสั่งพิมพ์ลงขนาด A4 แนวนอน
+// ==========================================
+function printDiagram() {
+    const room = document.getElementById('diagramRoom');
+    
+    // โคลนรหัสกล่องภายในห้องไปจัดระเบียบพิมพ์
+    // กรองเอาปุ่มกากบาทออกตอนพิมพ์ด้วยสไตล์พิมพ์
+    const clonedContent = room.innerHTML;
+    
+    const html = `
+        <div style="padding: 10px; font-family: 'Prompt', sans-serif; color: #1e293b; background: #fff; width: 297mm; min-height: 210mm; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 12px; margin-bottom: 15px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 22px; font-weight: bold; color: #0f172a;">📍 ผังจัดวางตำแหน่งอุปกรณ์เทคโนโลยี (Room Diagram)</h2>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;"><strong>สถานี:</strong> ${currentStation} &nbsp;|&nbsp; <strong>กลุ่มงาน:</strong> ${currentGroup}</p>
+                </div>
+                <div style="text-align: right; font-size: 11px; color: #64748b;">
+                    <p style="margin: 0;">ระบบสารสนเทศส่วนกลาง ADP-Inventory</p>
+                    <p style="margin: 3px 0 0 0;">วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
+                </div>
+            </div>
+            
+            <div style="position: relative; width: 100%; height: 520px; border: 2px dashed #475569; background: #fafafa; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+                ${clonedContent}
+            </div>
+            
+            <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; color: #334155;">
+                <div>
+                    <p style="margin: 0; font-weight: bold; color: #475569;">💡 หมายเหตุ:</p>
+                    <p style="margin: 3px 0 0 0; color: #64748b;">ผังนี้ใช้แสดงตำแหน่งทางกายภาพสำหรับการตรวจสอบและซ่อมบำรุงทรัพย์สิน</p>
+                </div>
+                <div style="text-align: center; width: 260px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
+                    <p style="margin: 0 0 35px 0; color: #64748b;">ลงชื่อผู้ตรวจสอบตำแหน่ง</p>
+                    <p style="margin: 0; font-weight: bold;">(............................................................)</p>
+                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">วันที่ ........ / ........ / ................</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = html;
+
+    // แทรกสไตล์ CSS ซ่อนปุ่มลบตอนพิมพ์แบบฝังตัว 
+    const style = document.createElement('style');
+    style.innerHTML = `@media print { .no-print { display: none !important; } body { background: #fff; } }`;
+    printArea.appendChild(style);
+
+    setTimeout(() => {
+        window.print();
+    }, 300);
 }
         
     </script>
