@@ -4456,7 +4456,6 @@ function placeDeviceInWorkspace(id, pos) {
 
     let displayLabel = dev.conn !== '-' ? dev.conn : '-';
     
-    // 🌟 สร้างป้ายกำกับบอกสีเครื่องพิมพ์ในกล่อง
     let colorBadge = '';
     if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
         let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
@@ -4464,8 +4463,9 @@ function placeDeviceInWorkspace(id, pos) {
         colorBadge = `<div class="mt-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold ${badgeClass} inline-block leading-none truncate max-w-full" title="${dev.extra}">${dev.extra}</div>`;
     }
 
+    // เพิ่ม onmousedown และ ontouchstart เพื่อป้องกันการดึง event
     el.innerHTML = `
-        <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
+        <button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>
         <span class="text-3xl leading-none mb-1">${dev.icon}</span>
         <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
         <span class="text-[9px] font-semibold text-indigo-500 dark:text-indigo-400 leading-tight w-full truncate mt-0.5" title="${displayLabel}">${displayLabel}</span>
@@ -4500,14 +4500,13 @@ function renderDoorInWorkspace(id, pos) {
     const room = document.getElementById('diagramRoom');
     let el = document.createElement('div');
     el.id = id;
-    // ดีไซน์กล่องให้ดูเป็นประตู/ทางเข้า
     el.className = 'draggable-device absolute w-28 h-12 bg-amber-50 dark:bg-amber-900/30 border-[3px] border-amber-400 dark:border-amber-600 rounded-lg flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1 z-10 hover:border-amber-500';
     el.setAttribute('data-x', pos.x);
     el.setAttribute('data-y', pos.y);
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
 
     el.innerHTML = `
-        <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
+        <button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>
         <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 leading-none">🚪 ประตู/ทางเข้า</span>
     `;
 
@@ -4678,14 +4677,14 @@ let interactInitialized = false;
 function initInteract() {
     if (interactInitialized) return;
     interact('.draggable-device').draggable({
-        inertia: false, // ปิด inertia เพื่อให้ลากพร้อมกันไม่กระตุก
+        ignoreFrom: 'button', // 🌟 สำคัญมาก: สั่งให้ไลบรารีไม่แย่งการจับคลิกจากปุ่ม
+        inertia: false,
         modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ],
         autoScroll: true,
         listeners: {
             start(event) { 
                 const target = event.target;
                 target.style.cursor = 'grabbing'; 
-                // หากคลิกกล่องที่ไม่ได้เลือก ให้ล้างอันอื่นแล้วเลือกอันนี้แทน
                 if (!target.classList.contains('selected-device')) {
                     document.querySelectorAll('.selected-device').forEach(el => {
                         el.classList.remove('selected-device');
@@ -4696,7 +4695,6 @@ function initInteract() {
                 }
             },
             move(event) {
-                // ขยับทุกชิ้นที่ถูกเลือกไปพร้อมๆ กัน
                 document.querySelectorAll('.selected-device').forEach(el => {
                     const x = (parseFloat(el.getAttribute('data-x')) || 0) + event.dx;
                     const y = (parseFloat(el.getAttribute('data-y')) || 0) + event.dy;
@@ -4708,7 +4706,9 @@ function initInteract() {
             end(event) { event.target.style.cursor = 'grab'; }
         }
     }).on('tap', function(event) {
-        // แตะคลิก 1 ทีเพื่อเลือก/ยกเลิกการเลือก
+        // 🌟 ป้องกันไม่ให้การ Tap แย่งการทำงานของปุ่มกากบาท
+        if (event.target.tagName.toLowerCase() === 'button') return;
+        
         const target = event.currentTarget;
         if (!event.shiftKey) {
             document.querySelectorAll('.selected-device').forEach(el => {
