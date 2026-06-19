@@ -931,10 +931,27 @@ nav {
                 </div>
             </div>
             
-            <div class="flex-1 p-6 flex flex-col overflow-hidden">
-                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="w-full flex-1 bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl relative overflow-hidden shadow-inner touch-none">
-                    </div>
+            <div class="flex-1 p-6 flex flex-col overflow-hidden relative">
+    
+    <div class="absolute top-8 left-8 z-50 flex gap-4 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-xl shadow-lg backdrop-blur border border-slate-200 dark:border-slate-600 no-print">
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↔️ กว้าง:</span>
+            <button onclick="adjustRoomSize('w', -100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">-</button>
+            <button onclick="adjustRoomSize('w', 100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">+</button>
+        </div>
+        <div class="w-px h-6 bg-slate-300 dark:bg-slate-600"></div>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↕️ ยาว:</span>
+            <button onclick="adjustRoomSize('h', -100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">-</button>
+            <button onclick="adjustRoomSize('h', 100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">+</button>
+        </div>
+    </div>
+
+    <div class="w-full flex-1 overflow-auto custom-scrollbar border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-950/50 p-4">
+        <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-900 relative shadow-inner touch-none mx-auto transition-all duration-300" style="width: 800px; height: 600px; min-width: 400px; min-height: 400px;">
             </div>
+    </div>
+</div>
             
         </div>
     </div>
@@ -4310,21 +4327,48 @@ window.unmergeSelected = function(tableId) {
         }
 
 // ===================================================
-// ระบบจัดผังห้องเวอร์ชันแอดวานซ์ (Drag from Outside & Print A4)
+// ระบบจัดผังห้อง (รองรับ Save to Google Sheets, Resize Room, Print A4 Landscape)
 // ===================================================
-let allDiagramDevices = {}; // เก็บ Object ข้อมูลดิบของอุปกรณ์ทั้งหมดรอบปัจจุบัน
+let allDiagramDevices = {}; 
+let currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
 
-function openDiagramModal() {
+async function openDiagramModal() {
     if (!currentStation) {
-        showToast("กรุณาเลือกสถานีก่อน", "error");
-        return;
+        showToast("กรุณาเลือกสถานีก่อน", "error"); return;
     }
     
     document.getElementById('diagramStationName').innerText = `สถานี: ${currentStation} (${currentGroup})`;
     document.getElementById('diagramModal').classList.remove('hidden');
     document.getElementById('diagramModal').classList.add('flex');
     
-    renderDiagram();
+    document.getElementById('loadingText').innerText = 'กำลังโหลดผังห้อง...';
+    document.getElementById('loadingOverlay').classList.remove('hidden'); 
+    document.getElementById('loadingOverlay').classList.add('flex');
+
+    try {
+        // ดึงพิกัดจาก Google Sheets
+        const targetStation = encodeURIComponent(currentStation);
+        const response = await fetch(`${API_URL}?action=GET_DIAGRAM&station=${targetStation}`);
+        const result = await response.json();
+        
+        if (result.data) {
+            currentDiagramData = JSON.parse(result.data);
+            // ตั้งค่าเริ่มต้นถ้าไม่มีข้อมูลห้อง
+            if(!currentDiagramData.roomWidth) currentDiagramData.roomWidth = 800;
+            if(!currentDiagramData.roomHeight) currentDiagramData.roomHeight = 600;
+        } else {
+            currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
+        }
+        
+        renderDiagram();
+    } catch(e) {
+        console.error(e);
+        showToast("โหลดผังห้องล้มเหลว (ใช้ข้อมูลเริ่มต้น)", "error");
+        renderDiagram();
+    } finally {
+        document.getElementById('loadingOverlay').classList.add('hidden'); 
+        document.getElementById('loadingOverlay').classList.remove('flex');
+    }
 }
 
 function closeDiagramModal() {
@@ -4332,11 +4376,25 @@ function closeDiagramModal() {
     document.getElementById('diagramModal').classList.remove('flex');
 }
 
+// ยืดหดขนาดห้อง
+function adjustRoomSize(axis, amount) {
+    if (axis === 'w') {
+        currentDiagramData.roomWidth = Math.max(400, currentDiagramData.roomWidth + amount);
+        document.getElementById('diagramRoom').style.width = currentDiagramData.roomWidth + 'px';
+    } else {
+        currentDiagramData.roomHeight = Math.max(400, currentDiagramData.roomHeight + amount);
+        document.getElementById('diagramRoom').style.height = currentDiagramData.roomHeight + 'px';
+    }
+}
+
 function renderDiagram() {
     const room = document.getElementById('diagramRoom');
-    room.innerHTML = ''; // ล้างพื้นที่ห้องให้โล่งก่อน
+    room.innerHTML = '';
     
-    // เคลียร์รายการในตระกร้า Sidebar
+    // ตั้งค่าขนาดห้องตาม Database
+    room.style.width = currentDiagramData.roomWidth + 'px';
+    room.style.height = currentDiagramData.roomHeight + 'px';
+    
     const listPC = document.getElementById('list-PC'); listPC.innerHTML = '';
     const listNB = document.getElementById('list-NB'); listNB.innerHTML = '';
     const listPRN = document.getElementById('list-PRN'); listPRN.innerHTML = '';
@@ -4344,39 +4402,26 @@ function renderDiagram() {
 
     allDiagramDevices = {};
 
-    // ดึงประวัติพิกัดเก่าจากเบราว์เซอร์
-    let savedPositions = {};
-    try {
-        savedPositions = JSON.parse(localStorage.getItem('adp_diagram_' + currentStation)) || {};
-    } catch(e){}
-
-    // เพิ่มตัวแปร conn เข้ามารับค่าการเชื่อมต่อ
     const processItem = (catKey, type, brand, model, sn, user, icon, conn) => {
         let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
-        if(!brand && !model && !actualSn) return; // ข้ามบรรทัดว่าง
-        
+        if(!brand && !model && !actualSn) return; 
         let actualConn = (conn && String(conn).trim() !== '-') ? conn : '-';
-        
         let uniqueId = `dev_${catKey}_${(actualSn || brand + model).replace(/\W/g, '')}_${Math.random().toString(36).substr(2, 4)}`;
         allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon, conn: actualConn };
     };
 
-    // ดึงข้อมูลสด และระบุ Index ของคอลัมน์ "การเชื่อมต่อ" ของแต่ละตาราง
     if (tableCPUMON) {
         tableCPUMON.getData().forEach(r => {
-            // คอลัมน์ 10 คือ การเชื่อมต่อ
             if (r[2] || r[4]) processItem('PC', 'PC', r[2], r[3], r[4], r[1], '💻', r[10]);
             if (r[6] || r[8]) processItem('PC', 'Monitor', r[6], r[7], r[8], r[1], '🖥️', r[10]);
         });
     }
-    // โน๊ตบุ๊ค คอลัมน์ 6 คือ การเชื่อมต่อ
     if (tableNB) tableNB.getData().forEach(r => { if(r[2]||r[4]) processItem('NB', 'Notebook', r[2], r[3], r[4], r[1], '💻', r[6]); });
-    // เครื่องพิมพ์ คอลัมน์ 8 คือ การเชื่อมต่อ
     if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8]); });
-    // เครื่องมือพิเศษ คอลัมน์ 7 คือ การเชื่อมต่อ
     if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️', r[7]); });
 
-    // คัดแยกชิ้นงาน
+    let savedPositions = currentDiagramData.devices || {};
+
     Object.keys(allDiagramDevices).forEach(id => {
         const dev = allDiagramDevices[id];
         let matchSavedKey = Object.keys(savedPositions).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
@@ -4394,32 +4439,24 @@ function renderDiagram() {
 function createSidebarItem(id, dev) {
     let targetList = document.getElementById(`list-${dev.catKey}`);
     if (!targetList) return;
-
     let el = document.createElement('div');
     el.id = `side_${id}`;
-    el.className = 'p-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg cursor-grab hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 transition-all text-left flex items-center gap-2 select-none active:scale-95';
+    el.className = 'p-2 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-lg cursor-grab hover:bg-indigo-50 transition-all text-left flex items-center gap-2 select-none';
     el.setAttribute('draggable', 'true');
     el.setAttribute('ondragstart', `dragFromSidebar(event, '${id}')`);
-
-    // เปลี่ยนจาก S/N เป็นข้อความการเชื่อมต่อ
     let displayConn = dev.conn !== '-' ? `🔗 ${dev.conn}` : `ไม่มีข้อมูลเชื่อมต่อ`;
-    
     el.innerHTML = `
         <span class="text-xl">${dev.icon}</span>
         <div class="flex-1 min-w-0">
             <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">${dev.type}</p>
-            <p class="text-[10px] text-indigo-500 dark:text-indigo-400 font-medium truncate">${displayConn}</p>
+            <p class="text-[10px] text-indigo-500 font-medium truncate">${displayConn}</p>
         </div>
     `;
     targetList.appendChild(el);
 }
 
-// แฟล็กการเริ่มลากภายนอก
-function dragFromSidebar(ev, id) {
-    ev.dataTransfer.setData("text/plain", id);
-}
+function dragFromSidebar(ev, id) { ev.dataTransfer.setData("text/plain", id); }
 
-// ดักจับจังหวะปล่อยวางบนกระดาษผังห้อง
 function dropToWorkspace(ev) {
     ev.preventDefault();
     const id = ev.dataTransfer.getData("text/plain");
@@ -4428,16 +4465,12 @@ function dropToWorkspace(ev) {
     const room = document.getElementById('diagramRoom');
     const rect = room.getBoundingClientRect();
     
-    // คำนวณพิกัดให้กึ่งกลางกล่อง (กว้าง 96px, สูง 96px) วางอยู่ตรงหัวเมาส์พอดี
+    // ชดเชยการคำนวณ Scroll ภายใน
     let x = ev.clientX - rect.left - 48;
     let y = ev.clientY - rect.top - 48;
-
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
+    if (x < 0) x = 0; if (y < 0) y = 0;
 
     placeDeviceInWorkspace(id, { x: Math.round(x), y: Math.round(y) });
-    
-    // เอาตัวชิ้นที่ลากออกจาก Sidebar
     const sideItem = document.getElementById(`side_${id}`);
     if (sideItem) sideItem.remove();
 }
@@ -4449,58 +4482,39 @@ function placeDeviceInWorkspace(id, pos) {
 
     let el = document.createElement('div');
     el.id = id;
-    el.className = 'draggable-device absolute w-24 h-24 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1.5 hover:border-indigo-500 hover:shadow-md transition-shadow z-10';
+    el.className = 'draggable-device absolute w-24 h-24 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1.5 hover:border-indigo-500 hover:shadow-md z-10';
     el.setAttribute('data-x', pos.x);
     el.setAttribute('data-y', pos.y);
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
 
-    // แสดงการเชื่อมต่อที่ด้านล่างกล่อง
     let displayLabel = dev.conn !== '-' ? dev.conn : '-';
-
     el.innerHTML = `
-        <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
+        <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
         <span class="text-3xl leading-none mb-1">${dev.icon}</span>
         <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
         <span class="text-[9px] font-semibold text-indigo-500 dark:text-indigo-400 leading-tight w-full truncate mt-0.5" title="${displayLabel}">${displayLabel}</span>
     `;
 
-    // ดึงหน้ากากขึ้นด้านบนเมื่อทำการคลิกเลือกหยิบจับ
     el.addEventListener('mousedown', () => {
         document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
         el.style.zIndex = '50';
     });
-
     room.appendChild(el);
 }
 
-// กดกากบาทเพื่อดึงอุปกรณ์ออกจากผัง ส่งกลับไปชุบชีวิตที่ Sidebar ด้านนอกตามเดิม
 function removeDeviceFromWorkspace(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
-    
-    // สั่งเซฟตำแหน่งปัจจุบันที่เหลืออยู่แบบไว แล้วรีเรนเดอร์เพื่อคืนของเข้ากรอบข้างนอก
-    const devices = document.querySelectorAll('.draggable-device');
-    let savedData = {};
-    devices.forEach(dev => {
-        savedData[dev.id] = { x: Math.round(dev.getAttribute('data-x')), y: Math.round(dev.getAttribute('data-y')) };
-    });
-    localStorage.setItem('adp_diagram_' + currentStation, JSON.stringify(savedData));
-    
-    renderDiagram();
+    updateCurrentDiagramData();
+    renderDiagram(); // ดันอุปกรณ์กลับไปหน้าต่างซ้าย
 }
 
-// ควบคุมการย้ายกล่องภายในห้องด้วยไลบรารี interact.js 
 let interactInitialized = false;
 function initInteract() {
     if (interactInitialized) return;
     interact('.draggable-device').draggable({
         inertia: true,
-        modifiers: [
-            interact.modifiers.restrictRect({
-                restriction: 'parent',
-                endOnly: true
-            })
-        ],
+        modifiers: [ interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }) ],
         autoScroll: true,
         listeners: {
             start(event) { event.target.style.cursor = 'grabbing'; },
@@ -4508,10 +4522,8 @@ function initInteract() {
                 const target = event.target;
                 const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
                 const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                
                 target.style.transform = `translate(${x}px, ${y}px)`;
-                target.setAttribute('data-x', x);
-                target.setAttribute('data-y', y);
+                target.setAttribute('data-x', x); target.setAttribute('data-y', y);
             },
             end(event) { event.target.style.cursor = 'grab'; }
         }
@@ -4519,67 +4531,95 @@ function initInteract() {
     interactInitialized = true;
 }
 
-// กดเซฟบันทึกรูปแบบ
-function saveDiagram() {
+// อัปเดตตัวแปรชั่วคราวก่อนส่งไป Apps Script
+function updateCurrentDiagramData() {
     const devices = document.querySelectorAll('.draggable-device');
-    let savedData = {};
+    currentDiagramData.devices = {};
     devices.forEach(dev => {
-        savedData[dev.id] = {
+        currentDiagramData.devices[dev.id] = {
             x: Math.round(dev.getAttribute('data-x')),
             y: Math.round(dev.getAttribute('data-y'))
         };
     });
-    
-    localStorage.setItem('adp_diagram_' + currentStation, JSON.stringify(savedData));
-    showToast("💾 บันทึกโครงสร้างผังห้องสำเร็จ!");
 }
 
-// เคลียร์ค่าทั้งหมดให้กลับมาเป็นห้องว่างเปล่า
-function clearCurrentDiagram() {
-    if(confirm("คุณต้องการดึงอุปกรณ์ทั้งหมดออกจากผังห้องใช่หรือไม่?")) {
-        localStorage.removeItem('adp_diagram_' + currentStation);
-        renderDiagram();
-        showToast("🧹 รีเซ็ตหน้ากระดาษผังห้องว่างเรียบร้อย");
+// ส่งเซฟไป Google Sheets
+async function saveDiagram() {
+    updateCurrentDiagramData();
+    document.getElementById('loadingText').innerText = 'บันทึกผังห้องลงฐานข้อมูล...';
+    document.getElementById('loadingOverlay').classList.remove('hidden'); 
+    document.getElementById('loadingOverlay').classList.add('flex');
+
+    try {
+        const payload = {
+            action: 'SAVE_DIAGRAM',
+            station: currentStation,
+            data: JSON.stringify(currentDiagramData)
+        };
+
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            showToast("💾 บันทึกโครงสร้างผังห้องลงระบบสำเร็จ!");
+        } else {
+            showToast("บันทึกล้มเหลว", "error");
+        }
+    } catch(e) {
+        console.error(e);
+        showToast("ไม่สามารถเชื่อมต่อฐานข้อมูลได้", "error");
+    } finally {
+        document.getElementById('loadingOverlay').classList.add('hidden'); 
+        document.getElementById('loadingOverlay').classList.remove('flex');
     }
 }
 
-// ==========================================
-// ฟังก์ชันจัดเอกสารสั่งพิมพ์ลงขนาด A4 แนวนอน
-// ==========================================
+function clearCurrentDiagram() {
+    if(confirm("คุณต้องการล้างอุปกรณ์ทั้งหมดออกจากผังห้องใช่หรือไม่?")) {
+        currentDiagramData.devices = {};
+        renderDiagram();
+        showToast("🧹 รีเซ็ตผังห้องเรียบร้อย (อย่าลืมกดบันทึกเพื่ออัปเดตระบบ)");
+    }
+}
+
+// พิมพ์หน้ากระดาษ A4 แนวนอน (Landscape) พร้อมสเกลให้อยู่ตรงกลาง
 function printDiagram() {
     const room = document.getElementById('diagramRoom');
-    
-    // โคลนรหัสกล่องภายในห้องไปจัดระเบียบพิมพ์
-    // กรองเอาปุ่มกากบาทออกตอนพิมพ์ด้วยสไตล์พิมพ์
     const clonedContent = room.innerHTML;
     
+    // นำขนาดห้องปัจจุบันมาจำลองในหน้าพิมพ์
+    const w = currentDiagramData.roomWidth + 'px';
+    const h = currentDiagramData.roomHeight + 'px';
+    
     const html = `
-        <div style="padding: 10px; font-family: 'Prompt', sans-serif; color: #1e293b; background: #fff; width: 297mm; min-height: 210mm; box-sizing: border-box;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 12px; margin-bottom: 15px;">
-                <div>
-                    <h2 style="margin: 0; font-size: 22px; font-weight: bold; color: #0f172a;">📍 ผังจัดวางตำแหน่งอุปกรณ์เทคโนโลยี (Room Diagram)</h2>
-                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;"><strong>สถานี:</strong> ${currentStation} &nbsp;|&nbsp; <strong>กลุ่มงาน:</strong> ${currentGroup}</p>
-                </div>
-                <div style="text-align: right; font-size: 11px; color: #64748b;">
-                    <p style="margin: 0;">ระบบสารสนเทศส่วนกลาง ADP-Inventory</p>
-                    <p style="margin: 3px 0 0 0;">วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
-                </div>
+        <style>
+            @media print {
+                @page { size: A4 landscape; margin: 10mm; }
+                body { margin: 0; padding: 0; font-family: 'Prompt', sans-serif; background: #fff !important; }
+                .no-print { display: none !important; }
+            }
+            .print-container { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px;}
+            .print-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; width: 100%; }
+            .print-room { 
+                position: relative; border: 2px solid #334155; border-radius: 12px; background-color: #f8fafc;
+                width: ${w}; height: ${h}; 
+                transform-origin: top center;
+                /* บังคับย่อส่วนสเกลห้องให้พอดีกับกระดาษ A4 แนวนอน (ประมาณ 1000px กว้าง) */
+                transform: scale(min(1, calc(1000px / ${currentDiagramData.roomWidth})));
+            }
+        </style>
+        
+        <div class="print-container">
+            <div class="print-header">
+                <h2 style="margin: 0; font-size: 26px; font-weight: bold; color: #0f172a;">แผนผังอุปกรณ์เทคโนโลยีประจำสถานี: ${currentStation}</h2>
+                <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
             </div>
             
-            <div style="position: relative; width: 100%; height: 520px; border: 2px dashed #475569; background: #fafafa; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+            <div class="print-room">
                 ${clonedContent}
-            </div>
-            
-            <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; color: #334155;">
-                <div>
-                    <p style="margin: 0; font-weight: bold; color: #475569;">💡 หมายเหตุ:</p>
-                    <p style="margin: 3px 0 0 0; color: #64748b;">ผังนี้ใช้แสดงตำแหน่งทางกายภาพสำหรับการตรวจสอบและซ่อมบำรุงทรัพย์สิน</p>
-                </div>
-                <div style="text-align: center; width: 260px; border-top: 1px dashed #cbd5e1; padding-top: 8px;">
-                    <p style="margin: 0 0 35px 0; color: #64748b;">ลงชื่อผู้ตรวจสอบตำแหน่ง</p>
-                    <p style="margin: 0; font-weight: bold;">(............................................................)</p>
-                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #94a3b8;">วันที่ ........ / ........ / ................</p>
-                </div>
             </div>
         </div>
     `;
@@ -4587,14 +4627,9 @@ function printDiagram() {
     const printArea = document.getElementById('printArea');
     printArea.innerHTML = html;
 
-    // แทรกสไตล์ CSS ซ่อนปุ่มลบตอนพิมพ์แบบฝังตัว 
-    const style = document.createElement('style');
-    style.innerHTML = `@media print { .no-print { display: none !important; } body { background: #fff; } }`;
-    printArea.appendChild(style);
-
     setTimeout(() => {
         window.print();
-    }, 300);
+    }, 500);
 }
         
     </script>
