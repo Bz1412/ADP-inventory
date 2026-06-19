@@ -884,16 +884,16 @@ nav {
     </div>
 
     <div id="diagramModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm no-print animate-fade-in">
-    <div class="bg-white dark:bg-slate-800 w-full h-full flex flex-col overflow-hidden">
+    <div class="bg-white dark:bg-slate-800 w-full h-full flex flex-col overflow-hidden relative">
         
         <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
             <div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 ระบบจัดตำแหน่งและผังอุปกรณ์ภายในห้อง</h3>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 ผังอุปกรณ์ภายในห้อง</h3>
                 <p id="diagramStationName" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">ชื่อสถานี</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="printDiagram()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5">
-                    🖨️ พิมพ์ผัง A4
+                    🖨️ พิมพ์ผังแนวนอน
                 </button>
                 <button onclick="clearCurrentDiagram()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95">
                     🧹 รีเซ็ตผังว่าง
@@ -907,51 +907,46 @@ nav {
         
         <div class="flex flex-1 overflow-hidden bg-slate-100 dark:bg-slate-900">
             
-            <div class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 overflow-y-auto flex flex-col gap-4">
-                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">📦 อุปกรณ์ที่ยังไม่ได้จัดวาง (ลากไปวางในห้อง)</div>
+            <div class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 overflow-y-auto flex flex-col gap-4 z-10 shadow-[2px_0_10px_rgba(0,0,0,0.05)]">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">📦 อุปกรณ์ที่ยังไม่ได้จัดวาง</div>
                 
                 <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
-                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">💻 คอมพิวเตอร์ & จอภาพ</div>
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">💻 คอมพิวเตอร์ & จอภาพ</div>
                     <div id="list-PC" class="flex flex-col gap-1.5 min-h-[40px]"></div>
                 </div>
-                
                 <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
-                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">💻 โน๊ตบุ๊ค (Notebook)</div>
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">💻 โน๊ตบุ๊ค (Notebook)</div>
                     <div id="list-NB" class="flex flex-col gap-1.5 min-h-[40px]"></div>
                 </div>
-                
                 <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
-                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">🖨️ เครื่องพิมพ์ (Printer)</div>
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">🖨️ เครื่องพิมพ์ (Printer)</div>
                     <div id="list-PRN" class="flex flex-col gap-1.5 min-h-[40px]"></div>
                 </div>
-                
                 <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
-                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1">🛠️ เครื่องมือพิเศษ</div>
+                    <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">🛠️ เครื่องมือพิเศษ</div>
                     <div id="list-SPC" class="flex flex-col gap-1.5 min-h-[40px]"></div>
                 </div>
             </div>
             
-            <div class="flex-1 p-6 flex flex-col overflow-hidden relative">
-    
-    <div class="absolute top-8 left-8 z-50 flex gap-4 bg-white/90 dark:bg-slate-800/90 p-2.5 rounded-xl shadow-lg backdrop-blur border border-slate-200 dark:border-slate-600 no-print">
-        <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↔️ กว้าง:</span>
-            <button onclick="adjustRoomSize('w', -100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">-</button>
-            <button onclick="adjustRoomSize('w', 100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">+</button>
-        </div>
-        <div class="w-px h-6 bg-slate-300 dark:bg-slate-600"></div>
-        <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↕️ ยาว:</span>
-            <button onclick="adjustRoomSize('h', -100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">-</button>
-            <button onclick="adjustRoomSize('h', 100)" class="w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-md font-bold text-slate-700 dark:text-slate-200 transition-colors">+</button>
-        </div>
-    </div>
+            <div class="flex-1 relative overflow-auto custom-scrollbar flex items-center justify-center p-8">
+                
+                <div class="fixed top-24 right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↔️ กว้าง:</span>
+                        <button onclick="adjustRoomSize('w', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">-</button>
+                        <button onclick="adjustRoomSize('w', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">+</button>
+                    </div>
+                    <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↕️ ยาว:</span>
+                        <button onclick="adjustRoomSize('h', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">-</button>
+                        <button onclick="adjustRoomSize('h', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">+</button>
+                    </div>
+                </div>
 
-    <div class="w-full flex-1 overflow-auto custom-scrollbar border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-950/50 p-4">
-        <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-900 relative shadow-inner touch-none mx-auto transition-all duration-300" style="width: 800px; height: 600px; min-width: 400px; min-height: 400px;">
+                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative shadow-inner touch-none transition-all duration-300">
+                    </div>
             </div>
-    </div>
-</div>
             
         </div>
     </div>
@@ -4327,7 +4322,7 @@ window.unmergeSelected = function(tableId) {
         }
 
 // ===================================================
-// ระบบจัดผังห้อง (รองรับ Save to Google Sheets, Resize Room, Print A4 Landscape)
+// ระบบจัดผังห้อง (รองรับ Resize, Print Landscape & Save to Apps Script)
 // ===================================================
 let allDiagramDevices = {}; 
 let currentDiagramData = { roomWidth: 800, roomHeight: 600, devices: {} };
@@ -4346,14 +4341,13 @@ async function openDiagramModal() {
     document.getElementById('loadingOverlay').classList.add('flex');
 
     try {
-        // ดึงพิกัดจาก Google Sheets
+        // วิ่งไปดึงผังห้องที่ชีต "Diagrams"
         const targetStation = encodeURIComponent(currentStation);
         const response = await fetch(`${API_URL}?action=GET_DIAGRAM&station=${targetStation}`);
         const result = await response.json();
         
         if (result.data) {
             currentDiagramData = JSON.parse(result.data);
-            // ตั้งค่าเริ่มต้นถ้าไม่มีข้อมูลห้อง
             if(!currentDiagramData.roomWidth) currentDiagramData.roomWidth = 800;
             if(!currentDiagramData.roomHeight) currentDiagramData.roomHeight = 600;
         } else {
@@ -4363,7 +4357,7 @@ async function openDiagramModal() {
         renderDiagram();
     } catch(e) {
         console.error(e);
-        showToast("โหลดผังห้องล้มเหลว (ใช้ข้อมูลเริ่มต้น)", "error");
+        showToast("โหลดผังห้องล้มเหลว (เริ่มจากห้องเปล่า)", "error");
         renderDiagram();
     } finally {
         document.getElementById('loadingOverlay').classList.add('hidden'); 
@@ -4376,7 +4370,7 @@ function closeDiagramModal() {
     document.getElementById('diagramModal').classList.remove('flex');
 }
 
-// ยืดหดขนาดห้อง
+// 📏 ฟังก์ชันยืดหดขนาดห้อง
 function adjustRoomSize(axis, amount) {
     if (axis === 'w') {
         currentDiagramData.roomWidth = Math.max(400, currentDiagramData.roomWidth + amount);
@@ -4391,14 +4385,14 @@ function renderDiagram() {
     const room = document.getElementById('diagramRoom');
     room.innerHTML = '';
     
-    // ตั้งค่าขนาดห้องตาม Database
+    // ตั้งค่าขนาดห้องตอนโหลด
     room.style.width = currentDiagramData.roomWidth + 'px';
     room.style.height = currentDiagramData.roomHeight + 'px';
     
-    const listPC = document.getElementById('list-PC'); listPC.innerHTML = '';
-    const listNB = document.getElementById('list-NB'); listNB.innerHTML = '';
-    const listPRN = document.getElementById('list-PRN'); listPRN.innerHTML = '';
-    const listSPC = document.getElementById('list-SPC'); listSPC.innerHTML = '';
+    document.getElementById('list-PC').innerHTML = '';
+    document.getElementById('list-NB').innerHTML = '';
+    document.getElementById('list-PRN').innerHTML = '';
+    document.getElementById('list-SPC').innerHTML = '';
 
     allDiagramDevices = {};
 
@@ -4465,7 +4459,6 @@ function dropToWorkspace(ev) {
     const room = document.getElementById('diagramRoom');
     const rect = room.getBoundingClientRect();
     
-    // ชดเชยการคำนวณ Scroll ภายใน
     let x = ev.clientX - rect.left - 48;
     let y = ev.clientY - rect.top - 48;
     if (x < 0) x = 0; if (y < 0) y = 0;
@@ -4506,7 +4499,7 @@ function removeDeviceFromWorkspace(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
     updateCurrentDiagramData();
-    renderDiagram(); // ดันอุปกรณ์กลับไปหน้าต่างซ้าย
+    renderDiagram(); 
 }
 
 let interactInitialized = false;
@@ -4531,7 +4524,6 @@ function initInteract() {
     interactInitialized = true;
 }
 
-// อัปเดตตัวแปรชั่วคราวก่อนส่งไป Apps Script
 function updateCurrentDiagramData() {
     const devices = document.querySelectorAll('.draggable-device');
     currentDiagramData.devices = {};
@@ -4543,7 +4535,7 @@ function updateCurrentDiagramData() {
     });
 }
 
-// ส่งเซฟไป Google Sheets
+// 💾 ส่งพิกัดและขนาดห้องไปบันทึกที่ชีต "Diagrams"
 async function saveDiagram() {
     updateCurrentDiagramData();
     document.getElementById('loadingText').innerText = 'บันทึกผังห้องลงฐานข้อมูล...';
@@ -4564,9 +4556,9 @@ async function saveDiagram() {
 
         const result = await response.json();
         if (result.status === 'success') {
-            showToast("💾 บันทึกโครงสร้างผังห้องลงระบบสำเร็จ!");
+            showToast("💾 บันทึกโครงสร้างผังห้องสำเร็จ!");
         } else {
-            showToast("บันทึกล้มเหลว", "error");
+            showToast("บันทึกล้มเหลว โปรดตรวจสอบสิทธิ์", "error");
         }
     } catch(e) {
         console.error(e);
@@ -4585,51 +4577,45 @@ function clearCurrentDiagram() {
     }
 }
 
-// พิมพ์หน้ากระดาษ A4 แนวนอน (Landscape) พร้อมสเกลให้อยู่ตรงกลาง
+// 🖨️ ฟังก์ชันพิมพ์ แนวนอน เต็มหน้า A4
 function printDiagram() {
     const room = document.getElementById('diagramRoom');
     const clonedContent = room.innerHTML;
     
-    // นำขนาดห้องปัจจุบันมาจำลองในหน้าพิมพ์
-    const w = currentDiagramData.roomWidth + 'px';
-    const h = currentDiagramData.roomHeight + 'px';
-    
+    // ตั้งค่ามาตราส่วนให้พอดีกับกระดาษ A4 แนวนอน (กว้างประมาณ 1050px)
+    const scale = Math.min(1, 1050 / currentDiagramData.roomWidth);
+
     const html = `
         <style>
             @media print {
                 @page { size: A4 landscape; margin: 10mm; }
-                body { margin: 0; padding: 0; font-family: 'Prompt', sans-serif; background: #fff !important; }
+                body { background: #fff !important; font-family: 'Prompt', sans-serif; }
                 .no-print { display: none !important; }
             }
-            .print-container { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 20px;}
+            .print-container { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;}
             .print-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; width: 100%; }
             .print-room { 
                 position: relative; border: 2px solid #334155; border-radius: 12px; background-color: #f8fafc;
-                width: ${w}; height: ${h}; 
+                width: ${currentDiagramData.roomWidth}px; 
+                height: ${currentDiagramData.roomHeight}px; 
                 transform-origin: top center;
-                /* บังคับย่อส่วนสเกลห้องให้พอดีกับกระดาษ A4 แนวนอน (ประมาณ 1000px กว้าง) */
-                transform: scale(min(1, calc(1000px / ${currentDiagramData.roomWidth})));
+                transform: scale(${scale});
             }
         </style>
-        
         <div class="print-container">
             <div class="print-header">
-                <h2 style="margin: 0; font-size: 26px; font-weight: bold; color: #0f172a;">แผนผังอุปกรณ์เทคโนโลยีประจำสถานี: ${currentStation}</h2>
-                <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
+                <h2 style="margin: 0; font-size: 26px; font-weight: bold;">ผังห้องสถานี: ${currentStation}</h2>
             </div>
-            
             <div class="print-room">
                 ${clonedContent}
             </div>
         </div>
     `;
-
+    
     const printArea = document.getElementById('printArea');
     printArea.innerHTML = html;
-
-    setTimeout(() => {
-        window.print();
-    }, 500);
+    
+    setTimeout(() => { window.print(); }, 500);
 }
         
     </script>
