@@ -4404,10 +4404,19 @@ function createSidebarItem(id, dev) {
     el.setAttribute('draggable', 'true');
     el.setAttribute('ondragstart', `dragFromSidebar(event, '${id}')`);
     let displayConn = dev.conn !== '-' ? `🔗 ${dev.conn}` : `ไม่มีข้อมูลเชื่อมต่อ`;
+    
+    // 🌟 สร้างป้ายกำกับบอกสีเครื่องพิมพ์
+    let colorBadge = '';
+    if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
+        let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
+        let badgeClass = isColor ? 'bg-pink-100 text-pink-600 border-pink-200' : 'bg-gray-200 text-gray-700 border-gray-300';
+        colorBadge = `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold ml-1 border ${badgeClass}">${dev.extra}</span>`;
+    }
+
     el.innerHTML = `
         <span class="text-xl">${dev.icon}</span>
         <div class="flex-1 min-w-0">
-            <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">${dev.type}</p>
+            <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate flex items-center">${dev.type} ${colorBadge}</p>
             <p class="text-[10px] text-indigo-500 font-medium truncate">${displayConn}</p>
         </div>
     `;
@@ -4446,11 +4455,21 @@ function placeDeviceInWorkspace(id, pos) {
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
 
     let displayLabel = dev.conn !== '-' ? dev.conn : '-';
+    
+    // 🌟 สร้างป้ายกำกับบอกสีเครื่องพิมพ์ในกล่อง
+    let colorBadge = '';
+    if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
+        let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
+        let badgeClass = isColor ? 'bg-pink-100 text-pink-600' : 'bg-gray-200 text-gray-700';
+        colorBadge = `<div class="mt-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold ${badgeClass} inline-block leading-none truncate max-w-full" title="${dev.extra}">${dev.extra}</div>`;
+    }
+
     el.innerHTML = `
         <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
         <span class="text-3xl leading-none mb-1">${dev.icon}</span>
         <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
         <span class="text-[9px] font-semibold text-indigo-500 dark:text-indigo-400 leading-tight w-full truncate mt-0.5" title="${displayLabel}">${displayLabel}</span>
+        ${colorBadge}
     `;
 
     el.addEventListener('mousedown', () => {
@@ -4515,7 +4534,6 @@ function renderDiagram() {
     const room = document.getElementById('diagramRoom');
     room.innerHTML = '';
     
-    // ตั้งค่าขนาดห้องตอนโหลด
     room.style.width = currentDiagramData.roomWidth + 'px';
     room.style.height = currentDiagramData.roomHeight + 'px';
     
@@ -4526,12 +4544,13 @@ function renderDiagram() {
 
     allDiagramDevices = {};
 
-    const processItem = (catKey, type, brand, model, sn, user, icon, conn) => {
+    // 🌟 เพิ่มพารามิเตอร์ extra สำหรับรับค่าลักษณะสี
+    const processItem = (catKey, type, brand, model, sn, user, icon, conn, extra = '') => {
         let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
         if(!brand && !model && !actualSn) return; 
         let actualConn = (conn && String(conn).trim() !== '-') ? conn : '-';
         let uniqueId = `dev_${catKey}_${(actualSn || brand + model).replace(/\W/g, '')}_${Math.random().toString(36).substr(2, 4)}`;
-        allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon, conn: actualConn };
+        allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon, conn: actualConn, extra: extra };
     };
 
     if (tableCPUMON) {
@@ -4541,7 +4560,12 @@ function renderDiagram() {
         });
     }
     if (tableNB) tableNB.getData().forEach(r => { if(r[2]||r[4]) processItem('NB', 'Notebook', r[2], r[3], r[4], r[1], '💻', r[6]); });
-    if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8]); });
+    
+    // 🌟 ดึง r[5] (ลักษณะสี) ของตาราง Printer ส่งเข้าไปด้วย
+    if (tablePrn) tablePrn.getData().forEach(r => { 
+        if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8], r[5]); 
+    });
+    
     if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️', r[7]); });
 
     let savedPositions = currentDiagramData.devices || {};
@@ -4562,9 +4586,8 @@ function renderDiagram() {
     });
 
     initInteract();
-    initLassoSelection(); // 🌟 เรียกใช้ระบบลากครอบ (Lasso)
+    initLassoSelection(); 
 }
-
 let lassoInitialized = false;
 function initLassoSelection() {
     if (lassoInitialized) return;
@@ -4764,6 +4787,7 @@ function clearCurrentDiagram() {
     }
 }
 
+// 🖨️ 4. อัปเดตฟังก์ชัน Print ให้แสดงสรุปยอดที่มุมขวาบน
 function printDiagram() {
     const room = document.getElementById('diagramRoom');
     
@@ -4775,17 +4799,54 @@ function printDiagram() {
     let lasso = document.getElementById('selection-lasso');
     if (lasso) lasso.style.display = 'none';
 
+    // บังคับอัปเดตข้อมูลกล่องปัจจุบันให้ล่าสุดก่อนนับจำนวน
+    updateCurrentDiagramData();
+
     const clonedContent = room.innerHTML;
     
-    // 🌟 คำนวณสเกลแบบไดนามิก (เช็คทั้งความกว้างและความสูง)
-    // พื้นที่กระดาษ A4 แนวนอนมีที่ว่างประมาณ 1050x700 px
+    // --- 📊 เริ่มต้น: คำนวณสรุปการเชื่อมต่อและเครื่องพิมพ์ ---
+    let connCounts = {};
+    let printerCount = 0;
+    
+    // นับเฉพาะอุปกรณ์ที่ถูกลากลงมาในผังห้องแล้วเท่านั้น
+    let placedDevices = currentDiagramData.devices || {};
+    Object.keys(placedDevices).forEach(id => {
+        let dev = allDiagramDevices[id];
+        if (dev) {
+            // เช็คว่าเป็นเครื่องพิมพ์หรือไม่ (ดูจากประเภทหรือไอคอน)
+            if (dev.catKey === 'PRN' || dev.type === 'Printer' || dev.type === 'เครื่องพิมพ์' || dev.icon === '🖨️') {
+                printerCount++;
+            }
+            // เช็คและนับการเชื่อมต่อ
+            let conn = String(dev.conn || '').trim();
+            if (conn && conn !== '-' && !conn.includes('ไม่มี')) {
+                connCounts[conn] = (connCounts[conn] || 0) + 1;
+            }
+        }
+    });
+
+    // สร้างกล่องข้อความสรุปสำหรับมุมขวาบน
+    let summaryHtml = `<div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; color: #334155; background: #f8fafc; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 8px;">`;
+    summaryHtml += `<div style="font-weight: bold; border-bottom: 1px solid #cbd5e1; margin-bottom: 4px; padding-bottom: 2px; width: 100%; text-align: right;">📊 สรุปอุปกรณ์ในผัง</div>`;
+    
+    let hasConn = false;
+    Object.keys(connCounts).sort().forEach(c => {
+        summaryHtml += `<div style="margin-bottom: 2px;">🔗 ${c} : <span style="font-weight: bold; color: #0f172a; font-size: 12px;">${connCounts[c]}</span> เครื่อง</div>`;
+        hasConn = true;
+    });
+    
+    if (!hasConn) summaryHtml += `<div style="color: #94a3b8; font-style: italic;">ไม่มีข้อมูลการเชื่อมต่อ</div>`;
+    
+    summaryHtml += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1;">🖨️ เครื่องพิมพ์รวม : <span style="font-weight: bold; color: #0f172a; font-size: 12px;">${printerCount}</span> เครื่อง</div>`;
+    summaryHtml += `</div>`;
+    // --- จบการคำนวณ ---
+
+    // 🌟 คำนวณสเกลแบบไดนามิกให้พอดีหน้า A4
     const maxPrintWidth = 1050;
-    const maxPrintHeight = 700;
+    const maxPrintHeight = 650;
     
     const scaleX = maxPrintWidth / currentDiagramData.roomWidth;
     const scaleY = maxPrintHeight / currentDiagramData.roomHeight;
-    
-    // ใช้สเกลที่น้อยที่สุดเพื่อบีบให้พอดีกรอบ A4 1 หน้าเสมอ
     const scale = Math.min(1, scaleX, scaleY);
 
     const html = `
@@ -4796,7 +4857,7 @@ function printDiagram() {
                 .no-print { display: none !important; }
             }
             .print-container { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden;}
-            .print-header { text-align: center; margin-bottom: 5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; width: 100%; }
+            .print-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; width: 100%; }
             .print-room { 
                 position: relative; border: 2px solid #334155; border-radius: 8px; background-color: #f8fafc;
                 width: ${currentDiagramData.roomWidth}px; 
@@ -4808,7 +4869,11 @@ function printDiagram() {
         </style>
         <div class="print-container">
             <div class="print-header">
-                <h2 style="margin: 0; font-size: 14px; font-weight: bold; color: #334155;">แผนผังอุปกรณ์สถานี: ${currentStation}</h2>
+                <div>
+                    <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #1e293b;">📍 แผนผังอุปกรณ์สถานี: ${currentStation}</h2>
+                    <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
+                </div>
+                ${summaryHtml}
             </div>
             <div class="print-room">
                 ${clonedContent}
