@@ -1573,23 +1573,38 @@ nav {
             unlockBodyScroll();
             if (!currentUserRole) return; 
 
-            // ซ่อนหน้าตารางและหน้ารวม
-            document.getElementById('editorPage').classList.add('hidden');
-            document.getElementById('aggregatePage').classList.add('hidden');
-            document.getElementById('btnHome').classList.add('hidden');
+            // ซ่อนหน้าตารางและหน้ารวมแบบปลอดภัย (เช็คก่อนว่ามี Element ไหม)
+            let elEditor = document.getElementById('editorPage');
+            if (elEditor) elEditor.classList.add('hidden');
+            
+            let elAgg = document.getElementById('aggregatePage');
+            if (elAgg) elAgg.classList.add('hidden');
+            
+            let elBtnHome = document.getElementById('btnHome');
+            if (elBtnHome) elBtnHome.classList.add('hidden');
 
             // 🌟 ถ้าเป็น "สถานี" ให้พากลับไปหน้า Landing Page (เลือกสถานี)
             if (currentUserRole !== 'Admin') {
-                document.getElementById('homePage').classList.add('hidden');
+                let elHome = document.getElementById('homePage');
+                if (elHome) elHome.classList.add('hidden');
                 
                 let landing = document.getElementById('landingPage');
-                landing.classList.remove('hidden');
-                landing.classList.remove('animate-fade-in'); void landing.offsetWidth; landing.classList.add('animate-fade-in');
+                if (landing) {
+                    landing.classList.remove('hidden');
+                    landing.classList.remove('animate-fade-in'); 
+                    void landing.offsetWidth; 
+                    landing.classList.add('animate-fade-in');
+                }
 
                 // คืนค่าปุ่มบน Navbar ให้กลับเป็นโหมดหน้าแรก
-                document.getElementById('btnAdminLogin').classList.remove('hidden');
-                document.getElementById('btnHelp').classList.add('hidden');
-                document.getElementById('navDivider').classList.add('hidden');
+                let btnAdminLogin = document.getElementById('btnAdminLogin');
+                if (btnAdminLogin) btnAdminLogin.classList.remove('hidden');
+                
+                let btnHelp = document.getElementById('btnHelp');
+                if (btnHelp) btnHelp.classList.add('hidden');
+                
+                let navDiv = document.getElementById('navDivider');
+                if (navDiv) navDiv.classList.add('hidden');
                 
                 currentUserRole = null; // ล้างสิทธิ์ (เสมือนการออกจากระบบ)
                 return;
@@ -1597,12 +1612,17 @@ nav {
 
             // 🌟 ถ้าเป็น "Admin" ให้กลับไปหน้า Dashboard (ภาพรวม)
             const homePage = document.getElementById('homePage');
-            homePage.classList.remove('hidden');
-            homePage.classList.remove('animate-fade-in'); void homePage.offsetWidth; homePage.classList.add('animate-fade-in');
+            if (homePage) {
+                homePage.classList.remove('hidden');
+                homePage.classList.remove('animate-fade-in'); 
+                void homePage.offsetWidth; 
+                homePage.classList.add('animate-fade-in');
+            }
             
             window.history.pushState({}, document.title, window.location.pathname);
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            loadDashboardStats();
+            
+            if (typeof loadDashboardStats === 'function') loadDashboardStats();
         }
 
         const customRenderTable = function(instance, cell, col, row, val, label, cellName) { 
