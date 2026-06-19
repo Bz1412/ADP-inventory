@@ -928,7 +928,32 @@ nav {
                 </div>
             </div>
             
-            <div class="flex-1 relative overflow-auto custom-scrollbar flex items-center justify-center p-8">
+            <div id="diagramScrollArea" class="flex-1 relative overflow-auto custom-scrollbar p-6 md:p-8">
+                
+                <div class="fixed top-24 right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
+                    
+                    <button onclick="spawnDoor()" class="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-lg text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 shadow-sm">
+                        🚪 เพิ่มประตู
+                    </button>
+                    <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↔️ กว้าง:</span>
+                        <button onclick="adjustRoomSize('w', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">-</button>
+                        <button onclick="adjustRoomSize('w', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">+</button>
+                    </div>
+                    <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
+                    
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↕️ ยาว:</span>
+                        <button onclick="adjustRoomSize('h', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">-</button>
+                        <button onclick="adjustRoomSize('h', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">+</button>
+                    </div>
+                </div>
+
+                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative shadow-inner touch-none transition-all duration-300 mx-auto mt-4 mb-20 origin-top-left">
+                    </div>
+            </div>
                 
                 <div class="fixed top-24 right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
                     <div class="flex items-center gap-2">
@@ -4370,55 +4395,6 @@ function adjustRoomSize(axis, amount) {
     }
 }
 
-function renderDiagram() {
-    const room = document.getElementById('diagramRoom');
-    room.innerHTML = '';
-    
-    // ตั้งค่าขนาดห้องตอนโหลด
-    room.style.width = currentDiagramData.roomWidth + 'px';
-    room.style.height = currentDiagramData.roomHeight + 'px';
-    
-    document.getElementById('list-PC').innerHTML = '';
-    document.getElementById('list-NB').innerHTML = '';
-    document.getElementById('list-PRN').innerHTML = '';
-    document.getElementById('list-SPC').innerHTML = '';
-
-    allDiagramDevices = {};
-
-    const processItem = (catKey, type, brand, model, sn, user, icon, conn) => {
-        let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
-        if(!brand && !model && !actualSn) return; 
-        let actualConn = (conn && String(conn).trim() !== '-') ? conn : '-';
-        let uniqueId = `dev_${catKey}_${(actualSn || brand + model).replace(/\W/g, '')}_${Math.random().toString(36).substr(2, 4)}`;
-        allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon, conn: actualConn };
-    };
-
-    if (tableCPUMON) {
-        tableCPUMON.getData().forEach(r => {
-            if (r[2] || r[4]) processItem('PC', 'PC', r[2], r[3], r[4], r[1], '💻', r[10]);
-            if (r[6] || r[8]) processItem('PC', 'Monitor', r[6], r[7], r[8], r[1], '🖥️', r[10]);
-        });
-    }
-    if (tableNB) tableNB.getData().forEach(r => { if(r[2]||r[4]) processItem('NB', 'Notebook', r[2], r[3], r[4], r[1], '💻', r[6]); });
-    if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8]); });
-    if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️', r[7]); });
-
-    let savedPositions = currentDiagramData.devices || {};
-
-    Object.keys(allDiagramDevices).forEach(id => {
-        const dev = allDiagramDevices[id];
-        let matchSavedKey = Object.keys(savedPositions).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
-        
-        if (matchSavedKey && savedPositions[matchSavedKey]) {
-            placeDeviceInWorkspace(id, savedPositions[matchSavedKey]);
-        } else {
-            createSidebarItem(id, dev);
-        }
-    });
-
-    initInteract();
-}
-
 function createSidebarItem(id, dev) {
     let targetList = document.getElementById(`list-${dev.catKey}`);
     if (!targetList) return;
@@ -4484,11 +4460,112 @@ function placeDeviceInWorkspace(id, pos) {
     room.appendChild(el);
 }
 
+// 🚪 ฟังก์ชันสร้างประตูใหม่ (ถูกเรียกเมื่อกดปุ่ม "เพิ่มประตู")
+function spawnDoor() {
+    let uniqueId = `dev_door_${Math.random().toString(36).substr(2, 6)}`;
+    
+    // คำนวณให้สร้างประตูโผล่มากึ่งกลางจอที่เรากำลังเลื่อนดูอยู่
+    const scrollArea = document.getElementById('diagramScrollArea');
+    let x = (scrollArea.scrollLeft + scrollArea.clientWidth / 2) - 50;
+    let y = (scrollArea.scrollTop + scrollArea.clientHeight / 2) - 25;
+    
+    if (x < 0) x = 20; if (y < 0) y = 20;
+    let pos = { x: Math.round(x), y: Math.round(y) };
+    
+    currentDiagramData.devices[uniqueId] = pos;
+    renderDoorInWorkspace(uniqueId, pos);
+}
+
+// 🖼️ วาด Element ประตูลงในห้อง
+function renderDoorInWorkspace(id, pos) {
+    const room = document.getElementById('diagramRoom');
+    let el = document.createElement('div');
+    el.id = id;
+    // ดีไซน์กล่องให้ดูเป็นประตู/ทางเข้า
+    el.className = 'draggable-device absolute w-28 h-12 bg-amber-50 dark:bg-amber-900/30 border-[3px] border-amber-400 dark:border-amber-600 rounded-lg flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1 z-10 hover:border-amber-500';
+    el.setAttribute('data-x', pos.x);
+    el.setAttribute('data-y', pos.y);
+    el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+
+    el.innerHTML = `
+        <button onclick="removeDeviceFromWorkspace('${id}')" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print">✕</button>
+        <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 leading-none">🚪 ประตู/ทางเข้า</span>
+    `;
+
+    el.addEventListener('mousedown', () => {
+        document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
+        el.style.zIndex = '50';
+    });
+    room.appendChild(el);
+}
+
+// ❌ ฟังก์ชันลบอุปกรณ์ (อัปเดตให้รองรับประตู)
 function removeDeviceFromWorkspace(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
     updateCurrentDiagramData();
+    
+    // ถ้าเป็นประตู ลบทิ้งแล้วจบเลย ไม่ต้องดันกลับไปแถบซ้าย
+    if (id.startsWith('dev_door_')) return; 
+    
     renderDiagram(); 
+}
+
+// 🔄 ฟังก์ชันเรนเดอร์ห้องหลัก (อัปเดตให้โหลดประตูกลับมาด้วย)
+function renderDiagram() {
+    const room = document.getElementById('diagramRoom');
+    room.innerHTML = '';
+    
+    // ตั้งค่าขนาดห้องตอนโหลด
+    room.style.width = currentDiagramData.roomWidth + 'px';
+    room.style.height = currentDiagramData.roomHeight + 'px';
+    
+    document.getElementById('list-PC').innerHTML = '';
+    document.getElementById('list-NB').innerHTML = '';
+    document.getElementById('list-PRN').innerHTML = '';
+    document.getElementById('list-SPC').innerHTML = '';
+
+    allDiagramDevices = {};
+
+    const processItem = (catKey, type, brand, model, sn, user, icon, conn) => {
+        let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
+        if(!brand && !model && !actualSn) return; 
+        let actualConn = (conn && String(conn).trim() !== '-') ? conn : '-';
+        let uniqueId = `dev_${catKey}_${(actualSn || brand + model).replace(/\W/g, '')}_${Math.random().toString(36).substr(2, 4)}`;
+        allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon, conn: actualConn };
+    };
+
+    if (tableCPUMON) {
+        tableCPUMON.getData().forEach(r => {
+            if (r[2] || r[4]) processItem('PC', 'PC', r[2], r[3], r[4], r[1], '💻', r[10]);
+            if (r[6] || r[8]) processItem('PC', 'Monitor', r[6], r[7], r[8], r[1], '🖥️', r[10]);
+        });
+    }
+    if (tableNB) tableNB.getData().forEach(r => { if(r[2]||r[4]) processItem('NB', 'Notebook', r[2], r[3], r[4], r[1], '💻', r[6]); });
+    if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8]); });
+    if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️', r[7]); });
+
+    let savedPositions = currentDiagramData.devices || {};
+
+    // 🌟 โหลด "ประตู" กลับมาถ้ามีประวัติในระบบ
+    Object.keys(savedPositions).forEach(k => {
+        if (k.startsWith('dev_door_')) {
+            renderDoorInWorkspace(k, savedPositions[k]);
+        }
+    });
+
+    Object.keys(allDiagramDevices).forEach(id => {
+        const dev = allDiagramDevices[id];
+        let matchSavedKey = Object.keys(savedPositions).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
+        
+        if (matchSavedKey && savedPositions[matchSavedKey]) {
+            placeDeviceInWorkspace(id, savedPositions[matchSavedKey]);
+        } else {
+            createSidebarItem(id, dev);
+        }
+    });
+
+    initInteract();
 }
 
 let interactInitialized = false;
@@ -4598,7 +4675,7 @@ function printDiagram() {
         </style>
         <div class="print-container">
             <div class="print-header">
-                <h2 style="margin: 0; font-size: 26px; font-weight: bold;">ผังห้องสถานี: ${currentStation}</h2>
+                <h2 style="margin: 0; font-size: 26px; font-weight: bold;">ผังห้อง: ${currentStation}</h2>
             </div>
             <div class="print-room">
                 ${clonedContent}
