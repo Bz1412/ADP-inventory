@@ -5014,10 +5014,11 @@ function updateCurrentDiagramData() {
     });
 }
 
-// 🖨️ อัปเดตฟังก์ชัน Print
+// 🖨️ 4. อัปเดตฟังก์ชัน Print (แก้ปัญหาล้นไปหน้า 2 ถาวร)
 function printDiagram() {
     const room = document.getElementById('diagramRoom');
     
+    // เอาเส้นลากครอบและกรอบสีน้ำเงินออกก่อนพิมพ์
     document.querySelectorAll('.selected-device').forEach(el => {
         el.classList.remove('selected-device');
         el.style.boxShadow = ''; el.style.borderColor = '';
@@ -5051,30 +5052,69 @@ function printDiagram() {
     if (!hasConn) summaryHtml += `<div style="color: #94a3b8; font-style: italic;">ไม่มีข้อมูลการเชื่อมต่อ</div>`;
     summaryHtml += `<div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #cbd5e1;">🖨️ เครื่องพิมพ์รวม : <span style="font-weight: bold; color: #0f172a; font-size: 12px;">${printerCount}</span> เครื่อง</div></div>`;
 
+    // 🌟 คำนวณสเกลแบบไดนามิกให้พอดีหน้า A4 (เผื่อพื้นที่ Header แล้ว)
     const maxPrintWidth = 1050;
-    const maxPrintHeight = 650;
+    const maxPrintHeight = 600; 
+    
     const scaleX = maxPrintWidth / currentDiagramData.roomWidth;
     const scaleY = maxPrintHeight / currentDiagramData.roomHeight;
     const scale = Math.min(1, scaleX, scaleY);
 
+    // 🌟 คำนวณขนาดกล่องจริงๆ หลังจากย่อสเกลแล้ว (สำคัญมาก เพื่อไม่ให้ล้นหน้า)
+    const finalWidth = currentDiagramData.roomWidth * scale;
+    const finalHeight = currentDiagramData.roomHeight * scale;
+
     const html = `
         <style>
             @media print {
-                @page { size: A4 landscape; margin: 8mm; }
-                body { background: #fff !important; font-family: 'Prompt', sans-serif; }
+                @page { size: A4 landscape; margin: 5mm; } /* ลดระยะขอบกระดาษให้น้อยที่สุด */
+                body { 
+                    background: #fff !important; 
+                    font-family: 'Prompt', sans-serif; 
+                    margin: 0; padding: 0;
+                    overflow: hidden !important; /* ห้ามเบราว์เซอร์มี Scroll หรือทะลุหน้า */
+                }
                 .no-print { display: none !important; }
             }
-            .print-container { width: 100%; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden;}
-            .print-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; width: 100%; }
+            .print-container { 
+                width: 100%; 
+                height: 98vh; /* บังคับให้สูงสุดไม่เกิน 1 หน้ากระดาษ */
+                display: flex; 
+                flex-direction: column; 
+                align-items: center; 
+                justify-content: flex-start; 
+                overflow: hidden;
+            }
+            .print-header { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: flex-end; 
+                margin-bottom: 10px; 
+                border-bottom: 2px solid #cbd5e1; 
+                padding-bottom: 5px; 
+                width: 100%; 
+                max-width: ${Math.max(finalWidth, 800)}px; /* ให้หัวกระดาษกว้างเท่าห้อง */
+            }
+            
+            /* กล่องรับขนาดที่แท้จริงหลังย่อ */
+            .print-wrapper {
+                width: ${finalWidth}px;
+                height: ${finalHeight}px;
+                overflow: hidden;
+                margin: 0 auto;
+            }
+
             .print-room { 
-                position: relative; border: 2px solid #334155; border-radius: 8px; background-color: #f8fafc;
+                position: relative; 
+                border: 2px solid #334155; 
+                border-radius: 8px; 
+                background-color: #f8fafc;
                 width: ${currentDiagramData.roomWidth}px; 
                 height: ${currentDiagramData.roomHeight}px; 
-                transform-origin: top center;
+                transform-origin: top left; /* บังคับให้ย่อจากมุมซ้ายบนเท่านั้น */
                 transform: scale(${scale});
-                margin-top: 5px;
             }
-            /* 🌟 บังคับให้สีกำแพงพิมพ์ออกกระดาษ */
+            /* บังคับให้สีกำแพงพิมพ์ออกกระดาษ */
             .print-room div[id^="wall_"] {
                 background-color: #94a3b8 !important;
                 border: 1px solid #64748b !important;
@@ -5085,14 +5125,18 @@ function printDiagram() {
         <div class="print-container">
             <div class="print-header">
                 <div>
-                    <h2 style="margin: 0; font-size: 18px; font-weight: bold; color: #1e293b;">📍 แผนผังอุปกรณ์สถานี: ${currentStation}</h2>
+                    <h2 style="margin: 0; font-size: 16px; font-weight: bold; color: #1e293b;">📍 แผนผังอุปกรณ์สถานี: ${currentStation}</h2>
                     <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH')} ${new Date().toLocaleTimeString('th-TH')}</p>
                 </div>
                 ${summaryHtml}
             </div>
-            <div class="print-room">
-                ${clonedContent}
+            
+            <div class="print-wrapper">
+                <div class="print-room">
+                    ${clonedContent}
+                </div>
             </div>
+
         </div>
     `;
     
