@@ -4956,7 +4956,8 @@ function printDiagram() {
     document.querySelectorAll('.selected-device').forEach(el => { el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = ''; });
     let lasso = document.getElementById('selection-lasso'); if (lasso) lasso.style.display = 'none';
 
-    if(currentUserRole === 'Admin') updateCurrentDiagramData();
+    // 🌟 ลบการเช็คสิทธิ์ Admin ออกตรงนี้ เพื่อให้ User ธรรมดาสามารถอ่านค่ากล่องมารวมยอดได้ 🌟
+    updateCurrentDiagramData();
     
     let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
     const clonedContent = room.innerHTML;
