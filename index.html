@@ -886,30 +886,39 @@ nav {
     <div id="diagramModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm no-print animate-fade-in">
     <div class="bg-white dark:bg-slate-800 w-full h-full flex flex-col overflow-hidden relative">
         
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+        <div class="px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap justify-between items-center bg-slate-50 dark:bg-slate-800/50 gap-2">
             <div>
-                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 ผังอุปกรณ์ภายในห้อง</h3>
+                <h3 class="text-base md:text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">📍 ผังอุปกรณ์ภายในห้อง</h3>
                 <p id="diagramStationName" class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">ชื่อสถานี</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="printDiagram()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5">
-                    🖨️ พิมพ์ผังแนวนอน
+            
+            <div class="flex items-center gap-3 text-[10px] md:text-xs bg-white dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-x-auto">
+                <span class="font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">แสดงผล:</span>
+                <label class="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" checked onchange="toggleDiagDisplay('showType', this.checked)" class="accent-indigo-600"> ประเภท</label>
+                <label class="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" checked onchange="toggleDiagDisplay('showUser', this.checked)" class="accent-indigo-600"> ผู้ใช้</label>
+                <label class="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" onchange="toggleDiagDisplay('showBrandModel', this.checked)" class="accent-indigo-600"> ยี่ห้อ/รุ่น</label>
+                <label class="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" onchange="toggleDiagDisplay('showSN', this.checked)" class="accent-indigo-600"> S/N</label>
+                <label class="flex items-center gap-1 cursor-pointer whitespace-nowrap"><input type="checkbox" checked onchange="toggleDiagDisplay('showConn', this.checked)" class="accent-indigo-600"> เชื่อมต่อ</label>
+            </div>
+
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="printDiagram()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5 flex-1 justify-center">
+                    🖨️ พิมพ์ผัง
                 </button>
-                <button onclick="clearCurrentDiagram()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95">
-                    🧹 รีเซ็ตผังว่าง
+                <button id="btnClearDiagram" onclick="clearCurrentDiagram()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-transform active:scale-95 flex-1 justify-center">
+                    🧹 ล้างผัง
                 </button>
-                <button onclick="saveDiagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5">
-                    💾 บันทึกพิกัด
+                <button id="btnSaveDiagram" onclick="saveDiagram()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform active:scale-95 flex items-center gap-1.5 flex-1 justify-center">
+                    💾 บันทึก
                 </button>
-                <button onclick="closeDiagramModal()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-xl font-bold transition-transform active:scale-95">ปิดหน้าต่าง</button>
+                <button onclick="closeDiagramModal()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-xl font-bold transition-transform active:scale-95">ปิด</button>
             </div>
         </div>
         
         <div class="flex flex-1 overflow-hidden bg-slate-100 dark:bg-slate-900">
             
-            <div class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 overflow-y-auto flex flex-col gap-4 z-10 shadow-[2px_0_10px_rgba(0,0,0,0.05)]">
+            <div id="diagramSidebar" class="w-80 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 p-4 overflow-y-auto flex flex-col gap-4 z-10 shadow-[2px_0_10px_rgba(0,0,0,0.05)]">
                 <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">📦 อุปกรณ์ที่ยังไม่ได้จัดวาง</div>
-                
                 <div class="border border-slate-100 dark:border-slate-700/60 rounded-xl p-2.5">
                     <div class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">💻 คอมพิวเตอร์ & จอภาพ</div>
                     <div id="list-PC" class="flex flex-col gap-1.5 min-h-[40px]"></div>
@@ -927,44 +936,35 @@ nav {
                     <div id="list-SPC" class="flex flex-col gap-1.5 min-h-[40px]"></div>
                 </div>
             </div>
-
-        <div class="flex flex-col flex-1 overflow-hidden">
-        <div id="roomTabsContainer" class="bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 px-4 py-2.5 flex items-center gap-2 overflow-x-auto shadow-sm z-40 no-print shrink-0">
-        </div>
-
-            <div id="diagramScrollArea" class="flex-1 relative overflow-auto custom-scrollbar p-6 md:p-8">
-                
-                <div class="fixed top-[135px] right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
-                    <button onclick="spawnDoor()" class="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-lg text-xs font-bold transition-transform active:scale-95 flex items-center gap-1 shadow-sm">
-                        🚪 เพิ่มประตู
-                    </button>
-                    <button id="btnDrawWall" onclick="toggleDrawWallMode()" class="bg-slate-100 hover:bg-blue-100 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-3 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-sm">
-                        ✏️ วาดฉากกั้น
-                    </button>
-                    <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
-
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↔️ กว้าง:</span>
-                        <button onclick="adjustRoomSize('w', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">-</button>
-                        <button onclick="adjustRoomSize('w', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">+</button>
-                    </div>
-                    <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
-                    
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↕️ ยาว:</span>
-                        <button onclick="adjustRoomSize('h', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">-</button>
-                        <button onclick="adjustRoomSize('h', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded text-slate-700 dark:text-slate-200 font-bold active:scale-95 transition-transform">+</button>
-                    </div>
-                </div>
-
-                <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative shadow-inner touch-none transition-all duration-300 mx-auto mt-6 mb-20 origin-top-left">
-                    </div>
-                
-                </div>
             
+            <div class="flex-1 flex flex-col relative overflow-hidden bg-slate-200/50 dark:bg-slate-900/50">
+                <div id="roomTabsContainer" class="w-full bg-slate-100 dark:bg-slate-800 border-b border-slate-300 dark:border-slate-700 px-4 py-2.5 flex items-center gap-2 overflow-x-auto shadow-sm z-40 no-print"></div>
+
+                <div id="diagramScrollArea" class="flex-1 relative overflow-auto custom-scrollbar p-6 md:p-8">
+                    
+                    <div id="diagramControls" class="fixed top-[135px] right-8 z-50 flex gap-4 bg-white/95 dark:bg-slate-800/95 px-4 py-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-600 no-print backdrop-blur-sm">
+                        <button onclick="spawnDoor()" class="bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-3 py-1 rounded-lg text-xs font-bold transition-transform active:scale-95 flex items-center gap-1">🚪 เพิ่มประตู</button>
+                        <button id="btnDrawWall" onclick="toggleDrawWallMode()" class="bg-slate-100 hover:bg-blue-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-3 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-1">✏️ วาดฉากกั้น</button>
+                        <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↔️ กว้าง:</span>
+                            <button onclick="adjustRoomSize('w', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 rounded text-slate-700 font-bold active:scale-95 transition-transform">-</button>
+                            <button onclick="adjustRoomSize('w', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 rounded text-slate-700 font-bold active:scale-95 transition-transform">+</button>
+                        </div>
+                        <div class="w-px h-6 bg-slate-300 dark:bg-slate-600 my-auto"></div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">↕️ ยาว:</span>
+                            <button onclick="adjustRoomSize('h', -100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 rounded text-slate-700 font-bold active:scale-95 transition-transform">-</button>
+                            <button onclick="adjustRoomSize('h', 100)" class="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 rounded text-slate-700 font-bold active:scale-95 transition-transform">+</button>
+                        </div>
+                    </div>
+
+                    <div id="diagramRoom" ondragover="event.preventDefault()" ondrop="dropToWorkspace(event)" class="bg-white dark:bg-slate-950 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-2xl relative shadow-inner transition-all duration-300 origin-top-left mb-20">
+                    </div>
+                </div>
             </div>
+            
         </div>
-        
     </div>
 </div>
     
@@ -4345,14 +4345,40 @@ window.unmergeSelected = function(tableId) {
             }, 300);
         }
 
-        // ===================================================
-// 📍 ระบบจัดผังห้อง (Multi-Rooms, วาดกำแพง, ลากครอบ, พิมพ์ A4)
+// ===================================================
+// 📍 ระบบจัดผังห้อง (Multi-Rooms, วาดกำแพง, ลากครอบ, พิมพ์ A4, เช็คสิทธิ์)
 // ===================================================
 let allDiagramDevices = {}; 
 let currentDiagramData = { activeRoomIndex: 0, rooms: [{ id: 'room_main', name: 'ห้องหลัก', roomWidth: 800, roomHeight: 600, devices: {}, walls: {} }] };
 
+// ตัวแปรตั้งค่าการแสดงผลบนกล่อง
+let diagDisplaySettings = { showType: true, showUser: true, showBrandModel: false, showSN: false, showConn: true };
+
+// สลับการแสดงผลข้อมูลบนกล่อง (ทำงานเมื่อกด Checkbox)
+function toggleDiagDisplay(key, isChecked) {
+    diagDisplaySettings[key] = isChecked;
+    renderDiagram(); // วาดกล่องใหม่ทั้งหมด
+}
+
+// ฟังก์ชันสำหรับปุ่ม ℹ️ เพื่อดูประวัติอุปกรณ์
+function openDeviceDetailsFromDiagram(sn, brand, model) {
+    if (sn && String(sn).trim() !== '-' && String(sn).trim().toLowerCase() !== 'ไม่มี') {
+        openSnHistory(sn);
+    } else {
+        showToast(`อุปกรณ์นี้ไม่มี S/N ในระบบ (${brand} ${model})`, "error");
+    }
+}
+
 async function openDiagramModal() {
     if (!currentStation) { showToast("กรุณาเลือกสถานีก่อน", "error"); return; }
+    
+    // 🌟 ระบบสิทธิ์ (RBAC) 🌟
+    const isAdmin = (currentUserRole === 'Admin');
+    document.getElementById('diagramSidebar').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('diagramControls').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('btnSaveDiagram').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('btnClearDiagram').style.display = isAdmin ? 'flex' : 'none';
+
     document.getElementById('diagramStationName').innerText = `สถานี: ${currentStation} (${currentGroup})`;
     document.getElementById('diagramModal').classList.remove('hidden');
     document.getElementById('diagramModal').classList.add('flex');
@@ -4384,7 +4410,7 @@ function closeDiagramModal() {
 
 // --- 🏢 ระบบจัดการห้อง (Tabs) ---
 function switchRoom(index) {
-    updateCurrentDiagramData();
+    if (currentUserRole === 'Admin') updateCurrentDiagramData();
     currentDiagramData.activeRoomIndex = index;
     if(isDrawWallMode) toggleDrawWallMode();
     renderDiagram();
@@ -4423,23 +4449,24 @@ function deleteRoom(index, ev) {
 }
 
 function renderRoomTabs() {
+    const isAdmin = (currentUserRole === 'Admin');
     const container = document.getElementById('roomTabsContainer');
     if (!container) return;
     let html = '';
     currentDiagramData.rooms.forEach((r, i) => {
         let isActive = (i === currentDiagramData.activeRoomIndex);
         let activeClass = isActive ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600';
-        html += `
-            <div onclick="switchRoom(${i})" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors whitespace-nowrap group ${activeClass}">
-                <span class="text-sm font-bold">${r.name}</span>
-                <div class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onclick="renameRoom(${i}, event)" class="hover:text-amber-300" title="เปลี่ยนชื่อ">✏️</button>
-                    ${currentDiagramData.rooms.length > 1 ? `<button onclick="deleteRoom(${i}, event)" class="hover:text-red-300" title="ลบห้อง">✕</button>` : ''}
-                </div>
-            </div>
-        `;
+        html += `<div onclick="switchRoom(${i})" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors whitespace-nowrap group ${activeClass}">
+                    <span class="text-sm font-bold">${r.name}</span>`;
+        if (isAdmin) {
+            html += `<div class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="renameRoom(${i}, event)" class="hover:text-amber-300" title="เปลี่ยนชื่อ">✏️</button>
+                        ${currentDiagramData.rooms.length > 1 ? `<button onclick="deleteRoom(${i}, event)" class="hover:text-red-300" title="ลบห้อง">✕</button>` : ''}
+                    </div>`;
+        }
+        html += `</div>`;
     });
-    html += `<button onclick="addNewRoom()" class="ml-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors whitespace-nowrap flex items-center gap-1 shadow-sm">➕ เพิ่มห้อง</button>`;
+    if (isAdmin) html += `<button onclick="addNewRoom()" class="ml-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors whitespace-nowrap flex items-center gap-1 shadow-sm">➕ เพิ่มห้อง</button>`;
     container.innerHTML = html;
 }
 
@@ -4502,32 +4529,65 @@ function dropToWorkspace(ev) {
 }
 
 function placeDeviceInWorkspace(id, pos) {
+    const isAdmin = (currentUserRole === 'Admin');
     const room = document.getElementById('diagramRoom');
     const dev = allDiagramDevices[id];
     if (!dev) return;
 
     let el = document.createElement('div');
     el.id = id;
-    el.className = 'draggable-device absolute w-24 h-24 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1.5 hover:border-indigo-500 hover:shadow-md z-10 touch-none';
+    
+    // ถ้าไม่ใช่แอดมิน ลากไม่ได้ ให้เปลี่ยนเคอร์เซอร์
+    let cursorClass = isAdmin ? 'cursor-grab hover:border-indigo-500 hover:shadow-md' : 'cursor-pointer hover:border-blue-400';
+    el.className = `draggable-device absolute bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl flex flex-col items-center justify-center shadow-sm select-none text-center p-1.5 z-10 touch-none ${cursorClass}`;
+    
+    // ตั้งค่าความกว้าง-สูง ให้กล่องยืดหยุ่นตามข้อมูลที่เลือกโชว์
+    el.style.minWidth = '96px';
+    el.style.minHeight = '96px';
+    el.style.width = 'max-content';
+    el.style.padding = '8px 12px';
+
     el.setAttribute('data-x', pos.x);
     el.setAttribute('data-y', pos.y);
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
 
-    let displayLabel = dev.conn !== '-' ? dev.conn : '-';
-    let colorBadge = '';
-    if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
-        let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
-        let badgeClass = isColor ? 'bg-pink-100 text-pink-600' : 'bg-gray-200 text-gray-700';
-        colorBadge = `<div class="mt-0.5 px-1.5 py-0.5 rounded-md text-[8px] font-bold ${badgeClass} inline-block leading-none truncate max-w-full" title="${dev.extra}">${dev.extra}</div>`;
+    // สร้างข้อมูลภายในกล่องตาม Checkbox ที่ติ๊กเลือกไว้
+    let contentHtml = `<span class="text-3xl leading-none mb-1">${dev.icon}</span>`;
+    
+    if (diagDisplaySettings.showType) {
+        let colorBadge = '';
+        if (dev.catKey === 'PRN' && dev.extra && dev.extra !== '-') {
+            let isColor = dev.extra.includes('สี') || dev.extra.toLowerCase().includes('color');
+            let badgeClass = isColor ? 'bg-pink-100 text-pink-600' : 'bg-gray-200 text-gray-700';
+            colorBadge = `<span class="ml-1 px-1 py-0.5 rounded text-[8px] font-bold ${badgeClass} leading-none">${dev.extra}</span>`;
+        }
+        contentHtml += `<div class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full flex justify-center items-center">${dev.type}${colorBadge}</div>`;
+    }
+    
+    if (diagDisplaySettings.showUser && dev.user && dev.user !== '-') {
+        contentHtml += `<div class="text-[10px] font-medium text-slate-600 dark:text-slate-300 leading-tight w-full truncate max-w-[120px] mt-0.5">👤 ${dev.user}</div>`;
+    }
+    
+    if (diagDisplaySettings.showBrandModel && (dev.brand || dev.model)) {
+        let bm = `${dev.brand !== '-' ? dev.brand : ''} ${dev.model !== '-' ? dev.model : ''}`.trim();
+        if (bm) contentHtml += `<div class="text-[9px] text-slate-500 dark:text-slate-400 leading-tight w-full truncate max-w-[120px] mt-0.5">${bm}</div>`;
     }
 
-    el.innerHTML = `
-        <button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>
-        <span class="text-3xl leading-none mb-1">${dev.icon}</span>
-        <span class="text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-tight w-full truncate">${dev.type}</span>
-        <span class="text-[9px] font-semibold text-indigo-500 dark:text-indigo-400 leading-tight w-full truncate mt-0.5" title="${displayLabel}">${displayLabel}</span>
-        ${colorBadge}
-    `;
+    if (diagDisplaySettings.showSN && dev.sn && dev.sn !== '-') {
+        contentHtml += `<div class="text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 leading-tight w-full mt-0.5">S/N: ${dev.sn}</div>`;
+    }
+
+    if (diagDisplaySettings.showConn && dev.conn && dev.conn !== '-') {
+        contentHtml += `<div class="text-[9px] font-semibold text-indigo-500 dark:text-indigo-400 leading-tight w-full mt-0.5">🔗 ${dev.conn}</div>`;
+    }
+
+    // ปุ่มลบอุปกรณ์ (โชว์เฉพาะ Admin)
+    let delBtn = isAdmin ? `<button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>` : '';
+
+    // ปุ่มรายละเอียด (Info) โชว์ให้ทุกคน
+    let infoBtn = `<button onclick="openDeviceDetailsFromDiagram('${dev.sn.replace(/'/g, "\\'")}', '${dev.brand.replace(/'/g, "\\'")}', '${dev.model.replace(/'/g, "\\'")}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" title="ดูประวัติอุปกรณ์" class="absolute -top-2 -left-2 w-6 h-6 bg-sky-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-sky-600 no-print z-50">ℹ️</button>`;
+
+    el.innerHTML = delBtn + infoBtn + contentHtml;
 
     el.addEventListener('mousedown', () => {
         document.querySelectorAll('.draggable-device').forEach(d => d.style.zIndex = '10');
@@ -4551,15 +4611,20 @@ function spawnDoor() {
 }
 
 function renderDoorInWorkspace(id, pos) {
+    const isAdmin = (currentUserRole === 'Admin');
     const room = document.getElementById('diagramRoom');
     let el = document.createElement('div');
     el.id = id; 
-    el.className = 'draggable-device absolute w-28 h-12 bg-amber-50 dark:bg-amber-900/30 border-[3px] border-amber-400 dark:border-amber-600 rounded-lg flex flex-col items-center justify-center cursor-grab shadow-sm select-none text-center p-1 z-10 hover:border-amber-500 touch-none';
+    let cursorClass = isAdmin ? 'cursor-grab hover:border-amber-500' : '';
+    el.className = `draggable-device absolute w-28 h-12 bg-amber-50 dark:bg-amber-900/30 border-[3px] border-amber-400 dark:border-amber-600 rounded-lg flex flex-col items-center justify-center shadow-sm select-none text-center p-1 z-10 touch-none ${cursorClass}`;
     el.setAttribute('data-x', pos.x);
     el.setAttribute('data-y', pos.y);
     el.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+    
+    let delBtn = isAdmin ? `<button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>` : '';
+
     el.innerHTML = `
-        <button onclick="removeDeviceFromWorkspace('${id}'); event.stopPropagation();" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full text-[12px] flex items-center justify-center shadow hover:bg-rose-600 no-print z-50">✕</button>
+        ${delBtn}
         <span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 leading-none">🚪 ประตู/ทางเข้า</span>
     `;
     el.addEventListener('mousedown', () => {
@@ -4570,17 +4635,23 @@ function renderDoorInWorkspace(id, pos) {
 }
 
 function renderWallInWorkspace(id, data) {
+    const isAdmin = (currentUserRole === 'Admin');
     const room = document.getElementById('diagramRoom');
     let el = document.createElement('div');
     el.id = id;
-    el.className = 'absolute bg-slate-400 dark:bg-slate-600 border border-slate-500 dark:border-slate-500 z-0 rounded-sm hover:bg-rose-400 dark:hover:bg-rose-800 transition-colors shadow-sm';
+    let hoverClass = isAdmin ? 'hover:bg-rose-400 dark:hover:bg-rose-800 cursor-pointer' : '';
+    el.className = `absolute bg-slate-400 dark:bg-slate-600 border border-slate-500 dark:border-slate-500 z-0 rounded-sm shadow-sm transition-colors ${hoverClass}`;
     el.style.left = data.x + 'px'; el.style.top = data.y + 'px'; el.style.width = data.w + 'px'; el.style.height = data.h + 'px';
-    el.title = "ดับเบิลคลิกเพื่อลบฉากกั้นนี้"; el.style.cursor = 'pointer';
-    el.ondblclick = function(ev) { ev.stopPropagation(); this.remove(); updateCurrentDiagramData(); };
+    
+    if (isAdmin) {
+        el.title = "ดับเบิลคลิกเพื่อลบฉากกั้นนี้";
+        el.ondblclick = function(ev) { ev.stopPropagation(); this.remove(); updateCurrentDiagramData(); };
+    }
     room.appendChild(el);
 }
 
 function removeDeviceFromWorkspace(id) {
+    if (currentUserRole !== 'Admin') return;
     const el = document.getElementById(id);
     if (el) el.remove();
     updateCurrentDiagramData();
@@ -4588,75 +4659,7 @@ function removeDeviceFromWorkspace(id) {
     renderDiagram(); 
 }
 
-function renderDiagram() {
-    renderRoomTabs();
-    const room = document.getElementById('diagramRoom');
-    room.innerHTML = '';
-    
-    let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
-    room.style.width = activeRoom.roomWidth + 'px';
-    room.style.height = activeRoom.roomHeight + 'px';
-    
-    document.getElementById('list-PC').innerHTML = '';
-    document.getElementById('list-NB').innerHTML = '';
-    document.getElementById('list-PRN').innerHTML = '';
-    document.getElementById('list-SPC').innerHTML = '';
-
-    allDiagramDevices = {};
-    const processItem = (catKey, type, brand, model, sn, user, icon, conn, extra = '') => {
-        let actualSn = (sn && String(sn).trim() !== '-') ? sn : '';
-        if(!brand && !model && !actualSn) return; 
-        let actualConn = (conn && String(conn).trim() !== '-') ? conn : '-';
-        let uniqueId = `dev_${catKey}_${(actualSn || brand + model).replace(/\W/g, '')}_${Math.random().toString(36).substr(2, 4)}`;
-        allDiagramDevices[uniqueId] = { uniqueId, catKey, type, brand, model, sn: actualSn || '-', user, icon, conn: actualConn, extra: extra };
-    };
-
-    if (tableCPUMON) {
-        tableCPUMON.getData().forEach(r => {
-            if (r[2] || r[4]) processItem('PC', 'PC', r[2], r[3], r[4], r[1], '💻', r[10]);
-            if (r[6] || r[8]) processItem('PC', 'Monitor', r[6], r[7], r[8], r[1], '🖥️', r[10]);
-        });
-    }
-    if (tableNB) tableNB.getData().forEach(r => { if(r[2]||r[4]) processItem('NB', 'Notebook', r[2], r[3], r[4], r[1], '💻', r[6]); });
-    if (tablePrn) tablePrn.getData().forEach(r => { if(r[2]||r[4]) processItem('PRN', 'Printer', r[2], r[3], r[4], r[1], '🖨️', r[8], r[5]); });
-    if (tableSpc) tableSpc.getData().forEach(r => { if(r[3]||r[5]) processItem('SPC', r[1]||'Tool', r[3], r[4], r[5], r[2], '🛠️', r[7]); });
-
-    let allPlacedDevices = {};
-    let savedPositionsInActiveRoom = {};
-    let savedWallsInActiveRoom = {};
-
-    currentDiagramData.rooms.forEach((r, i) => {
-        if (r.devices) Object.keys(r.devices).forEach(k => { allPlacedDevices[k] = true; });
-        if (i === currentDiagramData.activeRoomIndex) {
-            savedPositionsInActiveRoom = r.devices || {};
-            savedWallsInActiveRoom = r.walls || {};
-        }
-    });
-
-    Object.keys(savedWallsInActiveRoom).forEach(id => renderWallInWorkspace(id, savedWallsInActiveRoom[id]));
-    Object.keys(savedPositionsInActiveRoom).forEach(k => {
-        if (k.startsWith('dev_door_')) renderDoorInWorkspace(k, savedPositionsInActiveRoom[k]);
-    });
-
-    Object.keys(allDiagramDevices).forEach(id => {
-        const dev = allDiagramDevices[id];
-        let matchActiveKey = Object.keys(savedPositionsInActiveRoom).find(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
-        
-        if (matchActiveKey && savedPositionsInActiveRoom[matchActiveKey]) {
-            placeDeviceInWorkspace(id, savedPositionsInActiveRoom[matchActiveKey]);
-        } else {
-            let isUsedAnywhere = Object.keys(allPlacedDevices).some(k => k.split('_')[1] === id.split('_')[1] && k.split('_')[2] === id.split('_')[2]);
-            if (!isUsedAnywhere) {
-                createSidebarItem(id, dev);
-            }
-        }
-    });
-
-    initInteract();
-    initRoomMouseEvents(); 
-}
-
-// --- ✏️ ระบบเมาส์ (วาดกำแพง + Lasso) ---
+// ✏️ โหมดวาดกำแพงและลากคลุม
 let isDrawWallMode = false; let isDrawingWall = false; let wallStartX = 0, wallStartY = 0; let currentTempWall = null;
 function toggleDrawWallMode() {
     isDrawWallMode = !isDrawWallMode;
@@ -4678,6 +4681,7 @@ function initRoomMouseEvents() {
     let lassoStartX = 0, lassoStartY = 0; let isDrawingLasso = false;
 
     room.addEventListener('mousedown', (e) => {
+        if (currentUserRole !== 'Admin') return; // User ลากไม่ได้
         if (e.target.closest('.draggable-device') || e.target.closest('button') || e.target.id.startsWith('wall_')) return;
         const rect = room.getBoundingClientRect();
         if (isDrawWallMode) {
@@ -4696,6 +4700,7 @@ function initRoomMouseEvents() {
     });
 
     room.addEventListener('mousemove', (e) => {
+        if (currentUserRole !== 'Admin') return;
         const rect = room.getBoundingClientRect();
         let currentX = Math.max(0, Math.min(e.clientX - rect.left, room.clientWidth));
         let currentY = Math.max(0, Math.min(e.clientY - rect.top, room.clientHeight));
@@ -4717,6 +4722,7 @@ function initRoomMouseEvents() {
     });
 
     window.addEventListener('mouseup', (e) => {
+        if (currentUserRole !== 'Admin') return;
         if (isDrawingWall && currentTempWall) {
             isDrawingWall = false;
             let w = parseFloat(currentTempWall.style.width); let h = parseFloat(currentTempWall.style.height);
@@ -4743,7 +4749,7 @@ function initRoomMouseEvents() {
     roomMouseEventsInit = true;
 }
 
-// 📦 Interact.js (ลากและวาง)
+// 📦 Interact.js (ลากและวาง เฉพาะ Admin)
 let interactInitialized = false;
 function initInteract() {
     if (interactInitialized) return;
@@ -4754,6 +4760,7 @@ function initInteract() {
         autoScroll: true,
         listeners: {
             start(event) { 
+                if (currentUserRole !== 'Admin') return false; // 🌟 ห้ามลากถ้าเป็น User
                 const target = event.target;
                 target.style.cursor = 'grabbing'; 
                 if (!target.classList.contains('selected-device')) {
@@ -4764,6 +4771,7 @@ function initInteract() {
                 }
             },
             move(event) {
+                if (currentUserRole !== 'Admin') return;
                 document.querySelectorAll('.selected-device').forEach(el => {
                     const x = (parseFloat(el.getAttribute('data-x')) || 0) + event.dx;
                     const y = (parseFloat(el.getAttribute('data-y')) || 0) + event.dy;
@@ -4774,6 +4782,7 @@ function initInteract() {
             end(event) { event.target.style.cursor = 'grab'; }
         }
     }).on('tap', function(event) {
+        if (currentUserRole !== 'Admin') return; // User ห้ามคลุมเลือก
         if (event.target.tagName.toLowerCase() === 'button') return;
         const target = event.currentTarget;
         if (!event.shiftKey) {
@@ -4848,7 +4857,8 @@ function printDiagram() {
     document.querySelectorAll('.selected-device').forEach(el => { el.classList.remove('selected-device'); el.style.boxShadow = ''; el.style.borderColor = ''; });
     let lasso = document.getElementById('selection-lasso'); if (lasso) lasso.style.display = 'none';
 
-    updateCurrentDiagramData();
+    if(currentUserRole === 'Admin') updateCurrentDiagramData();
+    
     let activeRoom = currentDiagramData.rooms[currentDiagramData.activeRoomIndex];
     const clonedContent = room.innerHTML;
     
@@ -4906,6 +4916,7 @@ function printDiagram() {
     const printArea = document.getElementById('printArea'); printArea.innerHTML = html;
     setTimeout(() => { window.print(); }, 500);
 }
-</script>
+        
+    </script>
 </body>
 </html>
