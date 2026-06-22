@@ -4385,13 +4385,16 @@ async function openDiagramModal() {
 
     if (originalDbData && originalDbData.diagram) {
         let oldD = originalDbData.diagram;
-        if (!oldD.rooms) {
+        // 🌟 แก้ไขการแปลงข้อมูลเก่าที่สำคัญตรงนี้ 🌟
+        if (!oldD.rooms || !Array.isArray(oldD.rooms)) { 
             currentDiagramData = {
                 activeRoomIndex: 0,
                 rooms: [{
                     id: 'room_main', name: 'ห้องหลัก',
-                    roomWidth: oldD.roomWidth || 800, roomHeight: oldD.roomHeight || 600,
-                    devices: oldD.devices || {}, walls: oldD.walls || {}
+                    roomWidth: oldD.roomWidth || 800, 
+                    roomHeight: oldD.roomHeight || 600,
+                    devices: oldD.devices || {}, 
+                    walls: oldD.walls || {}
                 }]
             };
         } else {
@@ -4400,6 +4403,7 @@ async function openDiagramModal() {
     } else {
         currentDiagramData = { activeRoomIndex: 0, rooms: [{ id: 'room_main', name: 'ห้องหลัก', roomWidth: 800, roomHeight: 600, devices: {}, walls: {} }] };
     }
+    
     renderDiagram();
 }
 
