@@ -585,14 +585,12 @@ nav {
     
     <button onclick="document.getElementById('importAllExcelNewInput').click()" data-tooltip="นำเข้าไฟล์ Excel" class="has-tooltip bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border border-transparent px-5 py-2.5 rounded-xl shadow-md hover:shadow-lg hover:bg-black dark:hover:bg-white font-bold flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
         <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Stations Import (Excel)
-    </button>
-    
-    <button onclick="generateConnectionReport('all')" data-tooltip="ดูภาพรวมการเชื่อมต่อ" class="has-tooltip bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
-        📊 สรุปเชื่อมต่อ
-    </button>
-    
+    </button>    
     <button onclick="openExportModal()" data-tooltip="โหลดเป็นไฟล์ Excel ไฟล์เดียว" class="has-tooltip bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:border-slate-300 dark:hover:border-slate-600 font-medium flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Stations Export (Excel)
+    </button>
+    <button onclick="generateConnectionReport('all')" data-tooltip="ดูภาพรวมการเชื่อมต่อ" class="has-tooltip bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-5 py-2.5 rounded-xl shadow-sm hover:shadow hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-bold flex items-center gap-2 text-sm transition-transform active:scale-95 flex-1 justify-center whitespace-nowrap">
+        📊 สรุปเชื่อมต่อ
     </button>
 </div>
         </div>
@@ -982,7 +980,7 @@ nav {
     </div>
 </div>
 
-        <div id="connectionReportModal" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 z-[600] hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in no-print">
+        <div id="connectionReportModal" style="z-index: 9995;" class="fixed inset-0 bg-slate-900/40 dark:bg-slate-900/80 hidden flex-col justify-center items-center backdrop-blur-sm p-4 animate-fade-in no-print">
     <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700 animate-pop-in max-h-[90vh]">
         <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
             <div>
