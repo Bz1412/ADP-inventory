@@ -991,7 +991,10 @@ nav {
         <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#f8fafc] dark:bg-[#0f172a]" id="connectionReportContent">
             </div>
         <div class="p-5 border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex justify-end gap-3 flex-wrap">
-            <button onclick="closeConnectionReport()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-white bg-slate-900 hover:bg-black dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white shadow-md transition-transform active:scale-95">ปิดหน้าต่าง</button>
+            <button onclick="closeConnectionReport()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 transition-transform active:scale-95">ปิด</button>
+            <button onclick="printConnectionReport()" class="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-transform active:scale-95 flex items-center justify-center gap-2">
+                🖨️ พิมพ์รายงาน
+            </button>
         </div>
     </div>
 </div>
@@ -5044,135 +5047,194 @@ function printDiagram() {
     setTimeout(() => { window.print(); }, 500);
 }
 
-        function generateConnectionReport(mode) {
-    let counts = { 'คอมพิวเตอร์และโน๊ตบุ๊ค': {}, 'เครื่องพิมพ์': {} };
-    const connectionTypes = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone', 'Glaive', 'Sentinel', 'RCF', 'ไม่ระบุ'];
+        window.generateConnectionReport = function(mode) {
+    try {
+        let counts = { 'คอมพิวเตอร์และโน๊ตบุ๊ค': {}, 'เครื่องพิมพ์': {} };
+        const connectionTypes = ['LAN กอง 6', 'LAN กอง 5', 'อินเตอร์เน็ต', 'Standalone', 'Glaive', 'Sentinel', 'RCF', 'ไม่ระบุ'];
+        
+        connectionTypes.forEach(c => {
+            counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][c] = 0;
+            counts['เครื่องพิมพ์'][c] = 0;
+        });
+
+        if (mode === 'station') {
+            if (!currentStation) return showToast("ไม่พบข้อมูลสถานี", "error");
+            document.getElementById('connReportSubtitle').innerText = `สรุปการเชื่อมต่อของสถานี: ${currentStation}`;
+            
+            const getTableData = (table) => table ? table.getData() : [];
+            
+            getTableData(tableCPUMON).forEach(r => {
+                let hasCpu = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
+                if(hasCpu) {
+                    let conn = (r[10] && String(r[10]).trim() !== '-') ? String(r[10]).trim() : 'ไม่ระบุ';
+                    if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
+                    counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
+                }
+            });
+
+            getTableData(tableNB).forEach(r => {
+                let hasNb = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
+                if(hasNb) {
+                    let conn = (r[6] && String(r[6]).trim() !== '-') ? String(r[6]).trim() : 'ไม่ระบุ';
+                    if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
+                    counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
+                }
+            });
+
+            getTableData(tablePrn).forEach(r => {
+                let hasPrn = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
+                if(hasPrn) {
+                    let conn = (r[8] && String(r[8]).trim() !== '-') ? String(r[8]).trim() : 'ไม่ระบุ';
+                    if(counts['เครื่องพิมพ์'][conn] === undefined) counts['เครื่องพิมพ์'][conn] = 0;
+                    counts['เครื่องพิมพ์'][conn]++;
+                }
+            });
+
+        } else {
+            document.getElementById('connReportSubtitle').innerText = `สรุปการเชื่อมต่อของทุกอุปกรณ์ในระบบ (ภาพรวม)`;
+            
+            if(!globalAllDataCache) {
+                showToast("กำลังโหลดข้อมูลจากเซิร์ฟเวอร์ กรุณารอสักครู่...", "error");
+                return;
+            }
+            
+            Object.entries(globalAllDataCache).forEach(([dbKey, jsonValue]) => {
+                if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey === 'ADP_AUTH_DB' || dbKey.includes('WAREHOUSE') || dbKey === 'ADP_AGENTS_DB') return;
+                
+                try {
+                    let dbData = JSON.parse(jsonValue);
+                    
+                    (dbData.cpu || []).forEach(r => {
+                        let hasCpu = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
+                        if(hasCpu) {
+                            let conn = (r[6] && String(r[6]).trim() !== '-') ? String(r[6]).trim() : 'ไม่ระบุ';
+                            if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
+                            counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
+                        }
+                    });
+
+                    (dbData.nb || []).forEach(r => {
+                        let hasNb = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
+                        if(hasNb) {
+                            let conn = (r[6] && String(r[6]).trim() !== '-') ? String(r[6]).trim() : 'ไม่ระบุ';
+                            if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
+                            counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
+                        }
+                    });
+
+                    (dbData.prn || []).forEach(r => {
+                        let hasPrn = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
+                        if(hasPrn) {
+                            let conn = (r[8] && String(r[8]).trim() !== '-') ? String(r[8]).trim() : 'ไม่ระบุ';
+                            if(counts['เครื่องพิมพ์'][conn] === undefined) counts['เครื่องพิมพ์'][conn] = 0;
+                            counts['เครื่องพิมพ์'][conn]++;
+                        }
+                    });
+                } catch(e) { }
+            });
+        }
+
+        let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+        for(let type in counts) {
+            let typeIcon = type === 'เครื่องพิมพ์' ? '🖨️' : '💻';
+            let typeColor = type === 'เครื่องพิมพ์' ? 'purple' : 'blue';
+            
+            html += `<div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                        <h4 class="font-bold text-${typeColor}-600 dark:text-${typeColor}-400 mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
+                            <span class="text-xl">${typeIcon}</span> ${type}
+                        </h4>
+                        <div class="space-y-3">`;
+            
+            let total = 0;
+            let sortedKeys = Object.keys(counts[type]).sort((a,b) => counts[type][b] - counts[type][a]);
+            
+            sortedKeys.forEach(conn => {
+                let c = counts[type][conn];
+                if (c > 0) {
+                    html += `<div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-2 px-3 rounded-lg">
+                                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${conn}</span>
+                                <span class="font-bold text-slate-900 dark:text-white bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-md text-xs shadow-sm">${c} เครื่อง</span>
+                             </div>`;
+                    total += c;
+                }
+            });
+
+            if (total === 0) {
+                html += `<div class="text-center text-slate-400 text-sm py-4 italic">ไม่มีอุปกรณ์ในหมวดนี้</div>`;
+            } else {
+                html += `<div class="flex justify-between items-center pt-3 mt-2 border-t border-slate-100 dark:border-slate-700">
+                            <span class="text-sm font-bold text-slate-800 dark:text-slate-200">รวมทั้งหมด</span>
+                            <span class="font-black text-${typeColor}-600 dark:text-${typeColor}-400 text-lg">${total} เครื่อง</span>
+                         </div>`;
+            }
+            html += `</div></div>`;
+        }
+        html += '</div>';
+
+        document.getElementById('connectionReportContent').innerHTML = html;
+        document.getElementById('connectionReportModal').classList.remove('hidden');
+        document.getElementById('connectionReportModal').classList.add('flex');
+    } catch (err) {
+        console.error(err);
+        showToast("เกิดข้อผิดพลาด: " + err.message, "error");
+    }
+};
+
+window.closeConnectionReport = function() {
+    document.getElementById('connectionReportModal').classList.add('hidden');
+    document.getElementById('connectionReportModal').classList.remove('flex');
+};
+
+// --- ส่วนสำหรับกด Print ---
+window.printConnectionReport = function() {
+    const printArea = document.getElementById('printArea');
+    const subtitle = document.getElementById('connReportSubtitle').innerText;
     
-    connectionTypes.forEach(c => {
-        counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][c] = 0;
-        counts['เครื่องพิมพ์'][c] = 0;
+    // สร้างตารางให้เรียบร้อยเพื่อพิมพ์ใน A4 ได้สวยงาม
+    let phtml = `
+    <div style="width: 100%; font-family: 'Prompt', sans-serif; color: #000;">
+        <h2 style="text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 5px;">📊 รายงานสรุปการเชื่อมต่อ</h2>
+        <p style="text-align: center; font-size: 14px; color: #555; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">${subtitle}</p>
+        <div style="display: flex; justify-content: space-between; gap: 20px;">
+    `;
+
+    const reportEl = document.getElementById('connectionReportContent');
+    const sections = reportEl.querySelectorAll('.bg-white');
+    
+    sections.forEach(sec => {
+        let title = sec.querySelector('h4').innerText;
+        let rows = sec.querySelectorAll('.flex.justify-between');
+        
+        phtml += `<div style="flex: 1; border: 1px solid #ccc; border-radius: 8px; padding: 15px;">
+                    <h3 style="font-size: 16px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px;">${title}</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tbody>`;
+        rows.forEach(r => {
+            let spans = r.querySelectorAll('span');
+            if (spans.length >= 2) {
+                let isTotal = r.querySelector('.text-lg') !== null;
+                let fw = isTotal ? 'bold' : 'normal';
+                let fs = isTotal ? '16px' : '14px';
+                let pt = isTotal ? '10px' : '4px';
+                let bt = isTotal ? '1px solid #ccc' : 'none';
+                phtml += `<tr>
+                            <td style="padding: ${pt} 0; font-weight: ${fw}; font-size: ${fs}; border-top: ${bt};">${spans[0].innerText}</td>
+                            <td style="text-align: right; padding: ${pt} 0; font-weight: ${fw}; font-size: ${fs}; border-top: ${bt};">${spans[1].innerText}</td>
+                          </tr>`;
+            }
+        });
+        
+        let noData = sec.querySelector('.italic');
+        if (noData) phtml += `<tr><td colspan="2" style="text-align: center; color: #888; padding: 15px;">${noData.innerText}</td></tr>`;
+
+        phtml += `  </tbody></table></div>`;
     });
 
-    if (mode === 'station') {
-        document.getElementById('connReportSubtitle').innerText = `สรุปการเชื่อมต่อของสถานี: ${currentStation}`;
-        
-        const getTableData = (table) => table ? table.getData() : [];
-        
-        // คอมพิวเตอร์
-        getTableData(tableCPUMON).forEach(r => {
-            let hasCpu = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
-            if(hasCpu) {
-                let conn = (r[10] && r[10]!=='-') ? r[10] : 'ไม่ระบุ';
-                if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
-                counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
-            }
-        });
-
-        // โน๊ตบุ๊ค
-        getTableData(tableNB).forEach(r => {
-            let hasNb = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
-            if(hasNb) {
-                let conn = (r[6] && r[6]!=='-') ? r[6] : 'ไม่ระบุ';
-                if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
-                counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
-            }
-        });
-
-        // เครื่องพิมพ์
-        getTableData(tablePrn).forEach(r => {
-            let hasPrn = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
-            if(hasPrn) {
-                let conn = (r[8] && r[8]!=='-') ? r[8] : 'ไม่ระบุ';
-                if(counts['เครื่องพิมพ์'][conn] === undefined) counts['เครื่องพิมพ์'][conn] = 0;
-                counts['เครื่องพิมพ์'][conn]++;
-            }
-        });
-
-    } else {
-        document.getElementById('connReportSubtitle').innerText = `สรุปการเชื่อมต่อของทุกอุปกรณ์ในระบบ (ภาพรวม)`;
-        
-        if(!globalAllDataCache) return;
-        
-        Object.entries(globalAllDataCache).forEach(([dbKey, jsonValue]) => {
-            if (dbKey === 'ADP_WAREHOUSE_CENTRAL' || dbKey === 'ADP_AUTH_DB' || dbKey.includes('WAREHOUSE') || dbKey === 'ADP_AGENTS_DB') return;
-            
-            try {
-                let dbData = JSON.parse(jsonValue);
-                
-                (dbData.cpu || []).forEach(r => {
-                    let hasCpu = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
-                    if(hasCpu) {
-                        let conn = (r[6] && r[6]!=='-') ? r[6] : 'ไม่ระบุ';
-                        if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
-                        counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
-                    }
-                });
-
-                (dbData.nb || []).forEach(r => {
-                    let hasNb = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
-                    if(hasNb) {
-                        let conn = (r[6] && r[6]!=='-') ? r[6] : 'ไม่ระบุ';
-                        if(counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] === undefined) counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn] = 0;
-                        counts['คอมพิวเตอร์และโน๊ตบุ๊ค'][conn]++;
-                    }
-                });
-
-                (dbData.prn || []).forEach(r => {
-                    let hasPrn = (r[2] && r[2]!=='-') || (r[3] && r[3]!=='-') || (r[4] && r[4]!=='-');
-                    if(hasPrn) {
-                        let conn = (r[8] && r[8]!=='-') ? r[8] : 'ไม่ระบุ';
-                        if(counts['เครื่องพิมพ์'][conn] === undefined) counts['เครื่องพิมพ์'][conn] = 0;
-                        counts['เครื่องพิมพ์'][conn]++;
-                    }
-                });
-            } catch(e) {}
-        });
-    }
-
-    // สร้างตาราง/UI สรุป
-    let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+    phtml += `</div></div>`;
     
-    for(let type in counts) {
-        let typeIcon = type === 'เครื่องพิมพ์' ? '🖨️' : '💻';
-        let typeColor = type === 'เครื่องพิมพ์' ? 'purple' : 'blue';
-        
-        html += `<div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <h4 class="font-bold text-${typeColor}-600 dark:text-${typeColor}-400 mb-4 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 pb-2">
-                        <span class="text-xl">${typeIcon}</span> ${type}
-                    </h4>
-                    <div class="space-y-3">`;
-        
-        let total = 0;
-        // เรียงจำนวนจากมากไปน้อย
-        let sortedKeys = Object.keys(counts[type]).sort((a,b) => counts[type][b] - counts[type][a]);
-        
-        sortedKeys.forEach(conn => {
-            let c = counts[type][conn];
-            if (c > 0) {
-                html += `<div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900/50 p-2 px-3 rounded-lg">
-                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">${conn}</span>
-                            <span class="font-bold text-slate-900 dark:text-white bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded-md text-xs shadow-sm">${c} เครื่อง</span>
-                         </div>`;
-                total += c;
-            }
-        });
-
-        if (total === 0) {
-            html += `<div class="text-center text-slate-400 text-sm py-4 italic">ไม่มีอุปกรณ์ในหมวดนี้</div>`;
-        } else {
-            html += `<div class="flex justify-between items-center pt-3 mt-2 border-t border-slate-100 dark:border-slate-700">
-                        <span class="text-sm font-bold text-slate-800 dark:text-slate-200">รวมทั้งหมด</span>
-                        <span class="font-black text-${typeColor}-600 dark:text-${typeColor}-400 text-lg">${total} เครื่อง</span>
-                     </div>`;
-        }
-        html += `</div></div>`;
-    }
-    html += '</div>';
-
-    document.getElementById('connectionReportContent').innerHTML = html;
-    document.getElementById('connectionReportModal').classList.remove('hidden');
-    document.getElementById('connectionReportModal').classList.add('flex');
-}
+    printArea.innerHTML = phtml;
+    setTimeout(() => { window.print(); }, 300);
+};
 
 function closeConnectionReport() {
     document.getElementById('connectionReportModal').classList.add('hidden');
